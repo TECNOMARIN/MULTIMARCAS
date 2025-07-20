@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Productos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap CSS for Modal -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .product-card {
+            background-color: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative; /* Needed for absolute positioning of WhatsApp button */
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            background-color: #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .initial-payment {
+            color: #007bff;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .discount-info {
+            font-size: 0.875rem;
+            color: #555;
+            margin-top: 0.5rem;
+        }
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            white-space: nowrap; /* Prevent text wrapping for buttons */
+        }
+        .tab-button.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .tab-button:not(.active):hover {
+            background-color: #e2e8f0;
+        }
+        .details-list li {
+            margin-bottom: 0.25rem;
+        }
+        /* Floating Gemini button */
+        .floating-gemini-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1000; /* Ensure it's on top */
+            transition: background-color 0.3s ease;
+        }
+        .floating-gemini-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* WhatsApp button on product card */
+        .whatsapp-icon-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #25D366; /* WhatsApp green */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 10;
+            transition: background-color 0.3s ease;
+        }
+        .whatsapp-icon-button:hover {
+            background-color: #1DA851;
+        }
+        .whatsapp-icon-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .llm-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #ccc;
+            resize: vertical;
+            font-size: 1rem;
+        }
+        .llm-response {
+            background-color: #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+            color: #333;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .modal-footer .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Styles for the credit application form within the modal */
+        .form-container-modal {
+            background-color: #fff;
+            border-radius: 1rem;
+            padding: 1rem;
+            width: 100%;
+            position: relative; /* Needed for floating button inside */
+            min-height: 500px; /* Ensure enough height for content + button */
+            padding-bottom: 80px; /* Add padding to prevent overlap with floating button */
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="date"],
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s ease-in-out;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+        .section-title-modal {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #333;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        .submit-button-modal {
+            background-color: #25D366; /* WhatsApp green */
+            color: white;
+            padding: 0.75rem 1.5rem; /* Adjust padding for text */
+            border-radius: 0.75rem; /* Slightly rounded corners for button */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        .submit-button-modal:hover {
+            background-color: #1DA851; /* Darker WhatsApp green on hover */
+        }
+        .submit-button-modal img {
+            width: 24px; /* Icon size */
+            height: 24px; /* Icon size */
+            margin-right: 8px; /* Space between icon and text */
+        }
+        .success-message-modal {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: 600;
+            display: none; /* Hidden by default */
+        }
+        .info-button {
+            background-color: #6c757d; /* Grey button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            border: none;
+            margin-left: 1rem; /* Space from other elements */
+        }
+        .info-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Title -->
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-4 rounded-lg p-4 bg-white shadow-md">Catálogo de Productos</h1>
+
+        <!-- Brand Filter Dropdown -->
+        <div class="filter-container flex items-center justify-center sm:justify-start space-x-2 mb-4">
+            <label for="brand-select" class="font-semibold text-gray-700">Marca:</label>
+            <select id="brand-select" class="block w-full sm:w-48 p-2 border border-gray-300 rounded-md">
+                <!-- Options will be dynamically inserted here -->
+            </select>
+            <!-- New button for credit requirements -->
+            <button class="info-button" data-bs-toggle="modal" data-bs-target="#requirementsModal">
+                Requisitos de Crédito
+            </button>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="flex justify-center space-x-4 mb-4">
+            <button id="phones-tab" class="tab-button active" data-category="Celulares">Celulares</button>
+            <button id="tvs-tab" class="tab-button" data-category="Televisores">Televisores</button>
+            <button id="others-tab" class="tab-button" data-category="Otros">Otros</button>
+        </div>
+
+        <hr class="my-6 border-gray-300"> <!-- Horizontal line added here -->
+
+        <!-- Product Display Sections -->
+        <div id="product-display-area">
+            <div id="phones-section" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Products will be dynamically inserted here -->
+            </div>
+
+            <div id="tvs-section" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden">
+                <!-- Products will be dynamically inserted here -->
+            </div>
+
+            <div id="others-section" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden">
+                <!-- Products will be dynamically inserted here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Floating Gemini Button -->
+    <div id="floating-gemini-button" class="floating-gemini-button" data-bs-toggle="modal" data-bs-target="#geminiModal">
+        ?
+    </div>
+
+    <!-- Gemini Modal -->
+    <div class="modal fade" id="geminiModal" tabindex="-1" aria-labelledby="geminiModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="geminiModalLabel">Pregúntame sobre los productos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea id="question-input" class="llm-textarea" placeholder="Ej: ¿Qué celular tiene la mejor cámara?"></textarea>
+                    <div id="gemini-response" class="llm-response hidden">
+                        <p id="response-text" class="text-gray-800"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" id="ask-gemini-button" class="btn btn-primary">Preguntar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit Application Modal -->
+    <div class="modal fade" id="creditApplicationModal" tabindex="-1" aria-labelledby="creditApplicationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="creditApplicationModalLabel">Formulario de Solicitud de Crédito</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-container-modal">
+                        <form id="credit-application-form" class="space-y-4">
+                            <!-- Hidden fields for product info -->
+                            <input type="hidden" id="formProductName" name="productName">
+                            <input type="hidden" id="formProductBrand" name="productBrand">
+                            <input type="hidden" id="formInitialPayment" name="initialPayment">
+                            <input type="hidden" id="formInstallments" name="installments">
+                            <input type="hidden" id="formAnexo" name="anexo">
+
+                            <!-- Datos Personales -->
+                            <div>
+                                <h2 class="section-title-modal">Datos Personales</h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="form-group">
+                                        <label for="fullName">Nombre completo:</label>
+                                        <input type="text" id="fullName" name="fullName" placeholder="Tu nombre completo" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="idNumber">Número de cédula:</label>
+                                        <input type="text" id="idNumber" name="idNumber" placeholder="Tu número de identificación" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="birthDate">Fecha de nacimiento:</label>
+                                        <input type="date" id="birthDate" name="birthDate" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="birthCity">Ciudad de nacimiento:</label>
+                                        <input type="text" id="birthCity" name="birthCity" placeholder="Ej: Bogotá" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="birthDepartment">Departamento de nacimiento:</label>
+                                        <input type="text" id="birthDepartment" name="birthDepartment" placeholder="Ej: Cundinamarca" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">Correo electrónico:</label>
+                                        <input type="email" id="email" name="email" placeholder="tu.correo@ejemplo.com" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone">Teléfono:</label>
+                                        <input type="tel" id="phone" name="phone" placeholder="Ej: +57 300 123 4567" class="mt-1">
+                                    </div>
+                                    <div class="form-group md:col-span-2">
+                                        <label for="address">Dirección:</label>
+                                        <input type="text" id="address" name="address" placeholder="Tu dirección de residencia" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="work">Trabajo:</label>
+                                        <input type="text" id="work" name="work" placeholder="Tu ocupación o empresa" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="eps">EPS:</label>
+                                        <input type="text" id="eps" name="eps" placeholder="Tu Entidad Promotora de Salud" class="mt-1">
+                                    </div>
+                                    <!-- New fields for payment options -->
+                                    <div class="form-group">
+                                        <label for="paymentFrequency">Periodicidad de Pago:</label>
+                                        <select id="paymentFrequency" name="paymentFrequency" class="mt-1">
+                                            <option value="semanal">Semanal</option>
+                                            <option value="quincenal">Quincenal</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="numInstallments">Número de Cuotas:</label>
+                                        <select id="numInstallments" name="numInstallments" class="mt-1">
+                                            <!-- Options will be dynamically populated by JavaScript -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Referencias Personales -->
+                            <div>
+                                <h2 class="section-title-modal">Referencias Personales</h2>
+                                <!-- Referencia personal 1 -->
+                                <h3 class="text-md font-semibold mb-2 text-gray-700">Referencia personal 1:</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="form-group">
+                                        <label for="ref1Name">Nombre y apellido:</label>
+                                        <input type="text" id="ref1Name" name="ref1Name" placeholder="Nombre de la referencia" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ref1Phone">Teléfono:</label>
+                                        <input type="tel" id="ref1Phone" name="ref1Phone" placeholder="Teléfono de la referencia" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ref1Relationship">Parentesco:</label>
+                                        <input type="text" id="ref1Relationship" name="ref1Relationship" placeholder="Parentesco" class="mt-1">
+                                    </div>
+                                </div>
+
+                                <!-- Referencia personal 2 -->
+                                <h3 class="text-md font-semibold mb-2 mt-4 text-gray-700">Referencia personal 2:</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="form-group">
+                                        <label for="ref2Name">Nombre y apellido:</label>
+                                        <input type="text" id="ref2Name" name="ref2Name" placeholder="Nombre de la referencia" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ref2Phone">Teléfono:</label>
+                                        <input type="tel" id="ref2Phone" name="ref2Phone" placeholder="Teléfono de la referencia" class="mt-1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ref2Relationship">Parentesco:</label>
+                                        <input type="text" id="ref2Relationship" name="ref2Relationship" placeholder="Parentesco" class="mt-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Floating Send Button (WhatsApp icon and text) -->
+                            <button type="submit" class="submit-button-modal">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/WhatsApp_icon.png" alt="WhatsApp">
+                                Enviar Solicitud
+                            </button>
+
+                            <div id="successMessageModal" class="success-message-modal">
+                                ¡Tu solicitud ha sido enviada con éxito! Nos pondremos en contacto contigo pronto.
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credit Requirements Modal -->
+    <div class="modal fade" id="requirementsModal" tabindex="-1" aria-labelledby="requirementsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="requirementsModalLabel">Requisitos para Adquirir un Crédito</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Debe tener su cédula original.</li>
+                        <li>La persona que solicita el crédito debe ser el titular y debe venir en persona para la entrega del equipo.</li>
+                        <li>La solicitud de crédito debe ser aprobada por nuestro equipo.</li>
+                        <li>Debe enviar todos los datos solicitados en el formulario de solicitud para que podamos realizar el estudio de manera virtual.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS for Modal functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const phonesTab = document.getElementById('phones-tab');
+            const tvsTab = document.getElementById('tvs-tab');
+            const othersTab = document.getElementById('others-tab');
+            const phonesSection = document.getElementById('phones-section');
+            const tvsSection = document.getElementById('tvs-section');
+            const othersSection = document.getElementById('others-section');
+            const brandSelect = document.getElementById('brand-select');
+            const questionInput = document.getElementById('question-input');
+            const askGeminiButton = document.getElementById('ask-gemini-button');
+            const geminiResponseDiv = document.getElementById('gemini-response');
+            const responseText = document.getElementById('response-text');
+            const creditApplicationForm = document.getElementById('credit-application-form');
+            const successMessageModal = document.getElementById('successMessageModal');
+            const paymentFrequencySelect = document.getElementById('paymentFrequency');
+            const numInstallmentsSelect = document.getElementById('numInstallments');
+
+            // Product data with direct image URLs and structured payment info
+            const products = [
+                {
+                    name: "SAMSUMG A05 64 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "SAMSUNG",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/SAMSUNG%20A05%2064GB.jpg",
+                    initialPayment: "$130,000",
+                    fullPrice: "780,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "TECNO SPARK 30C 256 GB 8 RAM",
+                    category: "Celulares",
+                    brand: "TECNO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/TECNO%20SPARK%2030%20C%20256GB.jpg",
+                    initialPayment: "$250,000",
+                    fullPrice: "1,050,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "OPPO A20 128 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "OPPO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/OPPO%20A20%20128.jpg",
+                    initialPayment: "$200,000",
+                    fullPrice: "1,000,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "OPPO A40 128 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "OPPO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/OPPO%20A40%20256.jpg",
+                    initialPayment: "$300,000",
+                    fullPrice: "1,100,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "TECNO SPARK GO 1 64 GB 3 RAM",
+                    category: "Celulares",
+                    brand: "TECNO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/TECNO%20SPARK%20GO%201%202024.jpg",
+                    initialPayment: "$100,000",
+                    fullPrice: "750,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "TECNO SPARK GO 1 128 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "TECNO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/TECNO%20SPARK%20GO%201%202024%20128.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "900,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SAMSUMG A05 128 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "SAMSUNG",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/SAMSUNG%20A05%20128GB.jpg",
+                    initialPayment: "$180,000",
+                    fullPrice: "930,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "INFINIX SMART 8 128 GB",
+                    category: "Celulares",
+                    brand: "INFINIX",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/INFINIX%20SMART%208%20128.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "900,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "MOTO G04S 128 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "MOTOROLA",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/MOTO%20G04S%20128GB.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "900,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KALLEY BLACK 1 128 GB 3 RAM",
+                    category: "Celulares",
+                    brand: "KALLEY",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/KALLEY%20BLACK%201%20128GB.jpg",
+                    initialPayment: "$50,000",
+                    fullPrice: "650,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":27000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":67500}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KALLEY BLACK G2 128 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "KALLEY",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/KALLEY%20BLACK%20G2%20128GB.jpg",
+                    initialPayment: "$90,000",
+                    fullPrice: "800,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":31950},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":79875}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "MOTO G04S 64 GB 3 RAM",
+                    category: "Celulares",
+                    brand: "MOTOROLA",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/g04s%2064-100.jpg",
+                    initialPayment: "$100,000",
+                    fullPrice: "750,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "INFINIX SMART 9 64 GB",
+                    category: "Celulares",
+                    brand: "INFINIX",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/smart%209%2064-100.jpg",
+                    initialPayment: "$100,000",
+                    fullPrice: "750,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "INFINIX SMART 9 128 GB",
+                    category: "Celulares",
+                    brand: "INFINIX",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/smart%209%20128-100.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "900,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SMART TV KALLEY 40\"",
+                    category: "Televisores",
+                    brand: "KALLEY",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/KALLEY%2040.png",
+                    initialPayment: "$320,000",
+                    fullPrice: "1,350,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":115875}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SMART TV KALLEY 43\"",
+                    category: "Televisores",
+                    brand: "KALLEY",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/KALLEY%2043.png",
+                    initialPayment: "$420,000",
+                    fullPrice: "1,500,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":121500}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SAMSUNG A05S 128 GB 6 RAM",
+                    category: "Celulares",
+                    brand: "SAMSUNG",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/a05%20s%20128.jpg",
+                    initialPayment: "$200,000",
+                    fullPrice: "1,000,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SMART TV HYUNDAI 43\"",
+                    category: "Televisores",
+                    brand: "HYUNDAI",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/hyundai%2043.png",
+                    initialPayment: "$420,000",
+                    fullPrice: "1,500,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":121500}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SMART TV CHALLENGER 32\"",
+                    category: "Televisores",
+                    brand: "CHALLENGER",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/challenger%2032.png",
+                    initialPayment: "$220,000",
+                    fullPrice: "1,100,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":99000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SMART TV CHALLENGER 40\"",
+                    category: "Televisores",
+                    brand: "CHALLENGER",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/challenger%2040%20(1).png",
+                    initialPayment: "$320,000",
+                    fullPrice: "1,350,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":115875}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SMART TV CHALLENGER 43\"",
+                    category: "Televisores",
+                    brand: "CHALLENGER",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/challenger%2043.png",
+                    initialPayment: "$420,000",
+                    fullPrice: "1,500,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":121500}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "REDMI A3 64 GB 3 RAM",
+                    category: "Celulares",
+                    brand: "REDMI",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/REDMI%20A3-100.jpg",
+                    initialPayment: "$100,000",
+                    fullPrice: "750,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "REDMI 14C 128 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "REDMI",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/REDMI%2014C-100.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "900,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "TECNO SPARK 30C 256 GB 4 RAM",
+                    category: "Celulares",
+                    brand: "TECNO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/tecno%20spark%2030c.jpg",
+                    initialPayment: "$200,000",
+                    fullPrice: "1,000,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "HONOR PLAY 9A 128GB 4RAM",
+                    category: "Celulares",
+                    brand: "HONOR",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/HONOR%20PLAY-100.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "850,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":31500},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":78750}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "REDMI 14C 256GB",
+                    category: "Celulares",
+                    brand: "REDMI",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/REDMI%2014C-100%20(1).jpg",
+                    initialPayment: "$200,000",
+                    fullPrice: "1,000,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "TECNO 30C 4RAM 128GB",
+                    category: "Celulares",
+                    brand: "TECNO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_682c9d3e6f456.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "900,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "REDMI A3X 3RAM 64GB",
+                    category: "Celulares",
+                    brand: "REDMI",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_682c9d5f19760.jpg",
+                    initialPayment: "$100,000",
+                    fullPrice: "750,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KIT 2 CAMARAS",
+                    category: "Otros",
+                    brand: "CCTV",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/2-100.jpg",
+                    initialPayment: "$300,000",
+                    fullPrice: "850,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":24750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":61875}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KIT 4 CAMARAS",
+                    category: "Otros",
+                    brand: "CCTV",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/4-100.jpg",
+                    initialPayment: "$400,000",
+                    fullPrice: "1,200,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KIT 6 CAMARAS",
+                    category: "Otros",
+                    brand: "CCTV",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/6-100.jpg",
+                    initialPayment: "$600,000",
+                    fullPrice: "1,650,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":47250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":118125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KIT 8 CAMARAS",
+                    category: "Otros",
+                    brand: "CCTV",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/8-100.jpg",
+                    initialPayment: "$700,000",
+                    fullPrice: "1,980,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":57600},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":144000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KIT 12 CAMARAS",
+                    category: "Otros",
+                    brand: "CCTV",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/12-100.jpg",
+                    initialPayment: "$1,050,000",
+                    fullPrice: "3,000,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":87750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":219375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KIT 16 CAMARAS",
+                    category: "Otros",
+                    brand: "CCTV",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/16-100.jpg",
+                    initialPayment: "$1,300,000",
+                    fullPrice: "3,600,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":103500},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":258750}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "MOTOROLA ONE FUSION 128GB 4RAM",
+                    category: "Celulares",
+                    brand: "MOTOROLA",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/MOTO%20ONE%20FUNSION-100.jpg",
+                    initialPayment: "$70,000",
+                    fullPrice: "470,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":18000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":45000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "SAMSUNG A16 128GB 6RAM",
+                    category: "Celulares",
+                    brand: "SAMSUNG",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/A16%20128-100.jpg",
+                    initialPayment: "$300,000",
+                    fullPrice: "1,100,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "REDMI A5 64GB",
+                    category: "Celulares",
+                    brand: "REDMI",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_682c9c0016698.jpg",
+                    initialPayment: "$100,000",
+                    fullPrice: "750,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "HONOR X5B 3RAM 64GB",
+                    category: "Celulares",
+                    brand: "HONOR",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6831e55c96dce.jpg",
+                    initialPayment: "$100,000",
+                    fullPrice: "750,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "TECNO SPARK 30 8RAM 256GB",
+                    category: "Celulares",
+                    brand: "TECNO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6831e56689774.jpg",
+                    initialPayment: "$250,000",
+                    fullPrice: "1,050,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "TECNO SPARK 30 PRO 8RAM 256GB",
+                    category: "Celulares",
+                    brand: "TECNO",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6831e57037fe1.jpg",
+                    initialPayment: "$350,000",
+                    fullPrice: "1,150,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "INFINIX HOT 50I 4+4RAM 256GB",
+                    category: "Celulares",
+                    brand: "INFINIX",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_683498ab8b938.jpg",
+                    initialPayment: "$200,000",
+                    fullPrice: "1,000,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "REDMI 14C 8RAM 256GB",
+                    category: "Celulares",
+                    brand: "REDMI",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_68349b08d55a6.jpg",
+                    initialPayment: "$250,000",
+                    fullPrice: "1,050,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "IPHONE 12 128GB NEW",
+                    category: "Celulares",
+                    brand: "IPHONE",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6834df9629ae7.jpg",
+                    initialPayment: "$600,000",
+                    fullPrice: "1,800,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":54000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":135000}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "IPHONE 13 PRO MAX DE 128GB NUEVO",
+                    category: "Celulares",
+                    brand: "IPHONE",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6849c4b7ac466.jpg",
+                    initialPayment: "$1,700,000",
+                    fullPrice: "3,100,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":63000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":157500}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "HONOR PLAY 9A 64GB 4RAM",
+                    category: "Celulares",
+                    brand: "HONOR",
+                    imageUrl: "https://www.losdistribuidores.com/wp-content/uploads/2025/01/honor-play-9a.webp",
+                    initialPayment: "$100,000",
+                    fullPrice: "750,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "KALLEY BLACK E 64GB 4RAM",
+                    category: "Celulares",
+                    brand: "KALLEY",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_685b55728fcf6.jpg",
+                    initialPayment: "$50,000",
+                    fullPrice: "500,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":20250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":50625}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "REALME NOTE 60X 128GB4RAM",
+                    category: "Celulares",
+                    brand: "REALME",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_685b554ae019a.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "850,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":31500},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":78750}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                },
+                {
+                    name: "MOTOROLA G05 128GB 4RAM",
+                    category: "Celulares",
+                    brand: "MOTOROLA",
+                    imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_685b5561e53f6.jpg",
+                    initialPayment: "$150,000",
+                    fullPrice: "900,000",
+                    description: "",
+                    installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                }
+            ];
+
+            // Function to parse a currency string to a number
+            function parseCurrencyToNumber(currencyString) {
+                return parseInt(currencyString.replace(/[^0-9]/g, ''));
+            }
+
+            // Function to format a number to a currency string
+            function formatNumberToCurrency(number) {
+                return `$${number.toLocaleString('es-CO')}`;
+            }
+
+            // Update initial payments
+            products.forEach(product => {
+                let currentInitialPayment = parseCurrencyToNumber(product.initialPayment);
+                if (product.category === 'Celulares') {
+                    product.initialPayment = formatNumberToCurrency(currentInitialPayment + 20000);
+                } else if (product.category === 'Televisores') {
+                    product.initialPayment = formatNumberToCurrency(currentInitialPayment + 30000);
+                }
+            });
+
+            // Current filter states
+            let currentCategory = 'Celulares';
+            let currentBrand = 'TODOS'; // Default to show all brands
+
+            // Function to render product cards
+            function renderProducts(filteredProducts) {
+                // Clear existing products
+                phonesSection.innerHTML = '';
+                tvsSection.innerHTML = '';
+                othersSection.innerHTML = ''; // Clear new section
+
+                // Sort products by initial payment (lowest to highest)
+                filteredProducts.sort((a, b) => {
+                    const initialA = parseCurrencyToNumber(a.initialPayment);
+                    const initialB = parseCurrencyToNumber(b.initialPayment);
+                    return initialA - initialB;
+                });
+
+                filteredProducts.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.classList.add('product-card');
+
+                    // Use product.imageUrl directly, with a fallback to a generic placeholder
+                    const imageUrl = product.imageUrl || `https://placehold.co/400x200/e2e8f0/333?text=Imagen+no+disponible`;
+
+                    let installmentHtml = '';
+                    if (product.installments && product.installments.length > 0) {
+                        installmentHtml = product.installments.map(inst => `
+                            <p class="price-details"><strong>${inst.num_cuotas} ${inst.frecuencia}:</strong> $${inst.valor_cuota.toLocaleString('es-CO')}</p>
+                        `).join('');
+                    }
+
+                    // Clean the anexo string for use in the data-anexo attribute
+                    const cleanAnexoForAttribute = product.anexo ? product.anexo.replace(/<br>/g, ' ').replace(/<b>/g, '').replace(/<\/b>/g, '') : '';
+
+                    productCard.innerHTML = `
+                        <img src="${imageUrl}" alt="${product.name}" class="product-image" onerror="this.onerror=null;this.src='https://placehold.co/400x200/e2e8f0/333?text=Imagen+no+disponible';">
+                        <div class="p-4 flex-grow">
+                            <h2 class="text-xl font-semibold mb-2">${product.name}</h2>
+                            <p class="initial-payment mb-2">Inicial: <b>${product.initialPayment}</b></p>
+                            ${installmentHtml}
+                            ${product.anexo ? `<p class="discount-info">${product.anexo}</p>` : ''}
+                        </div>
+                        <div class="whatsapp-icon-button" data-bs-toggle="modal" data-bs-target="#creditApplicationModal"
+                            data-product-name="${product.name}"
+                            data-product-brand="${product.brand}"
+                            data-initial-payment="${product.initialPayment}"
+                            data-installments='${JSON.stringify(product.installments)}'
+                            data-anexo="${cleanAnexoForAttribute}"> <!-- Use the cleaned string here -->
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/WhatsApp_icon.png" alt="WhatsApp">
+                        </div>
+                    `;
+                    if (product.category === 'Celulares') {
+                        phonesSection.appendChild(productCard);
+                    } else if (product.category === 'Televisores') {
+                        tvsSection.appendChild(productCard);
+                    } else if (product.category === 'Otros') { // Handle new category
+                        othersSection.appendChild(productCard);
+                    }
+                });
+
+                // Attach event listeners to the new WhatsApp buttons
+                document.querySelectorAll('.whatsapp-icon-button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const productName = event.currentTarget.dataset.productName;
+                        const productBrand = event.currentTarget.dataset.productBrand;
+                        const initialPayment = event.currentTarget.dataset.initialPayment;
+                        const installments = event.currentTarget.dataset.installments; // Keep as string for hidden field
+                        const anexo = event.currentTarget.dataset.anexo;
+
+                        // Populate the hidden fields in the form modal
+                        document.getElementById('formProductName').value = productName;
+                        document.getElementById('formProductBrand').value = productBrand;
+                        document.getElementById('formInitialPayment').value = initialPayment;
+                        document.getElementById('formInstallments').value = installments;
+                        document.getElementById('formAnexo').value = anexo;
+
+                        // Reset form and hide success message when modal is opened
+                        creditApplicationForm.reset();
+                        successMessageModal.style.display = 'none';
+                        // Update installment options for the new product
+                        updateInstallmentOptions();
+                    });
+                });
+            }
+
+            // Function to apply filters and render products
+            function applyFilters() {
+                let filtered = products.filter(product => {
+                    // Normalize category names for filtering
+                    let productCategory = product.category;
+                    if (productCategory.includes('Televisores')) {
+                        productCategory = 'Televisores';
+                    } else if (productCategory.includes('kit cctv')) {
+                        productCategory = 'Otros';
+                    }
+
+                    return productCategory === currentCategory &&
+                           (currentBrand === 'TODOS' || product.brand === currentBrand);
+                });
+
+
+                // Hide all sections initially
+                phonesSection.classList.add('hidden');
+                tvsSection.classList.add('hidden');
+                othersSection.classList.add('hidden'); // Hide new section
+
+                // Show the relevant section and render products
+                if (currentCategory === 'Celulares') {
+                    phonesSection.classList.remove('hidden');
+                    renderProducts(filtered);
+                } else if (currentCategory === 'Televisores') {
+                    tvsSection.classList.remove('hidden');
+                    renderProducts(filtered);
+                } else if (currentCategory === 'Otros') { // Show new section
+                    othersSection.classList.remove('hidden');
+                    renderProducts(filtered);
+                }
+
+
+                // Update active state for category tabs
+                document.querySelectorAll('.tab-button').forEach(button => {
+                    if (button.dataset.category === currentCategory) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+            }
+
+            // Populate brand filter dropdown
+            function populateBrandFilters() {
+                // Filter products by current category to get relevant brands
+                const relevantProducts = products.filter(product => {
+                    let productCategory = product.category;
+                    if (productCategory.includes('Televisores')) {
+                        productCategory = 'Televisores';
+                    } else if (productCategory.includes('kit cctv')) {
+                        productCategory = 'Otros';
+                    }
+                    return productCategory === currentCategory;
+                });
+
+                const allBrands = new Set(relevantProducts.map(product => product.brand));
+                const uniqueBrands = ['TODOS', ...Array.from(allBrands).sort()];
+
+                brandSelect.innerHTML = ''; // Clear existing options
+
+                uniqueBrands.forEach(brand => {
+                    const option = document.createElement('option');
+                    option.value = brand;
+                    option.textContent = brand;
+                    brandSelect.appendChild(option);
+                });
+
+                // Set the current brand in the dropdown
+                brandSelect.value = currentBrand;
+            }
+
+            // Event Listeners for Category Tabs
+            phonesTab.addEventListener('click', () => {
+                currentCategory = 'Celulares';
+                currentBrand = 'TODOS'; // Reset brand filter when changing category
+                populateBrandFilters(); // Repopulate brands relevant to new category
+                applyFilters();
+            });
+
+            tvsTab.addEventListener('click', () => {
+                currentCategory = 'Televisores';
+                currentBrand = 'TODOS'; // Reset brand filter when changing category
+                populateBrandFilters(); // Repopulate brands relevant to new category
+                applyFilters();
+            });
+
+            othersTab.addEventListener('click', () => { // New tab event listener
+                currentCategory = 'Otros';
+                currentBrand = 'TODOS'; // Reset brand filter when changing category
+                populateBrandFilters(); // Repopulate brands relevant to new category
+                applyFilters();
+            });
+
+            // Event Listener for Brand Select Dropdown
+            brandSelect.addEventListener('change', (event) => {
+                currentBrand = event.target.value;
+                applyFilters();
+            });
+
+            // Function to update installment options based on payment frequency
+            function updateInstallmentOptions() {
+                numInstallmentsSelect.innerHTML = ''; // Clear existing options
+                const selectedFrequency = paymentFrequencySelect.value;
+                let maxInstallments = 0;
+
+                if (selectedFrequency === 'semanal') {
+                    maxInstallments = 40;
+                } else if (selectedFrequency === 'quincenal') {
+                    maxInstallments = 16;
+                }
+
+                for (let i = 1; i <= maxInstallments; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    numInstallmentsSelect.appendChild(option);
+                }
+            }
+
+            // Event listener for payment frequency change
+            paymentFrequencySelect.addEventListener('change', updateInstallmentOptions);
+
+            // Initial setup
+            populateBrandFilters();
+            applyFilters(); // Render products on initial load
+            updateInstallmentOptions(); // Populate initial installment options
+
+            // Gemini API interaction logic
+            askGeminiButton.addEventListener('click', async () => {
+                const question = questionInput.value.trim();
+                if (!question) {
+                    responseText.textContent = 'Por favor, introduce tu pregunta.';
+                    geminiResponseDiv.classList.remove('hidden');
+                    return;
+                }
+
+                responseText.textContent = 'Cargando respuesta...';
+                geminiResponseDiv.classList.remove('hidden');
+                askGeminiButton.disabled = true; // Disable button during loading
+
+                try {
+                    // Check for keywords indicating credit application intent
+                    const creditIntentKeywords = ["crédito", "credito", "adquirir", "comprar a crédito", "financiar", "quiero", "decidí", "vamos a hacerlo", "quiero un telefono", "quiero un celular", "quiero un televisor", "quiero una camara"];
+                    const isCreditIntent = creditIntentKeywords.some(keyword => question.toLowerCase().includes(keyword));
+
+                    let prompt;
+                    if (isCreditIntent) {
+                        prompt = `El usuario ha expresado interés en adquirir un producto a crédito. Responde de forma amigable y directa, indicándole que para iniciar el proceso de solicitud de crédito, debe hacer clic en el botón de WhatsApp que se encuentra en la tarjeta del producto de su interés. Recuérdale que al hacer clic en ese botón, se abrirá un formulario de solicitud de crédito.`;
+                    } else {
+                        // Concatenate all product details into a single string for context
+                        const productContext = products.map(p => {
+                            let details = `Nombre: ${p.name}, Marca: ${p.brand}, Categoría: ${p.category}, Pago Inicial: ${p.initialPayment}`;
+                            if (p.installments && p.installments.length > 0) {
+                                details += `, Cuotas: ${p.installments.map(inst => `${inst.num_cuotas} ${inst.frecuencia} de $${inst.valor_cuota.toLocaleString('es-CO')}`).join(', ')}`;
+                            }
+                            if (p.anexo) {
+                                details += `, Anexo: ${p.anexo.replace(/<br>/g, ' ').replace(/<b>/g, '').replace(/<\/b>/g, '')}`;
+                            }
+                            return details;
+                        }).join('\n');
+
+                        // Add credit requirements to the context for Gemini
+                        const creditRequirements = `Para adquirir un crédito con nosotros, los requisitos son:
+                        - Cédula original del titular.
+                        - La persona que solicita el crédito debe ser el titular y debe venir en persona para la entrega del equipo.
+                        - La solicitud de crédito debe ser aprobada por nuestro equipo.
+                        - Debe enviar todos los datos solicitados en el formulario de solicitud para que podamos realizar el estudio de manera virtual.`;
+
+                        prompt = `Basado en la siguiente información de productos y requisitos de crédito, responde a la pregunta del usuario. Si la pregunta no se puede responder con la información proporcionada, indica que no tienes suficiente información.
+
+                        Información de productos:
+                        ${productContext}
+
+                        Requisitos de Crédito:
+                        ${creditRequirements}
+
+                        Pregunta del usuario: "${question}"
+
+                        Respuesta:`;
+                    }
+
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // Canvas will provide this at runtime
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        responseText.textContent = text;
+                    } else {
+                        responseText.textContent = 'No se pudo obtener una respuesta. Inténtalo de nuevo más tarde.';
+                    }
+                } catch (error) {
+                    console.error('Error al llamar a la API de Gemini:', error);
+                    responseText.textContent = 'Ocurrió un error al procesar tu solicitud. Por favor, inténtalo de nuevo.';
+                } finally {
+                    askGeminiButton.disabled = false; // Re-enable button
+                }
+            });
+
+            // Credit application form submission logic
+            creditApplicationForm.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default form submission
+
+                // Get product data from hidden fields
+                const productName = document.getElementById('formProductName').value;
+                const productBrand = document.getElementById('formProductBrand').value;
+                const initialPayment = document.getElementById('formInitialPayment').value;
+
+                // Get personal data from form
+                const fullName = document.getElementById('fullName').value;
+                const idNumber = document.getElementById('idNumber').value;
+                const birthDate = document.getElementById('birthDate').value;
+                const birthCity = document.getElementById('birthCity').value;
+                const birthDepartment = document.getElementById('birthDepartment').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                const address = document.getElementById('address').value;
+                const work = document.getElementById('work').value;
+                const eps = document.getElementById('eps').value;
+                const ref1Name = document.getElementById('ref1Name').value;
+                const ref1Phone = document.getElementById('ref1Phone').value;
+                const ref1Relationship = document.getElementById('ref1Relationship').value;
+                const ref2Name = document.getElementById('ref2Name').value;
+                const ref2Phone = document.getElementById('ref2Phone').value;
+                const ref2Relationship = document.getElementById('ref2Relationship').value;
+
+                // Get new payment options
+                const selectedPaymentFrequency = paymentFrequencySelect.value;
+                const selectedNumInstallments = numInstallmentsSelect.value;
+
+                // Construct the WhatsApp message without the 'anexo' information
+                const whatsappMessage = `¡Hola! Me gustaría solicitar un crédito para el siguiente producto:
+
+*Detalles del Producto:*
+Nombre: ${productName}
+Marca: ${productBrand}
+Inicial: ${initialPayment}
+Periodicidad de Pago: ${selectedPaymentFrequency}
+Número de Cuotas: ${selectedNumInstallments}
+
+*Mis Datos Personales:*
+Nombre completo: ${fullName}
+Número de cédula: ${idNumber}
+Fecha de nacimiento: ${birthDate}
+Ciudad de nacimiento: ${birthCity}
+Departamento de nacimiento: ${birthDepartment}
+Correo electrónico: ${email}
+Teléfono: ${phone}
+Dirección: ${address}
+Trabajo: ${work}
+EPS: ${eps}
+
+*Referencias Personales:*
+Referencia 1:
+  Nombre: ${ref1Name}
+  Teléfono: ${ref1Phone}
+  Parentesco: ${ref1Relationship}
+Referencia 2:
+  Nombre: ${ref2Name}
+  Teléfono: ${ref2Phone}
+  Parentesco: ${ref2Relationship}
+
+Por favor, ayúdame con el proceso de solicitud.`;
+
+                const phoneNumber = '+573012971397'; // Replace with the actual WhatsApp number
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+                window.open(whatsappUrl, '_blank');
+
+                // Display success message
+                successMessageModal.style.display = 'block';
+
+                // Optionally, clear the form after a short delay and close modal
+                setTimeout(() => {
+                    creditApplicationForm.reset();
+                    successMessageModal.style.display = 'none';
+                    const modalElement = document.getElementById('creditApplicationModal');
+                    const modal = bootstrap.Modal.getInstance(modalElement); // Get the modal instance
+                    if (modal) {
+                        modal.hide(); // Hide the modal
+                    }
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
