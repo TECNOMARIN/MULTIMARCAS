@@ -56,12 +56,12 @@
             white-space: nowrap; /* Prevent text wrapping for buttons */
         }
         .tab-button.active {
-            background-color: #4CAF50;
+            background-color: #3B82F6; /* Primary blue */
             color: white;
-            border-color: #4CAF50;
+            border-color: #3B82F6;
         }
         .tab-button:not(.active):hover {
-            background-color: #e2e8f0;
+            background-color: #BFDBFE; /* Light blue on hover */
         }
         .details-list li {
             margin-bottom: 0.25rem;
@@ -189,8 +189,9 @@
         .submit-button-modal {
             background-color: #25D366; /* WhatsApp green */
             color: white;
-            padding: 0.75rem 1.5rem; /* Adjust padding for text */
-            border-radius: 0.75rem; /* Slightly rounded corners for button */
+            width: auto; /* Adjust width to fit content */
+            height: 50px; /* Fixed height */
+            border-radius: 9999px; /* Fully rounded */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -204,6 +205,7 @@
             bottom: 20px;
             right: 20px;
             z-index: 100;
+            padding: 0.75rem 1.5rem; /* Padding for text and icon */
         }
         .submit-button-modal:hover {
             background-color: #1DA851; /* Darker WhatsApp green on hover */
@@ -323,7 +325,7 @@
                         <form id="credit-application-form" class="space-y-4">
                             <!-- Hidden fields for product info -->
                             <input type="hidden" id="formProductName" name="productName">
-                            <input type="hidden" id="formProductBrand" name="productName">
+                            <input type="hidden" id="formProductBrand" name="productBrand">
                             <input type="hidden" id="formInitialPayment" name="initialPayment">
                             <input type="hidden" id="formInstallments" name="installments">
                             <input type="hidden" id="formAnexo" name="anexo">
@@ -457,6 +459,8 @@
                         <li>La persona que solicita el crédito debe ser el titular y debe venir en persona para la entrega del equipo.</li>
                         <li>La solicitud de crédito debe ser aprobada por nuestro equipo.</li>
                         <li>Debe enviar todos los datos solicitados en el formulario de solicitud para que podamos realizar el estudio de manera virtual.</li>
+                        <li>Debe proporcionar dos referencias personales.</li>
+                        <li>Debe enviar una foto de un recibo público (preferiblemente de Afinia) donde se vea la nomenclatura clara.</li>
                     </ul>
                 </div>
                 <div class="modal-footer">
@@ -495,9 +499,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/SAMSUNG%20A05%2064GB.jpg",
                     initialPayment: "$130,000",
                     fullPrice: "780,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "TECNO SPARK 30C 256 GB 8 RAM",
@@ -506,9 +516,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/TECNO%20SPARK%2030%20C%20256GB.jpg",
                     initialPayment: "$250,000",
                     fullPrice: "1,050,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "64 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 8 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 256 GB" }
+                    ]
                 },
                 {
                     name: "OPPO A20 128 GB 4 RAM",
@@ -517,9 +533,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/OPPO%20A20%20128.jpg",
                     initialPayment: "$200,000",
                     fullPrice: "1,000,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "64 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "OPPO A40 128 GB 4 RAM",
@@ -528,9 +550,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/OPPO%20A40%20256.jpg",
                     initialPayment: "$300,000",
                     fullPrice: "1,100,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 6 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 256 GB" }
+                    ]
                 },
                 {
                     name: "TECNO SPARK GO 1 64 GB 3 RAM",
@@ -539,9 +567,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/TECNO%20SPARK%20GO%201%202024.jpg",
                     initialPayment: "$100,000",
                     fullPrice: "750,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "13 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 3 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 120 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "TECNO SPARK GO 1 128 GB 4 RAM",
@@ -550,9 +584,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/TECNO%20SPARK%20GO%201%202024%20128.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "900,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "13 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 120 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "SAMSUMG A05 128 GB 4 RAM",
@@ -561,9 +601,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/SAMSUNG%20A05%20128GB.jpg",
                     initialPayment: "$180,000",
                     fullPrice: "930,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual y te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "INFINIX SMART 8 128 GB",
@@ -572,9 +618,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/INFINIX%20SMART%208%20128.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "900,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "13 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "MOTO G04S 128 GB 4 RAM",
@@ -583,9 +635,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/MOTO%20G04S%20128GB.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "900,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.5\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "KALLEY BLACK 1 128 GB 3 RAM",
@@ -594,9 +652,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/KALLEY%20BLACK%201%20128GB.jpg",
                     initialPayment: "$50,000",
                     fullPrice: "650,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":27000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":67500}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "13 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 3 GB" },
+                        { key: "Pantalla", value: "6.5\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "KALLEY BLACK G2 128 GB 4 RAM",
@@ -605,9 +669,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/KALLEY%20BLACK%20G2%20128GB.jpg",
                     initialPayment: "$90,000",
                     fullPrice: "800,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":31950},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":79875}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "8 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.5\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "MOTO G04S 64 GB 3 RAM",
@@ -616,9 +686,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/g04s%2064-100.jpg",
                     initialPayment: "$100,000",
                     fullPrice: "750,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 3 GB" },
+                        { key: "Pantalla", value: "6.5\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "INFINIX SMART 9 64 GB",
@@ -627,9 +703,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/smart%209%2064-100.jpg",
                     initialPayment: "$100,000",
                     fullPrice: "750,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "13 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "INFINIX SMART 9 128 GB",
@@ -638,9 +720,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/smart%209%20128-100.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "900,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "13 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "SMART TV KALLEY 40\"",
@@ -649,9 +737,13 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/KALLEY%2040.png",
                     initialPayment: "$320,000",
                     fullPrice: "1,350,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":115875}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tamaño", value: "40\"" },
+                        { key: "Resolución", value: "FULL HD 1080p" },
+                        { key: "Sistema", value: "Roku TV" }
+                    ]
                 },
                 {
                     name: "SMART TV KALLEY 43\"",
@@ -660,9 +752,13 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/KALLEY%2043.png",
                     initialPayment: "$420,000",
                     fullPrice: "1,500,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":121500}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tamaño", value: "43\"" },
+                        { key: "Resolución", value: "FULL HD 1080p" },
+                        { key: "Sistema", value: "Google TV" }
+                    ]
                 },
                 {
                     name: "SAMSUNG A05S 128 GB 6 RAM",
@@ -671,9 +767,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/a05%20s%20128.jpg",
                     initialPayment: "$200,000",
                     fullPrice: "1,000,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 6 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "SMART TV HYUNDAI 43\"",
@@ -682,9 +784,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/hyundai%2043.png",
                     initialPayment: "$420,000",
                     fullPrice: "1,500,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":121500}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tamaño", value: "43\"" },
+                        { key: "Características", value: "NETFLIX, Prime Video, Disney+, YouTube, Bluetooth" }
+                    ]
                 },
                 {
                     name: "SMART TV CHALLENGER 32\"",
@@ -693,9 +798,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/challenger%2032.png",
                     initialPayment: "$220,000",
                     fullPrice: "1,100,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":99000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tamaño", value: "32\"" },
+                        { key: "Resolución", value: "HD" }
+                    ]
                 },
                 {
                     name: "SMART TV CHALLENGER 40\"",
@@ -704,9 +812,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/challenger%2040%20(1).png",
                     initialPayment: "$320,000",
                     fullPrice: "1,350,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":115875}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tamaño", value: "40\"" },
+                        { key: "Resolución", value: "FHD" }
+                    ]
                 },
                 {
                     name: "SMART TV CHALLENGER 43\"",
@@ -715,9 +826,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/challenger%2043.png",
                     initialPayment: "$420,000",
                     fullPrice: "1,500,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":121500}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tamaño", value: "43\"" },
+                        { key: "Resolución", value: "FHD" }
+                    ]
                 },
                 {
                     name: "REDMI A3 64 GB 3 RAM",
@@ -726,9 +840,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/REDMI%20A3-100.jpg",
                     initialPayment: "$100,000",
                     fullPrice: "750,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "8 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 3 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "REDMI 14C 128 GB 4 RAM",
@@ -737,9 +857,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/REDMI%2014C-100.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "900,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.8\" (1080 - 2388 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "TECNO SPARK 30C 256 GB 4 RAM",
@@ -748,9 +874,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/tecno%20spark%2030c.jpg",
                     initialPayment: "$200,000",
                     fullPrice: "1,000,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "64 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 256 GB" }
+                    ]
                 },
                 {
                     name: "HONOR PLAY 9A 128GB 4RAM",
@@ -759,9 +891,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/HONOR%20PLAY-100.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "850,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":31500},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":78750}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.5\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "REDMI 14C 256GB",
@@ -770,9 +908,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/REDMI%2014C-100%20(1).jpg",
                     initialPayment: "$200,000",
                     fullPrice: "1,000,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.8\" (1080 - 2388 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 256 GB" }
+                    ]
                 },
                 {
                     name: "TECNO 30C 4RAM 128GB",
@@ -781,9 +925,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_682c9d3e6f456.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "900,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "64 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "REDMI A3X 3RAM 64GB",
@@ -792,9 +942,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_682c9d5f19760.jpg",
                     initialPayment: "$100,000",
                     fullPrice: "750,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "8 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 3 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "KIT 2 CAMARAS",
@@ -803,9 +959,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/2-100.jpg",
                     initialPayment: "$300,000",
                     fullPrice: "850,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":24750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":61875}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tipo", value: "Kit de Cámaras" },
+                        { key: "Número de Cámaras", value: "2" }
+                    ]
                 },
                 {
                     name: "KIT 4 CAMARAS",
@@ -814,9 +973,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/4-100.jpg",
                     initialPayment: "$400,000",
                     fullPrice: "1,200,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tipo", value: "Kit de Cámaras" },
+                        { key: "Número de Cámaras", value: "4" }
+                    ]
                 },
                 {
                     name: "KIT 6 CAMARAS",
@@ -825,9 +987,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/6-100.jpg",
                     initialPayment: "$600,000",
                     fullPrice: "1,650,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":47250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":118125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tipo", value: "Kit de Cámaras" },
+                        { key: "Número de Cámaras", value: "6" }
+                    ]
                 },
                 {
                     name: "KIT 8 CAMARAS",
@@ -836,9 +1001,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/8-100.jpg",
                     initialPayment: "$700,000",
                     fullPrice: "1,980,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":57600},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":144000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tipo", value: "Kit de Cámaras" },
+                        { key: "Número de Cámaras", value: "8" }
+                    ]
                 },
                 {
                     name: "KIT 12 CAMARAS",
@@ -847,9 +1015,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/12-100.jpg",
                     initialPayment: "$1,050,000",
                     fullPrice: "3,000,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":87750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":219375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tipo", value: "Kit de Cámaras" },
+                        { key: "Número de Cámaras", value: "12" }
+                    ]
                 },
                 {
                     name: "KIT 16 CAMARAS",
@@ -858,9 +1029,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/16-100.jpg",
                     initialPayment: "$1,300,000",
                     fullPrice: "3,600,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":103500},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":258750}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Tipo", value: "Kit de Cámaras" },
+                        { key: "Número de Cámaras", value: "16" }
+                    ]
                 },
                 {
                     name: "MOTOROLA ONE FUSION 128GB 4RAM",
@@ -869,9 +1043,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/MOTO%20ONE%20FUNSION-100.jpg",
                     initialPayment: "$70,000",
                     fullPrice: "470,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":18000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":45000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "8 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.5\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "SAMSUNG A16 128GB 6RAM",
@@ -880,9 +1060,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/A16%20128-100.jpg",
                     initialPayment: "$300,000",
                     fullPrice: "1,100,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 6 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "REDMI A5 64GB",
@@ -891,9 +1077,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_682c9c0016698.jpg",
                     initialPayment: "$100,000",
                     fullPrice: "750,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "8 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 3 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "HONOR X5B 3RAM 64GB",
@@ -902,9 +1094,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6831e55c96dce.jpg",
                     initialPayment: "$100,000",
                     fullPrice: "750,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 3 GB" },
+                        { key: "Pantalla", value: "6.5\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "TECNO SPARK 30 8RAM 256GB",
@@ -913,9 +1111,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6831e56689774.jpg",
                     initialPayment: "$250,000",
                     fullPrice: "1,050,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "64 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 8 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 256 GB" }
+                    ]
                 },
                 {
                     name: "TECNO SPARK 30 PRO 8RAM 256GB",
@@ -924,9 +1128,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6831e57037fe1.jpg",
                     initialPayment: "$350,000",
                     fullPrice: "1,150,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "64 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 8 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 256 GB" }
+                    ]
                 },
                 {
                     name: "INFINIX HOT 50I 4+4RAM 256GB",
@@ -935,9 +1145,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_683498ab8b938.jpg",
                     initialPayment: "$200,000",
                     fullPrice: "1,000,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "100 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.7\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 256 GB" }
+                    ]
                 },
                 {
                     name: "REDMI 14C 8RAM 256GB",
@@ -946,9 +1162,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_68349b08d55a6.jpg",
                     initialPayment: "$250,000",
                     fullPrice: "1,050,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":36000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":90000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 8 GB" },
+                        { key: "Pantalla", value: "6.8\" (1080 - 2388 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 256 GB" }
+                    ]
                 },
                 {
                     name: "IPHONE 12 128GB NEW",
@@ -957,9 +1179,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6834df9629ae7.jpg",
                     initialPayment: "$600,000",
                     fullPrice: "1,800,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":54000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":135000}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "12 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.1\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "IPHONE 13 PRO MAX DE 128GB NUEVO",
@@ -968,9 +1196,15 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_6849c4b7ac466.jpg",
                     initialPayment: "$1,700,000",
                     fullPrice: "3,100,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":63000},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":157500}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "12 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.6\" (1650 px - 720 px), 120 HZ" },
+                        { key: "Memoria", value: "Hasta 128 GB" }
+                    ]
                 },
                 {
                     name: "HONOR PLAY 9A 64GB 4RAM",
@@ -979,9 +1213,15 @@
                     imageUrl: "https://www.losdistribuidores.com/wp-content/uploads/2025/01/honor-play-9a.webp",
                     initialPayment: "$100,000",
                     fullPrice: "750,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":29250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":73125}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Lente Principal", value: "50 MP" },
+                        { key: "Cámara", value: "Doble" },
+                        { key: "RAM Plus", value: "Hasta 4 GB" },
+                        { key: "Pantalla", value: "6.5\" (1650 px - 720 px), 90 HZ" },
+                        { key: "Memoria", value: "Hasta 64 GB" }
+                    ]
                 },
                 {
                     name: "KALLEY BLACK E 64GB 4RAM",
@@ -990,9 +1230,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_685b55728fcf6.jpg",
                     initialPayment: "$50,000",
                     fullPrice: "500,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":20250},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":50625}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "RAM", value: "4 GB" },
+                        { key: "Memoria", value: "64 GB" }
+                    ]
                 },
                 {
                     name: "REALME NOTE 60X 128GB4RAM",
@@ -1001,9 +1244,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_685b554ae019a.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "850,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":31500},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":78750}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Memoria", value: "128GB" },
+                        { key: "RAM", value: "4GB" }
+                    ]
                 },
                 {
                     name: "MOTOROLA G05 128GB 4RAM",
@@ -1012,9 +1258,12 @@
                     imageUrl: "https://solutions-images.s3.amazonaws.com/72053879/productos/prod_685b5561e53f6.jpg",
                     initialPayment: "$150,000",
                     fullPrice: "900,000",
-                    description: "",
                     installments: [{"frecuencia":"Pago semanal","num_cuotas":"40","valor_cuota":33750},{"frecuencia":"Pago quincenal","num_cuotas":"16","valor_cuota":84375}],
-                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>"
+                    anexo: "Gets Solutions es la forma mas fácil de estrenar celular.<br><br>Paga las primeras 8 cuotas quincenales o 20 cuotas semanales de tu crédito de manera puntual and te dejamos las demás <b>con el 50% de descuento</b><br><b>Aplica Términos y Condicione</b>",
+                    specs: [
+                        { key: "Memoria", value: "128GB" },
+                        { key: "RAM", value: "4GB" }
+                    ]
                 }
             ];
 
@@ -1063,6 +1312,13 @@
                     // Use product.imageUrl directly, with a fallback to a generic placeholder
                     const imageUrl = product.imageUrl || `https://placehold.co/400x200/e2e8f0/333?text=Imagen+no+disponible`;
 
+                    let specsHtml = '';
+                    if (product.specs && product.specs.length > 0) {
+                        specsHtml = `<ul class="details-list text-sm text-gray-700 mb-4">` +
+                            product.specs.map(spec => `<li><strong>${spec.key}:</strong> ${spec.value}</li>`).join('') +
+                            `</ul>`;
+                    }
+
                     let installmentHtml = '';
                     if (product.installments && product.installments.length > 0) {
                         installmentHtml = product.installments.map(inst => `
@@ -1078,6 +1334,7 @@
                         <div class="p-4 flex-grow">
                             <h2 class="text-xl font-semibold mb-2">${product.name}</h2>
                             <p class="initial-payment mb-2">Inicial: <b>${product.initialPayment}</b></p>
+                            ${specsHtml}
                             ${installmentHtml}
                             ${product.anexo ? `<p class="discount-info">${product.anexo}</p>` : ''}
                         </div>
@@ -1292,7 +1549,9 @@
                         - Cédula original del titular.
                         - La persona que solicita el crédito debe ser el titular y debe venir en persona para la entrega del equipo.
                         - La solicitud de crédito debe ser aprobada por nuestro equipo.
-                        - Debe enviar todos los datos solicitados en el formulario de solicitud para que podamos realizar el estudio de manera virtual.`;
+                        - Debe enviar todos los datos solicitados en el formulario de solicitud para que podamos realizar el estudio de manera virtual.
+                        - Debe proporcionar dos referencias personales.
+                        - Debe enviar una foto de un recibo público (preferiblemente de Afinia) donde se vea la nomenclatura clara.`;
 
                         prompt = `Basado en la siguiente información de productos y requisitos de crédito, responde a la pregunta del usuario. Si la pregunta no se puede responder con la información proporcionada, indica que no tienes suficiente información.
 
