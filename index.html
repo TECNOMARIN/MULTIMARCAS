@@ -1528,8 +1528,22 @@ Estamos atentos a cualquier inquietud.</textarea>
                 responseText.textContent = 'Cargando respuesta...';
                 geminiResponseDiv.classList.remove('hidden');
                 askGeminiButton.disabled = true;
-
+                
+                // --- INICIO DE LA LÓGICA DE LA API CON MANEJO DE ERRORES MEJORADO ---
                 try {
+                    // --- IMPORTANTE: Pega tu propia clave API de Google AI Studio aquí ---
+                    // 1. Ve a https://aistudio.google.com/
+                    // 2. Haz clic en "Get API key" y crea una nueva clave.
+                    // 3. Pega la clave entre las comillas.
+                    // ¡ADVERTENCIA! No subas esta clave a un repositorio público de GitHub.
+                    const apiKey = "AQUI_VA_TU_CLAVE_API"; // Reemplaza AQUI_VA_TU_CLAVE_API con tu clave real
+
+                    // Verificación #1: Revisar si la clave API fue reemplazada
+                    if (apiKey === "AQUI_VA_TU_CLAVE_API" || !apiKey) {
+                        responseText.textContent = 'Error: La clave API no ha sido configurada. Por favor, sigue las instrucciones en el código para añadir tu clave.';
+                        return; // Detiene la ejecución si la clave no está
+                    }
+
                     const creditIntentKeywords = ["crédito", "credito", "adquirir", "comprar a crédito", "financiar", "quiero", "decidí", "vamos a hacerlo", "quiero un telefono", "quiero un celular", "quiero un televisor", "quiero una camara"];
                     const isCreditIntent = creditIntentKeywords.some(keyword => question.toLowerCase().includes(keyword));
 
@@ -1570,14 +1584,6 @@ Estamos atentos a cualquier inquietud.</textarea>
                     }
 
                     const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-                    
-                    // --- IMPORTANTE: Pega tu propia clave API de Google AI Studio aquí ---
-                    // 1. Ve a https://aistudio.google.com/
-                    // 2. Haz clic en "Get API key" y crea una nueva clave.
-                    // 3. Pega la clave entre las comillas.
-                    // ¡ADVERTENCIA! No subas esta clave a un repositorio público de GitHub.
-                    const apiKey = "AQUI_VA_TU_CLAVE_API"; // Reemplaza AQUI_VA_TU_CLAVE_API con tu clave real
-
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                     const response = await fetch(apiUrl, {
@@ -1586,21 +1592,33 @@ Estamos atentos a cualquier inquietud.</textarea>
                         body: JSON.stringify(payload)
                     });
 
+                    // Verificación #2: Revisar si la respuesta de la red fue exitosa (código 200)
+                    if (!response.ok) {
+                        const errorResult = await response.json();
+                        const errorMessage = errorResult.error?.message || `HTTP error! status: ${response.status}`;
+                        console.error('Error de la API:', errorMessage);
+                        responseText.textContent = `Error al conectar con la API: ${errorMessage}. Revisa que tu clave API sea correcta.`;
+                        return;
+                    }
+
                     const result = await response.json();
 
+                    // Verificación #3: Revisar si la respuesta tiene el contenido esperado
                     if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
                         responseText.textContent = result.candidates[0].content.parts[0].text;
                     } else {
                         console.error('Respuesta inesperada de la API:', result);
-                        responseText.textContent = 'No se pudo obtener una respuesta válida. Inténtalo de nuevo más tarde.';
+                        responseText.textContent = 'No se pudo obtener una respuesta válida. La estructura de la respuesta no es la esperada.';
                     }
                 } catch (error) {
-                    console.error('Error al llamar a la API de Gemini:', error);
-                    responseText.textContent = 'Ocurrió un error al procesar tu solicitud. Por favor, inténtalo de nuevo.';
+                    console.error('Error general al llamar a la API de Gemini:', error);
+                    responseText.textContent = 'Ocurrió un error inesperado al procesar tu solicitud. Revisa la consola para más detalles.';
                 } finally {
                     askGeminiButton.disabled = false;
                 }
+                // --- FIN DE LA LÓGICA DE LA API ---
             });
+
 
             creditApplicationForm.addEventListener('submit', function(event) {
                 event.preventDefault();
