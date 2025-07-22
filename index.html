@@ -236,9 +236,14 @@
             cursor: pointer;
             border: none;
             margin-left: 1rem; /* Space from other elements */
+            text-decoration: none; /* Remove underline from link */
+            display: inline-block;
         }
         .info-button:hover {
             background-color: #5a6268;
+        }
+        #messagingToolModal .modal-dialog {
+            max-width: 800px;
         }
     </style>
 </head>
@@ -253,9 +258,13 @@
             <select id="brand-select" class="block w-full sm:w-48 p-2 border border-gray-300 rounded-md">
                 <!-- Options will be dynamically inserted here -->
             </select>
-            <!-- New button for credit requirements -->
+            <!-- Button for credit requirements -->
             <button class="info-button" data-bs-toggle="modal" data-bs-target="#requirementsModal">
                 Requisitos de Crédito
+            </button>
+            <!-- New button for messaging tool modal -->
+            <button class="info-button" data-bs-toggle="modal" data-bs-target="#messagingToolModal">
+                Herramienta de Mensajeria
             </button>
         </div>
 
@@ -469,11 +478,73 @@
             </div>
         </div>
     </div>
+    
+    <!-- Messaging Tool Modal -->
+    <div class="modal fade" id="messagingToolModal" tabindex="-1" aria-labelledby="messagingToolModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messagingToolModalLabel">Generador de Mensajes de Cartera</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <main class="bg-white p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
+                        <!-- Sección 1: Lista de Contactos -->
+                        <div>
+                            <label for="contacts" class="block text-lg font-semibold mb-2 text-slate-700">1. Pega la lista de contactos</label>
+                            <p class="text-sm text-slate-500 mb-3">Escribe un contacto por línea. Formato: <code class="bg-slate-200 px-1 rounded">Nombre Completo,NúmeroDeTeléfono</code></p>
+                            <textarea id="contacts" rows="8" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Andrea Paola,3001234567&#10;Carlos Pérez,3109876543"></textarea>
+                        </div>
+
+                        <!-- Sección 2: Plantilla del Mensaje -->
+                        <div>
+                            <label for="messageTemplate" class="block text-lg font-semibold mb-2 text-slate-700">2. Edita la plantilla del mensaje</label>
+                            <p class="text-sm text-slate-500 mb-3">El texto <code class="bg-slate-200 px-1 rounded">¡Hola [Nombre]!</code> será reemplazado por el nombre de cada contacto.</p>
+                            <textarea id="messageTemplate" rows="12" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">📢 ¡Hola [Nombre]!
+Te informamos que actualmente existe un saldo pendiente de pago en tu cuenta en GETS SOLUTIONS. Es importante regularizar esta situación a la mayor brevedad para evitar bloqueos de servicios y reportes negativos en las centrales de riesgo.
+💳 Puedes realizar tu pago a través de los siguientes canales:
+▪️ Bancolombia
+Código convenio: 7569
+Nombre del convenio: GETS SOLUTIONS
+Referencia de pago: tu número de cédula
+▪️ Efecty
+Código convenio: 113688
+Nombre del convenio: GETS SOLUTIONS
+Referencia de pago: tu número de cédula
+▪️ Wompi
+PSE o Tarjeta de Crédito a través del sitio web:
+🔗 https://checkout.getsmobile.shop/pago_pse.php
+✅ Si ya realizaste tu pago, por favor ignora este mensaje.
+📲 Para más información o soporte técnico, puedes escribirnos a nuestro WhatsApp: +57 300 6631525
+Estamos atentos a cualquier inquietud.</textarea>
+                        </div>
+
+                        <!-- Botón para generar los enlaces -->
+                        <div class="text-center">
+                            <button id="generateButton" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-full hover:bg-blue-700 transition-transform duration-300 inline-block transform hover:scale-105 shadow-md">
+                                Generar Enlaces de WhatsApp
+                            </button>
+                        </div>
+
+                        <!-- Sección 3: Resultados -->
+                        <div id="resultsContainer" class="pt-6 border-t border-slate-200">
+                            <h2 class="text-lg font-semibold text-slate-700 mb-4">3. Haz clic en cada enlace para enviar el mensaje</h2>
+                            <div id="results" class="space-y-3">
+                                <!-- Los enlaces generados aparecerán aquí -->
+                                <p class="text-slate-500">Aquí se mostrarán los enlaces de WhatsApp una vez generados.</p>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bootstrap JS for Modal functionality -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // --- Existing Catalog Logic ---
             const phonesTab = document.getElementById('phones-tab');
             const tvsTab = document.getElementById('tvs-tab');
             const othersTab = document.getElementById('others-tab');
@@ -490,7 +561,6 @@
             const paymentFrequencySelect = document.getElementById('paymentFrequency');
             const numInstallmentsSelect = document.getElementById('numInstallments');
 
-            // Product data with direct image URLs and structured payment info
             const products = [
                 {
                     name: "SAMSUMG A05 64 GB 4 RAM",
@@ -1267,38 +1337,19 @@
                 }
             ];
 
-            // Function to parse a currency string to a number
             function parseCurrencyToNumber(currencyString) {
+                if (typeof currencyString !== 'string') return 0;
                 return parseInt(currencyString.replace(/[^0-9]/g, ''));
             }
 
-            // Function to format a number to a currency string
-            function formatNumberToCurrency(number) {
-                return `$${number.toLocaleString('es-CO')}`;
-            }
-
-            // Update initial payments
-            products.forEach(product => {
-                let currentInitialPayment = parseCurrencyToNumber(product.initialPayment);
-                if (product.category === 'Celulares') {
-                    product.initialPayment = formatNumberToCurrency(currentInitialPayment + 20000);
-                } else if (product.category === 'Televisores') {
-                    product.initialPayment = formatNumberToCurrency(currentInitialPayment + 30000);
-                }
-            });
-
-            // Current filter states
             let currentCategory = 'Celulares';
-            let currentBrand = 'TODOS'; // Default to show all brands
+            let currentBrand = 'TODOS';
 
-            // Function to render product cards
             function renderProducts(filteredProducts) {
-                // Clear existing products
                 phonesSection.innerHTML = '';
                 tvsSection.innerHTML = '';
-                othersSection.innerHTML = ''; // Clear new section
+                othersSection.innerHTML = '';
 
-                // Sort products by initial payment (lowest to highest)
                 filteredProducts.sort((a, b) => {
                     const initialA = parseCurrencyToNumber(a.initialPayment);
                     const initialB = parseCurrencyToNumber(b.initialPayment);
@@ -1309,7 +1360,6 @@
                     const productCard = document.createElement('div');
                     productCard.classList.add('product-card');
 
-                    // Use product.imageUrl directly, with a fallback to a generic placeholder
                     const imageUrl = product.imageUrl || `https://placehold.co/400x200/e2e8f0/333?text=Imagen+no+disponible`;
 
                     let specsHtml = '';
@@ -1322,11 +1372,10 @@
                     let installmentHtml = '';
                     if (product.installments && product.installments.length > 0) {
                         installmentHtml = product.installments.map(inst => `
-                            <p class="price-details"><strong>${inst.num_cuotas} ${inst.frecuencia}:</strong> $${inst.valor_cuota.toLocaleString('es-CO')}</p>
+                            <p class="price-details"><strong>${inst.num_cuotas} ${inst.frecuencia.replace('Pago ', '')}s:</strong> $${inst.valor_cuota.toLocaleString('es-CO')}</p>
                         `).join('');
                     }
 
-                    // Clean the anexo string for use in the data-anexo attribute
                     const cleanAnexoForAttribute = product.anexo ? product.anexo.replace(/<br>/g, ' ').replace(/<b>/g, '').replace(/<\/b>/g, '') : '';
 
                     productCard.innerHTML = `
@@ -1343,7 +1392,7 @@
                             data-product-brand="${product.brand}"
                             data-initial-payment="${product.initialPayment}"
                             data-installments='${JSON.stringify(product.installments)}'
-                            data-anexo="${cleanAnexoForAttribute}"> <!-- Use the cleaned string here -->
+                            data-anexo="${cleanAnexoForAttribute}">
                             <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/WhatsApp_icon.png" alt="WhatsApp">
                         </div>
                     `;
@@ -1351,148 +1400,101 @@
                         phonesSection.appendChild(productCard);
                     } else if (product.category === 'Televisores') {
                         tvsSection.appendChild(productCard);
-                    } else if (product.category === 'Otros') { // Handle new category
+                    } else if (product.category === 'Otros') {
                         othersSection.appendChild(productCard);
                     }
                 });
 
-                // Attach event listeners to the new WhatsApp buttons
                 document.querySelectorAll('.whatsapp-icon-button').forEach(button => {
                     button.addEventListener('click', (event) => {
                         const productName = event.currentTarget.dataset.productName;
                         const productBrand = event.currentTarget.dataset.productBrand;
                         const initialPayment = event.currentTarget.dataset.initialPayment;
-                        const installments = event.currentTarget.dataset.installments; // Keep as string for hidden field
+                        const installments = event.currentTarget.dataset.installments;
                         const anexo = event.currentTarget.dataset.anexo;
 
-                        // Populate the hidden fields in the form modal
                         document.getElementById('formProductName').value = productName;
                         document.getElementById('formProductBrand').value = productBrand;
                         document.getElementById('formInitialPayment').value = initialPayment;
                         document.getElementById('formInstallments').value = installments;
                         document.getElementById('formAnexo').value = anexo;
 
-                        // Reset form and hide success message when modal is opened
                         creditApplicationForm.reset();
                         successMessageModal.style.display = 'none';
-                        // Update installment options for the new product
                         updateInstallmentOptions();
                     });
                 });
             }
 
-            // Function to apply filters and render products
             function applyFilters() {
                 let filtered = products.filter(product => {
-                    // Normalize category names for filtering
-                    let productCategory = product.category;
-                    if (productCategory.includes('Televisores')) {
-                        productCategory = 'Televisores';
-                    } else if (productCategory.includes('kit cctv')) {
-                        productCategory = 'Otros';
-                    }
-
-                    return productCategory === currentCategory &&
+                    return product.category === currentCategory &&
                            (currentBrand === 'TODOS' || product.brand === currentBrand);
                 });
 
-
-                // Hide all sections initially
                 phonesSection.classList.add('hidden');
                 tvsSection.classList.add('hidden');
-                othersSection.classList.add('hidden'); // Hide new section
+                othersSection.classList.add('hidden');
 
-                // Show the relevant section and render products
                 if (currentCategory === 'Celulares') {
                     phonesSection.classList.remove('hidden');
-                    renderProducts(filtered);
                 } else if (currentCategory === 'Televisores') {
                     tvsSection.classList.remove('hidden');
-                    renderProducts(filtered);
-                } else if (currentCategory === 'Otros') { // Show new section
+                } else if (currentCategory === 'Otros') {
                     othersSection.classList.remove('hidden');
-                    renderProducts(filtered);
                 }
+                renderProducts(filtered);
 
-
-                // Update active state for category tabs
                 document.querySelectorAll('.tab-button').forEach(button => {
-                    if (button.dataset.category === currentCategory) {
-                        button.classList.add('active');
-                    } else {
-                        button.classList.remove('active');
-                    }
+                    button.classList.toggle('active', button.dataset.category === currentCategory);
                 });
             }
 
-            // Populate brand filter dropdown
             function populateBrandFilters() {
-                // Filter products by current category to get relevant brands
-                const relevantProducts = products.filter(product => {
-                    let productCategory = product.category;
-                    if (productCategory.includes('Televisores')) {
-                        productCategory = 'Televisores';
-                    } else if (productCategory.includes('kit cctv')) {
-                        productCategory = 'Otros';
-                    }
-                    return productCategory === currentCategory;
-                });
-
+                const relevantProducts = products.filter(product => product.category === currentCategory);
                 const allBrands = new Set(relevantProducts.map(product => product.brand));
                 const uniqueBrands = ['TODOS', ...Array.from(allBrands).sort()];
 
-                brandSelect.innerHTML = ''; // Clear existing options
-
+                brandSelect.innerHTML = '';
                 uniqueBrands.forEach(brand => {
                     const option = document.createElement('option');
                     option.value = brand;
                     option.textContent = brand;
                     brandSelect.appendChild(option);
                 });
-
-                // Set the current brand in the dropdown
                 brandSelect.value = currentBrand;
             }
 
-            // Event Listeners for Category Tabs
             phonesTab.addEventListener('click', () => {
                 currentCategory = 'Celulares';
-                currentBrand = 'TODOS'; // Reset brand filter when changing category
-                populateBrandFilters(); // Repopulate brands relevant to new category
+                currentBrand = 'TODOS';
+                populateBrandFilters();
                 applyFilters();
             });
 
             tvsTab.addEventListener('click', () => {
                 currentCategory = 'Televisores';
-                currentBrand = 'TODOS'; // Reset brand filter when changing category
-                populateBrandFilters(); // Repopulate brands relevant to new category
+                currentBrand = 'TODOS';
+                populateBrandFilters();
                 applyFilters();
             });
 
-            othersTab.addEventListener('click', () => { // New tab event listener
+            othersTab.addEventListener('click', () => {
                 currentCategory = 'Otros';
-                currentBrand = 'TODOS'; // Reset brand filter when changing category
-                populateBrandFilters(); // Repopulate brands relevant to new category
+                currentBrand = 'TODOS';
+                populateBrandFilters();
                 applyFilters();
             });
 
-            // Event Listener for Brand Select Dropdown
             brandSelect.addEventListener('change', (event) => {
                 currentBrand = event.target.value;
                 applyFilters();
             });
 
-            // Function to update installment options based on payment frequency
             function updateInstallmentOptions() {
-                numInstallmentsSelect.innerHTML = ''; // Clear existing options
+                numInstallmentsSelect.innerHTML = '';
                 const selectedFrequency = paymentFrequencySelect.value;
-                let maxInstallments = 0;
-
-                if (selectedFrequency === 'semanal') {
-                    maxInstallments = 40;
-                } else if (selectedFrequency === 'quincenal') {
-                    maxInstallments = 16;
-                }
+                let maxInstallments = (selectedFrequency === 'semanal') ? 40 : 16;
 
                 for (let i = 1; i <= maxInstallments; i++) {
                     const option = document.createElement('option');
@@ -1502,15 +1504,12 @@
                 }
             }
 
-            // Event listener for payment frequency change
             paymentFrequencySelect.addEventListener('change', updateInstallmentOptions);
 
-            // Initial setup
             populateBrandFilters();
-            applyFilters(); // Render products on initial load
-            updateInstallmentOptions(); // Populate initial installment options
+            applyFilters();
+            updateInstallmentOptions();
 
-            // Gemini API interaction logic
             askGeminiButton.addEventListener('click', async () => {
                 const question = questionInput.value.trim();
                 if (!question) {
@@ -1521,10 +1520,9 @@
 
                 responseText.textContent = 'Cargando respuesta...';
                 geminiResponseDiv.classList.remove('hidden');
-                askGeminiButton.disabled = true; // Disable button during loading
+                askGeminiButton.disabled = true;
 
                 try {
-                    // Check for keywords indicating credit application intent
                     const creditIntentKeywords = ["crédito", "credito", "adquirir", "comprar a crédito", "financiar", "quiero", "decidí", "vamos a hacerlo", "quiero un telefono", "quiero un celular", "quiero un televisor", "quiero una camara"];
                     const isCreditIntent = creditIntentKeywords.some(keyword => question.toLowerCase().includes(keyword));
 
@@ -1532,7 +1530,6 @@
                     if (isCreditIntent) {
                         prompt = `El usuario ha expresado interés en adquirir un producto a crédito. Responde de forma amigable y directa, indicándole que para iniciar el proceso de solicitud de crédito, debe hacer clic en el botón de WhatsApp que se encuentra en la tarjeta del producto de su interés. Recuérdale que al hacer clic en ese botón, se abrirá un formulario de solicitud de crédito.`;
                     } else {
-                        // Concatenate all product details into a single string for context
                         const productContext = products.map(p => {
                             let details = `Nombre: ${p.name}, Marca: ${p.brand}, Categoría: ${p.category}, Pago Inicial: ${p.initialPayment}`;
                             if (p.installments && p.installments.length > 0) {
@@ -1544,7 +1541,6 @@
                             return details;
                         }).join('\n');
 
-                        // Add credit requirements to the context for Gemini
                         const creditRequirements = `Para adquirir un crédito con nosotros, los requisitos son:
                         - Cédula original del titular.
                         - La persona que solicita el crédito debe ser el titular y debe venir en persona para la entrega del equipo.
@@ -1566,11 +1562,8 @@
                         Respuesta:`;
                     }
 
-                    let chatHistory = [];
-                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-
-                    const payload = { contents: chatHistory };
-                    const apiKey = "AIzaSyAL1boRsD0XW0lrA0xD9CithD4s3xe0NGM"; // TU CLAVE API AQUI
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                    const apiKey = ""; 
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                     const response = await fetch(apiUrl, {
@@ -1581,11 +1574,8 @@
 
                     const result = await response.json();
 
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        const text = result.candidates[0].content.parts[0].text;
-                        responseText.textContent = text;
+                    if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
+                        responseText.textContent = result.candidates[0].content.parts[0].text;
                     } else {
                         responseText.textContent = 'No se pudo obtener una respuesta. Inténtalo de nuevo más tarde.';
                     }
@@ -1593,92 +1583,144 @@
                     console.error('Error al llamar a la API de Gemini:', error);
                     responseText.textContent = 'Ocurrió un error al procesar tu solicitud. Por favor, inténtalo de nuevo.';
                 } finally {
-                    askGeminiButton.disabled = false; // Re-enable button
+                    askGeminiButton.disabled = false;
                 }
             });
 
-            // Credit application form submission logic
             creditApplicationForm.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent default form submission
+                event.preventDefault();
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
 
-                // Get product data from hidden fields
-                const productName = document.getElementById('formProductName').value;
-                const productBrand = document.getElementById('formProductBrand').value;
-                const initialPayment = document.getElementById('formInitialPayment').value;
-
-                // Get personal data from form
-                const fullName = document.getElementById('fullName').value;
-                const idNumber = document.getElementById('idNumber').value;
-                const birthDate = document.getElementById('birthDate').value;
-                const birthCity = document.getElementById('birthCity').value;
-                const birthDepartment = document.getElementById('birthDepartment').value;
-                const email = document.getElementById('email').value;
-                const phone = document.getElementById('phone').value;
-                const address = document.getElementById('address').value;
-                const work = document.getElementById('work').value;
-                const eps = document.getElementById('eps').value;
-                const ref1Name = document.getElementById('ref1Name').value;
-                const ref1Phone = document.getElementById('ref1Phone').value;
-                const ref1Relationship = document.getElementById('ref1Relationship').value;
-                const ref2Name = document.getElementById('ref2Name').value;
-                const ref2Phone = document.getElementById('ref2Phone').value;
-                const ref2Relationship = document.getElementById('ref2Relationship').value;
-
-                // Get new payment options
-                const selectedPaymentFrequency = paymentFrequencySelect.value;
-                const selectedNumInstallments = numInstallmentsSelect.value;
-
-                // Construct the WhatsApp message without the 'anexo' information
                 const whatsappMessage = `¡Hola! Me gustaría solicitar un crédito para el siguiente producto:
 
 *Detalles del Producto:*
-Nombre: ${productName}
-Marca: ${productBrand}
-Inicial: ${initialPayment}
-Periodicidad de Pago: ${selectedPaymentFrequency}
-Número de Cuotas: ${selectedNumInstallments}
+Nombre: ${data.productName}
+Marca: ${data.productBrand}
+Inicial: ${data.initialPayment}
+Periodicidad de Pago: ${data.paymentFrequency}
+Número de Cuotas: ${data.numInstallments}
 
 *Mis Datos Personales:*
-Nombre completo: ${fullName}
-Número de cédula: ${idNumber}
-Fecha de nacimiento: ${birthDate}
-Ciudad de nacimiento: ${birthCity}
-Departamento de nacimiento: ${birthDepartment}
-Correo electrónico: ${email}
-Teléfono: ${phone}
-Dirección: ${address}
-Trabajo: ${work}
-EPS: ${eps}
+Nombre completo: ${data.fullName}
+Número de cédula: ${data.idNumber}
+Fecha de nacimiento: ${data.birthDate}
+Ciudad de nacimiento: ${data.birthCity}
+Departamento de nacimiento: ${data.birthDepartment}
+Correo electrónico: ${data.email}
+Teléfono: ${data.phone}
+Dirección: ${data.address}
+Trabajo: ${data.work}
+EPS: ${data.eps}
 
 *Referencias Personales:*
 Referencia 1:
-  Nombre: ${ref1Name}
-  Teléfono: ${ref1Phone}
-  Parentesco: ${ref1Relationship}
+  Nombre: ${data.ref1Name}
+  Teléfono: ${data.ref1Phone}
+  Parentesco: ${data.ref1Relationship}
 Referencia 2:
-  Nombre: ${ref2Name}
-  Teléfono: ${ref2Phone}
-  Parentesco: ${ref2Relationship}
+  Nombre: ${data.ref2Name}
+  Teléfono: ${data.ref2Phone}
+  Parentesco: ${data.ref2Relationship}
 
 Por favor, ayúdame con el proceso de solicitud.`;
 
-                const phoneNumber = '+573012971397'; // Replace with the actual WhatsApp number
+                const phoneNumber = '+573012971397';
                 const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
                 window.open(whatsappUrl, '_blank');
 
-                // Display success message
                 successMessageModal.style.display = 'block';
 
-                // Optionally, clear the form after a short delay and close modal
                 setTimeout(() => {
-                    creditApplicationForm.reset();
+                    this.reset();
                     successMessageModal.style.display = 'none';
                     const modalElement = document.getElementById('creditApplicationModal');
-                    const modal = bootstrap.Modal.getInstance(modalElement); // Get the modal instance
+                    const modal = bootstrap.Modal.getInstance(modalElement);
                     if (modal) {
-                        modal.hide(); // Hide the modal
+                        modal.hide();
                     }
                 }, 3000);
+            });
+            
+            // --- New Messaging Tool Logic ---
+            const contactsInput = document.getElementById('contacts');
+            const messageTemplateInput = document.getElementById('messageTemplate');
+            const generateButton = document.getElementById('generateButton');
+            const resultsDiv = document.getElementById('results');
+
+            generateButton.addEventListener('click', () => {
+                const contactsText = contactsInput.value.trim();
+                const messageTemplate = messageTemplateInput.value.trim();
+
+                if (!contactsText || !messageTemplate) {
+                    resultsDiv.innerHTML = '<p class="text-red-500">Por favor, ingresa la lista de contactos y la plantilla del mensaje.</p>';
+                    return;
+                }
+
+                resultsDiv.innerHTML = '';
+                const contacts = contactsText.split('\n');
+                let hasErrors = false;
+
+                contacts.forEach((contactLine, index) => {
+                    if (contactLine.trim() === '') return;
+
+                    const parts = contactLine.split(',');
+                    if (parts.length < 2) {
+                        const errorElement = document.createElement('p');
+                        errorElement.className = 'text-red-500';
+                        errorElement.textContent = `Error en la línea ${index + 1}: Formato incorrecto. Debe ser "Nombre,Teléfono".`;
+                        resultsDiv.appendChild(errorElement);
+                        hasErrors = true;
+                        return;
+                    }
+
+                    const name = parts[0].trim();
+                    let phone = parts[1].trim();
+
+                    if (!phone.startsWith('+57')) {
+                        if (phone.startsWith('57')) {
+                           phone = phone.substring(2);
+                        }
+                        phone = `+57${phone}`;
+                    }
+                    
+                    if (!/^\+57\d{10}$/.test(phone)) {
+                        const errorElement = document.createElement('p');
+                        errorElement.className = 'text-red-500';
+                        errorElement.textContent = `Error en la línea ${index + 1}: El número de teléfono "${parts[1].trim()}" no parece válido.`;
+                        resultsDiv.appendChild(errorElement);
+                        hasErrors = true;
+                        return;
+                    }
+
+                    const personalizedMessage = messageTemplate.replace(/\[Nombre\]/gi, name);
+                    const encodedMessage = encodeURIComponent(personalizedMessage);
+                    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+
+                    const linkElement = document.createElement('a');
+                    linkElement.href = whatsappUrl;
+                    linkElement.target = '_blank';
+                    linkElement.rel = 'noopener noreferrer';
+                    linkElement.className = 'block bg-green-100 text-green-800 p-4 rounded-lg hover:bg-green-200 transition-colors duration-300 cursor-pointer';
+                    linkElement.innerHTML = `
+                        <strong class="font-semibold">${name}</strong>
+                        <span class="block text-sm text-green-600">${phone}</span>
+                    `;
+
+                    linkElement.addEventListener('click', () => {
+                        linkElement.className = 'block bg-slate-200 text-slate-500 p-4 rounded-lg transition-colors duration-300 opacity-70';
+                        const phoneSpan = linkElement.querySelector('span');
+                        if (phoneSpan) {
+                            phoneSpan.className = 'block text-sm text-slate-400';
+                        }
+                    }, { once: true });
+
+                    resultsDiv.appendChild(linkElement);
+                });
+
+                if (resultsDiv.innerHTML === '' && !hasErrors) {
+                     resultsDiv.innerHTML = '<p class="text-slate-500">No se encontraron contactos válidos para procesar.</p>';
+                }
             });
         });
     </script>
