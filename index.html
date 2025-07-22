@@ -518,6 +518,13 @@ PSE o Tarjeta de Crédito a través del sitio web:
 📲 Para más información o soporte técnico, puedes escribirnos a nuestro WhatsApp: +57 300 6631525
 Estamos atentos a cualquier inquietud.</textarea>
                         </div>
+                        
+                        <!-- NEW SECTION: Attachment Link -->
+                        <div>
+                            <label for="attachmentLink" class="block text-lg font-semibold mb-2 text-slate-700">3. Adjuntar Enlace de Imagen o Archivo (Opcional)</label>
+                            <p class="text-sm text-slate-500 mb-3">Pega aquí un enlace a una imagen o documento. Se adjuntará al final del mensaje.</p>
+                            <input type="text" id="attachmentLink" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="https://ejemplo.com/imagen.jpg">
+                        </div>
 
                         <!-- Botón para generar los enlaces -->
                         <div class="text-center">
@@ -526,9 +533,9 @@ Estamos atentos a cualquier inquietud.</textarea>
                             </button>
                         </div>
 
-                        <!-- Sección 3: Resultados -->
+                        <!-- Sección 4: Resultados -->
                         <div id="resultsContainer" class="pt-6 border-t border-slate-200">
-                            <h2 class="text-lg font-semibold text-slate-700 mb-4">3. Haz clic en cada enlace para enviar el mensaje</h2>
+                            <h2 class="text-lg font-semibold text-slate-700 mb-4">4. Haz clic en cada enlace para enviar el mensaje</h2>
                             <div id="results" class="space-y-3">
                                 <!-- Los enlaces generados aparecerán aquí -->
                                 <p class="text-slate-500">Aquí se mostrarán los enlaces de WhatsApp una vez generados.</p>
@@ -1645,16 +1652,23 @@ Por favor, ayúdame con el proceso de solicitud.`;
             // --- New Messaging Tool Logic ---
             const contactsInput = document.getElementById('contacts');
             const messageTemplateInput = document.getElementById('messageTemplate');
+            const attachmentLinkInput = document.getElementById('attachmentLink');
             const generateButton = document.getElementById('generateButton');
             const resultsDiv = document.getElementById('results');
 
             generateButton.addEventListener('click', () => {
                 const contactsText = contactsInput.value.trim();
                 const messageTemplate = messageTemplateInput.value.trim();
+                const attachmentLink = attachmentLinkInput.value.trim();
 
                 if (!contactsText || !messageTemplate) {
                     resultsDiv.innerHTML = '<p class="text-red-500">Por favor, ingresa la lista de contactos y la plantilla del mensaje.</p>';
                     return;
+                }
+                
+                let finalMessageTemplate = messageTemplate;
+                if (attachmentLink) {
+                    finalMessageTemplate += `\n\n${attachmentLink}`;
                 }
 
                 resultsDiv.innerHTML = '';
@@ -1693,7 +1707,7 @@ Por favor, ayúdame con el proceso de solicitud.`;
                         return;
                     }
 
-                    const personalizedMessage = messageTemplate.replace(/\[Nombre\]/gi, name);
+                    const personalizedMessage = finalMessageTemplate.replace(/\[Nombre\]/gi, name);
                     const encodedMessage = encodeURIComponent(personalizedMessage);
                     const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
 
