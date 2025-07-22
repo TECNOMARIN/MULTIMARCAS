@@ -1570,7 +1570,14 @@ Estamos atentos a cualquier inquietud.</textarea>
                     }
 
                     const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-                    const apiKey = ""; 
+                    
+                    // --- IMPORTANTE: Pega tu propia clave API de Google AI Studio aquí ---
+                    // 1. Ve a https://aistudio.google.com/
+                    // 2. Haz clic en "Get API key" y crea una nueva clave.
+                    // 3. Pega la clave entre las comillas.
+                    // ¡ADVERTENCIA! No subas esta clave a un repositorio público de GitHub.
+                    const apiKey = "AQUI_VA_TU_CLAVE_API"; // Reemplaza AQUI_VA_TU_CLAVE_API con tu clave real
+
                     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                     const response = await fetch(apiUrl, {
@@ -1584,7 +1591,8 @@ Estamos atentos a cualquier inquietud.</textarea>
                     if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
                         responseText.textContent = result.candidates[0].content.parts[0].text;
                     } else {
-                        responseText.textContent = 'No se pudo obtener una respuesta. Inténtalo de nuevo más tarde.';
+                        console.error('Respuesta inesperada de la API:', result);
+                        responseText.textContent = 'No se pudo obtener una respuesta válida. Inténtalo de nuevo más tarde.';
                     }
                 } catch (error) {
                     console.error('Error al llamar a la API de Gemini:', error);
