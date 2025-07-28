@@ -1529,18 +1529,14 @@ Estamos atentos a cualquier inquietud.</textarea>
                 geminiResponseDiv.classList.remove('hidden');
                 askGeminiButton.disabled = true;
                 
-                // --- INICIO DE LA LÓGICA DE LA API CON MANEJO DE ERRORES MEJORADO ---
+                // --- INICIO DE LA LÓGICA DE LA API PARA GITHUB ---
                 try {
-                    // --- IMPORTANTE: Pega tu propia clave API de Google AI Studio aquí ---
-                    // 1. Ve a https://aistudio.google.com/
-                    // 2. Haz clic en "Get API key" y crea una nueva clave.
-                    // 3. Pega la clave entre las comillas.
-                    // ¡ADVERTENCIA! No subas esta clave a un repositorio público de GitHub.
-                    const apiKey = "AQUI_VA_TU_CLAVE_API"; // Reemplaza AQUI_VA_TU_CLAVE_API con tu clave real
+                    const apiKey = "AIzaSyAJ-1pakWmnbNkmJF-ZSwK15AFWvhAONrY";
 
-                    // Verificación #1: Revisar si la clave API fue reemplazada
+                    // Verificación: Revisar si la clave API fue reemplazada
                     if (apiKey === "AQUI_VA_TU_CLAVE_API" || !apiKey) {
-                        responseText.textContent = 'Error: La clave API no ha sido configurada. Por favor, sigue las instrucciones en el código para añadir tu clave.';
+                        responseText.textContent = 'Error: La clave API del asistente no ha sido configurada. Si eres el dueño de la página, sigue las instrucciones en el código para añadir tu clave.';
+                        askGeminiButton.disabled = false; // Re-enable button
                         return; // Detiene la ejecución si la clave no está
                     }
 
@@ -1592,18 +1588,16 @@ Estamos atentos a cualquier inquietud.</textarea>
                         body: JSON.stringify(payload)
                     });
 
-                    // Verificación #2: Revisar si la respuesta de la red fue exitosa (código 200)
                     if (!response.ok) {
                         const errorResult = await response.json();
                         const errorMessage = errorResult.error?.message || `HTTP error! status: ${response.status}`;
                         console.error('Error de la API:', errorMessage);
-                        responseText.textContent = `Error al conectar con la API: ${errorMessage}. Revisa que tu clave API sea correcta.`;
+                        responseText.textContent = `Error al conectar con la API: ${errorMessage}.`;
                         return;
                     }
 
                     const result = await response.json();
 
-                    // Verificación #3: Revisar si la respuesta tiene el contenido esperado
                     if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
                         responseText.textContent = result.candidates[0].content.parts[0].text;
                     } else {
