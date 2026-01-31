@@ -21,9 +21,21 @@
     .section-view { display: none; padding: 1.5rem; }
     .is-active-view { display: block; }
     .box-admin { border: 1px solid #f1f5f9; padding: 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; background: #fafafa; }
-    .res-grid { background: #f8fafc; border-radius: 12px; padding: 1rem; margin-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    
+    /* Grid de resultados ajustada para 3 elementos */
+    .res-grid { 
+      background: #f8fafc; 
+      border-radius: 12px; 
+      padding: 1rem; 
+      margin-top: 1rem; 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 0.75rem; 
+    }
     .res-item p:first-child { font-size: 0.6rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
-    .res-item p:last-child { font-size: 1rem; color: var(--gets-dark); font-weight: 800; }
+    .res-item p:last-child { font-size: 1.1rem; color: var(--gets-dark); font-weight: 800; }
+    .res-full { grid-column: span 2; border-top: 1px solid #e2e8f0; pt: 0.5rem; margin-top: 0.25rem; padding-top: 0.5rem; }
+
     .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .error-msg { font-size: 0.75rem; color: #e11d48; margin-top: 0.5rem; display: none; }
     .admin-label { font-size: 0.7rem; font-weight: 700; color: var(--gets-purple); text-transform: uppercase; margin-bottom: 0.5rem; display: block; }
@@ -72,10 +84,18 @@
       </div>
       
       <div class="res-grid">
-        <div class="res-item"><p>A Consignar</p><p id="out_consignar">$ 0</p></div>
-        <div class="res-item"><p>Utilidad</p><p id="out_utilidad" style="color: #059669;">$ 0</p></div>
-        <div class="res-item"><p>Valor Cuota</p><p id="out_cuota" style="color: var(--gets-purple);">$ 0</p></div>
-        <div class="res-item"><p>Total</p><p id="out_total">$ 0</p></div>
+        <div class="res-item">
+          <p>A Consignar</p>
+          <p id="out_consignar">$ 0</p>
+        </div>
+        <div class="res-item">
+          <p>Valor Cuota</p>
+          <p id="out_cuota" style="color: var(--gets-purple);">$ 0</p>
+        </div>
+        <div class="res-item res-full">
+          <p>Total Financiado</p>
+          <p id="out_total">$ 0</p>
+        </div>
       </div>
       <button id="btn_save" class="button is-purple is-fullwidth mt-4" style="background: var(--gets-purple); color:white" onclick="apiCall('guardarSimulacion')">
         Registrar Simulación
@@ -85,7 +105,6 @@
     <!-- CONFIGURACIÓN -->
     <div id="v-adm" class="section-view">
       
-      <!-- 1. ALIADOS -->
       <div class="box-admin">
         <span class="admin-label">1. Registro de Aliados</span>
         <div class="field has-addons">
@@ -94,7 +113,6 @@
         </div>
       </div>
 
-      <!-- 2. ENTIDADES -->
       <div class="box-admin">
         <span class="admin-label">2. Registro de Entidades</span>
         <div class="columns is-mobile mb-2">
@@ -104,7 +122,6 @@
         <button class="button is-info is-fullwidth is-small" onclick="apiCall('crearFinanciera')">Guardar Entidad</button>
       </div>
 
-      <!-- 3. PLANES DE CUOTAS -->
       <div class="box-admin">
         <span class="admin-label">3. Definición de Planes (Tasas Mensuales)</span>
         <div class="field">
@@ -136,7 +153,6 @@
         <button class="button is-dark is-fullwidth is-small" onclick="apiCall('crearPlanCuota')">Registrar Plan</button>
       </div>
 
-      <!-- 4. VINCULACIÓN (PORCENTAJES) -->
       <div class="box-admin">
         <span class="admin-label">4. Vinculación y Factores Específicos</span>
         <div class="columns is-mobile mb-2">
@@ -291,10 +307,11 @@
       const cuo = db.cuotas.find(c => String(c.id_cuota) === idCuo);
 
       if(!fin || !rel || precio <= 0) { 
-        render(0,0,0,0); 
+        render(0,0,0); 
         return null; 
       }
 
+      // Lógica de cálculo (La utilidad se calcula pero no se muestra)
       const cons = precio / rel.factor_cliente;
       const util = (precio / rel.factor_cliente) - (precio / fin.factor_financiera);
       
@@ -306,7 +323,7 @@
         v_cuo = v_tot / n_max;
       }
       
-      render(cons, util, v_cuo, v_tot);
+      render(cons, v_cuo, v_tot);
       
       return { 
         id_cliente: idCli, 
@@ -320,10 +337,9 @@
       };
     }
 
-    function render(c, u, q, t) {
+    function render(c, q, t) {
       const f = v => v.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
       document.getElementById('out_consignar').innerText = f(c);
-      document.getElementById('out_utilidad').innerText = f(u);
       document.getElementById('out_cuota').innerText = f(q);
       document.getElementById('out_total').innerText = f(t);
     }
