@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Gets Solutions | Gestión Integral</title>
+  <title>Gets Solutions | Versión 1.1</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -12,7 +12,7 @@
       --gets-dark: #1e293b;
     }
     body { background: var(--primary-gradient); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; font-family: sans-serif; }
-    .main-card { width: 100%; max-width: 650px; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; }
+    .main-card { width: 100%; max-width: 650px; background: white; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; position: relative; }
     .brand-header { padding: 1.5rem; text-align: center; }
     .brand-logo { max-width: 140px; }
     .custom-tabs { display: flex; border-bottom: 1px solid #f1f5f9; }
@@ -22,23 +22,59 @@
     .is-active-view { display: block; }
     .box-admin { border: 1px solid #f1f5f9; padding: 1.25rem; border-radius: 10px; margin-bottom: 1.5rem; background: #fafafa; }
     
-    /* Grid de resultados ajustada para 3 elementos */
     .res-grid { 
       background: #f8fafc; 
       border-radius: 12px; 
-      padding: 1rem; 
+      padding: 1.25rem; 
       margin-top: 1rem; 
       display: grid; 
       grid-template-columns: 1fr 1fr; 
-      gap: 0.75rem; 
+      gap: 1rem; 
     }
-    .res-item p:first-child { font-size: 0.6rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
-    .res-item p:last-child { font-size: 1.1rem; color: var(--gets-dark); font-weight: 800; }
-    .res-full { grid-column: span 2; border-top: 1px solid #e2e8f0; pt: 0.5rem; margin-top: 0.25rem; padding-top: 0.5rem; }
+    .res-item p:first-child { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
+    .res-item p:last-child { font-size: 1.2rem; color: var(--gets-dark); font-weight: 800; }
 
     .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .error-msg { font-size: 0.75rem; color: #e11d48; margin-top: 0.5rem; display: none; }
     .admin-label { font-size: 0.7rem; font-weight: 700; color: var(--gets-purple); text-transform: uppercase; margin-bottom: 0.5rem; display: block; }
+    
+    .solicitante-section {
+      border-left: 4px solid var(--gets-purple);
+      padding-left: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    #modal-security .modal-content {
+      max-width: 380px;
+    }
+    #modal-security .box {
+      border-radius: 16px;
+      padding: 3rem 2rem !important;
+    }
+    #security-title { 
+      margin-bottom: 0.75rem !important; 
+      font-weight: 700; 
+      color: var(--gets-dark);
+      margin-top: 1rem !important;
+    }
+    #security-desc { 
+      margin-bottom: 2rem !important; 
+      margin-top: 0 !important;
+      display: block; 
+      line-height: 1.4;
+      color: #64748b;
+      font-weight: 400;
+    }
+    .security-icon-container {
+      color: var(--gets-purple);
+      display: flex;
+      justify-content: center;
+    }
+    
+    .footer-v { text-align: center; padding: 1rem; font-size: 0.65rem; color: #94a3b8; background: #f8fafc; border-top: 1px solid #f1f5f9; }
+    
+    .input:focus { border-color: var(--gets-purple); box-shadow: 0 0 0 0.125em rgba(147, 51, 234, 0.25); }
+    .button.is-purple { background-color: var(--gets-purple); color: white; border: none; transition: opacity 0.3s; }
+    .button.is-purple:hover { opacity: 0.9; color: white; }
   </style>
 </head>
 <body>
@@ -46,9 +82,34 @@
   <div id="loading" class="loader-overlay">
     <div class="button is-loading is-large is-white"></div>
     <p class="mt-4 has-text-grey" id="loader_text">Sincronizando con el servidor central...</p>
-    <div id="connection_error" class="error-msg px-4 has-text-centered">
-      <b>Error de conexión:</b> No se pudo establecer comunicación con el servidor. <br>
-      Por favor, verifique la configuración de acceso del sistema.
+  </div>
+
+  <div id="modal-security" class="modal">
+    <div class="modal-background" onclick="cancelSecurity()"></div>
+    <div class="modal-content">
+      <div class="box has-text-centered">
+        <div class="security-icon-container">
+          <i data-lucide="shield-check" style="width: 56px; height: 56px;"></i>
+        </div>
+        
+        <h3 class="title is-4" id="security-title">Verificación</h3>
+        <p class="subtitle is-6" id="security-desc">Ingresa la clave de acceso</p>
+        
+        <div class="field">
+          <div class="control has-icons-left">
+            <input id="security-pass" class="input is-medium" type="password" placeholder="Contraseña" onkeypress="if(event.key === 'Enter') verifySecurity()">
+            <span class="icon is-small is-left">
+              <i data-lucide="lock"></i>
+            </span>
+          </div>
+          <p id="security-error-msg" class="help is-danger is-hidden mt-2" style="font-weight: 600;">La contraseña es incorrecta.</p>
+        </div>
+        
+        <div class="buttons is-centered mt-6">
+          <button class="button is-light is-medium" style="width: 120px;" onclick="cancelSecurity()">Cancelar</button>
+          <button class="button is-purple is-medium" style="width: 120px;" onclick="verifySecurity()">Confirmar</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -58,57 +119,60 @@
     </div>
 
     <div class="custom-tabs">
-      <div id="t-sim" class="tab-item is-active" onclick="switchView('sim')">Calculadora</div>
-      <div id="t-adm" class="tab-item" onclick="switchView('adm')">Configuración</div>
+      <div id="t-sim" class="tab-item is-active" onclick="handleTabClick('sim')">Calculadora</div>
+      <div id="t-adm" class="tab-item" onclick="handleTabClick('adm')">Configuración</div>
     </div>
 
-    <!-- CALCULADORA -->
     <div id="v-sim" class="section-view is-active-view">
-      <div class="field">
-        <label class="label is-small">Aliado / Cliente</label>
-        <div class="select is-fullwidth"><select id="sel_cliente" onchange="calc()"></select></div>
+      <div class="solicitante-section">
+        <p class="admin-label">Datos del Solicitante</p>
+        <div class="columns is-mobile is-multiline mb-0">
+          <div class="column is-6 py-1"><input id="in_cc" class="input is-small" type="text" placeholder="Documento (CC)"></div>
+          <div class="column is-6 py-1"><input id="in_celular" class="input is-small" type="tel" placeholder="Celular"></div>
+          <div class="column is-12 py-1"><input id="in_nombre_sol" class="input is-small" type="text" placeholder="Nombre completo"></div>
+          <div class="column is-12 py-1"><input id="in_correo" class="input is-small" type="email" placeholder="Correo electrónico"></div>
+        </div>
       </div>
+
+      <div class="field">
+        <label class="label is-small">Aliado / Tienda</label>
+        <div class="select is-fullwidth"><select id="sel_cliente" onchange="handleAllyChange()"></select></div>
+      </div>
+      
+      <div class="field">
+        <label class="label is-small">Entidad Financiera</label>
+        <div class="select is-fullwidth"><select id="sel_financiera" onchange="loadPlanes()"></select></div>
+      </div>
+
       <div class="columns is-mobile mb-0">
         <div class="column">
-          <label class="label is-small">Entidad</label>
-          <div class="select is-fullwidth"><select id="sel_financiera" onchange="loadCuotas()"></select></div>
+          <label class="label is-small">Plan de Pagos</label>
+          <div class="select is-fullwidth"><select id="sel_plan" onchange="loadNumCuotas()"></select></div>
         </div>
         <div class="column">
-          <label class="label is-small">Plan / Plazo</label>
-          <div class="select is-fullwidth"><select id="sel_cuota" onchange="calc()"></select></div>
+          <label class="label is-small">Número de Cuotas</label>
+          <div class="select is-fullwidth"><select id="sel_n_cuotas" onchange="calc()"></select></div>
         </div>
       </div>
+
       <div class="field">
         <label class="label is-small">Precio del Producto ($)</label>
         <input id="in_precio" class="input" type="number" placeholder="0.00" oninput="calc()">
       </div>
       
       <div class="res-grid">
-        <div class="res-item">
-          <p>A Consignar</p>
-          <p id="out_consignar">$ 0</p>
-        </div>
-        <div class="res-item">
-          <p>Valor Cuota</p>
-          <p id="out_cuota" style="color: var(--gets-purple);">$ 0</p>
-        </div>
-        <div class="res-item res-full">
-          <p>Total Financiado</p>
-          <p id="out_total">$ 0</p>
-        </div>
+        <div class="res-item"><p>A Consignar</p><p id="out_consignar">$ 0</p></div>
+        <div class="res-item"><p>Valor Cuota</p><p id="out_cuota" style="color: var(--gets-purple);">$ 0</p></div>
       </div>
-      <button id="btn_save" class="button is-purple is-fullwidth mt-4" style="background: var(--gets-purple); color:white" onclick="apiCall('guardarSimulacion')">
-        Registrar Simulación
-      </button>
+      <button id="btn_save" class="button is-purple is-fullwidth mt-4" onclick="apiCall('guardarSimulacion')">Registrar Simulación</button>
     </div>
 
-    <!-- CONFIGURACIÓN -->
     <div id="v-adm" class="section-view">
-      
       <div class="box-admin">
         <span class="admin-label">1. Registro de Aliados</span>
+        <div class="field mb-2"><input id="new_cli_nom" class="input is-small" placeholder="Nombre del Aliado"></div>
         <div class="field has-addons">
-          <div class="control is-expanded"><input id="new_cli_nom" class="input is-small" placeholder="Nombre del Aliado"></div>
+          <div class="control is-expanded"><input id="new_cli_pass" class="input is-small" type="text" placeholder="Contraseña"></div>
           <div class="control"><button class="button is-purple is-small" onclick="apiCall('crearCliente')">Registrar</button></div>
         </div>
       </div>
@@ -116,168 +180,181 @@
       <div class="box-admin">
         <span class="admin-label">2. Registro de Entidades</span>
         <div class="columns is-mobile mb-2">
-          <div class="column is-8"><input id="new_fin_nom" class="input is-small" placeholder="Nombre de Entidad"></div>
-          <div class="column is-4"><input id="new_fin_fac" class="input is-small" type="number" step="0.01" placeholder="Factor Base"></div>
+          <div class="column is-8"><input id="new_fin_nom" class="input is-small" placeholder="Nombre"></div>
+          <div class="column is-4"><input id="new_fin_fac" class="input is-small" type="number" step="0.01" placeholder="Factor"></div>
         </div>
         <button class="button is-info is-fullwidth is-small" onclick="apiCall('crearFinanciera')">Guardar Entidad</button>
       </div>
 
       <div class="box-admin">
-        <span class="admin-label">3. Definición de Planes (Tasas Mensuales)</span>
-        <div class="field">
-          <div class="select is-fullwidth is-small mb-2">
-            <select id="plan_fin_id"></select>
-          </div>
+        <span class="admin-label">3. Definición de Planes</span>
+        <div class="select is-fullwidth is-small mb-2"><select id="plan_fin_id"></select></div>
+        <div class="columns is-mobile mb-2">
+          <div class="column"><div class="select is-fullwidth is-small"><select id="plan_tipo"><option value="mensual">Mensual</option><option value="quincenal">Quincenal</option></select></div></div>
+          <div class="column"><input id="plan_num" class="input is-small" type="number" placeholder="Cuotas Máx."></div>
         </div>
         <div class="columns is-mobile mb-2">
-          <div class="column">
-            <div class="select is-fullwidth is-small">
-              <select id="plan_tipo">
-                <option value="mensual">Mensual</option>
-                <option value="quincenal">Quincenal</option>
-              </select>
-            </div>
-          </div>
-          <div class="column">
-            <input id="plan_num" class="input is-small" type="number" placeholder="Cuotas Máx.">
-          </div>
-        </div>
-        <div class="columns is-mobile mb-2">
-          <div class="column">
-            <input id="plan_int" class="input is-small" type="number" step="0.01" placeholder="% Int. Mensual">
-          </div>
-          <div class="column">
-            <input id="plan_fia" class="input is-small" type="number" step="0.01" placeholder="% Fianza Mensual">
-          </div>
+          <div class="column"><input id="plan_int" class="input is-small" type="number" step="0.01" placeholder="% Int. Mensual"></div>
+          <div class="column"><input id="plan_fia" class="input is-small" type="number" step="0.01" placeholder="% Fianza"></div>
         </div>
         <button class="button is-dark is-fullwidth is-small" onclick="apiCall('crearPlanCuota')">Registrar Plan</button>
       </div>
 
       <div class="box-admin">
-        <span class="admin-label">4. Vinculación y Factores Específicos</span>
+        <span class="admin-label">4. Vinculación (Factores Aliado)</span>
         <div class="columns is-mobile mb-2">
           <div class="column"><div class="select is-fullwidth is-small"><select id="rel_cli_id"></select></div></div>
           <div class="column"><div class="select is-fullwidth is-small"><select id="rel_fin_id"></select></div></div>
         </div>
-        <div class="field">
-          <input id="rel_fac_val" class="input is-small" type="number" step="0.01" placeholder="Factor Asignado al Aliado">
-        </div>
+        <input id="rel_fac_val" class="input is-small mb-2" type="number" step="0.01" placeholder="Factor Asignado">
         <button class="button is-warning is-fullwidth is-small" onclick="apiCall('asignarFactorCliente')">Vincular Aliado</button>
       </div>
 
-      <div class="box-admin">
-        <p class="is-size-7 has-text-grey mb-2">Actualiza los datos locales con la información más reciente del servidor central.</p>
-        <button class="button is-light is-fullwidth is-small" onclick="refresh()">Sincronizar Sistema</button>
-      </div>
+      <button class="button is-light is-fullwidth is-small" onclick="refresh()">Sincronizar Datos</button>
     </div>
+    
+    <div class="footer-v">Gets Solutions Gestión Integral | Versión 1.1</div>
   </div>
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
-    
     let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [] };
+    let securityContext = null; 
+    let pendingAllyId = null;
+    let authAllyId = null;
+    let authAdmin = false;
 
-    window.onload = () => { refresh(); };
+    window.onload = () => { lucide.createIcons(); refresh(); };
+
+    function clearAllFields() {
+      const inputs = document.querySelectorAll('input');
+      inputs.forEach(input => { input.value = ""; });
+      document.getElementById('out_consignar').innerText = "$ 0";
+      document.getElementById('out_cuota').innerText = "$ 0";
+      authAllyId = null;
+      authAdmin = false;
+      document.getElementById('sel_cliente').selectedIndex = 0;
+    }
 
     async function refresh() {
       document.getElementById('loading').style.display = 'flex';
-      document.getElementById('connection_error').style.display = 'none';
-      
       const res = await fetchApi('getData');
       if(res) {
         db = res;
-        fill('sel_cliente', db.clientes, 'id_cliente', 'nombre_cliente');
-        fill('sel_financiera', db.financieras, 'id_financiera', 'nombre_financiera');
-        
-        fill('plan_fin_id', db.financieras, 'id_financiera', 'nombre_financiera');
-        fill('rel_cli_id', db.clientes, 'id_cliente', 'nombre_cliente');
-        fill('rel_fin_id', db.financieras, 'id_financiera', 'nombre_financiera');
-
-        loadCuotas();
+        fill('sel_cliente', db.clientes, 'id_cliente', 'nombre_cliente', true);
+        fill('sel_financiera', db.financieras, 'id_financiera', 'nombre_financiera', true);
+        fill('plan_fin_id', db.financieras, 'id_financiera', 'nombre_financiera', true);
+        fill('rel_cli_id', db.clientes, 'id_cliente', 'nombre_cliente', true);
+        fill('rel_fin_id', db.financieras, 'id_financiera', 'nombre_financiera', true);
+        loadPlanes();
+        clearAllFields();
         document.getElementById('loading').style.display = 'none';
-      } else {
-        document.getElementById('loader_text').innerText = "Fallo la sincronización.";
-        document.getElementById('connection_error').style.display = 'block';
       }
+    }
+
+    function handleAllyChange() {
+      const id = document.getElementById('sel_cliente').value;
+      if (!id || id === "placeholder") return;
+      if (id === authAllyId) { calc(); return; }
+      securityContext = 'ally';
+      pendingAllyId = id;
+      document.getElementById('security-title').innerText = "Acceso de Aliado";
+      document.getElementById('security-desc').innerText = "Ingresa la clave del aliado seleccionado para continuar.";
+      document.getElementById('security-error-msg').classList.add('is-hidden');
+      document.getElementById('modal-security').classList.add('is-active');
+      document.getElementById('security-pass').value = "";
+      setTimeout(() => document.getElementById('security-pass').focus(), 150);
+    }
+
+    function handleTabClick(view) {
+      if (view === 'adm' && !authAdmin) {
+        securityContext = 'admin';
+        document.getElementById('security-title').innerText = "Acceso Administrativo";
+        document.getElementById('security-desc').innerText = "Ingresa la clave maestra de administrador.";
+        document.getElementById('security-error-msg').classList.add('is-hidden');
+        document.getElementById('modal-security').classList.add('is-active');
+        document.getElementById('security-pass').value = "";
+        setTimeout(() => document.getElementById('security-pass').focus(), 150);
+        return;
+      }
+      switchView(view);
+    }
+
+    function verifySecurity() {
+      const pass = document.getElementById('security-pass').value;
+      const errorMsg = document.getElementById('security-error-msg');
+      
+      if (securityContext === 'ally') {
+        const ally = db.clientes.find(c => String(c.id_cliente) === pendingAllyId);
+        if (ally && String(ally.contrasena) === pass) {
+          authAllyId = pendingAllyId;
+          errorMsg.classList.add('is-hidden');
+          document.getElementById('modal-security').classList.remove('is-active');
+          calc();
+        } else {
+          errorMsg.innerText = "La contraseña del aliado es incorrecta";
+          errorMsg.classList.remove('is-hidden');
+          document.getElementById('security-pass').value = "";
+          document.getElementById('security-pass').focus();
+        }
+      } else if (securityContext === 'admin') {
+        // LÓGICA DE BÚSQUEDA DEL ADMINISTRADOR
+        const adminUser = db.clientes.find(c => String(c.nombre_cliente).toLowerCase() === 'administrador');
+        if (adminUser && String(adminUser.contrasena) === pass) {
+          authAdmin = true;
+          errorMsg.classList.add('is-hidden');
+          document.getElementById('modal-security').classList.remove('is-active');
+          switchView('adm');
+        } else {
+          errorMsg.innerText = "Credenciales administrativas incorrectas";
+          errorMsg.classList.remove('is-hidden');
+          document.getElementById('security-pass').value = "";
+          document.getElementById('security-pass').focus();
+        }
+      }
+    }
+
+    function cancelSecurity() {
+      document.getElementById('modal-security').classList.remove('is-active');
+      if (securityContext === 'ally') { document.getElementById('sel_cliente').value = authAllyId || "placeholder"; }
     }
 
     async function fetchApi(action, params = {}) {
       const url = new URL(SCRIPT_URL);
       url.searchParams.append('action', action);
       for (const key in params) url.searchParams.append(key, params[key]);
-      
       try {
-        const response = await fetch(url.toString(), {
-          method: 'GET',
-          mode: 'cors',
-          cache: 'no-cache'
-        });
-
-        if (!response.ok) throw new Error("Acceso Denegado");
-        
+        const response = await fetch(url.toString(), { method: 'GET', mode: 'cors', cache: 'no-cache' });
         const json = await response.json();
         if(json.status === 'success') return json.data;
-        
-        alert("Error del Sistema: " + json.message);
-        return null;
-      } catch (e) {
-        console.error("Communication Error:", e);
-        return null;
-      }
+        alert("Error: " + json.message);
+      } catch (e) { console.error(e); return null; }
     }
 
     async function apiCall(action) {
       const btn = event.currentTarget;
       btn.classList.add('is-loading');
-
       let params = {};
-      
-      if(action === 'crearCliente') {
-        params.nombre = document.getElementById('new_cli_nom').value;
+      if(action === 'crearCliente') { params.data = JSON.stringify({ nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value }); }
+      else if(action === 'crearFinanciera') { params.nombre = document.getElementById('new_fin_nom').value; params.factor = document.getElementById('new_fin_fac').value; }
+      else if(action === 'crearPlanCuota') params.data = JSON.stringify({ id_financiera: document.getElementById('plan_fin_id').value, tipo_cuota: document.getElementById('plan_tipo').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tasa_fianza: document.getElementById('plan_fia').value });
+      else if(action === 'asignarFactorCliente') params.data = JSON.stringify({ id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value });
+      else if(action === 'guardarSimulacion') { 
+        const data = calc(); if(!data) { btn.classList.remove('is-loading'); return; } 
+        data.cc = document.getElementById('in_cc').value; data.nombre = document.getElementById('in_nombre_sol').value;
+        data.correo = document.getElementById('in_correo').value; data.celular = document.getElementById('in_celular').value;
+        params.data = JSON.stringify(data); 
       }
-      else if(action === 'crearFinanciera') {
-        params.nombre = document.getElementById('new_fin_nom').value;
-        params.factor = document.getElementById('new_fin_fac').value;
-      }
-      else if(action === 'crearPlanCuota') {
-        const data = {
-          id_financiera: document.getElementById('plan_fin_id').value,
-          tipo_cuota: document.getElementById('plan_tipo').value,
-          numero_cuotas: document.getElementById('plan_num').value,
-          tasa_interes: document.getElementById('plan_int').value,
-          tasa_fianza: document.getElementById('plan_fia').value
-        };
-        params.data = JSON.stringify(data);
-      }
-      else if(action === 'asignarFactorCliente') {
-        const data = {
-          id_cliente: document.getElementById('rel_cli_id').value,
-          id_financiera: document.getElementById('rel_fin_id').value,
-          factor_cliente: document.getElementById('rel_fac_val').value
-        };
-        params.data = JSON.stringify(data);
-      }
-      else if(action === 'guardarSimulacion') {
-        const data = calc();
-        if(!data) { btn.classList.remove('is-loading'); return; }
-        params.data = JSON.stringify(data);
-      }
-
       const res = await fetchApi(action, params);
       btn.classList.remove('is-loading');
-      
-      if(res) { 
-        alert(res); 
-        refresh(); 
-      }
+      if(res) { alert(res); refresh(); }
     }
 
-    function fill(id, list, v, t) {
+    function fill(id, list, v, t, hasPlaceholder = false) {
       const el = document.getElementById(id);
       if(!el) return;
-      el.innerHTML = (list && list.length) 
-        ? list.map(i => `<option value="${i[v]}">${i[t]}</option>`) 
-        : '<option value="">(Sin registros)</option>';
+      let opts = hasPlaceholder ? '<option value="placeholder" selected disabled>Selecciona una opción...</option>' : '';
+      el.innerHTML = (list && list.length) ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Sin registros)</option>';
     }
 
     function switchView(v) {
@@ -287,61 +364,56 @@
       document.getElementById('t-' + v).classList.add('is-active');
     }
 
-    function loadCuotas() {
+    function loadPlanes() {
       const idFin = document.getElementById('sel_financiera').value;
+      if (!idFin || idFin === "placeholder") return;
       const filtered = db.cuotas.filter(c => String(c.id_financiera) === idFin);
-      document.getElementById('sel_cuota').innerHTML = filtered.length 
-        ? filtered.map(c => `<option value="${c.id_cuota}">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas} máx)</option>`) 
-        : '<option value="">(Sin planes)</option>';
+      const el = document.getElementById('sel_plan');
+      el.innerHTML = filtered.length ? '<option value="placeholder" selected disabled>Selecciona un plan...</option>' + filtered.map(c => `<option value="${c.id_cuota}">${c.tipo_cuota.toUpperCase()} (Plazo ${c.numero_cuotas})</option>`).join('') : '<option value="">(Sin planes)</option>';
+      loadNumCuotas();
+    }
+
+    function loadNumCuotas() {
+      const idCuo = document.getElementById('sel_plan').value;
+      if (!idCuo || idCuo === "placeholder") return;
+      const plan = db.cuotas.find(c => String(c.id_cuota) === idCuo);
+      const el = document.getElementById('sel_n_cuotas');
+      if(plan) {
+        let opts = '<option value="" selected disabled>...</option>';
+        for(let i=1; i <= plan.numero_cuotas; i++) { opts += `<option value="${i}">${i} ${i === 1 ? 'cuota' : 'cuotas'}</option>`; }
+        el.innerHTML = opts;
+      } else { el.innerHTML = '<option value="">-</option>'; }
       calc();
     }
 
     function calc() {
       const idCli = document.getElementById('sel_cliente').value;
       const idFin = document.getElementById('sel_financiera').value;
-      const idCuo = document.getElementById('sel_cuota').value;
+      const idCuo = document.getElementById('sel_plan').value;
+      const nElegido = parseInt(document.getElementById('sel_n_cuotas').value) || 0;
       const precio = parseFloat(document.getElementById('in_precio').value) || 0;
-      
+      if (!idCli || idCli === "placeholder" || idCli !== authAllyId) return null;
       const fin = db.financieras.find(f => String(f.id_financiera) === idFin);
       const rel = db.porcentajes.find(p => String(p.id_cliente) === idCli && String(p.id_financiera) === idFin);
       const cuo = db.cuotas.find(c => String(c.id_cuota) === idCuo);
-
-      if(!fin || !rel || precio <= 0) { 
-        render(0,0,0); 
-        return null; 
-      }
-
-      // Lógica de cálculo (La utilidad se calcula pero no se muestra)
+      if(!fin || !rel || !cuo || precio <= 0 || nElegido <= 0) { render(0,0); return null; }
       const cons = precio / rel.factor_cliente;
+      const tasaInt = parseFloat(cuo.tasa_interes) || 0;
+      const interesTotal = cons * tasaInt * nElegido;
+      const cuotaBase = (cons + interesTotal) / nElegido;
+      const tasaFia = parseFloat(cuo.tasa_fianza) || 0;
+      const valorFianza = cuotaBase * tasaFia;
+      const v_cuo = cuotaBase + valorFianza;
       const util = (precio / rel.factor_cliente) - (precio / fin.factor_financiera);
-      
-      let v_cuo = 0, v_tot = 0;
-      if(cuo) {
-        const n_max = parseInt(cuo.numero_cuotas) || 1;
-        const t_mes = (parseFloat(cuo.tasa_interes) || 0) + (parseFloat(cuo.tasa_fianza) || 0);
-        v_tot = precio * (1 + t_mes); 
-        v_cuo = v_tot / n_max;
-      }
-      
-      render(cons, v_cuo, v_tot);
-      
-      return { 
-        id_cliente: idCli, 
-        id_financiera: idFin, 
-        id_cuota: idCuo, 
-        precio_producto: precio, 
-        valor_a_consignar: cons, 
-        utilidad: util, 
-        valor_cuota: v_cuo, 
-        total_financiado: v_tot 
-      };
+      const v_tot = v_cuo * nElegido;
+      render(cons, v_cuo);
+      return { id_cliente: idCli, id_financiera: idFin, id_cuota: idCuo, precio_producto: precio, valor_a_consignar: cons, utilidad: util, valor_cuota: v_cuo, total_financiado: v_tot, n_cuotas: nElegido };
     }
 
-    function render(c, q, t) {
+    function render(c, q) {
       const f = v => v.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
       document.getElementById('out_consignar').innerText = f(c);
       document.getElementById('out_cuota').innerText = f(q);
-      document.getElementById('out_total').innerText = f(t);
     }
   </script>
 </body>
