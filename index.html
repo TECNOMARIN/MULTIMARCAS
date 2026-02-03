@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions Pos | Gestión empresarial V2.21</title>
+  <title>Gets Solutions Pos | Gestión empresarial V2.23</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -18,7 +18,7 @@
     body { background: var(--primary-gradient); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
     
     .main-card { width: 100%; max-width: 500px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); overflow: hidden; display: none; transition: max-width 0.4s ease; position: relative; }
-    .main-card.wide { max-width: 1400px; } 
+    .main-card.wide { max-width: 1000px; } 
     
     /* Indicador de Sincronización en Segundo Plano */
     #bg-sync-indicator {
@@ -27,12 +27,21 @@
         background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 20px;
     }
 
-    /* Navegación */
+    /* Navegación Principal */
     .brand-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; background: white; }
     .brand-logo { max-height: 45px; }
     .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
     .tab-item { flex: 1; padding: 1rem 0.5rem; text-align: center; cursor: pointer; color: #94a3b8; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.3s; }
     .tab-item.is-active { color: var(--gets-purple); border-bottom-color: var(--gets-purple); background: white; }
+
+    /* Sub-navegación Horizontal para Consultas */
+    .query-tabs { display: flex; gap: 10px; padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
+    .query-tab-item { 
+      padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #64748b; 
+      cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
+    }
+    .query-tab-item:hover { background: #f1f5f9; color: var(--gets-purple); }
+    .query-tab-item.is-active { background: white; color: var(--gets-purple); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
     /* Vistas */
     .section-view { display: none; padding: 1.5rem; }
@@ -40,20 +49,20 @@
     .admin-label { font-size: 0.7rem; font-weight: 800; color: var(--gets-purple); text-transform: uppercase; margin-bottom: 0.75rem; display: block; }
     .box-admin { border: 1px solid #f1f5f9; padding: 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; background: #f8fafc; }
 
-    /* Resultados */
+    /* Resultados Calculadora */
     .res-grid { background: #1e293b; border-radius: 15px; padding: 1.25rem; margin-top: 1.5rem; color: white; text-align: center; display: flex; gap: 10px; }
     .res-item { flex: 1; }
     .res-item p:first-child { font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
     .res-item p:last-child { font-size: 1.3rem; font-weight: 800; }
 
     /* Tablas */
-    .table-container { border-radius: 12px; border: 1px solid #f1f5f9; max-height: 550px; overflow: auto; background: white; }
+    .table-container { border-radius: 12px; border: 1px solid #f1f5f9; max-height: 500px; overflow: auto; background: white; }
     .table { font-size: 0.75rem; white-space: nowrap; width: 100%; }
     .table.is-clickable tbody tr { cursor: pointer; transition: background 0.2s; }
     .table.is-clickable tbody tr:hover { background-color: #f5f3ff !important; }
     .table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 5; border-bottom: 2px solid #e2e8f0; padding: 12px; font-weight: 800; color: #475569; }
 
-    /* Notificaciones Toast */
+    /* Notificaciones */
     #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
     .toast { 
         background: white; border-radius: 12px; padding: 1rem 1.5rem; min-width: 280px;
@@ -70,39 +79,48 @@
     .btn-modern { border-radius: 10px; font-weight: 700; transition: all 0.2s ease; padding: 0.6rem 1.5rem; height: auto; font-size: 0.85rem; }
     .btn-modern.is-cancel { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
     .btn-modern.is-save { background: var(--primary-gradient); color: white; border: none; box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25); }
-    .btn-modern.is-save:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35); color: white; }
-    .btn-modern.is-danger-modern { background: #fff; color: var(--gets-red); border: 1px solid #fee2e2; }
-    .btn-modern.is-danger-modern:hover { background: var(--gets-red); color: white; border-color: var(--gets-red); transform: translateY(-2px); }
+    
+    /* Botón Eliminar Rojo */
+    .btn-modern.is-danger-modern { 
+        background: white; 
+        color: var(--gets-red); 
+        border: 2px solid #fee2e2; 
+    }
+    .btn-modern.is-danger-modern:hover { 
+        background: var(--gets-red); 
+        color: white !important; 
+        border-color: var(--gets-red);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+    }
 
     .modal-card-foot { justify-content: flex-end; gap: 12px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 1rem 1.5rem; }
     .footer-v { text-align: center; padding: 1rem; font-size: 0.7rem; color: #94a3b8; background: #f8fafc; border-top: 1px solid #f1f5f9; font-weight: 600; }
 
-    /* Resumen Totales */
-    .summary-box { background: #fdf2ff; border: 1px solid #e9d5ff; border-radius: 15px; padding: 1.5rem; margin-top: 1.5rem; display: flex; justify-content: space-around; }
+    /* Totales */
+    .summary-box { background: #fdf2ff; border: 1px solid #e9d5ff; border-radius: 15px; padding: 1rem; margin-top: 1.25rem; display: flex; justify-content: space-around; }
     .summary-item { text-align: center; }
-    .summary-item p:first-child { font-size: 0.7rem; color: #6b21a8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.4rem; }
-    .summary-item p:last-child { font-size: 1.4rem; color: var(--gets-dark); font-weight: 800; }
+    .summary-item p:first-child { font-size: 0.65rem; color: #6b21a8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem; }
+    .summary-item p:last-child { font-size: 1.25rem; color: var(--gets-dark); font-weight: 800; }
 
     @media screen and (max-width: 768px) {
-      .query-layout { flex-direction: column; }
-      .query-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; }
-      .summary-box { flex-direction: column; gap: 1.5rem; }
-      .modal-card-foot { flex-direction: column-reverse; gap: 8px; }
-      .modal-card-foot .button { width: 100%; }
+      .summary-box { flex-direction: column; gap: 1rem; }
+      .query-tabs { overflow-x: auto; padding: 0.75rem; gap: 5px; }
+      .query-tab-item { flex-shrink: 0; padding: 0.4rem 0.75rem; font-size: 0.7rem; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Cargador Inicial (Solo se muestra una vez) -->
+  <!-- Pantalla de Carga Inicial -->
   <div id="loading" class="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
     <div class="button is-loading is-large is-white"></div>
-    <p class="mt-4 has-text-grey">Sincronizando con Gets Solutions Pos...</p>
+    <p class="mt-4 has-text-grey">Conectando con Gets Solutions Pos...</p>
   </div>
 
   <div id="toast-container"></div>
 
-  <!-- LOGIN -->
+  <!-- INICIO DE SESIÓN -->
   <div id="login-container" class="main-card" style="display: block;">
     <div class="brand-header"><img src="https://appgets.solutions/img/logoempresa.png" alt="Logo" class="brand-logo"></div>
     <div id="login-view" style="padding: 3rem 2rem;">
@@ -112,14 +130,14 @@
         </div>
         <h2 class="title is-4 mb-2">Ingreso Seguro</h2>
       </div>
-      <div class="field w-full" style="width:100%">
+      <div class="field w-full">
         <label class="label is-small">Tienda / Aliado</label>
         <div class="control has-icons-left">
           <input id="login-user" class="input is-medium" type="text" placeholder="Nombre Comercial">
           <span class="icon is-small is-left"><i data-lucide="store"></i></span>
         </div>
       </div>
-      <div class="field w-full mt-4" style="width:100%">
+      <div class="field w-full mt-4">
         <label class="label is-small">Contraseña</label>
         <div class="control has-icons-left">
           <input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') attemptLogin()">
@@ -129,10 +147,10 @@
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()" style="background: var(--gets-purple); color: white; font-weight: 700;">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.21</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.23</div>
   </div>
 
-  <!-- APP PRINCIPAL -->
+  <!-- APLICACIÓN PRINCIPAL -->
   <div id="app-container" class="main-card">
     <div id="bg-sync-indicator"><div class="button is-loading is-small is-white" style="height:15px; width:15px; margin-right:5px"></div> Sincronizando...</div>
     
@@ -215,41 +233,52 @@
         </div>
         <button class="button is-dark is-fullwidth is-small" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tipo_cuota: 'Mensual'})">Registrar Plan</button>
       </div>
-      <button class="button is-light is-fullwidth is-small" onclick="refresh(true)">Sincronizar Manual</button>
+      <button class="button is-light is-fullwidth is-small" onclick="refresh(true)">Sincronizar Datos</button>
     </div>
 
     <!-- CONSULTAS -->
-    <div id="v-con" class="section-view">
-      <div class="query-layout">
-        <aside class="query-sidebar">
-          <p class="menu-label">Administración</p>
-          <ul class="menu-list">
-            <li><a id="m-cli" class="is-active" onclick="switchQuery('cli')">Aliados</a></li>
-            <li><a id="m-fin" onclick="switchQuery('fin')">Entidades</a></li>
-            <li><a id="m-his" onclick="switchQuery('his')">Historial</a></li>
-          </ul>
-        </aside>
-        <main class="query-content">
-          <div id="q-cli" class="q-section"><span class="admin-label">Aliados Comerciales</span><div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Nombre</th><th>Clave</th></tr></thead><tbody id="tb-clientes"></tbody></table></div></div>
-          <div id="q-fin" class="q-section" style="display:none;"><span class="admin-label">Entidades Financieras</span><div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Entidad</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras"></tbody></table></div></div>
-          <div id="q-his" class="q-section" style="display:none;">
-            <span class="admin-label">Historial Hoja SIMULACION</span>
-            <div class="columns is-mobile is-multiline mb-2">
-              <div class="column is-5"><label class="label is-7 mb-0">Desde</label><input id="f-desde" class="input is-small" type="date"></div>
-              <div class="column is-5"><label class="label is-7 mb-0">Hasta</label><input id="f-hasta" class="input is-small" type="date"></div>
-              <div class="column is-2 is-flex is-align-items-flex-end"><button class="button is-purple is-small is-fullwidth" onclick="filterSimulations()"><i data-lucide="filter" style="width:14px;"></i></button></div>
-            </div>
-            <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th>Tienda</th><th>Entidad</th><th>CC</th><th>Nombre</th><th>Correo</th><th>Celular</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th><th class="has-text-right">Total</th></tr></thead><tbody id="tb-simulaciones"></tbody></table></div>
-            <div class="summary-box">
-              <div class="summary-item"><p>Créditos</p><p id="total-count">0</p></div>
-              <div class="summary-item"><p>Sumatoria</p><p id="total-creditos">$ 0</p></div>
-              <div class="summary-item"><p>Utilidad</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
-            </div>
+    <div id="v-con">
+      <!-- Pestañas Horizontales de Consultas -->
+      <nav class="query-tabs">
+        <div id="m-cli" class="query-tab-item is-active" onclick="switchQuery('cli')">
+          <i data-lucide="users"></i> Aliados
+        </div>
+        <div id="m-fin" class="query-tab-item" onclick="switchQuery('fin')">
+          <i data-lucide="landmark"></i> Entidades
+        </div>
+        <div id="m-his" class="query-tab-item" onclick="switchQuery('his')">
+          <i data-lucide="history"></i> Historial
+        </div>
+      </nav>
+
+      <div class="p-5">
+        <div id="q-cli" class="q-section">
+          <span class="admin-label">Aliados Comerciales Registrados</span>
+          <div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Nombre</th><th>Clave Acceso</th></tr></thead><tbody id="tb-clientes"></tbody></table></div>
+        </div>
+        
+        <div id="q-fin" class="q-section" style="display:none;">
+          <span class="admin-label">Entidades Financieras y Factores</span>
+          <div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Entidad</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras"></tbody></table></div>
+        </div>
+        
+        <div id="q-his" class="q-section" style="display:none;">
+          <span class="admin-label">Historial de Simulaciones Recientes</span>
+          <div class="columns is-mobile is-multiline mb-2">
+            <div class="column is-5"><label class="label is-7 mb-0">Desde</label><input id="f-desde" class="input is-small" type="date"></div>
+            <div class="column is-5"><label class="label is-7 mb-0">Hasta</label><input id="f-hasta" class="input is-small" type="date"></div>
+            <div class="column is-2 is-flex is-align-items-flex-end"><button class="button is-purple is-small is-fullwidth" onclick="filterSimulations()"><i data-lucide="filter" style="width:14px;"></i></button></div>
           </div>
-        </main>
+          <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th>Tienda</th><th>Entidad</th><th>CC</th><th>Nombre</th><th>Correo</th><th>Celular</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th><th class="has-text-right">Total</th></tr></thead><tbody id="tb-simulaciones"></tbody></table></div>
+          <div class="summary-box">
+            <div class="summary-item"><p>Créditos</p><p id="total-count">0</p></div>
+            <div class="summary-item"><p>Sumatoria</p><p id="total-creditos">$ 0</p></div>
+            <div class="summary-item"><p>Utilidad</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.21</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.23</div>
   </div>
 
   <!-- MODALES PERSONALIZADOS -->
@@ -267,27 +296,27 @@
 
   <div id="mod-cli" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
-    <div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Editar Aliado</p></header>
+    <div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Editar Aliado Comercial</p></header>
       <section class="modal-card-body">
           <input id="ed-cli-id" type="hidden">
-          <div class="field"><label class="label is-small">Nombre</label><input id="ed-cli-nom" class="input is-small"></div>
-          <div class="field"><label class="label is-small">Clave</label><input id="ed-cli-pass" class="input is-small"></div>
-          <hr><span class="admin-label">Factores Asignados</span><div id="vinculos-container" class="table-container"></div>
+          <div class="field"><label class="label is-small">Nombre de la Tienda</label><input id="ed-cli-nom" class="input is-small"></div>
+          <div class="field"><label class="label is-small">Clave de Acceso</label><input id="ed-cli-pass" class="input is-small"></div>
+          <hr><span class="admin-label">Factores Asignados por Financiera</span><div id="vinculos-container" class="table-container"></div>
       </section>
-      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteAliado()">Eliminar</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveAliado()">Guardar</button></footer>
+      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteAliado()">Eliminar Aliado</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveAliado()">Guardar Cambios</button></footer>
     </div>
   </div>
 
   <div id="mod-fin" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
-    <div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Configurar Entidad</p></header>
+    <div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Configurar Entidad Financiera</p></header>
       <section class="modal-card-body">
           <input id="ed-fin-id" type="hidden">
-          <div class="field"><label class="label is-small">Nombre</label><input id="ed-fin-nom" class="input is-small"></div>
-          <div class="field"><label class="label is-small">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01"></div>
-          <hr><span class="admin-label">Planes</span><div id="planes-container" class="table-container"></div>
+          <div class="field"><label class="label is-small">Nombre de la Entidad</label><input id="ed-fin-nom" class="input is-small"></div>
+          <div class="field"><label class="label is-small">Factor Base de Entidad</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01"></div>
+          <hr><span class="admin-label">Planes de Cuotas Registrados</span><div id="planes-container" class="table-container"></div>
       </section>
-      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar</button></footer>
+      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar Entidad</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar Planes</button></footer>
     </div>
   </div>
 
@@ -378,7 +407,7 @@
         document.getElementById('ed-cli-id').value = c.id_cliente;
         document.getElementById('ed-cli-nom').value = c.nombre_cliente;
         document.getElementById('ed-cli-pass').value = c.contrasena;
-        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">Acción</th></tr></thead><tbody>';
+        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">Eliminar</th></tr></thead><tbody>';
         db.financieras.forEach(f => {
             const r = db.porcentajes.find(p => String(p.id_cliente) === String(id) && String(p.id_financiera) === String(f.id_financiera));
             h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?r.factor_cliente:''}"></td><td class="has-text-centered">${r ? `<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>` : ''}</td></tr>`;
@@ -387,8 +416,8 @@
         document.getElementById('mod-cli').classList.add('is-active'); lucide.createIcons();
     }
 
-    function confirmDeleteAliado() { openConfirm(`¿Eliminar aliado "${document.getElementById('ed-cli-nom').value}"?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
-    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Eliminar este factor?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
+    function confirmDeleteAliado() { openConfirm(`¿Eliminar el aliado "${document.getElementById('ed-cli-nom').value}" permanentemente?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
+    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Eliminar este factor de vinculación?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
 
     async function saveAliado() {
         const id = document.getElementById('ed-cli-id').value;
@@ -403,7 +432,7 @@
         document.getElementById('ed-fin-id').value = f.id_financiera;
         document.getElementById('ed-fin-nom').value = f.nombre_financiera;
         document.getElementById('ed-fin-fac').value = f.factor_financiera;
-        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">X</th></tr></thead><tbody>';
+        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">Acción</th></tr></thead><tbody>';
         db.cuotas.filter(c => String(c.id_financiera) === String(id)).forEach(c => {
             h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_interes}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_fianza}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
         });
@@ -411,8 +440,8 @@
         document.getElementById('mod-fin').classList.add('is-active'); lucide.createIcons();
     }
 
-    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar entidad "${document.getElementById('ed-fin-nom').value}"?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
-    function confirmDeletePlan(idCuota, idFin) { openConfirm("¿Eliminar este plan?", async () => { await apiCall('deletePlanCuota', { id_cuota: idCuota }); openFinanciera(idFin); }); }
+    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar la entidad "${document.getElementById('ed-fin-nom').value}" y todos sus datos?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
+    function confirmDeletePlan(idCuota, idFin) { openConfirm("¿Eliminar este plan de cuotas?", async () => { await apiCall('deletePlanCuota', { id_cuota: idCuota }); openFinanciera(idFin); }); }
 
     async function saveFinanciera() {
         const id = document.getElementById('ed-fin-id').value;
@@ -422,14 +451,22 @@
         closeModals();
     }
 
+    function parseDateString(dateStr) {
+        if (!dateStr) return new Date();
+        if (typeof dateStr === 'string' && dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return new Date(dateStr);
+    }
+
     function filterSimulations() {
       const d = document.getElementById('f-desde').value, h = document.getElementById('f-hasta').value;
       const t1 = d ? new Date(d + 'T00:00:00').getTime() : null, t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
       let list = db.simulaciones || [];
       if(t1 && t2) list = list.filter(s => { 
           const dateStr = s.fecha || s.fecha_registro || s.Fecha || "";
-          const parts = dateStr.includes('/') ? dateStr.split('/') : null;
-          const t = parts ? new Date(parts[2], parts[1]-1, parts[0]).getTime() : new Date(dateStr).getTime();
+          const t = parseDateString(dateStr).getTime();
           return t >= t1 && t <= t2; 
       });
       const fmt = v => Number(v || 0).toLocaleString('es-CO', {style:'currency', currency:'COP', maximumFractionDigits:0});
@@ -439,7 +476,7 @@
         const entidad = db.financieras.find(f => String(f.id_financiera) === String(s.id_financiera))?.nombre_financiera || 'Entidad';
         sumCreditos += Number(s.valor_a_consignar || 0); sumUtilidad += Number(s.utilidad || 0);
         return `<tr><td class="is-size-7">${s.fecha || s.Fecha}</td><td class="has-text-weight-bold" style="color:var(--gets-purple)">${tienda}</td><td>${entidad}</td><td>${s.cc}</td><td>${s.nombre}</td><td>${s.correo}</td><td>${s.celular}</td><td class="has-text-right">${fmt(s.valor_a_consignar)}</td><td class="has-text-right" style="color:#059669">${fmt(s.utilidad)}</td><td class="has-text-right">${fmt(s.valor_cuota)}</td><td class="has-text-centered">${s.n_cuotas}</td><td class="has-text-right has-text-weight-bold">${fmt(s.total_financiado)}</td></tr>`;
-      }).join('') : '<tr><td colspan="12" class="has-text-centered py-4">Sin registros</td></tr>';
+      }).join('') : '<tr><td colspan="12" class="has-text-centered py-4">Sin registros encontrados</td></tr>';
       document.getElementById('tb-simulaciones').innerHTML = html;
       document.getElementById('total-count').innerText = list.length;
       document.getElementById('total-creditos').innerText = fmt(sumCreditos);
@@ -461,7 +498,7 @@
     async function apiCall(action, data = null) {
       const res = await fetchApi(action, data);
       if(res) { 
-        if(action==='guardarSimulacion') { clearInputs(); showToast("Simulación Registrada"); }
+        if(action==='guardarSimulacion') { clearInputs(); showToast("Simulación Registrada Correctamente"); }
         else showToast(res);
         refresh(true); 
       }
@@ -470,22 +507,26 @@
     function switchView(v) {
       document.querySelectorAll('.section-view').forEach(e => e.classList.remove('is-active-view'));
       document.querySelectorAll('.tab-item').forEach(e => e.classList.remove('is-active'));
-      document.getElementById('v-' + v).classList.add('is-active-view');
-      document.getElementById('t-' + v).classList.add('is-active');
+      const target = document.getElementById('v-' + v);
+      const tab = document.getElementById('t-' + v);
+      if(target) target.classList.add('is-active-view');
+      if(tab) tab.classList.add('is-active');
       document.getElementById('app-container').classList.toggle('wide', v === 'con');
     }
 
     function switchQuery(sec) {
       document.querySelectorAll('.q-section').forEach(s => s.style.display = 'none');
-      document.querySelectorAll('.query-sidebar a').forEach(a => a.classList.remove('is-active'));
-      document.getElementById('q-' + sec).style.display = 'block';
-      document.getElementById('m-' + sec).classList.add('is-active');
+      document.querySelectorAll('.query-tab-item').forEach(a => a.classList.remove('is-active'));
+      const target = document.getElementById('q-' + sec);
+      const tab = document.getElementById('m-' + sec);
+      if(target) target.style.display = 'block';
+      if(tab) tab.classList.add('is-active');
     }
 
     function fill(id, list, v, t, hasPlaceholder = false) {
       const el = document.getElementById(id); if(!el) return;
-      let opts = hasPlaceholder ? '<option value="placeholder" selected disabled>Seleccione...</option>' : '';
-      el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Vacío)</option>';
+      let opts = hasPlaceholder ? '<option value="placeholder" selected disabled>Seleccione una opción...</option>' : '';
+      el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Sin datos disponibles)</option>';
     }
 
     function handleAllyChange() { loadAssignedEntities(document.getElementById('sel_cliente').value); }
@@ -511,7 +552,7 @@
     function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active')); }
     function validateAndSave() {
       const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
-      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Campos pendientes", 'error'); return; } }
+      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Hay campos pendientes por completar.", 'error'); return; } }
       apiCall('guardarSimulacion', { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value });
     }
     function clearInputs() { ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => document.getElementById(id).value = ""); render(0,0); }
