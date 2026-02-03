@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions Pos | Gestión empresarial V2.26</title>
+  <title>Gets Solutions Pos | Gestión empresarial V2.29</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -18,7 +18,7 @@
     body { background: var(--primary-gradient); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
     
     .main-card { width: 100%; max-width: 500px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); overflow: hidden; display: none; transition: max-width 0.4s ease; position: relative; }
-    .main-card.wide { max-width: 1000px; } 
+    .main-card.wide { max-width: 1100px; } 
     
     #bg-sync-indicator {
         position: absolute; top: 10px; right: 20px; font-size: 0.65rem; color: var(--gets-purple);
@@ -26,7 +26,7 @@
         background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 20px;
     }
 
-    /* Navegación */
+    /* Navegación Principal */
     .brand-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; background: white; }
     .brand-logo { max-height: 45px; }
     .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
@@ -35,18 +35,15 @@
 
     /* Sub-navegación Consultas */
     .query-tabs { display: flex; gap: 10px; padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
-    .query-tab-item { 
-      padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #64748b; 
-      cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
-    }
-    .query-tab-item:hover { background: #f1f5f9; color: var(--gets-purple); }
+    .query-tab-item { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px; }
     .query-tab-item.is-active { background: white; color: var(--gets-purple); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    /* Vistas */
-    .section-view { display: none; padding: 1.5rem; }
-    .is-active-view { display: block !important; }
-    .admin-label { font-size: 0.7rem; font-weight: 800; color: var(--gets-purple); text-transform: uppercase; margin-bottom: 0.75rem; display: block; }
+    /* Vistas Maestras - BLOQUEO DE FILTRADO */
+    .section-view { display: none !important; padding: 1.5rem; }
+    .section-view.is-active-view { display: block !important; }
+
     .box-admin { border: 1px solid #f1f5f9; padding: 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; background: #f8fafc; }
+    .admin-label { font-size: 0.7rem; font-weight: 800; color: var(--gets-purple); text-transform: uppercase; margin-bottom: 0.75rem; display: block; }
 
     /* Resultados */
     .res-grid { background: #1e293b; border-radius: 15px; padding: 1.25rem; margin-top: 1.5rem; color: white; text-align: center; display: flex; gap: 10px; }
@@ -61,42 +58,33 @@
     .table.is-clickable tbody tr:hover { background-color: #f5f3ff !important; }
     .table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 5; border-bottom: 2px solid #e2e8f0; padding: 12px; font-weight: 800; color: #475569; }
 
-    /* Toasts */
-    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
-    .toast { 
-        background: white; border-radius: 12px; padding: 1rem 1.5rem; min-width: 280px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
-        display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
-        transform: translateX(120%); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border-left: 5px solid var(--gets-purple);
-    }
-    .toast.is-active { transform: translateX(0); }
-    .toast.is-success { border-left-color: var(--gets-green); }
-    .toast.is-error { border-left-color: var(--gets-red); }
-
     /* Botones Modernos */
     .btn-modern { border-radius: 10px; font-weight: 700; transition: all 0.2s ease; padding: 0.6rem 1.5rem; height: auto; font-size: 0.85rem; border: 1px solid transparent; }
     .btn-modern.is-cancel { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
     .btn-modern.is-save { background: var(--primary-gradient); color: white; box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25); }
     .btn-modern.is-save:hover { transform: translateY(-2px); color: white; }
     
-    .btn-modern.is-danger-modern { 
-        background: white; color: var(--gets-red); border: 2px solid #fee2e2; 
-    }
-    .btn-modern.is-danger-modern:hover { 
-        background: var(--gets-red) !important; color: white !important; 
-        border-color: var(--gets-red) !important; transform: translateY(-2px);
-    }
+    .btn-modern.is-danger-modern { background: white; color: var(--gets-red); border: 2px solid #fee2e2; }
+    .btn-modern.is-danger-modern:hover { background: var(--gets-red) !important; color: white !important; border-color: var(--gets-red) !important; }
 
-    /* Iconos de eliminación corregidos */
+    /* Icono Eliminar */
     .btn-delete-row { 
-        color: var(--gets-red) !important; 
-        cursor: pointer !important; 
-        transition: transform 0.2s; 
-        display: inline-flex; align-items: center; justify-content: center;
-        padding: 5px;
+        color: var(--gets-red) !important; cursor: pointer !important; 
+        transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center;
+        padding: 6px;
     }
     .btn-delete-row:hover { transform: scale(1.3); }
+
+    /* Toasts */
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 11000; }
+    .toast { background: white; border-radius: 12px; padding: 1rem 1.5rem; min-width: 280px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); display: flex; align-items: center; gap: 12px; margin-bottom: 10px; transform: translateX(120%); transition: all 0.4s ease; border-left: 5px solid var(--gets-purple); }
+    .toast.is-active { transform: translateX(0); }
+    .toast.is-success { border-left-color: var(--gets-green); }
+    .toast.is-error { border-left-color: var(--gets-red); }
+
+    /* Modales */
+    .modal { z-index: 1000; }
+    #mod-confirm { z-index: 10000 !important; } /* Prioridad Total */
 
     .modal-card-foot { justify-content: flex-end; gap: 12px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 1rem 1.5rem; }
     .footer-v { text-align: center; padding: 1rem; font-size: 0.7rem; color: #94a3b8; background: #f8fafc; border-top: 1px solid #f1f5f9; font-weight: 600; }
@@ -117,6 +105,7 @@
 </head>
 <body>
 
+  <!-- Cargador Inicial -->
   <div id="loading" class="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
     <div class="button is-loading is-large is-white"></div>
     <p class="mt-4 has-text-grey">Sincronizando con Gets Solutions Pos...</p>
@@ -151,7 +140,7 @@
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()" style="background: var(--gets-purple); color: white; font-weight: 700;">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.26</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.29</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -173,7 +162,7 @@
 
     <!-- CALCULADORA -->
     <div id="v-sim" class="section-view is-active-view">
-      <div class="solicitante-section">
+      <div class="solicitante-section" style="border-left: 4px solid var(--gets-purple); padding: 0.5rem 1rem; margin-bottom: 1.5rem; background: #fafafa; border-radius: 0 8px 8px 0;">
         <span class="admin-label">Datos del Solicitante</span>
         <div class="columns is-mobile is-multiline mb-0">
           <div class="column is-6 py-1"><input id="in_cc" class="input is-small" placeholder="CC / Documento"></div>
@@ -250,17 +239,17 @@
 
       <div class="p-5">
         <div id="q-cli" class="q-section">
-          <span class="admin-label">Aliados Registrados (Clic para editar)</span>
+          <span class="admin-label">Aliados (Clic para editar)</span>
           <div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Nombre</th><th>Clave</th></tr></thead><tbody id="tb-clientes"></tbody></table></div>
         </div>
         
         <div id="q-fin" class="q-section" style="display:none;">
-          <span class="admin-label">Entidades Registradas (Clic para editar)</span>
+          <span class="admin-label">Entidades (Clic para editar)</span>
           <div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Entidad</th><th>Factor</th></tr></thead><tbody id="tb-financieras"></tbody></table></div>
         </div>
         
         <div id="q-his" class="q-section" style="display:none;">
-          <span class="admin-label">Historial de Simulaciones</span>
+          <span class="admin-label">Historial</span>
           <div class="columns is-mobile mb-2">
             <div class="column"><input id="f-desde" class="input is-small" type="date"></div>
             <div class="column"><input id="f-hasta" class="input is-small" type="date"></div>
@@ -268,32 +257,34 @@
           </div>
           <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th>Tienda</th><th>Entidad</th><th>CC</th><th>Nombre</th><th>Correo</th><th>Celular</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th><th class="has-text-right">Total</th></tr></thead><tbody id="tb-simulaciones"></tbody></table></div>
           <div class="summary-box">
-            <div class="summary-item"><p>Créditos</p><p id="total-count">0</p></div>
+            <div class="summary-item"><p>N° Créditos</p><p id="total-count">0</p></div>
             <div class="summary-item"><p>Sumatoria</p><p id="total-creditos">$ 0</p></div>
             <div class="summary-item"><p>Utilidad Total</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.26</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.29</div>
   </div>
 
-  <!-- MODAL CONFIRMACIÓN -->
+  <!-- MODAL CONFIRMACIÓN (PRIORIDAD ALTA) -->
   <div id="mod-confirm" class="modal">
     <div class="modal-background" onclick="closeConfirm()"></div>
-    <div class="modal-card" style="max-width: 400px;">
-        <header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Confirmar Acción</p></header>
+    <div class="modal-card" style="max-width: 400px; margin-top: 15vh;">
+        <header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Confirmar Eliminación</p></header>
         <section class="modal-card-body has-text-centered py-5">
-            <div style="color: var(--gets-red); margin-bottom: 1rem;"><i data-lucide="alert-triangle" style="width:48px; height:48px;"></i></div>
-            <p id="confirm-text" class="is-size-6"></p>
+            <div style="color: var(--gets-red); margin-bottom: 1.5rem;"><i data-lucide="alert-triangle" style="width:64px; height:64px;"></i></div>
+            <p id="confirm-text" class="is-size-6 has-text-weight-semibold">¿Realmente desea eliminar este registro?</p>
+            <p class="is-size-7 has-text-grey mt-2">Los cambios se verán reflejados en Google Sheets de inmediato.</p>
         </section>
         <footer class="modal-card-foot">
             <button class="button btn-modern is-cancel" onclick="closeConfirm()">Cancelar</button>
-            <button id="btn-confirm-exec" class="button btn-modern is-save" style="background: var(--gets-red);">Confirmar</button>
+            <button id="btn-confirm-exec" class="button btn-modern is-save" style="background: var(--gets-red);">Confirmar ahora</button>
         </footer>
     </div>
   </div>
 
+  <!-- MODALES DE EDICIÓN -->
   <div id="mod-cli" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
     <div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Editar Aliado Comercial</p></header>
@@ -301,30 +292,22 @@
           <input id="ed-cli-id" type="hidden">
           <div class="field"><label class="label is-small">Nombre</label><input id="ed-cli-nom" class="input is-small"></div>
           <div class="field"><label class="label is-small">Clave</label><input id="ed-cli-pass" class="input is-small"></div>
-          <hr><span class="admin-label">Factores Asignados (Basura para eliminar)</span><div id="vinculos-container" class="table-container"></div>
+          <hr><span class="admin-label">Factores por Financiera</span><div id="vinculos-container" class="table-container"></div>
       </section>
-      <footer class="modal-card-foot">
-          <button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteAliado()">Eliminar Aliado</button>
-          <button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button>
-          <button class="button btn-modern is-save" onclick="saveAliado()">Guardar Cambios</button>
-      </footer>
+      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteAliado()">Eliminar</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveAliado()">Guardar</button></footer>
     </div>
   </div>
 
   <div id="mod-fin" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
-    <div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Configurar Entidad Financiera</p></header>
+    <div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Configurar Entidad</p></header>
       <section class="modal-card-body">
           <input id="ed-fin-id" type="hidden">
-          <div class="field"><label class="label is-small">Nombre</label><input id="ed-fin-nom" class="input is-small"></div>
+          <div class="field"><label class="label is-small">Entidad</label><input id="ed-fin-nom" class="input is-small"></div>
           <div class="field"><label class="label is-small">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01"></div>
-          <hr><span class="admin-label">Planes de Cuotas (Basura para eliminar)</span><div id="planes-container" class="table-container"></div>
+          <hr><span class="admin-label">Planes Vigentes</span><div id="planes-container" class="table-container"></div>
       </section>
-      <footer class="modal-card-foot">
-          <button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar Entidad</button>
-          <button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button>
-          <button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar Planes</button>
-      </footer>
+      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar</button></footer>
     </div>
   </div>
 
@@ -334,6 +317,17 @@
     let currentUser = null;
 
     window.onload = () => { lucide.createIcons(); setDefaultDates(); refresh(false); };
+
+    // --- FORMATEO COLOMBIA (Miles: . Decimal: ,) ---
+    const fmt = (v, dec = 0) => {
+        return Number(v || 0).toLocaleString('es-CO', { 
+            minimumFractionDigits: dec, 
+            maximumFractionDigits: dec 
+        });
+    };
+    const fmtCop = (v) => {
+        return Number(v || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+    };
 
     function showToast(msg, type = 'success') {
         const container = document.getElementById('toast-container');
@@ -404,28 +398,26 @@
     function renderTables() {
       const draw = (id, html) => { const el = document.getElementById(id); if(el) el.innerHTML = html; };
       draw('tb-clientes', db.clientes.map(c => `<tr onclick="openAliado('${c.id_cliente}')"><td>${c.nombre_cliente}</td><td><code>${c.contrasena}</code></td></tr>`).join(''));
-      draw('tb-financieras', db.financieras.map(f => `<tr onclick="openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
+      draw('tb-financieras', db.financieras.map(f => `<tr onclick="openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${fmt(f.factor_financiera, 2)}</td></tr>`).join(''));
       filterSimulations(); 
     }
 
-    // --- FUNCIONES DE ELIMINACIÓN ---
-
-    function confirmDeleteAliado() { openConfirm(`¿Eliminar el aliado permanentemente?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
-    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Desea eliminar este factor de vinculación?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
-    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar la entidad financiera?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
-    function confirmDeletePlan(idCuota, idFin) { openConfirm("¿Eliminar este plan de cuotas?", async () => { await apiCall('deletePlanCuota', { id_cuota: idCuota }); openFinanciera(idFin); }); }
+    // --- ELIMINACIONES ---
+    function confirmDeleteAliado() { openConfirm(`¿Eliminar el aliado?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
+    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Borrar esta vinculación?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
+    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar la entidad y sus planes?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
+    function confirmDeletePlan(idCuota, idFin) { openConfirm("¿Borrar este plan?", async () => { await apiCall('deletePlanCuota', { id_cuota: idCuota }); openFinanciera(idFin); }); }
 
     // --- MODALES ---
-
     function openAliado(id) {
-        const c = db.clientes.find(x => String(x.id_cliente) === String(id)); if(!c) return;
+        const c = db.clientes.find(x => String(x.id_cliente).trim() === String(id).trim()); if(!c) return;
         document.getElementById('ed-cli-id').value = c.id_cliente;
         document.getElementById('ed-cli-nom').value = c.nombre_cliente;
         document.getElementById('ed-cli-pass').value = c.contrasena;
-        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">X</th></tr></thead><tbody>';
+        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">Borrar</th></tr></thead><tbody>';
         db.financieras.forEach(f => {
-            const r = db.porcentajes.find(p => String(p.id_cliente) === String(id) && String(p.id_financiera) === String(f.id_financiera));
-            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?r.factor_cliente:''}"></td><td class="has-text-centered">${r ? `<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>` : ''}</td></tr>`;
+            const r = db.porcentajes.find(p => String(p.id_cliente).trim() === String(id).trim() && String(p.id_financiera).trim() === String(f.id_financiera).trim());
+            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?r.factor_cliente:''}"></td><td class="has-text-centered">${r ? `<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2"></i></span>` : ''}</td></tr>`;
         });
         document.getElementById('vinculos-container').innerHTML = h + '</tbody></table>';
         document.getElementById('mod-cli').classList.add('is-active'); lucide.createIcons();
@@ -440,13 +432,13 @@
     }
 
     function openFinanciera(id) {
-        const f = db.financieras.find(x => String(x.id_financiera) === String(id)); if(!f) return;
+        const f = db.financieras.find(x => String(x.id_financiera).trim() === String(id).trim()); if(!f) return;
         document.getElementById('ed-fin-id').value = f.id_financiera;
         document.getElementById('ed-fin-nom').value = f.nombre_financiera;
         document.getElementById('ed-fin-fac').value = f.factor_financiera;
         let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">X</th></tr></thead><tbody>';
-        db.cuotas.filter(c => String(c.id_financiera) === String(id)).forEach(c => {
-            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_interes}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_fianza}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
+        db.cuotas.filter(c => String(c.id_financiera).trim() === String(id).trim()).forEach(c => {
+            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_interes}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_fianza}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2"></i></span></td></tr>`;
         });
         document.getElementById('planes-container').innerHTML = h + '</tbody></table>';
         document.getElementById('mod-fin').classList.add('is-active'); lucide.createIcons();
@@ -460,26 +452,25 @@
         closeModals();
     }
 
-    // --- LOGICA GENERAL ---
-
+    // --- LOGICA ---
     function filterSimulations() {
       const d = document.getElementById('f-desde').value, h = document.getElementById('f-hasta').value;
       const t1 = d ? new Date(d + 'T00:00:00').getTime() : null, t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
       let list = db.simulaciones || [];
-      const parse = (s) => { if(!s) return 0; const p = s.split('/'); return new Date(p[2], p[1]-1, p[0]).getTime(); };
-      if(t1 && t2) list = list.filter(s => { const t = parse(s.fecha || s.Fecha); return t >= t1 && t <= t2; });
-      const fmt = v => Number(v || 0).toLocaleString('es-CO', {style:'currency', currency:'COP', maximumFractionDigits:0});
-      let sumC = 0, sumU = 0;
+      const parseP = (s) => { if(!s) return 0; const b = s.split('/'); return new Date(b[2], b[1]-1, b[0]).getTime(); };
+      if(t1 && t2) list = list.filter(s => { const t = parseP(s.fecha || s.Fecha); return t >= t1 && t <= t2; });
+      
+      let sc = 0, su = 0;
       const html = list.length ? list.slice().reverse().map(s => {
-        const tienda = db.clientes.find(c => String(c.id_cliente) === String(s.id_cliente))?.nombre_cliente || 'Aliado';
-        const entidad = db.financieras.find(f => String(f.id_financiera) === String(s.id_financiera))?.nombre_financiera || 'Entidad';
-        sumC += Number(s.valor_a_consignar || 0); sumU += Number(s.utilidad || 0);
-        return `<tr><td class="is-size-7">${s.fecha || s.Fecha}</td><td class="has-text-weight-bold" style="color:var(--gets-purple)">${tienda}</td><td>${entidad}</td><td>${s.cc}</td><td>${s.nombre}</td><td>${s.correo}</td><td>${s.celular}</td><td class="has-text-right">${fmt(s.valor_a_consignar)}</td><td class="has-text-right" style="color:#059669">${fmt(s.utilidad)}</td><td class="has-text-right">${fmt(s.valor_cuota)}</td><td class="has-text-centered">${s.n_cuotas}</td><td class="has-text-right has-text-weight-bold">${fmt(s.total_financiado)}</td></tr>`;
-      }).join('') : '<tr><td colspan="12" class="has-text-centered py-4">Sin registros</td></tr>';
+        const t = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim())?.nombre_cliente || 'Aliado';
+        const e = db.financieras.find(fi => String(fi.id_financiera).trim() === String(s.id_financiera).trim())?.nombre_financiera || 'Entidad';
+        sc += Number(s.valor_a_consignar || 0); su += Number(s.utilidad || 0);
+        return `<tr><td class="is-size-7">${s.fecha || s.Fecha}</td><td class="has-text-weight-bold" style="color:var(--gets-purple)">${t}</td><td>${e}</td><td>${s.cc}</td><td>${s.nombre}</td><td>${s.correo}</td><td>${s.celular}</td><td class="has-text-right">${fmtCop(s.valor_a_consignar)}</td><td class="has-text-right" style="color:#059669">${fmtCop(s.utilidad)}</td><td class="has-text-right">${fmtCop(s.valor_cuota)}</td><td class="has-text-centered">${s.n_cuotas}</td><td class="has-text-right has-text-weight-bold">${fmtCop(s.total_financiado)}</td></tr>`;
+      }).join('') : '<tr><td colspan="12" class="has-text-centered py-4">Sin datos</td></tr>';
       document.getElementById('tb-simulaciones').innerHTML = html;
       document.getElementById('total-count').innerText = list.length;
-      document.getElementById('total-creditos').innerText = fmt(sumC);
-      document.getElementById('total-utilidad').innerText = fmt(sumU);
+      document.getElementById('total-creditos').innerText = fmtCop(sc);
+      document.getElementById('total-utilidad').innerText = fmtCop(su);
       lucide.createIcons();
     }
 
@@ -491,7 +482,7 @@
         const json = await res.json();
         if (json.status === 'error') throw new Error(json.message);
         return json.data;
-      } catch (e) { showToast("Error: " + e.message, 'error'); return null; }
+      } catch (e) { showToast(e.message, 'error'); return null; }
     }
 
     async function apiCall(action, data = null) {
@@ -503,11 +494,19 @@
     }
 
     function switchView(v) {
-      document.querySelectorAll('.section-view').forEach(e => e.classList.remove('is-active-view'));
+      // Bloqueo estricto de filtrado de vistas
+      document.querySelectorAll('.section-view').forEach(e => {
+          e.classList.remove('is-active-view');
+          e.style.display = "none";
+      });
       document.querySelectorAll('.tab-item').forEach(e => e.classList.remove('is-active'));
+      
       const target = document.getElementById('v-' + v);
       const tab = document.getElementById('t-' + v);
-      if(target) target.classList.add('is-active-view');
+      if(target) {
+          target.classList.add('is-active-view');
+          target.style.display = "block";
+      }
       if(tab) tab.classList.add('is-active');
       document.getElementById('app-container').classList.toggle('wide', v === 'con');
     }
@@ -523,15 +522,15 @@
 
     function fill(id, list, v, t, hasPlaceholder = false) {
       const el = document.getElementById(id); if(!el) return;
-      let opts = hasPlaceholder ? '<option value="placeholder" selected disabled>Seleccione...</option>' : '';
-      el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Vacío)</option>';
+      let opts = hasPlaceholder ? '<option value="placeholder" selected disabled>Seleccionar...</option>' : '';
+      el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">Sin datos</option>';
     }
 
     function handleAllyChange() { loadAssignedEntities(document.getElementById('sel_cliente').value); }
-    function loadAssignedEntities(id) { fill('sel_financiera', db.financieras.filter(f => db.porcentajes.some(p => String(p.id_cliente)===String(id) && String(p.id_financiera)===String(f.id_financiera))), 'id_financiera', 'nombre_financiera', true); }
-    function loadPlanes() { fill('sel_plan', db.cuotas.filter(c => String(c.id_financiera) === String(document.getElementById('sel_financiera').value)).map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true); }
+    function loadAssignedEntities(id) { fill('sel_financiera', db.financieras.filter(f => db.porcentajes.some(p => String(p.id_cliente).trim()===String(id).trim() && String(p.id_financiera).trim()===String(f.id_financiera).trim())), 'id_financiera', 'nombre_financiera', true); }
+    function loadPlanes() { fill('sel_plan', db.cuotas.filter(c => String(c.id_financiera).trim() === String(document.getElementById('sel_financiera').value).trim()).map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true); }
     function loadNumCuotas() {
-        const plan = db.cuotas.find(c => String(c.id_cuota) === String(document.getElementById('sel_plan').value));
+        const plan = db.cuotas.find(c => String(c.id_cuota).trim() === String(document.getElementById('sel_plan').value).trim());
         if(plan) { let o = '<option value="" selected disabled>...</option>'; for(let i=1; i <= plan.numero_cuotas; i++) o += `<option value="${i}">${i} cuota${i>1?'s':''}</option>`; document.getElementById('sel_n_cuotas').innerHTML = o; }
         calc();
     }
@@ -539,18 +538,18 @@
     function calc() {
       const idCli = document.getElementById('sel_cliente').value, idFin = document.getElementById('sel_financiera').value, idCuo = document.getElementById('sel_plan').value, n = parseInt(document.getElementById('sel_n_cuotas').value) || 0, p = parseFloat(document.getElementById('in_precio').value) || 0;
       if (!idCli || idCli === "placeholder" || !idFin || idFin === "placeholder") return null;
-      const fin = db.financieras.find(f => String(f.id_financiera) === String(idFin)), rel = db.porcentajes.find(p => String(p.id_cliente) === String(idCli) && String(p.id_financiera) === String(idFin)), cuo = db.cuotas.find(c => String(c.id_cuota) === String(idCuo));
+      const fin = db.financieras.find(f => String(f.id_financiera).trim() === String(idFin).trim()), rel = db.porcentajes.find(p => String(p.id_cliente).trim() === String(idCli).trim() && String(p.id_financiera).trim() === String(idFin).trim()), cuo = db.cuotas.find(c => String(c.id_cuota).trim() === String(idCuo).trim());
       if(!fin || !rel || !cuo || p <= 0 || n <= 0) { render(0,0); return null; }
       const cons = p / rel.factor_cliente, tI = parseFloat(cuo.tasa_interes), cB = (cons + (cons * tI * n)) / n, vC = cB + (cB * parseFloat(cuo.tasa_fianza));
       render(cons, vC);
       return { id_cliente: idCli, id_financiera: idFin, id_cuota: idCuo, precio_producto: p, valor_a_consignar: cons, utilidad: (p / rel.factor_cliente) - (p / fin.factor_financiera), valor_cuota: vC, total_financiado: vC * n, n_cuotas: n };
     }
 
-    function render(c, q) { const f = v => v.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }); document.getElementById('out_consignar').innerText = f(c); document.getElementById('out_cuota').innerText = f(q); }
+    function render(c, q) { document.getElementById('out_consignar').innerText = fmtCop(c); document.getElementById('out_cuota').innerText = fmtCop(q); }
     function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active')); }
     function validateAndSave() {
       const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
-      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Campos pendientes", 'error'); return; } }
+      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Faltan datos", 'error'); return; } }
       apiCall('guardarSimulacion', { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value });
     }
     function clearInputs() { ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => document.getElementById(id).value = ""); render(0,0); }
