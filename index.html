@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions | Gestión Integral V2.11</title>
+  <title>Gets Solutions Pos | Gestión empresarial V2.18</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -12,10 +12,11 @@
       --gets-purple: #9333ea;
       --gets-dark: #1e293b;
       --gets-light: #f8fafc;
+      --gets-red: #ef4444;
     }
     body { background: var(--primary-gradient); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
     
-    .main-card { width: 100%; max-width: 500px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); overflow: hidden; display: none; transition: max-width 0.4s ease; }
+    .main-card { width: 100%; max-width: 500px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); overflow: hidden; display: none; transition: max-width 0.4s ease; }
     .main-card.wide { max-width: 1400px; } 
     
     /* Navegación */
@@ -38,7 +39,7 @@
     .res-item p:first-child { font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
     .res-item p:last-child { font-size: 1.3rem; font-weight: 800; }
 
-    /* Layout Consultas Detallado */
+    /* Layout Consultas */
     .query-layout { display: flex; gap: 1.5rem; min-height: 550px; }
     .query-sidebar { width: 200px; border-right: 1px solid #f1f5f9; padding-right: 10px; }
     .query-content { flex: 1; overflow: hidden; }
@@ -47,29 +48,96 @@
     
     .table-container { border-radius: 12px; border: 1px solid #f1f5f9; max-height: 600px; overflow: auto; background: white; }
     .table { font-size: 0.75rem; white-space: nowrap; width: 100%; }
+    .table.is-clickable tbody tr { cursor: pointer; transition: background 0.2s; }
+    .table.is-clickable tbody tr:hover { background-color: #f5f3ff !important; }
     .table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 5; border-bottom: 2px solid #e2e8f0; padding: 12px; font-weight: 800; color: #475569; }
 
-    /* Resumen de Totales */
+    /* Pie de página */
+    .footer-v { text-align: center; padding: 1rem; font-size: 0.7rem; color: #94a3b8; background: #f8fafc; border-top: 1px solid #f1f5f9; font-weight: 600; }
+
+    /* Totales */
     .summary-box { background: #fdf2ff; border: 1px solid #e9d5ff; border-radius: 15px; padding: 1.5rem; margin-top: 1.5rem; display: flex; justify-content: space-around; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
     .summary-item { text-align: center; }
     .summary-item p:first-child { font-size: 0.7rem; color: #6b21a8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.4rem; }
     .summary-item p:last-child { font-size: 1.4rem; color: var(--gets-dark); font-weight: 800; }
 
+    /* Botones Modernos */
+    .button.is-purple { background: var(--gets-purple); color: white; font-weight: 700; border: none; }
+    .button.is-purple:hover { background: #7e22ce; color: white; }
+
+    .btn-modern {
+        border-radius: 10px;
+        font-weight: 700;
+        transition: all 0.2s ease;
+        padding: 0.6rem 1.5rem;
+        height: auto;
+        font-size: 0.85rem;
+    }
+
+    .btn-modern.is-cancel {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-modern.is-cancel:hover {
+        background: #e2e8f0;
+        color: #475569;
+        border-color: #cbd5e1;
+    }
+
+    .btn-modern.is-save {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25);
+    }
+
+    .btn-modern.is-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35);
+        color: white;
+    }
+
+    .btn-modern.is-danger-modern {
+        background: #fff;
+        color: var(--gets-red);
+        border: 1px solid #fee2e2;
+    }
+
+    .btn-modern.is-danger-modern:hover {
+        background: var(--gets-red);
+        color: white;
+        border-color: var(--gets-red);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.25);
+    }
+
+    .modal-card-foot {
+        justify-content: flex-end;
+        gap: 12px;
+        background-color: #f8fafc;
+        border-top: 1px solid #f1f5f9;
+        padding: 1rem 1.5rem;
+    }
+
+    .btn-delete-row { color: #f87171; cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
+    .btn-delete-row:hover { color: #dc2626; }
+
     @media screen and (max-width: 768px) {
       .query-layout { flex-direction: column; }
       .query-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; }
       .summary-box { flex-direction: column; gap: 1.5rem; }
+      .modal-card-foot { flex-direction: column-reverse; gap: 8px; }
+      .modal-card-foot .button { width: 100%; }
     }
-
-    .button.is-purple { background: var(--gets-purple); color: white; font-weight: 700; border: none; }
-    .button.is-purple:hover { background: #7e22ce; color: white; }
   </style>
 </head>
 <body>
 
   <div id="loading" class="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
     <div class="button is-loading is-large is-white"></div>
-    <p class="mt-4 has-text-grey">Sincronizando con Gets Solutions...</p>
+    <p class="mt-4 has-text-grey">Sincronizando con Gets Solutions Pos...</p>
   </div>
 
   <!-- LOGIN -->
@@ -99,6 +167,7 @@
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.18</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -145,16 +214,27 @@
     <div id="v-adm" class="section-view">
       <div class="box-admin">
         <span class="admin-label">1. Registro de Aliados</span>
-        <input id="new_cli_nom" class="input is-small mb-2" placeholder="Nombre Aliado">
+        <div class="control has-icons-left mb-2">
+            <input id="new_cli_nom" class="input is-small" placeholder="Nombre Aliado">
+            <span class="icon is-small is-left"><i data-lucide="store"></i></span>
+        </div>
         <div class="field has-addons">
-          <div class="control is-expanded"><input id="new_cli_pass" class="input is-small" placeholder="Contraseña"></div>
+          <div class="control is-expanded has-icons-left">
+              <input id="new_cli_pass" class="input is-small" placeholder="Contraseña">
+              <span class="icon is-small is-left"><i data-lucide="key"></i></span>
+          </div>
           <div class="control"><button class="button is-purple is-small" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value})">Registrar</button></div>
         </div>
       </div>
       <div class="box-admin">
         <span class="admin-label">2. Registro de Entidades</span>
         <div class="columns is-mobile mb-2">
-          <div class="column is-8"><input id="new_fin_nom" class="input is-small" placeholder="Nombre Entidad"></div>
+          <div class="column is-8">
+              <div class="control has-icons-left">
+                <input id="new_fin_nom" class="input is-small" placeholder="Nombre Entidad">
+                <span class="icon is-small is-left"><i data-lucide="building"></i></span>
+              </div>
+          </div>
           <div class="column is-4"><input id="new_fin_fac" class="input is-small" type="number" step="0.01" placeholder="Factor"></div>
         </div>
         <button class="button is-info is-fullwidth is-small" style="background:#3b82f6; color:white; font-weight:700;" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value})">Guardar Entidad</button>
@@ -184,11 +264,11 @@
         </aside>
         <main class="query-content">
           <div id="q-cli" class="q-section">
-            <span class="admin-label">Aliados Comerciales</span>
+            <span class="admin-label">Aliados Comerciales (Clic para editar)</span>
             <div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Nombre</th><th>Clave Acceso</th></tr></thead><tbody id="tb-clientes"></tbody></table></div>
           </div>
           <div id="q-fin" class="q-section" style="display:none;">
-            <span class="admin-label">Entidades Financieras</span>
+            <span class="admin-label">Entidades Financieras (Clic para editar)</span>
             <div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Entidad</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras"></tbody></table></div>
           </div>
           <div id="q-his" class="q-section" style="display:none;">
@@ -220,7 +300,6 @@
               </table>
             </div>
 
-            <!-- TOTALES -->
             <div class="summary-box">
               <div class="summary-item"><p>N° Créditos</p><p id="total-count">0</p></div>
               <div class="summary-item"><p>Sumatoria Créditos</p><p id="total-creditos">$ 0</p></div>
@@ -230,15 +309,46 @@
         </main>
       </div>
     </div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.18</div>
   </div>
 
-  <!-- MODAL EDICIÓN -->
+  <!-- MODAL EDICIÓN ALIADO -->
   <div id="mod-cli" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
     <div class="modal-card">
-      <header class="modal-card-head"><p class="modal-card-title is-size-6">Editar Aliado</p></header>
-      <section class="modal-card-body"><div id="vinculos-container"></div></section>
-      <footer class="modal-card-foot"><button class="button is-small" onclick="closeModals()">Cerrar</button></footer>
+      <header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Editar Aliado Comercial</p></header>
+      <section class="modal-card-body">
+          <input id="ed-cli-id" type="hidden">
+          <div class="field"><label class="label is-small">Nombre de la Tienda</label><input id="ed-cli-nom" class="input is-small"></div>
+          <div class="field"><label class="label is-small">Clave de Acceso</label><input id="ed-cli-pass" class="input is-small"></div>
+          <hr><span class="admin-label">Factores Asignados por Financiera</span>
+          <div id="vinculos-container" class="table-container"></div>
+      </section>
+      <footer class="modal-card-foot">
+          <button class="button btn-modern is-danger-modern mr-auto" onclick="deleteAliado()">Eliminar Aliado</button>
+          <button class="button btn-modern is-cancel" onclick="closeModals()">Cancelar</button>
+          <button class="button btn-modern is-save" onclick="saveAliado()">Guardar Cambios</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- MODAL EDICIÓN ENTIDAD -->
+  <div id="mod-fin" class="modal">
+    <div class="modal-background" onclick="closeModals()"></div>
+    <div class="modal-card" style="width:95%; max-width:700px;">
+      <header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Tasas y Planes de Entidad</p></header>
+      <section class="modal-card-body">
+          <input id="ed-fin-id" type="hidden">
+          <div class="field"><label class="label is-small">Nombre de la Entidad</label><input id="ed-fin-nom" class="input is-small"></div>
+          <div class="field"><label class="label is-small">Factor Base de Entidad</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01"></div>
+          <hr><span class="admin-label">Planes Registrados</span>
+          <div id="planes-container" class="table-container"></div>
+      </section>
+      <footer class="modal-card-foot">
+          <button class="button btn-modern is-danger-modern mr-auto" onclick="deleteFinanciera()">Eliminar Entidad</button>
+          <button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button>
+          <button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar Planes</button>
+      </footer>
     </div>
   </div>
 
@@ -303,10 +413,108 @@
 
     function renderTables() {
       const draw = (id, html) => { const el = document.getElementById(id); if(el) el.innerHTML = html; };
-      draw('tb-clientes', db.clientes.map(c => `<tr><td>${c.nombre_cliente}</td><td><code>${c.contrasena}</code></td></tr>`).join(''));
-      draw('tb-financieras', db.financieras.map(f => `<tr><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
+      draw('tb-clientes', db.clientes.map(c => `<tr onclick="openAliado('${c.id_cliente}')"><td>${c.nombre_cliente}</td><td><code>${c.contrasena}</code></td></tr>`).join(''));
+      draw('tb-financieras', db.financieras.map(f => `<tr onclick="openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
       filterSimulations(); 
     }
+
+    // --- FUNCIONES MODALES ---
+
+    function openAliado(id) {
+        const c = db.clientes.find(x => String(x.id_cliente) === String(id));
+        if(!c) return;
+        document.getElementById('ed-cli-id').value = c.id_cliente;
+        document.getElementById('ed-cli-nom').value = c.nombre_cliente;
+        document.getElementById('ed-cli-pass').value = c.contrasena;
+        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor Aliado</th><th class="has-text-centered">Acción</th></tr></thead><tbody>';
+        db.financieras.forEach(f => {
+            const r = db.porcentajes.find(p => String(p.id_cliente) === String(id) && String(p.id_financiera) === String(f.id_financiera));
+            h += `<tr>
+                <td class="is-size-7">${f.nombre_financiera}</td>
+                <td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?r.factor_cliente:''}"></td>
+                <td class="has-text-centered">
+                    ${r ? `<span class="btn-delete-row" onclick="event.stopPropagation(); deleteVinculo('${id}', '${f.id_financiera}')" title="Eliminar factor"><i data-lucide="trash-2" style="width:16px;"></i></span>` : ''}
+                </td>
+            </tr>`;
+        });
+        h += '</tbody></table>';
+        document.getElementById('vinculos-container').innerHTML = h;
+        document.getElementById('mod-cli').classList.add('is-active');
+        lucide.createIcons();
+    }
+
+    async function deleteAliado() {
+        const id = document.getElementById('ed-cli-id').value;
+        const nombre = document.getElementById('ed-cli-nom').value;
+        if(!confirm(`¿ESTÁ COMPLETAMENTE SEGURO DE ELIMINAR EL ALIADO "${nombre.toUpperCase()}"? Esta acción borrará su acceso y vinculaciones.`)) return;
+        await apiCall('deleteCliente', { id_cliente: id });
+        closeModals(); refresh();
+    }
+
+    async function deleteVinculo(idCli, idFin) {
+        if(!confirm("¿Desea eliminar la vinculación de este factor? El aliado no podrá simular con esta entidad.")) return;
+        await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin });
+        openAliado(idCli); 
+    }
+
+    async function saveAliado() {
+        const id = document.getElementById('ed-cli-id').value;
+        await apiCall('updateCliente', { id_cliente: id, nombre_cliente: document.getElementById('ed-cli-nom').value, contrasena: document.getElementById('ed-cli-pass').value });
+        const inps = document.querySelectorAll('.v-fac');
+        for(let i of inps) { if(i.value!=="") await apiCall('updatePorcentaje', { id_cliente: id, id_financiera: i.dataset.fin, factor_cliente: i.value }); }
+        closeModals(); refresh();
+    }
+
+    function openFinanciera(id) {
+        const f = db.financieras.find(x => String(x.id_financiera) === String(id));
+        if(!f) return;
+        document.getElementById('ed-fin-id').value = f.id_financiera;
+        document.getElementById('ed-fin-nom').value = f.nombre_financiera;
+        document.getElementById('ed-fin-fac').value = f.factor_financiera;
+        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">Acción</th></tr></thead><tbody>';
+        db.cuotas.filter(c => String(c.id_financiera) === String(id)).forEach(c => {
+            h += `<tr>
+                <td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td>
+                <td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_interes}"></td>
+                <td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_fianza}"></td>
+                <td class="has-text-centered">
+                    <span class="btn-delete-row" onclick="event.stopPropagation(); deletePlan('${c.id_cuota}', '${id}')" title="Eliminar Plan">
+                        <i data-lucide="trash-2" style="width:16px;"></i>
+                    </span>
+                </td>
+            </tr>`;
+        });
+        h += '</tbody></table>';
+        document.getElementById('planes-container').innerHTML = h;
+        document.getElementById('mod-fin').classList.add('is-active');
+        lucide.createIcons();
+    }
+
+    async function deleteFinanciera() {
+        const id = document.getElementById('ed-fin-id').value;
+        const nombre = document.getElementById('ed-fin-nom').value;
+        if(!confirm(`¿ESTÁ SEGURO DE ELIMINAR LA ENTIDAD "${nombre.toUpperCase()}"? Se borrarán todos sus planes y vinculaciones asociadas.`)) return;
+        await apiCall('deleteFinanciera', { id_financiera: id });
+        closeModals(); refresh();
+    }
+
+    async function deletePlan(idCuota, idFin) {
+        if(!confirm("¿Está seguro de eliminar este plan de cuotas?")) return;
+        await apiCall('deletePlanCuota', { id_cuota: idCuota });
+        openFinanciera(idFin); 
+    }
+
+    async function saveFinanciera() {
+        const id = document.getElementById('ed-fin-id').value;
+        await apiCall('updateFinanciera', { id_financiera: id, nombre_financiera: document.getElementById('ed-fin-nom').value, factor_financiera: document.getElementById('ed-fin-fac').value });
+        const ints = document.querySelectorAll('.p-int'); const fias = document.querySelectorAll('.p-fia');
+        for(let i=0; i<ints.length; i++) { await apiCall('updatePlanCuota', { id_cuota: ints[i].dataset.id, tasa_interes: ints[i].value, tasa_fianza: fias[i].value }); }
+        closeModals(); refresh();
+    }
+
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active')); }
+
+    // --- LOGICA DE HISTORIAL ---
 
     function parseDateString(dateStr) {
         if (!dateStr) return new Date();
@@ -364,7 +572,6 @@
         sumCreditos += totalCredito;
         sumUtilidad += utilidad;
 
-        // Formateo de fecha corta para visualización
         const rawDateStr = getVal(s, ['fecha', 'fecha_registro', 'Fecha']);
         const displayDate = typeof rawDateStr === 'string' && rawDateStr.includes('/') ? rawDateStr : new Date(rawDateStr).toLocaleDateString('es-CO');
 
@@ -391,6 +598,8 @@
       lucide.createIcons();
     }
 
+    // --- COMUNICACION API ---
+
     async function fetchApi(action, data = null) {
       const url = new URL(SCRIPT_URL);
       url.searchParams.append('action', action);
@@ -407,6 +616,8 @@
       const res = await fetchApi(action, data);
       if(res) { if(action==='guardarSimulacion') clearInputs(); else alert(res); refresh(); }
     }
+
+    // --- UTILIDADES ---
 
     function switchView(v) {
       document.querySelectorAll('.section-view').forEach(e => e.classList.remove('is-active-view'));
@@ -438,12 +649,12 @@
 
     function loadPlanes() {
       const idFin = document.getElementById('sel_financiera').value;
-      fill('sel_plan', db.cuotas.filter(c => String(c.id_financiera) === idFin).map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true);
+      fill('sel_plan', db.cuotas.filter(c => String(c.id_financiera) === String(idFin)).map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true);
     }
 
     function loadNumCuotas() {
       const idCuo = document.getElementById('sel_plan').value;
-      const plan = db.cuotas.find(c => String(c.id_cuota) === idCuo);
+      const plan = db.cuotas.find(c => String(c.id_cuota) === String(idCuo));
       if(plan) {
         let o = '<option value="" selected disabled>...</option>';
         for(let i=1; i <= plan.numero_cuotas; i++) o += `<option value="${i}">${i} cuota${i>1?'s':''}</option>`;
@@ -459,9 +670,9 @@
       const nElegido = parseInt(document.getElementById('sel_n_cuotas').value) || 0;
       const precio = parseFloat(document.getElementById('in_precio').value) || 0;
       if (!idCli || idCli === "placeholder" || !idFin || idFin === "placeholder") return null;
-      const fin = db.financieras.find(f => String(f.id_financiera) === idFin);
+      const fin = db.financieras.find(f => String(f.id_financiera) === String(idFin));
       const rel = db.porcentajes.find(p => String(p.id_cliente) === String(idCli) && String(p.id_financiera) === String(idFin));
-      const cuo = db.cuotas.find(c => String(c.id_cuota) === idCuo);
+      const cuo = db.cuotas.find(c => String(c.id_cuota) === String(idCuo));
       if(!fin || !rel || !cuo || precio <= 0 || nElegido <= 0) { render(0,0); return null; }
       const cons = precio / rel.factor_cliente;
       const tasaInt = parseFloat(cuo.tasa_interes) || 0;
@@ -476,8 +687,6 @@
       document.getElementById('out_consignar').innerText = f(c);
       document.getElementById('out_cuota').innerText = f(q);
     }
-
-    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active')); }
 
     function validateAndSave() {
       const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
