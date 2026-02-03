@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions | Versión 1.8</title>
+  <title>Gets Solutions | Gestión Integral V2.11</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -13,239 +13,261 @@
       --gets-dark: #1e293b;
       --gets-light: #f8fafc;
     }
+    body { background: var(--primary-gradient); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
     
-    body { 
-      background: var(--primary-gradient); 
-      min-height: 100vh; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      padding: 1rem; 
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    }
+    .main-card { width: 100%; max-width: 500px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); overflow: hidden; display: none; transition: max-width 0.4s ease; }
+    .main-card.wide { max-width: 1400px; } 
     
-    .main-card { 
-      width: 100%; 
-      max-width: 480px; 
-      background: white; 
-      border-radius: 20px; 
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
-      overflow: hidden; 
-      display: none; 
-      animation: fadeIn 0.3s ease-out;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    #login-view { 
-      padding: 3rem 2rem; 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    .login-icon-box {
-      background: #f5f3ff;
-      color: var(--gets-purple);
-      padding: 1rem;
-      border-radius: 50%;
-      margin-bottom: 1.5rem;
-    }
-
-    .login-header-group {
-      margin-bottom: 2.5rem;
-      width: 100%;
-      text-align: center;
-    }
-
-    .login-header-group .title { margin-bottom: 0.5rem !important; color: var(--gets-dark); }
-    .login-header-group .subtitle { margin-top: 0 !important; color: #64748b; }
-
-    .brand-header { 
-      padding: 1.5rem; 
-      text-align: center; 
-      background: white;
-      border-bottom: 1px solid #f1f5f9;
-    }
-    .brand-logo { max-height: 50px; width: auto; }
-
-    .custom-tabs { display: flex; background: #fdfdfd; border-bottom: 1px solid #f1f5f9; }
-    .tab-item { 
-      flex: 1; padding: 1rem 0.5rem; text-align: center; cursor: pointer; 
-      color: #94a3b8; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;
-      transition: all 0.2s ease;
-      border-bottom: 3px solid transparent;
-    }
+    /* Navegación */
+    .brand-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; background: white; }
+    .brand-logo { max-height: 45px; }
+    .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
+    .tab-item { flex: 1; padding: 1rem 0.5rem; text-align: center; cursor: pointer; color: #94a3b8; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.3s; }
     .tab-item.is-active { color: var(--gets-purple); border-bottom-color: var(--gets-purple); background: white; }
 
+    /* Vistas */
     .section-view { display: none; padding: 1.5rem; }
     .is-active-view { display: block; }
+    .admin-label { font-size: 0.7rem; font-weight: 800; color: var(--gets-purple); text-transform: uppercase; margin-bottom: 0.75rem; display: block; }
+    .box-admin { border: 1px solid #f1f5f9; padding: 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; background: #f8fafc; }
 
-    .admin-label { 
-      font-size: 0.7rem; font-weight: 800; color: var(--gets-purple); 
-      text-transform: uppercase; margin-bottom: 0.75rem; display: block;
-      letter-spacing: 0.05em;
-    }
+    /* Formularios y Calculadora */
+    .solicitante-section { border-left: 4px solid var(--gets-purple); padding: 0.5rem 1rem; margin-bottom: 1.5rem; background: #fafafa; border-radius: 0 8px 8px 0; }
+    .res-grid { background: #1e293b; border-radius: 15px; padding: 1.25rem; margin-top: 1.5rem; color: white; text-align: center; display: flex; gap: 10px; }
+    .res-item { flex: 1; }
+    .res-item p:first-child { font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
+    .res-item p:last-child { font-size: 1.3rem; font-weight: 800; }
+
+    /* Layout Consultas Detallado */
+    .query-layout { display: flex; gap: 1.5rem; min-height: 550px; }
+    .query-sidebar { width: 200px; border-right: 1px solid #f1f5f9; padding-right: 10px; }
+    .query-content { flex: 1; overflow: hidden; }
+    .menu-list a { border-radius: 8px; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem; padding: 0.75rem; }
+    .menu-list a.is-active { background: var(--gets-purple); color: white !important; }
     
-    .solicitante-section { 
-      border-left: 4px solid var(--gets-purple); 
-      padding-left: 1rem; 
-      margin-bottom: 1.75rem; 
-      background: #fafafa;
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-      border-radius: 0 8px 8px 0;
+    .table-container { border-radius: 12px; border: 1px solid #f1f5f9; max-height: 600px; overflow: auto; background: white; }
+    .table { font-size: 0.75rem; white-space: nowrap; width: 100%; }
+    .table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 5; border-bottom: 2px solid #e2e8f0; padding: 12px; font-weight: 800; color: #475569; }
+
+    /* Resumen de Totales */
+    .summary-box { background: #fdf2ff; border: 1px solid #e9d5ff; border-radius: 15px; padding: 1.5rem; margin-top: 1.5rem; display: flex; justify-content: space-around; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .summary-item { text-align: center; }
+    .summary-item p:first-child { font-size: 0.7rem; color: #6b21a8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.4rem; }
+    .summary-item p:last-child { font-size: 1.4rem; color: var(--gets-dark); font-weight: 800; }
+
+    @media screen and (max-width: 768px) {
+      .query-layout { flex-direction: column; }
+      .query-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #f1f5f9; padding-bottom: 1rem; }
+      .summary-box { flex-direction: column; gap: 1.5rem; }
     }
 
-    .res-grid { 
-      background: #1e293b; 
-      border-radius: 15px; 
-      padding: 1.25rem; 
-      margin-top: 1.5rem; 
-      display: grid; 
-      grid-template-columns: 1fr; 
-      gap: 1rem; 
-    }
-    .res-item { text-align: center; }
-    .res-item p:first-child { font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem; }
-    .res-item p:last-child { font-size: 1.4rem; color: white; font-weight: 800; }
-    .res-divider { height: 1px; background: #334155; margin: 0.5rem 0; }
-
-    .footer-v { 
-      text-align: center; padding: 1rem; font-size: 0.7rem; 
-      color: #94a3b8; background: #f8fafc; border-top: 1px solid #f1f5f9; 
-      font-weight: 600;
-    }
-
-    @media screen and (max-width: 480px) {
-      body { padding: 0; }
-      .main-card { border-radius: 0; min-height: 100vh; max-width: none; }
-      .section-view { padding: 1.25rem 1rem; }
-    }
-
-    .button.is-purple { background-color: var(--gets-purple); color: white; border: none; font-weight: 700; }
-    .button.is-purple:hover { background-color: #7e22ce; color: white; }
-    .input { border-radius: 8px; border-color: #e2e8f0; }
-    .input:focus { border-color: var(--gets-purple); box-shadow: 0 0 0 0.125em rgba(147, 51, 234, 0.15); }
+    .button.is-purple { background: var(--gets-purple); color: white; font-weight: 700; border: none; }
+    .button.is-purple:hover { background: #7e22ce; color: white; }
   </style>
 </head>
 <body>
 
-  <div id="loading" class="loader-overlay">
+  <div id="loading" class="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
     <div class="button is-loading is-large is-white"></div>
-    <p class="mt-4 has-text-grey" id="loader_text">Gets Solutions Integral...</p>
+    <p class="mt-4 has-text-grey">Sincronizando con Gets Solutions...</p>
   </div>
 
-  <!-- PANTALLA LOGIN -->
+  <!-- LOGIN -->
   <div id="login-container" class="main-card" style="display: block;">
-    <div class="brand-header">
-      <img src="https://appgets.solutions/img/logoempresa.png" alt="Logo" class="brand-logo">
-    </div>
-    <div id="login-view">
-      <div class="login-icon-box"><i data-lucide="shield-check" style="width: 32px; height: 32px;"></i></div>
-      <div class="login-header-group">
-        <h2 class="title is-4">Ingreso Seguro</h2>
-        <p class="subtitle is-6">Identifícate para acceder al sistema</p>
+    <div class="brand-header"><img src="https://appgets.solutions/img/logoempresa.png" alt="Logo" class="brand-logo"></div>
+    <div id="login-view" style="padding: 3rem 2rem;">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="color: var(--gets-purple); background: #f5f3ff; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+            <i data-lucide="shield-check" style="width:32px; height:32px;"></i>
+        </div>
+        <h2 class="title is-4 mb-2">Ingreso Seguro</h2>
       </div>
-      <div class="field is-fullwidth" style="width: 100%;">
-        <label class="label is-small has-text-grey">Nombre de la Tienda / Aliado</label>
+      <div class="field w-full" style="width:100%">
+        <label class="label is-small">Tienda / Aliado</label>
         <div class="control has-icons-left">
-          <input id="login-user" class="input is-medium" type="text" placeholder="Nombre oficial">
+          <input id="login-user" class="input is-medium" type="text" placeholder="Nombre Comercial">
           <span class="icon is-small is-left"><i data-lucide="store"></i></span>
         </div>
       </div>
-      <div class="field is-fullwidth mt-4" style="width: 100%;">
-        <label class="label is-small has-text-grey">Contraseña de Acceso</label>
+      <div class="field w-full mt-4" style="width:100%">
+        <label class="label is-small">Contraseña</label>
         <div class="control has-icons-left">
-          <input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" onkeypress="if(event.key === 'Enter') attemptLogin()">
+          <input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') attemptLogin()">
           <span class="icon is-small is-left"><i data-lucide="key"></i></span>
         </div>
       </div>
-      <p id="login-error" class="help is-danger is-hidden mt-3">Credenciales no válidas. Reintente.</p>
-      <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()">Entrar al Sistema</button>
+      <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()">Ingresar</button>
+      <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions | V1.8</div>
   </div>
 
   <!-- APP PRINCIPAL -->
   <div id="app-container" class="main-card">
-    <div class="brand-header">
-      <div class="is-flex is-justify-content-space-between is-align-items-center">
-        <img src="https://appgets.solutions/img/logoempresa.png" alt="Logo" class="brand-logo">
-        <button class="button is-light is-small has-text-danger" onclick="logout()">
-          <span class="icon"><i data-lucide="log-out"></i></span><span>Salir</span>
-        </button>
-      </div>
+    <div class="brand-header is-flex is-justify-content-space-between is-align-items-center">
+      <img src="https://appgets.solutions/img/logoempresa.png" alt="Logo" class="brand-logo">
+      <button class="button is-ghost is-small has-text-danger" onclick="location.reload()">
+        <span class="icon is-small"><i data-lucide="log-out"></i></span><span>Salir</span>
+      </button>
     </div>
 
-    <div class="custom-tabs" id="main-tabs">
+    <div class="custom-tabs">
       <div id="t-sim" class="tab-item is-active" onclick="switchView('sim')">Calculadora</div>
       <div id="t-adm" class="tab-item" style="display:none;" onclick="switchView('adm')">Configuración</div>
+      <div id="t-con" class="tab-item" style="display:none;" onclick="switchView('con')">Consultas</div>
     </div>
 
+    <!-- CALCULADORA -->
     <div id="v-sim" class="section-view is-active-view">
       <div class="solicitante-section">
         <span class="admin-label">Datos del Solicitante</span>
         <div class="columns is-mobile is-multiline mb-0">
-          <div class="column is-6 py-1"><input id="in_cc" class="input is-small" type="text" placeholder="Documento (CC)"></div>
-          <div class="column is-6 py-1"><input id="in_celular" class="input is-small" type="tel" placeholder="Celular"></div>
-          <div class="column is-12 py-1"><input id="in_nombre_sol" class="input is-small" type="text" placeholder="Nombre completo"></div>
-          <div class="column is-12 py-1"><input id="in_correo" class="input is-small" type="email" placeholder="Correo electrónico"></div>
+          <div class="column is-6 py-1"><input id="in_cc" class="input is-small" placeholder="CC / Documento"></div>
+          <div class="column is-6 py-1"><input id="in_celular" class="input is-small" placeholder="Celular"></div>
+          <div class="column is-12 py-1"><input id="in_nombre_sol" class="input is-small" placeholder="Nombre completo"></div>
+          <div class="column is-12 py-1"><input id="in_correo" class="input is-small" placeholder="Correo electrónico"></div>
         </div>
       </div>
-
-      <div class="field">
-        <label class="label is-small">Aliado / Tienda</label>
-        <div class="select is-fullwidth"><select id="sel_cliente" class="has-text-weight-bold" onchange="handleAllyChange()"></select></div>
-      </div>
-      
-      <div class="field">
-        <label class="label is-small">Entidad Financiera</label>
-        <div class="select is-fullwidth"><select id="sel_financiera" onchange="loadPlanes()"></select></div>
-      </div>
-
+      <div class="field"><label class="label is-small">Tienda</label><div class="select is-fullwidth"><select id="sel_cliente" onchange="handleAllyChange()"></select></div></div>
+      <div class="field"><label class="label is-small">Entidad Financiera</label><div class="select is-fullwidth"><select id="sel_financiera" onchange="loadPlanes()"></select></div></div>
       <div class="columns is-mobile mb-0">
         <div class="column"><label class="label is-small">Plan</label><div class="select is-fullwidth"><select id="sel_plan" onchange="loadNumCuotas()"></select></div></div>
         <div class="column"><label class="label is-small">Cuotas</label><div class="select is-fullwidth"><select id="sel_n_cuotas" onchange="calc()"></select></div></div>
       </div>
-
-      <div class="field">
-        <label class="label is-small">Precio del Producto ($)</label>
-        <input id="in_precio" class="input is-medium" type="number" placeholder="0.00" oninput="calc()">
-      </div>
-      
+      <div class="field"><label class="label is-small">Precio del Producto ($)</label><input id="in_precio" class="input is-medium" type="number" placeholder="0.00" oninput="calc()"></div>
       <div class="res-grid">
         <div class="res-item"><p>Total Crédito</p><p id="out_consignar">$ 0</p></div>
-        <div class="res-divider"></div>
-        <div class="res-item"><p>Valor Cuota (Aproximado)</p><p id="out_cuota" style="color: #a855f7;">$ 0</p></div>
+        <div class="res-item"><p>Cuota (Aprox.)</p><p id="out_cuota">$ 0</p></div>
       </div>
-      
-      <button id="btn_save" class="button is-purple is-fullwidth is-medium mt-5" onclick="validateAndSave()">Registrar Simulación</button>
+      <button class="button is-purple is-fullwidth is-medium mt-5" onclick="validateAndSave()">Registrar Simulación</button>
     </div>
 
-    <!-- CONFIG (SÓLO ADMIN) -->
+    <!-- CONFIGURACIÓN -->
     <div id="v-adm" class="section-view">
-      <div class="box p-5 has-background-light" style="border-radius:12px;">
-        <span class="admin-label">Nuevo Aliado</span>
-        <div class="field mb-3"><input id="new_cli_nom" class="input is-small" placeholder="Nombre Tienda"></div>
+      <div class="box-admin">
+        <span class="admin-label">1. Registro de Aliados</span>
+        <input id="new_cli_nom" class="input is-small mb-2" placeholder="Nombre Aliado">
         <div class="field has-addons">
-          <div class="control is-expanded"><input id="new_cli_pass" class="input is-small" type="text" placeholder="Contraseña"></div>
-          <div class="control"><button class="button is-purple is-small" onclick="apiCall('crearCliente')">Crear</button></div>
+          <div class="control is-expanded"><input id="new_cli_pass" class="input is-small" placeholder="Contraseña"></div>
+          <div class="control"><button class="button is-purple is-small" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value})">Registrar</button></div>
         </div>
       </div>
-      <button class="button is-light is-fullwidth is-small mt-4" onclick="refresh()">Actualizar Sistema</button>
+      <div class="box-admin">
+        <span class="admin-label">2. Registro de Entidades</span>
+        <div class="columns is-mobile mb-2">
+          <div class="column is-8"><input id="new_fin_nom" class="input is-small" placeholder="Nombre Entidad"></div>
+          <div class="column is-4"><input id="new_fin_fac" class="input is-small" type="number" step="0.01" placeholder="Factor"></div>
+        </div>
+        <button class="button is-info is-fullwidth is-small" style="background:#3b82f6; color:white; font-weight:700;" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value})">Guardar Entidad</button>
+      </div>
+      <div class="box-admin">
+        <span class="admin-label">3. Definición de Planes</span>
+        <div class="select is-fullwidth is-small mb-2"><select id="plan_fin_id"></select></div>
+        <div class="columns is-mobile mb-2">
+          <div class="column"><input id="plan_num" class="input is-small" type="number" placeholder="Máx. Cuotas"></div>
+          <div class="column"><input id="plan_int" class="input is-small" type="number" step="0.01" placeholder="% Int"></div>
+        </div>
+        <button class="button is-dark is-fullwidth is-small" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tipo_cuota: 'Mensual'})">Registrar Plan</button>
+      </div>
+      <button class="button is-light is-fullwidth is-small" onclick="refresh()">Sincronizar Base de Datos</button>
     </div>
-    
-    <div class="footer-v">Gets Solutions Gestión Integral | V1.8</div>
+
+    <!-- CONSULTAS -->
+    <div id="v-con" class="section-view">
+      <div class="query-layout">
+        <aside class="query-sidebar">
+          <p class="menu-label">Administración</p>
+          <ul class="menu-list">
+            <li><a id="m-cli" class="is-active" onclick="switchQuery('cli')">Aliados</a></li>
+            <li><a id="m-fin" onclick="switchQuery('fin')">Entidades</a></li>
+            <li><a id="m-his" onclick="switchQuery('his')">Historial</a></li>
+          </ul>
+        </aside>
+        <main class="query-content">
+          <div id="q-cli" class="q-section">
+            <span class="admin-label">Aliados Comerciales</span>
+            <div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Nombre</th><th>Clave Acceso</th></tr></thead><tbody id="tb-clientes"></tbody></table></div>
+          </div>
+          <div id="q-fin" class="q-section" style="display:none;">
+            <span class="admin-label">Entidades Financieras</span>
+            <div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Entidad</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras"></tbody></table></div>
+          </div>
+          <div id="q-his" class="q-section" style="display:none;">
+            <span class="admin-label">Historial Hoja SIMULACION</span>
+            <div class="columns is-mobile is-multiline mb-2">
+              <div class="column is-5"><label class="label is-7 mb-0">Fecha Inicial</label><input id="f-desde" class="input is-small" type="date"></div>
+              <div class="column is-5"><label class="label is-7 mb-0">Fecha Final</label><input id="f-hasta" class="input is-small" type="date"></div>
+              <div class="column is-2 is-flex is-align-items-flex-end"><button class="button is-purple is-small is-fullwidth" onclick="filterSimulations()"><i data-lucide="filter" style="width:14px;"></i></button></div>
+            </div>
+            <div class="table-container">
+              <table class="table is-fullwidth is-striped is-narrow">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Tienda (Aliado)</th>
+                    <th>Entidad</th>
+                    <th>CC</th>
+                    <th>Nombre Solicitante</th>
+                    <th>Correo</th>
+                    <th>Celular</th>
+                    <th class="has-text-right">Total Crédito</th>
+                    <th class="has-text-right">Utilidad</th>
+                    <th class="has-text-right">Cuota</th>
+                    <th class="has-text-centered">Plazo</th>
+                    <th class="has-text-right">Total Pagado</th>
+                  </tr>
+                </thead>
+                <tbody id="tb-simulaciones"></tbody>
+              </table>
+            </div>
+
+            <!-- TOTALES -->
+            <div class="summary-box">
+              <div class="summary-item"><p>N° Créditos</p><p id="total-count">0</p></div>
+              <div class="summary-item"><p>Sumatoria Créditos</p><p id="total-creditos">$ 0</p></div>
+              <div class="summary-item"><p>Utilidad Total</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDICIÓN -->
+  <div id="mod-cli" class="modal">
+    <div class="modal-background" onclick="closeModals()"></div>
+    <div class="modal-card">
+      <header class="modal-card-head"><p class="modal-card-title is-size-6">Editar Aliado</p></header>
+      <section class="modal-card-body"><div id="vinculos-container"></div></section>
+      <footer class="modal-card-foot"><button class="button is-small" onclick="closeModals()">Cerrar</button></footer>
+    </div>
   </div>
 
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
-    let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [] };
+    let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [], simulaciones: [] };
     let currentUser = null;
 
-    window.onload = () => { lucide.createIcons(); refresh(); };
+    window.onload = () => { 
+        lucide.createIcons(); 
+        setDefaultDates(); 
+        refresh(); 
+    };
+
+    function setDefaultDates() {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const formatDate = (date) => {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            let year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+        };
+        document.getElementById('f-desde').value = formatDate(firstDay);
+        document.getElementById('f-hasta').value = formatDate(now);
+    }
 
     async function refresh() {
       document.getElementById('loading').style.display = 'flex';
@@ -253,24 +275,25 @@
       if(res) {
         db = res;
         fill('sel_cliente', db.clientes, 'id_cliente', 'nombre_cliente');
+        fill('plan_fin_id', db.financieras, 'id_financiera', 'nombre_financiera', true);
+        renderTables();
         document.getElementById('loading').style.display = 'none';
       }
     }
 
     function attemptLogin() {
-      const userVal = document.getElementById('login-user').value.trim().toLowerCase();
-      const passVal = document.getElementById('login-pass').value;
-      const found = db.clientes.find(c => String(c.nombre_cliente).toLowerCase().trim() === userVal && String(c.contrasena) === passVal);
-
+      const u = document.getElementById('login-user').value.trim().toLowerCase();
+      const p = document.getElementById('login-pass').value;
+      const found = db.clientes.find(c => String(c.nombre_cliente).toLowerCase().trim() === u && String(c.contrasena) === p);
       if (found) {
         currentUser = found;
         document.getElementById('login-container').style.display = 'none';
         document.getElementById('app-container').style.display = 'block';
-        const selCli = document.getElementById('sel_cliente');
         const isAdmin = String(currentUser.nombre_cliente).toLowerCase() === 'administrador';
-        selCli.disabled = !isAdmin;
-        selCli.value = currentUser.id_cliente;
+        document.getElementById('sel_cliente').disabled = !isAdmin;
+        document.getElementById('sel_cliente').value = currentUser.id_cliente;
         document.getElementById('t-adm').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('t-con').style.display = isAdmin ? 'block' : 'none';
         loadAssignedEntities(currentUser.id_cliente);
         switchView('sim');
       } else {
@@ -278,103 +301,126 @@
       }
     }
 
-    function loadAssignedEntities(clientId) {
-      const assignedIds = db.porcentajes.filter(p => String(p.id_cliente) === String(clientId)).map(p => String(p.id_financiera));
-      const filtered = db.financieras.filter(f => assignedIds.includes(String(f.id_financiera)));
-      fill('sel_financiera', filtered, 'id_financiera', 'nombre_financiera', true);
-      document.getElementById('sel_plan').innerHTML = '<option value="placeholder" disabled selected>...</option>';
-      document.getElementById('sel_n_cuotas').innerHTML = '<option value="" disabled selected>...</option>';
-      calc();
+    function renderTables() {
+      const draw = (id, html) => { const el = document.getElementById(id); if(el) el.innerHTML = html; };
+      draw('tb-clientes', db.clientes.map(c => `<tr><td>${c.nombre_cliente}</td><td><code>${c.contrasena}</code></td></tr>`).join(''));
+      draw('tb-financieras', db.financieras.map(f => `<tr><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
+      filterSimulations(); 
     }
 
-    function handleAllyChange() {
-      loadAssignedEntities(document.getElementById('sel_cliente').value);
+    function parseDateString(dateStr) {
+        if (!dateStr) return new Date();
+        if (typeof dateStr === 'string' && dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+        }
+        return new Date(dateStr);
     }
 
-    function logout() { location.reload(); }
+    function filterSimulations() {
+      const d = document.getElementById('f-desde').value; 
+      const h = document.getElementById('f-hasta').value;
+      let list = db.simulaciones || [];
+      
+      const t1 = d ? new Date(d + 'T00:00:00').getTime() : null;
+      const t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
 
-    function validateAndSave() {
-      const checks = [
-        { id: 'in_cc', label: 'Documento (CC)' },
-        { id: 'in_celular', label: 'Celular' },
-        { id: 'in_nombre_sol', label: 'Nombre Completo' },
-        { id: 'in_correo', label: 'Correo Electrónico', isEmail: true },
-        { id: 'sel_financiera', label: 'Entidad Financiera' },
-        { id: 'sel_plan', label: 'Plan de Pagos' },
-        { id: 'sel_n_cuotas', label: 'Número de Cuotas' },
-        { id: 'in_precio', label: 'Precio del Producto' }
-      ];
+      const getVal = (obj, keys) => {
+        for(let k of keys) {
+          const found = Object.keys(obj).find(x => x.toLowerCase().trim() === k.toLowerCase());
+          if(found) return obj[found];
+        }
+        return "";
+      };
 
-      for (let field of checks) {
-        const el = document.getElementById(field.id);
-        const val = el.value.trim();
-        if (!val || val === "placeholder" || val === "") {
-          alert(`Falta un dato: Por favor ingrese el "${field.label}".`);
-          el.focus(); return;
-        }
-        if (field.isEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-          alert(`Correo inválido: El formato de correo no es válido.`);
-          el.focus(); return;
-        }
+      if(t1 && t2) {
+        list = list.filter(s => { 
+          const rawDate = getVal(s, ['fecha', 'fecha_registro', 'Fecha']);
+          const t = parseDateString(rawDate).getTime(); 
+          return t >= t1 && t <= t2; 
+        });
       }
-      apiCall('guardarSimulacion');
+      
+      const fmt = v => Number(v || 0).toLocaleString('es-CO', {style:'currency', currency:'COP', maximumFractionDigits:0});
+      
+      let sumCreditos = 0;
+      let sumUtilidad = 0;
+
+      const html = list.length ? list.slice().reverse().map(s => {
+        const aliadoID = getVal(s, ['id_cliente', 'aliado', 'tienda']);
+        const financieraID = getVal(s, ['id_financiera', 'entidad']);
+        
+        const tienda = db.clientes.find(c => String(c.id_cliente) === String(aliadoID))?.nombre_cliente || 'Aliado';
+        const entidad = db.financieras.find(f => String(f.id_financiera) === String(financieraID))?.nombre_financiera || 'Entidad';
+        
+        const totalCredito = Number(getVal(s, ['valor_a_consignar', 'total_credito']) || 0);
+        const utilidad = Number(getVal(s, ['utilidad', 'ganancia']) || 0);
+        const cuota = Number(getVal(s, ['valor_cuota', 'cuota']) || 0);
+        const plazo = getVal(s, ['n_cuotas', 'cuotas', 'plazo']);
+        const totalFin = Number(getVal(s, ['total_financiado', 'total_pagado']) || 0);
+
+        sumCreditos += totalCredito;
+        sumUtilidad += utilidad;
+
+        // Formateo de fecha corta para visualización
+        const rawDateStr = getVal(s, ['fecha', 'fecha_registro', 'Fecha']);
+        const displayDate = typeof rawDateStr === 'string' && rawDateStr.includes('/') ? rawDateStr : new Date(rawDateStr).toLocaleDateString('es-CO');
+
+        return `<tr>
+          <td class="is-size-7">${displayDate}</td>
+          <td class="has-text-weight-bold" style="color: var(--gets-purple);">${tienda}</td>
+          <td class="has-text-weight-semibold">${entidad}</td>
+          <td>${getVal(s, ['cc', 'documento'])}</td>
+          <td>${getVal(s, ['nombre', 'solicitante'])}</td>
+          <td>${getVal(s, ['correo', 'email'])}</td>
+          <td>${getVal(s, ['celular', 'telefono'])}</td>
+          <td class="has-text-right has-text-weight-bold">${fmt(totalCredito)}</td>
+          <td class="has-text-right" style="color: #059669;">${fmt(utilidad)}</td>
+          <td class="has-text-right">${fmt(cuota)}</td>
+          <td class="has-text-centered">${plazo}</td>
+          <td class="has-text-right has-text-weight-bold" style="color: var(--gets-purple);">${fmt(totalFin)}</td>
+        </tr>`;
+      }).join('') : '<tr><td colspan="12" class="has-text-centered py-4">No se hallaron registros en el rango seleccionado</td></tr>';
+      
+      document.getElementById('tb-simulaciones').innerHTML = html;
+      document.getElementById('total-count').innerText = list.length;
+      document.getElementById('total-creditos').innerText = fmt(sumCreditos);
+      document.getElementById('total-utilidad').innerText = fmt(sumUtilidad);
+      lucide.createIcons();
     }
 
-    async function fetchApi(action, params = {}) {
+    async function fetchApi(action, data = null) {
       const url = new URL(SCRIPT_URL);
       url.searchParams.append('action', action);
-      for (const k in params) url.searchParams.append(k, params[k]);
+      if(data) url.searchParams.append('data', JSON.stringify(data));
       try {
-        const response = await fetch(url.toString(), { method: 'GET', mode: 'cors' });
-        const json = await response.json();
+        const res = await fetch(url.toString(), { method: 'GET', mode: 'cors' });
+        const json = await res.json();
         if (json.status === 'error') throw new Error(json.message);
         return json.data;
-      } catch (e) { alert("Error del Sistema: " + e.message); return null; }
+      } catch (e) { alert("Error: " + e.message); return null; }
     }
 
-    async function apiCall(action) {
-      const btn = event.currentTarget;
-      btn.classList.add('is-loading');
-      let params = {};
-      if(action === 'crearCliente') params.data = JSON.stringify({ nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value });
-      else if(action === 'guardarSimulacion') { 
-        const data = calc(); 
-        data.cc = document.getElementById('in_cc').value; 
-        data.nombre = document.getElementById('in_nombre_sol').value;
-        data.correo = document.getElementById('in_correo').value; 
-        data.celular = document.getElementById('in_celular').value;
-        params.data = JSON.stringify(data); 
-      }
-      const res = await fetchApi(action, params);
-      btn.classList.remove('is-loading');
-      if(res) { 
-        alert(res); 
-        if(action === 'guardarSimulacion') clearInputs(); // NUEVA LÓGICA: LIMPIAR EN VEZ DE RECARGAR
-      }
+    async function apiCall(action, data = null) {
+      const res = await fetchApi(action, data);
+      if(res) { if(action==='guardarSimulacion') clearInputs(); else alert(res); refresh(); }
     }
 
-    /**
-     * Limpia todos los campos de la calculadora tras un registro exitoso.
-     */
-    function clearInputs() {
-      // Limpiar datos del solicitante
-      ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => {
-        document.getElementById(id).value = "";
-      });
-      
-      // Resetear selectores financieros a su estado inicial
-      document.getElementById('sel_financiera').selectedIndex = 0;
-      document.getElementById('sel_plan').innerHTML = '<option value="placeholder" disabled selected>...</option>';
-      document.getElementById('sel_n_cuotas').innerHTML = '<option value="" disabled selected>...</option>';
-      
-      // Limpiar resultados visuales
-      document.getElementById('out_consignar').innerText = "$ 0";
-      document.getElementById('out_cuota').innerText = "$ 0";
-      
-      // Si el usuario es Administrador, mantenemos la tienda pero cargamos sus entidades nuevamente
-      // Si es aliado regular, el selector de cliente ya está bloqueado correctamente.
-      const clientId = document.getElementById('sel_cliente').value;
-      if(clientId) loadAssignedEntities(clientId);
+    function switchView(v) {
+      document.querySelectorAll('.section-view').forEach(e => e.classList.remove('is-active-view'));
+      document.querySelectorAll('.tab-item').forEach(e => e.classList.remove('is-active'));
+      document.getElementById('v-' + v).classList.add('is-active-view');
+      document.getElementById('t-' + v).classList.add('is-active');
+      document.getElementById('app-container').classList.toggle('wide', v === 'con');
+    }
+
+    function switchQuery(sec) {
+      document.querySelectorAll('.q-section').forEach(s => s.style.display = 'none');
+      document.querySelectorAll('.query-sidebar a').forEach(a => a.classList.remove('is-active'));
+      document.getElementById('q-' + sec).style.display = 'block';
+      document.getElementById('m-' + sec).classList.add('is-active');
     }
 
     function fill(id, list, v, t, hasPlaceholder = false) {
@@ -383,27 +429,25 @@
       el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Vacío)</option>';
     }
 
-    function switchView(v) {
-      document.querySelectorAll('.section-view').forEach(e => e.classList.remove('is-active-view'));
-      document.querySelectorAll('.tab-item').forEach(e => e.classList.remove('is-active'));
-      document.getElementById('v-' + v).classList.add('is-active-view');
-      document.getElementById('t-' + v).classList.add('is-active');
+    function loadAssignedEntities(clientId) {
+      const assignedIds = db.porcentajes.filter(p => String(p.id_cliente) === String(clientId)).map(p => String(p.id_financiera));
+      fill('sel_financiera', db.financieras.filter(f => assignedIds.includes(String(f.id_financiera))), 'id_financiera', 'nombre_financiera', true);
     }
+
+    function handleAllyChange() { loadAssignedEntities(document.getElementById('sel_cliente').value); }
 
     function loadPlanes() {
       const idFin = document.getElementById('sel_financiera').value;
-      const filtered = db.cuotas.filter(c => String(c.id_financiera) === idFin);
-      fill('sel_plan', filtered.map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true);
+      fill('sel_plan', db.cuotas.filter(c => String(c.id_financiera) === idFin).map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true);
     }
 
     function loadNumCuotas() {
       const idCuo = document.getElementById('sel_plan').value;
       const plan = db.cuotas.find(c => String(c.id_cuota) === idCuo);
-      const el = document.getElementById('sel_n_cuotas');
       if(plan) {
         let o = '<option value="" selected disabled>...</option>';
         for(let i=1; i <= plan.numero_cuotas; i++) o += `<option value="${i}">${i} cuota${i>1?'s':''}</option>`;
-        el.innerHTML = o;
+        document.getElementById('sel_n_cuotas').innerHTML = o;
       }
       calc();
     }
@@ -414,21 +458,15 @@
       const idCuo = document.getElementById('sel_plan').value;
       const nElegido = parseInt(document.getElementById('sel_n_cuotas').value) || 0;
       const precio = parseFloat(document.getElementById('in_precio').value) || 0;
-      
       if (!idCli || idCli === "placeholder" || !idFin || idFin === "placeholder") return null;
       const fin = db.financieras.find(f => String(f.id_financiera) === idFin);
-      const rel = db.porcentajes.find(p => String(p.id_cliente) === idCli && String(p.id_financiera) === idFin);
+      const rel = db.porcentajes.find(p => String(p.id_cliente) === String(idCli) && String(p.id_financiera) === String(idFin));
       const cuo = db.cuotas.find(c => String(c.id_cuota) === idCuo);
-      
       if(!fin || !rel || !cuo || precio <= 0 || nElegido <= 0) { render(0,0); return null; }
-      
       const cons = precio / rel.factor_cliente;
       const tasaInt = parseFloat(cuo.tasa_interes) || 0;
-      const interesTotal = cons * tasaInt * nElegido;
-      const cuotaBase = (cons + interesTotal) / nElegido;
-      const tasaFia = parseFloat(cuo.tasa_fianza) || 0;
-      const v_cuo = cuotaBase + (cuotaBase * tasaFia);
-      
+      const cuotaBase = (cons + (cons * tasaInt * nElegido)) / nElegido;
+      const v_cuo = cuotaBase + (cuotaBase * (parseFloat(cuo.tasa_fianza) || 0));
       render(cons, v_cuo);
       return { id_cliente: idCli, id_financiera: idFin, id_cuota: idCuo, precio_producto: precio, valor_a_consignar: cons, utilidad: (precio / rel.factor_cliente) - (precio / fin.factor_financiera), valor_cuota: v_cuo, total_financiado: v_cuo * nElegido, n_cuotas: nElegido };
     }
@@ -437,6 +475,21 @@
       const f = v => v.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
       document.getElementById('out_consignar').innerText = f(c);
       document.getElementById('out_cuota').innerText = f(q);
+    }
+
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active')); }
+
+    function validateAndSave() {
+      const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
+      for (let id of checks) { const el = document.getElementById(id); if (!el.value || el.value === "placeholder") { alert("Complete todos los campos."); el.focus(); return; } }
+      apiCall('guardarSimulacion', { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value });
+    }
+
+    function clearInputs() { 
+      ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => document.getElementById(id).value = ""); 
+      document.getElementById('out_consignar').innerText = "$ 0"; 
+      document.getElementById('out_cuota').innerText = "$ 0"; 
+      alert("Simulación Registrada Correctamente"); 
     }
   </script>
 </body>
