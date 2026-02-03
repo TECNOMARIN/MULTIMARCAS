@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions Pos | Gestión empresarial V2.36</title>
+  <title>Gets Solutions Pos | Gestión empresarial V2.37</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -26,7 +26,7 @@
         background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 20px;
     }
 
-    /* Navegación Principal */
+    /* Navegación */
     .brand-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; background: white; }
     .brand-logo { max-height: 45px; }
     .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
@@ -38,7 +38,7 @@
     .query-tab-item { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.2s; }
     .query-tab-item.is-active { background: white; color: var(--gets-purple); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    /* Vistas Maestras - BLOQUEO ESTRICTO */
+    /* Vistas Maestras - BLOQUEO DE FILTRADO */
     .section-view { display: none !important; padding: 1.5rem; }
     .section-view.is-active-view { display: block !important; }
 
@@ -63,7 +63,6 @@
     .btn-modern.is-cancel { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
     .btn-modern.is-save { background: var(--primary-gradient); color: white; box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25); }
     .btn-modern.is-save:hover { transform: translateY(-2px); color: white; }
-    
     .btn-modern.is-danger-modern { background: white; color: var(--gets-red); border: 2px solid #fee2e2; }
     .btn-modern.is-danger-modern:hover { background: var(--gets-red) !important; color: white !important; border-color: var(--gets-red) !important; transform: translateY(-2px); }
 
@@ -73,10 +72,10 @@
 
     /* Modales */
     .modal { z-index: 1000; }
-    #mod-confirm { z-index: 21000 !important; }
+    #mod-confirm { z-index: 20000 !important; }
 
     /* Toasts */
-    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 22000; }
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 21000; }
     .toast { background: white; border-radius: 12px; padding: 1rem 1.5rem; min-width: 280px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); display: flex; align-items: center; gap: 12px; margin-bottom: 10px; transform: translateX(120%); transition: all 0.4s ease; border-left: 5px solid var(--gets-purple); }
     .toast.is-active { transform: translateX(0); }
     .toast.is-success { border-left-color: var(--gets-green); }
@@ -89,6 +88,14 @@
     .summary-item { text-align: center; }
     .summary-item p:first-child { font-size: 0.65rem; color: #6b21a8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem; }
     .summary-item p:last-child { font-size: 1.25rem; color: var(--gets-dark); font-weight: 800; }
+
+    @media screen and (max-width: 768px) {
+      .summary-box { flex-direction: column; gap: 1rem; }
+      .query-tabs { overflow-x: auto; padding: 0.75rem; gap: 5px; }
+      .query-tab-item { flex-shrink: 0; padding: 0.4rem 0.75rem; font-size: 0.7rem; }
+      .modal-card-foot { flex-direction: column-reverse; }
+      .modal-card-foot .button { width: 100%; margin: 0 !important; }
+    }
   </style>
 </head>
 <body>
@@ -96,7 +103,7 @@
   <!-- Cargador Inicial -->
   <div id="loading" class="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
     <div class="button is-loading is-large is-white"></div>
-    <p class="mt-4 has-text-grey">Gets Solutions Pos | Sincronizando...</p>
+    <p class="mt-4 has-text-grey">Sincronizando con Gets Solutions Pos...</p>
   </div>
 
   <div id="toast-container"></div>
@@ -110,7 +117,7 @@
         <h2 class="title is-4 mb-2">Ingreso Seguro</h2>
       </div>
       <div class="field w-full">
-        <label class="label is-small">Aliado / Tienda</label>
+        <label class="label is-small">Tienda / Aliado</label>
         <div class="control has-icons-left"><input id="login-user" class="input is-medium" type="text" placeholder="Nombre Comercial"><span class="icon is-small is-left"><i data-lucide="store"></i></span></div>
       </div>
       <div class="field w-full mt-4">
@@ -120,7 +127,7 @@
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()" style="background: var(--gets-purple); color: white; font-weight: 700;">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.36</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.37</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -155,7 +162,7 @@
         <div class="column"><label class="label is-small">Plan</label><div class="select is-fullwidth"><select id="sel_plan" onchange="loadNumCuotas()"></select></div></div>
         <div class="column"><label class="label is-small">Cuotas</label><div class="select is-fullwidth"><select id="sel_n_cuotas" onchange="calc()"></select></div></div>
       </div>
-      <div class="field"><label class="label is-small">Precio del Producto ($)</label><input id="in_precio" class="input is-medium" type="number" placeholder="0.00" oninput="calc()"></div>
+      <div class="field"><label class="label is-small">Precio del Producto ($)</label><input id="in_precio" class="input is-medium" type="number" placeholder="0,00" oninput="calc()"></div>
       <div class="res-grid">
         <div class="res-item"><p>Total Crédito</p><p id="out_consignar">$ 0</p></div>
         <div class="res-item"><p>Cuota (Aprox.)</p><p id="out_cuota">$ 0</p></div>
@@ -176,11 +183,11 @@
       <div class="box-admin">
         <span class="admin-label">2. Vinculación (Factores Aliado)</span>
         <div class="columns is-mobile mb-2"><div class="column"><div class="select is-fullwidth is-small"><select id="rel_cli_id"></select></div></div><div class="column"><div class="select is-fullwidth is-small"><select id="rel_fin_id"></select></div></div></div>
-        <div class="field has-addons"><div class="control is-expanded"><input id="rel_fac_val" class="input is-small" type="number" step="0.01" placeholder="Factor Asignado"></div><div class="control"><button class="button is-warning is-small" style="font-weight:700;" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value})">Vincular</button></div></div>
+        <div class="field has-addons"><div class="control is-expanded"><input id="rel_fac_val" class="input is-small" type="number" step="0,01" placeholder="Factor Asignado"></div><div class="control"><button class="button is-warning is-small" style="font-weight:700;" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value})">Vincular</button></div></div>
       </div>
       <div class="box-admin">
         <span class="admin-label">3. Registro de Entidades</span>
-        <div class="columns is-mobile mb-2"><div class="column is-8"><div class="control has-icons-left"><input id="new_fin_nom" class="input is-small" placeholder="Nombre Entidad"><span class="icon is-small is-left"><i data-lucide="building"></i></span></div></div><div class="column is-4"><input id="new_fin_fac" class="input is-small" type="number" step="0.01" placeholder="Factor Base"></div></div>
+        <div class="columns is-mobile mb-2"><div class="column is-8"><div class="control has-icons-left"><input id="new_fin_nom" class="input is-small" placeholder="Nombre Entidad"><span class="icon is-small is-left"><i data-lucide="building"></i></span></div></div><div class="column is-4"><input id="new_fin_fac" class="input is-small" type="number" step="0,01" placeholder="Factor Base"></div></div>
         <button class="button is-info is-fullwidth is-small" style="background:#3b82f6; color:white; font-weight:700;" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value})">Guardar Entidad</button>
       </div>
       <div class="box-admin">
@@ -197,8 +204,8 @@
                 </div>
             </div>
             <div class="column is-6"><input id="plan_num" class="input is-small" type="number" placeholder="Máx. Cuotas"></div>
-            <div class="column is-6"><input id="plan_int" class="input is-small" type="number" step="0.01" placeholder="% Interés"></div>
-            <div class="column is-6"><input id="plan_fia" class="input is-small" type="number" step="0.01" placeholder="% Fianza"></div>
+            <div class="column is-6"><input id="plan_int" class="input is-small" type="number" step="0,01" placeholder="% Interés"></div>
+            <div class="column is-6"><input id="plan_fia" class="input is-small" type="number" step="0,01" placeholder="% Fianza"></div>
         </div>
         <button class="button is-dark is-fullwidth is-small" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, tipo_cuota: document.getElementById('plan_tipo').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tasa_fianza: document.getElementById('plan_fia').value})">Registrar Plan</button>
       </div>
@@ -216,18 +223,18 @@
         <div id="q-cli" class="q-section"><span class="admin-label">Aliados Comerciales</span><div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Nombre</th><th>Clave Acceso</th></tr></thead><tbody id="tb-clientes"></tbody></table></div></div>
         <div id="q-fin" class="q-section" style="display:none;"><span class="admin-label">Entidades Financieras</span><div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Entidad</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras"></tbody></table></div></div>
         <div id="q-his" class="q-section" style="display:none;">
-          <span class="admin-label">Historial</span>
+          <span class="admin-label">Historial de Simulaciones</span>
           <div class="columns is-mobile mb-2"><div class="column"><input id="f-desde" class="input is-small" type="date"></div><div class="column"><input id="f-hasta" class="input is-small" type="date"></div><div class="column is-narrow"><button class="button is-purple is-small" onclick="filterSimulations()"><i data-lucide="filter"></i></button></div></div>
           <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th>Tienda</th><th>Entidad</th><th>CC</th><th>Nombre</th><th>Correo</th><th>Celular</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th><th class="has-text-right">Total</th></tr></thead><tbody id="tb-simulaciones"></tbody></table></div>
           <div class="summary-box">
-            <div class="summary-item"><p>Créditos</p><p id="total-count">0</p></div>
+            <div class="summary-item"><p>N° Créditos</p><p id="total-count">0</p></div>
             <div class="summary-item"><p>Sumatoria</p><p id="total-creditos">$ 0</p></div>
             <div class="summary-item"><p>Utilidad Total</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.36</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.37</div>
   </div>
 
   <!-- MODAL CONFIRMACIÓN -->
@@ -258,7 +265,7 @@
     <div class="modal-background" onclick="closeModals()"></div>
     <div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Configurar Entidad</p></header>
       <section class="modal-card-body">
-          <input id="ed-fin-id" type="hidden"><div class="field"><label class="label is-small">Entidad</label><input id="ed-fin-nom" class="input is-small"></div><div class="field"><label class="label is-small">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01"></div><hr><span class="admin-label">Planes Registrados</span><div id="planes-container" class="table-container"></div>
+          <input id="ed-fin-id" type="hidden"><div class="field"><label class="label is-small">Entidad</label><input id="ed-fin-nom" class="input is-small"></div><div class="field"><label class="label is-small">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0,01"></div><hr><span class="admin-label">Planes Registrados</span><div id="planes-container" class="table-container"></div>
       </section>
       <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar</button></footer>
     </div>
@@ -323,20 +330,18 @@
       filterSimulations(); 
     }
 
-    // --- ELIMINACIONES ---
     function confirmDeleteAliado() { openConfirm(`¿Eliminar aliado permanentemente?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
-    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Borrar vínculo de factor?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
-    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar entidad y sus planes?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
-    function confirmDeletePlan(idC, idF) { openConfirm("¿Borrar este plan de cuotas?", async () => { await apiCall('deletePlanCuota', { id_cuota: idC }); openFinanciera(idF); }); }
+    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Borrar factor de vinculación?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
+    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar financiera y sus planes?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
+    function confirmDeletePlan(idC, idF) { openConfirm("¿Borrar este plan?", async () => { await apiCall('deletePlanCuota', { id_cuota: idC }); openFinanciera(idF); }); }
 
-    // --- MODALES ---
     function openAliado(id) {
         const c = db.clientes.find(x => String(x.id_cliente).trim() === String(id).trim()); if(!c) return;
         document.getElementById('ed-cli-id').value = c.id_cliente; document.getElementById('ed-cli-nom').value = c.nombre_cliente; document.getElementById('ed-cli-pass').value = c.contrasena;
         let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">X</th></tr></thead><tbody>';
         db.financieras.forEach(f => {
             const r = db.porcentajes.find(p => String(p.id_cliente).trim() === String(id).trim() && String(p.id_financiera).trim() === String(f.id_financiera).trim());
-            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?toNum(r.factor_cliente):''}"></td><td class="has-text-centered">${r?`<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>`:''}</td></tr>`;
+            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0,01" value="${r?toNum(r.factor_cliente):''}"></td><td class="has-text-centered">${r?`<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>`:''}</td></tr>`;
         });
         document.getElementById('vinculos-container').innerHTML = h + '</tbody></table>'; document.getElementById('mod-cli').classList.add('is-active'); lucide.createIcons();
     }
@@ -354,7 +359,7 @@
         document.getElementById('ed-fin-id').value = f.id_financiera; document.getElementById('ed-fin-nom').value = f.nombre_financiera; document.getElementById('ed-fin-fac').value = f.factor_financiera;
         let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">X</th></tr></thead><tbody>';
         db.cuotas.filter(c => String(c.id_financiera).trim() === String(id).trim()).forEach(c => {
-            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${toNum(c.tasa_interes)}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${toNum(c.tasa_fianza)}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
+            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0,0001" value="${toNum(c.tasa_interes)}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0,0001" value="${toNum(c.tasa_fianza)}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
         });
         document.getElementById('planes-container').innerHTML = h + '</tbody></table>'; document.getElementById('mod-fin').classList.add('is-active'); lucide.createIcons();
     }
@@ -367,7 +372,6 @@
         closeModals();
     }
 
-    // --- LÓGICA ---
     function filterSimulations() {
       const d = document.getElementById('f-desde').value, h = document.getElementById('f-hasta').value;
       const t1 = d ? new Date(d + 'T00:00:00').getTime() : null, t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
@@ -433,13 +437,25 @@
       const fin = db.financieras.find(f => String(f.id_financiera).trim() === String(idFin).trim()), rel = db.porcentajes.find(p => String(p.id_cliente).trim() === String(idCli).trim() && String(p.id_financiera).trim() === String(idFin).trim()), cuo = db.cuotas.find(c => String(c.id_cuota).trim() === String(idCuo).trim());
       if(!fin || !rel || !cuo || p <= 0 || n <= 0) { render(0,0); return null; }
       
-      const cons = p / toNum(rel.factor_cliente);
-      const tI = toNum(cuo.tasa_interes) / 100, tF = toNum(cuo.tasa_fianza) / 100;
+      const factorAliado = toNum(rel.factor_cliente);
+      const factorBase = toNum(fin.factor_financiera);
+      
+      // 1. Total Crédito (Capital)
+      const cons = p / factorAliado;
+      
+      // 2. Utilidad según nueva fórmula: (Capital * Factor Financiera) - Precio
+      const util = (cons * factorBase) - p;
+      
+      // 3. Tasas como porcentajes (/100)
+      const tI = toNum(cuo.tasa_interes) / 100;
+      const tF = toNum(cuo.tasa_fianza) / 100;
+      
+      // 4. Cuota base e IVA/Fianza
       const cB = (cons + (cons * tI * n)) / n;
       const vC = cB + (cB * tF);
       
       render(cons, vC);
-      return { id_cliente: idCli, id_financiera: idFin, id_cuota: idCuo, precio_producto: p, valor_a_consignar: cons, utilidad: (p / toNum(rel.factor_cliente)) - (p / toNum(fin.factor_financiera)), valor_cuota: vC, total_financiado: vC * n, n_cuotas: n };
+      return { id_cliente: idCli, id_financiera: idFin, id_cuota: idCuo, precio_producto: p, valor_a_consignar: cons, utilidad: util, valor_cuota: vC, total_financiado: vC * n, n_cuotas: n };
     }
 
     function render(c, q) { document.getElementById('out_consignar').innerText = fmtCop(c); document.getElementById('out_cuota').innerText = fmtCop(q); }
