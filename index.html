@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions Pos | Gestión empresarial V2.23</title>
+  <title>Gets Solutions Pos | Gestión empresarial V2.24</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -20,21 +20,21 @@
     .main-card { width: 100%; max-width: 500px; background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); overflow: hidden; display: none; transition: max-width 0.4s ease; position: relative; }
     .main-card.wide { max-width: 1000px; } 
     
-    /* Indicador de Sincronización en Segundo Plano */
+    /* Indicador de Sincronización */
     #bg-sync-indicator {
         position: absolute; top: 10px; right: 20px; font-size: 0.65rem; color: var(--gets-purple);
         font-weight: 700; display: none; align-items: center; gap: 5px; z-index: 20;
         background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 20px;
     }
 
-    /* Navegación Principal */
+    /* Navegación */
     .brand-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; background: white; }
     .brand-logo { max-height: 45px; }
     .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
     .tab-item { flex: 1; padding: 1rem 0.5rem; text-align: center; cursor: pointer; color: #94a3b8; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.3s; }
     .tab-item.is-active { color: var(--gets-purple); border-bottom-color: var(--gets-purple); background: white; }
 
-    /* Sub-navegación Horizontal para Consultas */
+    /* Sub-navegación Consultas */
     .query-tabs { display: flex; gap: 10px; padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
     .query-tab-item { 
       padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #64748b; 
@@ -49,7 +49,7 @@
     .admin-label { font-size: 0.7rem; font-weight: 800; color: var(--gets-purple); text-transform: uppercase; margin-bottom: 0.75rem; display: block; }
     .box-admin { border: 1px solid #f1f5f9; padding: 1.25rem; border-radius: 12px; margin-bottom: 1.25rem; background: #f8fafc; }
 
-    /* Resultados Calculadora */
+    /* Resultados */
     .res-grid { background: #1e293b; border-radius: 15px; padding: 1.25rem; margin-top: 1.5rem; color: white; text-align: center; display: flex; gap: 10px; }
     .res-item { flex: 1; }
     .res-item p:first-child { font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
@@ -76,23 +76,36 @@
     .toast.is-error { border-left-color: var(--gets-red); }
 
     /* Botones Modernos */
-    .btn-modern { border-radius: 10px; font-weight: 700; transition: all 0.2s ease; padding: 0.6rem 1.5rem; height: auto; font-size: 0.85rem; }
-    .btn-modern.is-cancel { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-    .btn-modern.is-save { background: var(--primary-gradient); color: white; border: none; box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25); }
-    
-    /* Botón Eliminar Rojo */
+    .btn-modern { border-radius: 10px; font-weight: 700; transition: all 0.2s ease; padding: 0.6rem 1.5rem; height: auto; font-size: 0.85rem; border: 1px solid transparent; }
+    .btn-modern.is-cancel { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+    .btn-modern.is-save { background: var(--primary-gradient); color: white; box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25); }
+    .btn-modern.is-save:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35); color: white; }
+
+    /* Botón Eliminar Rojo Corregido */
     .btn-modern.is-danger-modern { 
         background: white; 
         color: var(--gets-red); 
         border: 2px solid #fee2e2; 
     }
     .btn-modern.is-danger-modern:hover { 
-        background: var(--gets-red); 
+        background: var(--gets-red) !important; 
         color: white !important; 
-        border-color: var(--gets-red);
+        border-color: var(--gets-red) !important;
         transform: translateY(-2px);
         box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
     }
+
+    /* Icono eliminar en filas de tabla */
+    .btn-delete-row { 
+        color: var(--gets-red); 
+        cursor: pointer !important; 
+        transition: transform 0.2s; 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center;
+        padding: 4px;
+    }
+    .btn-delete-row:hover { transform: scale(1.2); }
 
     .modal-card-foot { justify-content: flex-end; gap: 12px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 1rem 1.5rem; }
     .footer-v { text-align: center; padding: 1rem; font-size: 0.7rem; color: #94a3b8; background: #f8fafc; border-top: 1px solid #f1f5f9; font-weight: 600; }
@@ -107,20 +120,22 @@
       .summary-box { flex-direction: column; gap: 1rem; }
       .query-tabs { overflow-x: auto; padding: 0.75rem; gap: 5px; }
       .query-tab-item { flex-shrink: 0; padding: 0.4rem 0.75rem; font-size: 0.7rem; }
+      .modal-card-foot { flex-direction: column-reverse; }
+      .modal-card-foot .button { width: 100%; margin-left: 0 !important; margin-right: 0 !important; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Pantalla de Carga Inicial -->
+  <!-- Cargador Inicial -->
   <div id="loading" class="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
     <div class="button is-loading is-large is-white"></div>
-    <p class="mt-4 has-text-grey">Conectando con Gets Solutions Pos...</p>
+    <p class="mt-4 has-text-grey">Sincronizando con Gets Solutions Pos...</p>
   </div>
 
   <div id="toast-container"></div>
 
-  <!-- INICIO DE SESIÓN -->
+  <!-- LOGIN -->
   <div id="login-container" class="main-card" style="display: block;">
     <div class="brand-header"><img src="https://appgets.solutions/img/logoempresa.png" alt="Logo" class="brand-logo"></div>
     <div id="login-view" style="padding: 3rem 2rem;">
@@ -147,7 +162,7 @@
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()" style="background: var(--gets-purple); color: white; font-weight: 700;">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.23</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.24</div>
   </div>
 
   <!-- APLICACIÓN PRINCIPAL -->
@@ -233,22 +248,15 @@
         </div>
         <button class="button is-dark is-fullwidth is-small" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tipo_cuota: 'Mensual'})">Registrar Plan</button>
       </div>
-      <button class="button is-light is-fullwidth is-small" onclick="refresh(true)">Sincronizar Datos</button>
+      <button class="button is-light is-fullwidth is-small" onclick="refresh(true)">Sincronizar Base de Datos</button>
     </div>
 
     <!-- CONSULTAS -->
     <div id="v-con">
-      <!-- Pestañas Horizontales de Consultas -->
       <nav class="query-tabs">
-        <div id="m-cli" class="query-tab-item is-active" onclick="switchQuery('cli')">
-          <i data-lucide="users"></i> Aliados
-        </div>
-        <div id="m-fin" class="query-tab-item" onclick="switchQuery('fin')">
-          <i data-lucide="landmark"></i> Entidades
-        </div>
-        <div id="m-his" class="query-tab-item" onclick="switchQuery('his')">
-          <i data-lucide="history"></i> Historial
-        </div>
+        <div id="m-cli" class="query-tab-item is-active" onclick="switchQuery('cli')"><i data-lucide="users"></i> Aliados</div>
+        <div id="m-fin" class="query-tab-item" onclick="switchQuery('fin')"><i data-lucide="landmark"></i> Entidades</div>
+        <div id="m-his" class="query-tab-item" onclick="switchQuery('his')"><i data-lucide="history"></i> Historial</div>
       </nav>
 
       <div class="p-5">
@@ -263,7 +271,7 @@
         </div>
         
         <div id="q-his" class="q-section" style="display:none;">
-          <span class="admin-label">Historial de Simulaciones Recientes</span>
+          <span class="admin-label">Historial de Simulaciones</span>
           <div class="columns is-mobile is-multiline mb-2">
             <div class="column is-5"><label class="label is-7 mb-0">Desde</label><input id="f-desde" class="input is-small" type="date"></div>
             <div class="column is-5"><label class="label is-7 mb-0">Hasta</label><input id="f-hasta" class="input is-small" type="date"></div>
@@ -271,26 +279,29 @@
           </div>
           <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th>Tienda</th><th>Entidad</th><th>CC</th><th>Nombre</th><th>Correo</th><th>Celular</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th><th class="has-text-right">Total</th></tr></thead><tbody id="tb-simulaciones"></tbody></table></div>
           <div class="summary-box">
-            <div class="summary-item"><p>Créditos</p><p id="total-count">0</p></div>
+            <div class="summary-item"><p>N° Créditos</p><p id="total-count">0</p></div>
             <div class="summary-item"><p>Sumatoria</p><p id="total-creditos">$ 0</p></div>
-            <div class="summary-item"><p>Utilidad</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
+            <div class="summary-item"><p>Utilidad Total</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.23</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.24</div>
   </div>
 
   <!-- MODALES PERSONALIZADOS -->
   <div id="mod-confirm" class="modal">
     <div class="modal-background" onclick="closeConfirm()"></div>
     <div class="modal-card" style="max-width: 400px;">
-        <header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Confirmar</p></header>
+        <header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Confirmar Acción</p></header>
         <section class="modal-card-body has-text-centered py-5">
             <div style="color: var(--gets-red); margin-bottom: 1rem;"><i data-lucide="alert-triangle" style="width:48px; height:48px;"></i></div>
             <p id="confirm-text" class="is-size-6"></p>
         </section>
-        <footer class="modal-card-foot"><button class="button btn-modern is-cancel" onclick="closeConfirm()">Cancelar</button><button id="btn-confirm-exec" class="button btn-modern is-save" style="background: var(--gets-red);">Confirmar</button></footer>
+        <footer class="modal-card-foot">
+            <button class="button btn-modern is-cancel" onclick="closeConfirm()">Cancelar</button>
+            <button id="btn-confirm-exec" class="button btn-modern is-save" style="background: var(--gets-red);">Confirmar</button>
+        </footer>
     </div>
   </div>
 
@@ -303,7 +314,11 @@
           <div class="field"><label class="label is-small">Clave de Acceso</label><input id="ed-cli-pass" class="input is-small"></div>
           <hr><span class="admin-label">Factores Asignados por Financiera</span><div id="vinculos-container" class="table-container"></div>
       </section>
-      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteAliado()">Eliminar Aliado</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveAliado()">Guardar Cambios</button></footer>
+      <footer class="modal-card-foot">
+          <button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteAliado()">Eliminar Aliado</button>
+          <button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button>
+          <button class="button btn-modern is-save" onclick="saveAliado()">Guardar Cambios</button>
+      </footer>
     </div>
   </div>
 
@@ -316,7 +331,11 @@
           <div class="field"><label class="label is-small">Factor Base de Entidad</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01"></div>
           <hr><span class="admin-label">Planes de Cuotas Registrados</span><div id="planes-container" class="table-container"></div>
       </section>
-      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar Entidad</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar Planes</button></footer>
+      <footer class="modal-card-foot">
+          <button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar Entidad</button>
+          <button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button>
+          <button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar Planes</button>
+      </footer>
     </div>
   </div>
 
@@ -410,7 +429,7 @@
         let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">Eliminar</th></tr></thead><tbody>';
         db.financieras.forEach(f => {
             const r = db.porcentajes.find(p => String(p.id_cliente) === String(id) && String(p.id_financiera) === String(f.id_financiera));
-            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?r.factor_cliente:''}"></td><td class="has-text-centered">${r ? `<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>` : ''}</td></tr>`;
+            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?r.factor_cliente:''}"></td><td class="has-text-centered">${r ? `<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2"></i></span>` : ''}</td></tr>`;
         });
         document.getElementById('vinculos-container').innerHTML = h + '</tbody></table>';
         document.getElementById('mod-cli').classList.add('is-active'); lucide.createIcons();
@@ -434,7 +453,7 @@
         document.getElementById('ed-fin-fac').value = f.factor_financiera;
         let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">Acción</th></tr></thead><tbody>';
         db.cuotas.filter(c => String(c.id_financiera) === String(id)).forEach(c => {
-            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_interes}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_fianza}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
+            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_interes}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_fianza}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2"></i></span></td></tr>`;
         });
         document.getElementById('planes-container').innerHTML = h + '</tbody></table>';
         document.getElementById('mod-fin').classList.add('is-active'); lucide.createIcons();
@@ -526,7 +545,7 @@
     function fill(id, list, v, t, hasPlaceholder = false) {
       const el = document.getElementById(id); if(!el) return;
       let opts = hasPlaceholder ? '<option value="placeholder" selected disabled>Seleccione una opción...</option>' : '';
-      el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Sin datos disponibles)</option>';
+      el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Sin datos)</option>';
     }
 
     function handleAllyChange() { loadAssignedEntities(document.getElementById('sel_cliente').value); }
@@ -552,7 +571,7 @@
     function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active')); }
     function validateAndSave() {
       const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
-      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Hay campos pendientes por completar.", 'error'); return; } }
+      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Campos pendientes", 'error'); return; } }
       apiCall('guardarSimulacion', { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value });
     }
     function clearInputs() { ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => document.getElementById(id).value = ""); render(0,0); }
