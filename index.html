@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions Pos | Gestión empresarial V2.37</title>
+  <title>Gets Solutions Pos | Gestión empresarial V2.38</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -26,7 +26,7 @@
         background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 20px;
     }
 
-    /* Navegación */
+    /* Navegación Principal */
     .brand-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; background: white; }
     .brand-logo { max-height: 45px; }
     .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
@@ -118,16 +118,22 @@
       </div>
       <div class="field w-full">
         <label class="label is-small">Tienda / Aliado</label>
-        <div class="control has-icons-left"><input id="login-user" class="input is-medium" type="text" placeholder="Nombre Comercial"><span class="icon is-small is-left"><i data-lucide="store"></i></span></div>
+        <div class="control has-icons-left">
+          <input id="login-user" class="input is-medium" type="text" placeholder="Nombre Comercial">
+          <span class="icon is-small is-left"><i data-lucide="store"></i></span>
+        </div>
       </div>
       <div class="field w-full mt-4">
         <label class="label is-small">Contraseña</label>
-        <div class="control has-icons-left"><input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') attemptLogin()"><span class="icon is-small is-left"><i data-lucide="key"></i></span></div>
+        <div class="control has-icons-left">
+          <input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') attemptLogin()">
+          <span class="icon is-small is-left"><i data-lucide="key"></i></span>
+        </div>
       </div>
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()" style="background: var(--gets-purple); color: white; font-weight: 700;">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.37</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.38</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -234,7 +240,7 @@
         </div>
       </div>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.37</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.38</div>
   </div>
 
   <!-- MODAL CONFIRMACIÓN -->
@@ -330,18 +336,42 @@
       filterSimulations(); 
     }
 
+    // --- FUNCIONES DE LIMPIEZA ---
+    function clearInputs() { 
+      ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => document.getElementById(id).value = ""); 
+      render(0,0);
+    }
+    function clearAllyForm() {
+      ['new_cli_nom', 'new_cli_pass'].forEach(id => document.getElementById(id).value = "");
+    }
+    function clearVinculoForm() {
+      document.getElementById('rel_cli_id').value = "placeholder";
+      document.getElementById('rel_fin_id').value = "placeholder";
+      document.getElementById('rel_fac_val').value = "";
+    }
+    function clearEntityForm() {
+      ['new_fin_nom', 'new_fin_fac'].forEach(id => document.getElementById(id).value = "");
+    }
+    function clearPlanForm() {
+      document.getElementById('plan_fin_id').value = "placeholder";
+      document.getElementById('plan_tipo').value = "Mensual";
+      ['plan_num', 'plan_int', 'plan_fia'].forEach(id => document.getElementById(id).value = "");
+    }
+
+    // --- ELIMINACIONES ---
     function confirmDeleteAliado() { openConfirm(`¿Eliminar aliado permanentemente?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
     function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Borrar factor de vinculación?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
-    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar financiera y sus planes?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
+    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar entidad financiera?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
     function confirmDeletePlan(idC, idF) { openConfirm("¿Borrar este plan?", async () => { await apiCall('deletePlanCuota', { id_cuota: idC }); openFinanciera(idF); }); }
 
+    // --- MODALES ---
     function openAliado(id) {
         const c = db.clientes.find(x => String(x.id_cliente).trim() === String(id).trim()); if(!c) return;
         document.getElementById('ed-cli-id').value = c.id_cliente; document.getElementById('ed-cli-nom').value = c.nombre_cliente; document.getElementById('ed-cli-pass').value = c.contrasena;
         let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">X</th></tr></thead><tbody>';
         db.financieras.forEach(f => {
             const r = db.porcentajes.find(p => String(p.id_cliente).trim() === String(id).trim() && String(p.id_financiera).trim() === String(f.id_financiera).trim());
-            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0,01" value="${r?toNum(r.factor_cliente):''}"></td><td class="has-text-centered">${r?`<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>`:''}</td></tr>`;
+            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?toNum(r.factor_cliente):''}"></td><td class="has-text-centered">${r?`<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>`:''}</td></tr>`;
         });
         document.getElementById('vinculos-container').innerHTML = h + '</tbody></table>'; document.getElementById('mod-cli').classList.add('is-active'); lucide.createIcons();
     }
@@ -359,7 +389,7 @@
         document.getElementById('ed-fin-id').value = f.id_financiera; document.getElementById('ed-fin-nom').value = f.nombre_financiera; document.getElementById('ed-fin-fac').value = f.factor_financiera;
         let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">X</th></tr></thead><tbody>';
         db.cuotas.filter(c => String(c.id_financiera).trim() === String(id).trim()).forEach(c => {
-            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0,0001" value="${toNum(c.tasa_interes)}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0,0001" value="${toNum(c.tasa_fianza)}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
+            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${toNum(c.tasa_interes)}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${toNum(c.tasa_fianza)}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
         });
         document.getElementById('planes-container').innerHTML = h + '</tbody></table>'; document.getElementById('mod-fin').classList.add('is-active'); lucide.createIcons();
     }
@@ -372,6 +402,7 @@
         closeModals();
     }
 
+    // --- LÓGICA DE NEGOCIO ---
     function filterSimulations() {
       const d = document.getElementById('f-desde').value, h = document.getElementById('f-hasta').value;
       const t1 = d ? new Date(d + 'T00:00:00').getTime() : null, t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
@@ -397,7 +428,17 @@
 
     async function apiCall(action, data = null) {
       const res = await fetchApi(action, data);
-      if(res) { if(action==='guardarSimulacion') clearInputs(); showToast(res); refresh(true); }
+      if(res) { 
+        // LIMPIEZA SEGÚN ACCIÓN
+        if(action==='guardarSimulacion') clearInputs();
+        if(action==='crearCliente') clearAllyForm();
+        if(action==='asignarFactorCliente') clearVinculoForm();
+        if(action==='crearFinanciera') clearEntityForm();
+        if(action==='crearPlanCuota') clearPlanForm();
+
+        showToast(res); 
+        refresh(true); 
+      }
     }
 
     function switchView(v) {
@@ -465,7 +506,6 @@
       for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Faltan datos requeridos", 'error'); return; } }
       apiCall('guardarSimulacion', { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value });
     }
-    function clearInputs() { ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => document.getElementById(id).value = ""); render(0,0); }
   </script>
 </body>
 </html>
