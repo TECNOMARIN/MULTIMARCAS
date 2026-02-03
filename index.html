@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions Pos | Gestión empresarial V2.25</title>
+  <title>Gets Solutions Pos | Gestión empresarial V2.26</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -61,7 +61,7 @@
     .table.is-clickable tbody tr:hover { background-color: #f5f3ff !important; }
     .table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 5; border-bottom: 2px solid #e2e8f0; padding: 12px; font-weight: 800; color: #475569; }
 
-    /* Notificaciones Toast */
+    /* Toasts */
     #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; }
     .toast { 
         background: white; border-radius: 12px; padding: 1rem 1.5rem; min-width: 280px;
@@ -78,28 +78,22 @@
     .btn-modern { border-radius: 10px; font-weight: 700; transition: all 0.2s ease; padding: 0.6rem 1.5rem; height: auto; font-size: 0.85rem; border: 1px solid transparent; }
     .btn-modern.is-cancel { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
     .btn-modern.is-save { background: var(--primary-gradient); color: white; box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25); }
-    .btn-modern.is-save:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(109, 40, 217, 0.35); color: white; }
-
+    .btn-modern.is-save:hover { transform: translateY(-2px); color: white; }
+    
     .btn-modern.is-danger-modern { 
-        background: white; 
-        color: var(--gets-red); 
-        border: 2px solid #fee2e2; 
+        background: white; color: var(--gets-red); border: 2px solid #fee2e2; 
     }
     .btn-modern.is-danger-modern:hover { 
-        background: var(--gets-red) !important; 
-        color: white !important; 
-        border-color: var(--gets-red) !important;
-        transform: translateY(-2px);
+        background: var(--gets-red) !important; color: white !important; 
+        border-color: var(--gets-red) !important; transform: translateY(-2px);
     }
 
-    /* Icono eliminar en filas */
+    /* Iconos de eliminación corregidos */
     .btn-delete-row { 
-        color: var(--gets-red); 
+        color: var(--gets-red) !important; 
         cursor: pointer !important; 
         transition: transform 0.2s; 
-        display: inline-flex; 
-        align-items: center; 
-        justify-content: center;
+        display: inline-flex; align-items: center; justify-content: center;
         padding: 5px;
     }
     .btn-delete-row:hover { transform: scale(1.3); }
@@ -157,7 +151,7 @@
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()" style="background: var(--gets-purple); color: white; font-weight: 700;">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.25</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.26</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -246,7 +240,7 @@
       <button class="button is-light is-fullwidth is-small" onclick="refresh(true)">Sincronizar Manual</button>
     </div>
 
-    <!-- CONSULTAS (CORREGIDO: se añade clase section-view) -->
+    <!-- CONSULTAS -->
     <div id="v-con" class="section-view">
       <nav class="query-tabs">
         <div id="m-cli" class="query-tab-item is-active" onclick="switchQuery('cli')"><i data-lucide="users"></i> Aliados</div>
@@ -276,12 +270,12 @@
           <div class="summary-box">
             <div class="summary-item"><p>Créditos</p><p id="total-count">0</p></div>
             <div class="summary-item"><p>Sumatoria</p><p id="total-creditos">$ 0</p></div>
-            <div class="summary-item"><p>Utilidad</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
+            <div class="summary-item"><p>Utilidad Total</p><p id="total-utilidad" style="color: #059669;">$ 0</p></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.25</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.26</div>
   </div>
 
   <!-- MODAL CONFIRMACIÓN -->
@@ -300,15 +294,14 @@
     </div>
   </div>
 
-  <!-- MODAL ALIADO -->
   <div id="mod-cli" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
     <div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Editar Aliado Comercial</p></header>
       <section class="modal-card-body">
           <input id="ed-cli-id" type="hidden">
-          <div class="field"><label class="label is-small">Nombre de la Tienda</label><input id="ed-cli-nom" class="input is-small"></div>
-          <div class="field"><label class="label is-small">Clave de Acceso</label><input id="ed-cli-pass" class="input is-small"></div>
-          <hr><span class="admin-label">Factores Asignados (Clic en papelera para eliminar)</span><div id="vinculos-container" class="table-container"></div>
+          <div class="field"><label class="label is-small">Nombre</label><input id="ed-cli-nom" class="input is-small"></div>
+          <div class="field"><label class="label is-small">Clave</label><input id="ed-cli-pass" class="input is-small"></div>
+          <hr><span class="admin-label">Factores Asignados (Basura para eliminar)</span><div id="vinculos-container" class="table-container"></div>
       </section>
       <footer class="modal-card-foot">
           <button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteAliado()">Eliminar Aliado</button>
@@ -318,15 +311,14 @@
     </div>
   </div>
 
-  <!-- MODAL ENTIDAD -->
   <div id="mod-fin" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
     <div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Configurar Entidad Financiera</p></header>
       <section class="modal-card-body">
           <input id="ed-fin-id" type="hidden">
-          <div class="field"><label class="label is-small">Nombre de la Entidad</label><input id="ed-fin-nom" class="input is-small"></div>
+          <div class="field"><label class="label is-small">Nombre</label><input id="ed-fin-nom" class="input is-small"></div>
           <div class="field"><label class="label is-small">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01"></div>
-          <hr><span class="admin-label">Planes de Cuotas (Clic en papelera para eliminar)</span><div id="planes-container" class="table-container"></div>
+          <hr><span class="admin-label">Planes de Cuotas (Basura para eliminar)</span><div id="planes-container" class="table-container"></div>
       </section>
       <footer class="modal-card-foot">
           <button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar Entidad</button>
@@ -404,7 +396,6 @@
         document.getElementById('sel_cliente').disabled = !isAdmin;
         document.getElementById('sel_cliente').value = currentUser.id_cliente;
         document.getElementById('t-adm').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('t-con').style.display = isAdmin ? 'block' : 'none';
         loadAssignedEntities(currentUser.id_cliente);
         switchView('sim');
       } else { document.getElementById('login-error').classList.remove('is-hidden'); }
@@ -417,24 +408,28 @@
       filterSimulations(); 
     }
 
-    // --- MODALES MODIFICADOS ---
+    // --- FUNCIONES DE ELIMINACIÓN ---
+
+    function confirmDeleteAliado() { openConfirm(`¿Eliminar el aliado permanentemente?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
+    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Desea eliminar este factor de vinculación?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
+    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar la entidad financiera?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
+    function confirmDeletePlan(idCuota, idFin) { openConfirm("¿Eliminar este plan de cuotas?", async () => { await apiCall('deletePlanCuota', { id_cuota: idCuota }); openFinanciera(idFin); }); }
+
+    // --- MODALES ---
 
     function openAliado(id) {
         const c = db.clientes.find(x => String(x.id_cliente) === String(id)); if(!c) return;
         document.getElementById('ed-cli-id').value = c.id_cliente;
         document.getElementById('ed-cli-nom').value = c.nombre_cliente;
         document.getElementById('ed-cli-pass').value = c.contrasena;
-        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">Acción</th></tr></thead><tbody>';
+        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">X</th></tr></thead><tbody>';
         db.financieras.forEach(f => {
             const r = db.porcentajes.find(p => String(p.id_cliente) === String(id) && String(p.id_financiera) === String(f.id_financiera));
-            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?r.factor_cliente:''}"></td><td class="has-text-centered">${r ? `<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2"></i></span>` : ''}</td></tr>`;
+            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?r.factor_cliente:''}"></td><td class="has-text-centered">${r ? `<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>` : ''}</td></tr>`;
         });
         document.getElementById('vinculos-container').innerHTML = h + '</tbody></table>';
         document.getElementById('mod-cli').classList.add('is-active'); lucide.createIcons();
     }
-
-    function confirmDeleteAliado() { openConfirm(`¿Eliminar el aliado "${document.getElementById('ed-cli-nom').value}"?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
-    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Desea eliminar este factor de vinculación?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
 
     async function saveAliado() {
         const id = document.getElementById('ed-cli-id').value;
@@ -449,16 +444,13 @@
         document.getElementById('ed-fin-id').value = f.id_financiera;
         document.getElementById('ed-fin-nom').value = f.nombre_financiera;
         document.getElementById('ed-fin-fac').value = f.factor_financiera;
-        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">Acción</th></tr></thead><tbody>';
+        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">X</th></tr></thead><tbody>';
         db.cuotas.filter(c => String(c.id_financiera) === String(id)).forEach(c => {
-            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_interes}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_fianza}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2"></i></span></td></tr>`;
+            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_interes}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${c.tasa_fianza}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
         });
         document.getElementById('planes-container').innerHTML = h + '</tbody></table>';
         document.getElementById('mod-fin').classList.add('is-active'); lucide.createIcons();
     }
-
-    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar la entidad "${document.getElementById('ed-fin-nom').value}"?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
-    function confirmDeletePlan(idCuota, idFin) { openConfirm("¿Eliminar este plan de cuotas?", async () => { await apiCall('deletePlanCuota', { id_cuota: idCuota }); openFinanciera(idFin); }); }
 
     async function saveFinanciera() {
         const id = document.getElementById('ed-fin-id').value;
@@ -468,37 +460,26 @@
         closeModals();
     }
 
-    // --- HISTORIAL ---
-
-    function parseDateString(dateStr) {
-        if (!dateStr) return new Date();
-        if (typeof dateStr === 'string' && dateStr.includes('/')) {
-            const p = dateStr.split('/'); return new Date(p[2], p[1]-1, p[0]);
-        }
-        return new Date(dateStr);
-    }
+    // --- LOGICA GENERAL ---
 
     function filterSimulations() {
       const d = document.getElementById('f-desde').value, h = document.getElementById('f-hasta').value;
       const t1 = d ? new Date(d + 'T00:00:00').getTime() : null, t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
       let list = db.simulaciones || [];
-      if(t1 && t2) list = list.filter(s => { 
-          const dateStr = s.fecha || s.fecha_registro || s.Fecha || "";
-          const t = parseDateString(dateStr).getTime();
-          return t >= t1 && t <= t2; 
-      });
+      const parse = (s) => { if(!s) return 0; const p = s.split('/'); return new Date(p[2], p[1]-1, p[0]).getTime(); };
+      if(t1 && t2) list = list.filter(s => { const t = parse(s.fecha || s.Fecha); return t >= t1 && t <= t2; });
       const fmt = v => Number(v || 0).toLocaleString('es-CO', {style:'currency', currency:'COP', maximumFractionDigits:0});
-      let sumCreditos = 0, sumUtilidad = 0;
+      let sumC = 0, sumU = 0;
       const html = list.length ? list.slice().reverse().map(s => {
         const tienda = db.clientes.find(c => String(c.id_cliente) === String(s.id_cliente))?.nombre_cliente || 'Aliado';
         const entidad = db.financieras.find(f => String(f.id_financiera) === String(s.id_financiera))?.nombre_financiera || 'Entidad';
-        sumCreditos += Number(s.valor_a_consignar || 0); sumUtilidad += Number(s.utilidad || 0);
+        sumC += Number(s.valor_a_consignar || 0); sumU += Number(s.utilidad || 0);
         return `<tr><td class="is-size-7">${s.fecha || s.Fecha}</td><td class="has-text-weight-bold" style="color:var(--gets-purple)">${tienda}</td><td>${entidad}</td><td>${s.cc}</td><td>${s.nombre}</td><td>${s.correo}</td><td>${s.celular}</td><td class="has-text-right">${fmt(s.valor_a_consignar)}</td><td class="has-text-right" style="color:#059669">${fmt(s.utilidad)}</td><td class="has-text-right">${fmt(s.valor_cuota)}</td><td class="has-text-centered">${s.n_cuotas}</td><td class="has-text-right has-text-weight-bold">${fmt(s.total_financiado)}</td></tr>`;
       }).join('') : '<tr><td colspan="12" class="has-text-centered py-4">Sin registros</td></tr>';
       document.getElementById('tb-simulaciones').innerHTML = html;
       document.getElementById('total-count').innerText = list.length;
-      document.getElementById('total-creditos').innerText = fmt(sumCreditos);
-      document.getElementById('total-utilidad').innerText = fmt(sumUtilidad);
+      document.getElementById('total-creditos').innerText = fmt(sumC);
+      document.getElementById('total-utilidad').innerText = fmt(sumU);
       lucide.createIcons();
     }
 
@@ -516,9 +497,8 @@
     async function apiCall(action, data = null) {
       const res = await fetchApi(action, data);
       if(res) { 
-        if(action==='guardarSimulacion') { clearInputs(); showToast("Simulación Registrada"); }
-        else showToast(res);
-        refresh(true); 
+        if(action==='guardarSimulacion') clearInputs();
+        showToast(res); refresh(true); 
       }
     }
 
@@ -543,8 +523,8 @@
 
     function fill(id, list, v, t, hasPlaceholder = false) {
       const el = document.getElementById(id); if(!el) return;
-      let opts = hasPlaceholder ? '<option value="placeholder" selected disabled>Seleccione una opción...</option>' : '';
-      el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Sin datos)</option>';
+      let opts = hasPlaceholder ? '<option value="placeholder" selected disabled>Seleccione...</option>' : '';
+      el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">(Vacío)</option>';
     }
 
     function handleAllyChange() { loadAssignedEntities(document.getElementById('sel_cliente').value); }
