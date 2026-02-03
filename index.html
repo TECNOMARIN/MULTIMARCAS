@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions Pos | Gestión empresarial V2.18</title>
+  <title>Gets Solutions Pos | Gestión empresarial V2.19</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -167,7 +167,7 @@
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.18</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.19</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -309,7 +309,7 @@
         </main>
       </div>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.18</div>
+    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.19</div>
   </div>
 
   <!-- MODAL EDICIÓN ALIADO -->
@@ -691,7 +691,7 @@
     function validateAndSave() {
       const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
       for (let id of checks) { const el = document.getElementById(id); if (!el.value || el.value === "placeholder") { alert("Complete todos los campos."); el.focus(); return; } }
-      apiCall('guardarSimulacion', { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value });
+      apiCall('guardarSimulacion', { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_solettie_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value });
     }
 
     function clearInputs() { 
