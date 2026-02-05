@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Solutions Pos | Gestión empresarial V2.38</title>
+  <title>Gets Aliados | Gestión empresarial V2.47</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -26,16 +26,40 @@
         background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 20px;
     }
 
-    /* Navegación Principal */
+    /* Navegación */
     .brand-header { padding: 1.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; background: white; }
     .brand-logo { max-height: 45px; }
     .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; }
     .tab-item { flex: 1; padding: 1rem 0.5rem; text-align: center; cursor: pointer; color: #94a3b8; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.3s; }
     .tab-item.is-active { color: var(--gets-purple); border-bottom-color: var(--gets-purple); background: white; }
 
+    /* Banner Bienvenida */
+    .welcome-banner {
+        background: #f5f3ff;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #ddd6fe;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .welcome-icon {
+        background: var(--gets-purple);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .welcome-text p:first-child { font-size: 0.75rem; color: #6b7280; font-weight: 600; margin-bottom: -2px; }
+    .welcome-text p:last-child { font-size: 1.1rem; color: var(--gets-purple); font-weight: 800; }
+
     /* Consultas Horizontal Tabs */
     .query-tabs { display: flex; gap: 10px; padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #f1f5f9; }
-    .query-tab-item { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.2s; }
+    .query-tab-item { padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.8rem; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.4s ease; }
     .query-tab-item.is-active { background: white; color: var(--gets-purple); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
     /* Vistas Maestras - BLOQUEO DE FILTRADO */
@@ -46,7 +70,7 @@
     .admin-label { font-size: 0.7rem; font-weight: 800; color: var(--gets-purple); text-transform: uppercase; margin-bottom: 0.75rem; display: block; }
 
     /* Resultados Calculadora */
-    .res-grid { background: #1e293b; border-radius: 15px; padding: 1.25rem; margin-top: 1.5rem; color: white; text-align: center; display: flex; gap: 10px; }
+    .res-grid { background: #1e293b; border-radius: 15px; padding: 1.25rem; margin: 1.5rem 0; color: white; text-align: center; display: flex; gap: 10px; }
     .res-item { flex: 1; }
     .res-item p:first-child { font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; }
     .res-item p:last-child { font-size: 1.3rem; font-weight: 800; }
@@ -54,47 +78,35 @@
     /* Tablas */
     .table-container { border-radius: 12px; border: 1px solid #f1f5f9; max-height: 500px; overflow: auto; background: white; }
     .table { font-size: 0.75rem; white-space: nowrap; width: 100%; }
-    .table.is-clickable tbody tr { cursor: pointer; transition: background 0.2s; }
-    .table.is-clickable tbody tr:hover { background-color: #f5f3ff !important; }
     .table thead th { position: sticky; top: 0; background: #f8fafc; z-index: 5; border-bottom: 2px solid #e2e8f0; padding: 12px; font-weight: 800; color: #475569; }
 
-    /* Botones */
+    /* Botones Modernos */
     .btn-modern { border-radius: 10px; font-weight: 700; transition: 0.2s; padding: 0.6rem 1.5rem; height: auto; font-size: 0.85rem; border: 1px solid transparent; }
     .btn-modern.is-cancel { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
     .btn-modern.is-save { background: var(--primary-gradient); color: white; box-shadow: 0 4px 10px rgba(109, 40, 217, 0.25); }
-    .btn-modern.is-save:hover { transform: translateY(-2px); color: white; }
     .btn-modern.is-danger-modern { background: white; color: var(--gets-red); border: 2px solid #fee2e2; }
-    .btn-modern.is-danger-modern:hover { background: var(--gets-red) !important; color: white !important; border-color: var(--gets-red) !important; transform: translateY(-2px); }
+    .btn-modern.is-danger-modern:hover { background: var(--gets-red) !important; color: white !important; transform: translateY(-2px); }
 
     /* Icono Eliminar */
     .btn-delete-row { color: var(--gets-red) !important; cursor: pointer !important; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center; padding: 6px; }
     .btn-delete-row:hover { transform: scale(1.3); }
 
-    /* Modales */
+    /* Modales Prioridad */
     .modal { z-index: 1000; }
-    #mod-confirm { z-index: 20000 !important; }
+    #mod-confirm { z-index: 21000 !important; }
 
     /* Toasts */
-    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 21000; }
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 22000; }
     .toast { background: white; border-radius: 12px; padding: 1rem 1.5rem; min-width: 280px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); display: flex; align-items: center; gap: 12px; margin-bottom: 10px; transform: translateX(120%); transition: all 0.4s ease; border-left: 5px solid var(--gets-purple); }
     .toast.is-active { transform: translateX(0); }
     .toast.is-success { border-left-color: var(--gets-green); }
     .toast.is-error { border-left-color: var(--gets-red); }
 
-    .modal-card-foot { justify-content: flex-end; gap: 12px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 1rem 1.5rem; }
     .footer-v { text-align: center; padding: 1rem; font-size: 0.7rem; color: #94a3b8; background: #f8fafc; border-top: 1px solid #f1f5f9; font-weight: 600; }
 
-    .summary-box { background: #fdf2ff; border: 1px solid #e9d5ff; border-radius: 15px; padding: 1rem; margin-top: 1.25rem; display: flex; justify-content: space-around; }
-    .summary-item { text-align: center; }
-    .summary-item p:first-child { font-size: 0.65rem; color: #6b21a8; font-weight: 700; text-transform: uppercase; margin-bottom: 0.25rem; }
-    .summary-item p:last-child { font-size: 1.25rem; color: var(--gets-dark); font-weight: 800; }
-
     @media screen and (max-width: 768px) {
-      .summary-box { flex-direction: column; gap: 1rem; }
       .query-tabs { overflow-x: auto; padding: 0.75rem; gap: 5px; }
-      .query-tab-item { flex-shrink: 0; padding: 0.4rem 0.75rem; font-size: 0.7rem; }
-      .modal-card-foot { flex-direction: column-reverse; }
-      .modal-card-foot .button { width: 100%; margin: 0 !important; }
+      .query-tab-item { flex-shrink: 0; }
     }
   </style>
 </head>
@@ -103,7 +115,7 @@
   <!-- Cargador Inicial -->
   <div id="loading" class="loader-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
     <div class="button is-loading is-large is-white"></div>
-    <p class="mt-4 has-text-grey">Sincronizando con Gets Solutions Pos...</p>
+    <p class="mt-4 has-text-grey">Sincronizando con Gets Aliados...</p>
   </div>
 
   <div id="toast-container"></div>
@@ -113,27 +125,21 @@
     <div class="brand-header"><img src="https://appgets.solutions/img/logoempresa.png" alt="Logo" class="brand-logo"></div>
     <div id="login-view" style="padding: 3rem 2rem;">
       <div style="text-align: center; margin-bottom: 2rem;">
-        <div style="color: var(--gets-purple); background: #f5f3ff; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;"><i data-lucide="shield-check" style="width:32px; height:32px;"></i></div>
+        <div style="color: var(--gets-purple); background: #f5f3ff; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;"><i data-lucide="shield-check"></i></div>
         <h2 class="title is-4 mb-2">Ingreso Seguro</h2>
       </div>
       <div class="field w-full">
         <label class="label is-small">Tienda / Aliado</label>
-        <div class="control has-icons-left">
-          <input id="login-user" class="input is-medium" type="text" placeholder="Nombre Comercial">
-          <span class="icon is-small is-left"><i data-lucide="store"></i></span>
-        </div>
+        <div class="control has-icons-left"><input id="login-user" class="input is-medium" type="text" placeholder="Nombre Comercial"><span class="icon is-small is-left"><i data-lucide="store"></i></span></div>
       </div>
       <div class="field w-full mt-4">
         <label class="label is-small">Contraseña</label>
-        <div class="control has-icons-left">
-          <input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') attemptLogin()">
-          <span class="icon is-small is-left"><i data-lucide="key"></i></span>
-        </div>
+        <div class="control has-icons-left"><input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') attemptLogin()"><span class="icon is-small is-left"><i data-lucide="key"></i></span></div>
       </div>
       <button class="button is-purple is-fullwidth is-medium mt-6" onclick="attemptLogin()" style="background: var(--gets-purple); color: white; font-weight: 700;">Ingresar</button>
       <p id="login-error" class="help is-danger is-hidden mt-4 has-text-centered">Credenciales incorrectas.</p>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.38</div>
+    <div class="footer-v">Gets Aliados | Gestión empresarial V2.47</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -153,8 +159,31 @@
 
     <!-- CALCULADORA -->
     <div id="v-sim" class="section-view is-active-view">
+      
+      <!-- Banner de Bienvenida Dinámico -->
+      <div class="welcome-banner">
+        <div class="welcome-icon"><i data-lucide="store"></i></div>
+        <div class="welcome-text">
+            <p>¡Bienvenido a nuestro aliado!</p>
+            <p id="display-store-name">Cargando Tienda...</p>
+        </div>
+      </div>
+
+      <div class="field"><label class="label is-small">Tienda / Aliado</label><div class="select is-fullwidth"><select id="sel_cliente" onchange="handleAllyChange()"></select></div></div>
+      <div class="field"><label class="label is-small">Entidad Financiera</label><div class="select is-fullwidth"><select id="sel_financiera" onchange="loadPlanes()"></select></div></div>
+      <div class="columns is-mobile mb-0">
+        <div class="column"><label class="label is-small">Plan</label><div class="select is-fullwidth"><select id="sel_plan" onchange="loadNumCuotas()"></select></div></div>
+        <div class="column"><label class="label is-small">Cuotas</label><div class="select is-fullwidth"><select id="sel_n_cuotas" onchange="calc()"></select></div></div>
+      </div>
+      <div class="field"><label class="label is-small">Precio del Producto ($)</label><input id="in_precio" class="input is-medium has-text-weight-bold" type="text" placeholder="$ 0" oninput="handlePriceInput(this)"></div>
+
+      <div class="res-grid">
+        <div class="res-item"><p>Total Crédito</p><p id="out_consignar">$ 0</p></div>
+        <div class="res-item"><p>Cuota (Aprox.)</p><p id="out_cuota">$ 0</p></div>
+      </div>
+
       <div class="solicitante-section" style="border-left: 4px solid var(--gets-purple); padding: 0.5rem 1rem; margin-bottom: 1.5rem; background: #fafafa; border-radius: 0 8px 8px 0;">
-        <span class="admin-label">Datos del Solicitante</span>
+        <span class="admin-label">Datos del Solicitante (Cliente)</span>
         <div class="columns is-mobile is-multiline mb-0">
           <div class="column is-6 py-1"><input id="in_cc" class="input is-small" placeholder="CC / Documento"></div>
           <div class="column is-6 py-1"><input id="in_celular" class="input is-small" placeholder="Celular"></div>
@@ -162,18 +191,8 @@
           <div class="column is-12 py-1"><input id="in_correo" class="input is-small" placeholder="Correo electrónico"></div>
         </div>
       </div>
-      <div class="field"><label class="label is-small">Tienda</label><div class="select is-fullwidth"><select id="sel_cliente" onchange="handleAllyChange()"></select></div></div>
-      <div class="field"><label class="label is-small">Entidad Financiera</label><div class="select is-fullwidth"><select id="sel_financiera" onchange="loadPlanes()"></select></div></div>
-      <div class="columns is-mobile mb-0">
-        <div class="column"><label class="label is-small">Plan</label><div class="select is-fullwidth"><select id="sel_plan" onchange="loadNumCuotas()"></select></div></div>
-        <div class="column"><label class="label is-small">Cuotas</label><div class="select is-fullwidth"><select id="sel_n_cuotas" onchange="calc()"></select></div></div>
-      </div>
-      <div class="field"><label class="label is-small">Precio del Producto ($)</label><input id="in_precio" class="input is-medium" type="number" placeholder="0,00" oninput="calc()"></div>
-      <div class="res-grid">
-        <div class="res-item"><p>Total Crédito</p><p id="out_consignar">$ 0</p></div>
-        <div class="res-item"><p>Cuota (Aprox.)</p><p id="out_cuota">$ 0</p></div>
-      </div>
-      <button class="button is-purple is-fullwidth is-medium mt-5" onclick="validateAndSave()" style="background: var(--gets-purple); color: white; font-weight: 700;">Registrar Simulación</button>
+
+      <button class="button is-purple is-fullwidth is-medium mt-2" onclick="validateAndSave()" style="background: var(--gets-purple); color: white; font-weight: 700;">Registrar Simulación</button>
     </div>
 
     <!-- CONFIGURACIÓN -->
@@ -181,37 +200,30 @@
       <div class="box-admin">
         <span class="admin-label">1. Registro de Aliados</span>
         <div class="control has-icons-left mb-2"><input id="new_cli_nom" class="input is-small" placeholder="Nombre Aliado"><span class="icon is-small is-left"><i data-lucide="store"></i></span></div>
+        <div class="control has-icons-left mb-2"><input id="new_cli_bank" class="input is-small" placeholder="Cuenta Bancaria"><span class="icon is-small is-left"><i data-lucide="coins"></i></span></div>
         <div class="field has-addons">
           <div class="control is-expanded has-icons-left"><input id="new_cli_pass" class="input is-small" placeholder="Contraseña"><span class="icon is-small is-left"><i data-lucide="key"></i></span></div>
-          <div class="control"><button class="button is-purple is-small" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value})">Registrar</button></div>
+          <div class="control"><button class="button is-purple is-small" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value, cuenta: document.getElementById('new_cli_bank').value})">Registrar</button></div>
         </div>
       </div>
       <div class="box-admin">
         <span class="admin-label">2. Vinculación (Factores Aliado)</span>
         <div class="columns is-mobile mb-2"><div class="column"><div class="select is-fullwidth is-small"><select id="rel_cli_id"></select></div></div><div class="column"><div class="select is-fullwidth is-small"><select id="rel_fin_id"></select></div></div></div>
-        <div class="field has-addons"><div class="control is-expanded"><input id="rel_fac_val" class="input is-small" type="number" step="0,01" placeholder="Factor Asignado"></div><div class="control"><button class="button is-warning is-small" style="font-weight:700;" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value})">Vincular</button></div></div>
+        <div class="field has-addons"><div class="control is-expanded"><input id="rel_fac_val" class="input is-small" type="number" step="0.01" placeholder="Factor Asignado"></div><div class="control"><button class="button is-warning is-small" style="font-weight:700;" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value})">Vincular</button></div></div>
       </div>
       <div class="box-admin">
         <span class="admin-label">3. Registro de Entidades</span>
-        <div class="columns is-mobile mb-2"><div class="column is-8"><div class="control has-icons-left"><input id="new_fin_nom" class="input is-small" placeholder="Nombre Entidad"><span class="icon is-small is-left"><i data-lucide="building"></i></span></div></div><div class="column is-4"><input id="new_fin_fac" class="input is-small" type="number" step="0,01" placeholder="Factor Base"></div></div>
+        <div class="columns is-mobile mb-2"><div class="column is-8"><div class="control has-icons-left"><input id="new_fin_nom" class="input is-small" placeholder="Nombre Entidad"><span class="icon is-small is-left"><i data-lucide="building"></i></span></div></div><div class="column is-4"><input id="new_fin_fac" class="input is-small" type="number" step="0.01" placeholder="Factor Base"></div></div>
         <button class="button is-info is-fullwidth is-small" style="background:#3b82f6; color:white; font-weight:700;" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value})">Guardar Entidad</button>
       </div>
       <div class="box-admin">
         <span class="admin-label">4. Definición de Planes</span>
         <div class="select is-fullwidth is-small mb-2"><select id="plan_fin_id"></select></div>
         <div class="columns is-mobile is-multiline mb-2">
-            <div class="column is-6">
-                <div class="select is-fullwidth is-small">
-                    <select id="plan_tipo">
-                        <option value="Mensual">Mensual</option>
-                        <option value="Quincenal">Quincenal</option>
-                        <option value="Semanal">Semanal</option>
-                    </select>
-                </div>
-            </div>
+            <div class="column is-6"><div class="select is-fullwidth is-small"><select id="plan_tipo"><option value="Mensual">Mensual</option><option value="Quincenal">Quincenal</option><option value="Semanal">Semanal</option></select></div></div>
             <div class="column is-6"><input id="plan_num" class="input is-small" type="number" placeholder="Máx. Cuotas"></div>
-            <div class="column is-6"><input id="plan_int" class="input is-small" type="number" step="0,01" placeholder="% Interés"></div>
-            <div class="column is-6"><input id="plan_fia" class="input is-small" type="number" step="0,01" placeholder="% Fianza"></div>
+            <div class="column is-6"><input id="plan_int" class="input is-small" type="number" step="0.01" placeholder="% Interés"></div>
+            <div class="column is-6"><input id="plan_fia" class="input is-small" type="number" step="0.01" placeholder="% Fianza"></div>
         </div>
         <button class="button is-dark is-fullwidth is-small" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, tipo_cuota: document.getElementById('plan_tipo').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tasa_fianza: document.getElementById('plan_fia').value})">Registrar Plan</button>
       </div>
@@ -221,13 +233,13 @@
     <!-- CONSULTAS -->
     <div id="v-con" class="section-view">
       <nav class="query-tabs">
-        <div id="m-cli" class="query-tab-item is-active" onclick="switchQuery('cli')"><i data-lucide="users"></i> Aliados</div>
-        <div id="m-fin" class="query-tab-item" onclick="switchQuery('fin')"><i data-lucide="landmark"></i> Entidades</div>
-        <div id="m-his" class="query-tab-item" onclick="switchQuery('his')"><i data-lucide="history"></i> Historial</div>
+        <div id="m-cli" class="query-tab-item is-active" onclick="switchQuery('cli')">Aliados</div>
+        <div id="m-fin" class="query-tab-item" onclick="switchQuery('fin')">Entidades</div>
+        <div id="m-his" class="query-tab-item" onclick="switchQuery('his')">Historial</div>
       </nav>
       <div class="p-5">
-        <div id="q-cli" class="q-section"><span class="admin-label">Aliados Comerciales</span><div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Nombre</th><th>Clave Acceso</th></tr></thead><tbody id="tb-clientes"></tbody></table></div></div>
-        <div id="q-fin" class="q-section" style="display:none;"><span class="admin-label">Entidades Financieras</span><div class="table-container"><table class="table is-fullwidth is-striped is-clickable is-narrow"><thead><tr><th>Entidad</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras"></tbody></table></div></div>
+        <div id="q-cli" class="q-section"><span class="admin-label">Aliados Comerciales</span><div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Nombre</th><th>Clave Acceso</th></tr></thead><tbody id="tb-clientes"></tbody></table></div></div>
+        <div id="q-fin" class="q-section" style="display:none;"><span class="admin-label">Entidades Financieras</span><div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Entidad</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras"></tbody></table></div></div>
         <div id="q-his" class="q-section" style="display:none;">
           <span class="admin-label">Historial de Simulaciones</span>
           <div class="columns is-mobile mb-2"><div class="column"><input id="f-desde" class="input is-small" type="date"></div><div class="column"><input id="f-hasta" class="input is-small" type="date"></div><div class="column is-narrow"><button class="button is-purple is-small" onclick="filterSimulations()"><i data-lucide="filter"></i></button></div></div>
@@ -240,7 +252,7 @@
         </div>
       </div>
     </div>
-    <div class="footer-v">Gets Solutions Pos | Gestión empresarial V2.38</div>
+    <div class="footer-v">Gets Aliados | Gestión empresarial V2.47</div>
   </div>
 
   <!-- MODAL CONFIRMACIÓN -->
@@ -249,31 +261,10 @@
     <div class="modal-card" style="max-width: 400px; margin-top: 15vh;">
         <header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Confirmar Acción</p></header>
         <section class="modal-card-body has-text-centered py-5">
-            <div style="color: var(--gets-red); margin-bottom: 1.5rem;"><i data-lucide="alert-triangle" style="width:64px; height:64px;"></i></div>
+            <div style="color: var(--gets-red); margin-bottom: 1.5rem;"><i data-lucide="alert-triangle"></i></div>
             <p id="confirm-text" class="is-size-6 has-text-weight-semibold">¿Seguro que desea eliminar el registro?</p>
         </section>
         <footer class="modal-card-foot"><button class="button btn-modern is-cancel" onclick="closeConfirm()">Cancelar</button><button id="btn-confirm-exec" class="button btn-modern is-save" style="background: var(--gets-red);">Confirmar</button></footer>
-    </div>
-  </div>
-
-  <!-- MODALES EDICIÓN -->
-  <div id="mod-cli" class="modal">
-    <div class="modal-background" onclick="closeModals()"></div>
-    <div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Editar Aliado</p></header>
-      <section class="modal-card-body">
-          <input id="ed-cli-id" type="hidden"><div class="field"><label class="label is-small">Nombre</label><input id="ed-cli-nom" class="input is-small"></div><div class="field"><label class="label is-small">Clave</label><input id="ed-cli-pass" class="input is-small"></div><hr><span class="admin-label">Factores Asignados</span><div id="vinculos-container" class="table-container"></div>
-      </section>
-      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteAliado()">Eliminar</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveAliado()">Guardar</button></footer>
-    </div>
-  </div>
-
-  <div id="mod-fin" class="modal">
-    <div class="modal-background" onclick="closeModals()"></div>
-    <div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold">Configurar Entidad</p></header>
-      <section class="modal-card-body">
-          <input id="ed-fin-id" type="hidden"><div class="field"><label class="label is-small">Entidad</label><input id="ed-fin-nom" class="input is-small"></div><div class="field"><label class="label is-small">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0,01"></div><hr><span class="admin-label">Planes Registrados</span><div id="planes-container" class="table-container"></div>
-      </section>
-      <footer class="modal-card-foot"><button class="button btn-modern is-danger-modern mr-auto" onclick="confirmDeleteFinanciera()">Eliminar</button><button class="button btn-modern is-cancel" onclick="closeModals()">Cerrar</button><button class="button btn-modern is-save" onclick="saveFinanciera()">Actualizar</button></footer>
     </div>
   </div>
 
@@ -284,14 +275,21 @@
 
     window.onload = () => { lucide.createIcons(); setDefaultDates(); refresh(false); };
 
-    // --- MANEJO NUMÉRICO (Locale es-CO: Miles . Decimal ,) ---
     const toNum = (v) => {
         if (v === null || v === undefined || v === "") return 0;
         if (typeof v === 'number') return v;
-        return parseFloat(v.toString().replace(/\./g, '').replace(',', '.')) || 0;
+        let clean = v.toString().replace(/[\$\.]/g, '').replace(',', '.').trim();
+        return parseFloat(clean) || 0;
     };
-    const fmt = (v, dec = 0) => Number(v || 0).toLocaleString('es-CO', { minimumFractionDigits: dec, maximumFractionDigits: dec });
     const fmtCop = (v) => Number(v || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+
+    function handlePriceInput(input) {
+        let val = input.value.replace(/\D/g, "");
+        if (val === "") { input.value = ""; calc(); return; }
+        let formatted = new Intl.NumberFormat('es-CO').format(parseInt(val));
+        input.value = "$ " + formatted;
+        calc();
+    }
 
     function showToast(msg, type = 'success') {
         const c = document.getElementById('toast-container'); const t = document.createElement('div'); t.className = `toast is-${type}`;
@@ -318,105 +316,66 @@
         fill('rel_cli_id', db.clientes, 'id_cliente', 'nombre_cliente', true);
         fill('rel_fin_id', db.financieras, 'id_financiera', 'nombre_financiera', true);
         fill('plan_fin_id', db.financieras, 'id_financiera', 'nombre_financiera', true);
-        renderTables(); document.getElementById('loading').style.display = 'none'; document.getElementById('bg-sync-indicator').style.display = 'none';
+        renderTables();
+        if(currentUser) {
+            const t = db.clientes.find(c => String(c.id_cliente).trim() === String(currentUser.id_cliente).trim());
+            if(t) {
+                document.getElementById('display-store-name').innerText = t.nombre_cliente;
+                document.getElementById('sel_cliente').value = currentUser.id_cliente;
+                handleAllyChange();
+            }
+        }
+        document.getElementById('loading').style.display = 'none'; document.getElementById('bg-sync-indicator').style.display = 'none';
       }
     }
 
     function attemptLogin() {
       const u = document.getElementById('login-user').value.trim().toLowerCase(), p = document.getElementById('login-pass').value;
       const f = db.clientes.find(c => String(c.nombre_cliente).toLowerCase().trim() === u && String(c.contrasena) === p);
-      if (f) { currentUser = f; document.getElementById('login-container').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; const adm = String(currentUser.nombre_cliente).toLowerCase() === 'administrador'; document.getElementById('sel_cliente').disabled = !adm; loadAssignedEntities(currentUser.id_cliente); switchView('sim'); }
+      if (f) { 
+          currentUser = f; document.getElementById('login-container').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; 
+          const adm = String(currentUser.nombre_cliente).toLowerCase() === 'administrador'; 
+          document.getElementById('sel_cliente').disabled = !adm; 
+          document.getElementById('sel_cliente').value = currentUser.id_cliente;
+          document.getElementById('display-store-name').innerText = currentUser.nombre_cliente;
+          document.getElementById('t-adm').style.display = adm ? 'block' : 'none';
+          document.getElementById('t-con').style.display = adm ? 'block' : 'none';
+          handleAllyChange(); switchView('sim'); 
+      }
       else { document.getElementById('login-error').classList.remove('is-hidden'); }
     }
 
     function renderTables() {
       const draw = (id, h) => { const el = document.getElementById(id); if(el) el.innerHTML = h; };
-      draw('tb-clientes', db.clientes.map(c => `<tr onclick="openAliado('${c.id_cliente}')"><td>${c.nombre_cliente}</td><td><code>${c.contrasena}</code></td></tr>`).join(''));
-      draw('tb-financieras', db.financieras.map(f => `<tr onclick="openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${fmt(toNum(f.factor_financiera), 2)}</td></tr>`).join(''));
+      draw('tb-clientes', db.clientes.map(c => `<tr><td>${c.nombre_cliente}</td><td><code>${c.contrasena}</code></td></tr>`).join(''));
+      draw('tb-financieras', db.financieras.map(f => `<tr><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
       filterSimulations(); 
     }
 
-    // --- FUNCIONES DE LIMPIEZA ---
-    function clearInputs() { 
-      ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => document.getElementById(id).value = ""); 
-      render(0,0);
-    }
-    function clearAllyForm() {
-      ['new_cli_nom', 'new_cli_pass'].forEach(id => document.getElementById(id).value = "");
-    }
-    function clearVinculoForm() {
-      document.getElementById('rel_cli_id').value = "placeholder";
-      document.getElementById('rel_fin_id').value = "placeholder";
-      document.getElementById('rel_fac_val').value = "";
-    }
-    function clearEntityForm() {
-      ['new_fin_nom', 'new_fin_fac'].forEach(id => document.getElementById(id).value = "");
-    }
-    function clearPlanForm() {
-      document.getElementById('plan_fin_id').value = "placeholder";
-      document.getElementById('plan_tipo').value = "Mensual";
-      ['plan_num', 'plan_int', 'plan_fia'].forEach(id => document.getElementById(id).value = "");
-    }
-
-    // --- ELIMINACIONES ---
-    function confirmDeleteAliado() { openConfirm(`¿Eliminar aliado permanentemente?`, async () => { await apiCall('deleteCliente', { id_cliente: document.getElementById('ed-cli-id').value }); closeModals(); }); }
-    function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Borrar factor de vinculación?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
-    function confirmDeleteFinanciera() { openConfirm(`¿Eliminar entidad financiera?`, async () => { await apiCall('deleteFinanciera', { id_financiera: document.getElementById('ed-fin-id').value }); closeModals(); }); }
-    function confirmDeletePlan(idC, idF) { openConfirm("¿Borrar este plan?", async () => { await apiCall('deletePlanCuota', { id_cuota: idC }); openFinanciera(idF); }); }
-
-    // --- MODALES ---
-    function openAliado(id) {
-        const c = db.clientes.find(x => String(x.id_cliente).trim() === String(id).trim()); if(!c) return;
-        document.getElementById('ed-cli-id').value = c.id_cliente; document.getElementById('ed-cli-nom').value = c.nombre_cliente; document.getElementById('ed-cli-pass').value = c.contrasena;
-        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">X</th></tr></thead><tbody>';
-        db.financieras.forEach(f => {
-            const r = db.porcentajes.find(p => String(p.id_cliente).trim() === String(id).trim() && String(p.id_financiera).trim() === String(f.id_financiera).trim());
-            h += `<tr><td class="is-size-7">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?toNum(r.factor_cliente):''}"></td><td class="has-text-centered">${r?`<span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeleteVinculo('${id}', '${f.id_financiera}')"><i data-lucide="trash-2" style="width:16px;"></i></span>`:''}</td></tr>`;
-        });
-        document.getElementById('vinculos-container').innerHTML = h + '</tbody></table>'; document.getElementById('mod-cli').classList.add('is-active'); lucide.createIcons();
-    }
-
-    async function saveAliado() {
-        const id = document.getElementById('ed-cli-id').value;
-        await apiCall('updateCliente', { id_cliente: id, nombre_cliente: document.getElementById('ed-cli-nom').value, contrasena: document.getElementById('ed-cli-pass').value });
-        const inps = document.querySelectorAll('.v-fac');
-        for(let i of inps) { if(i.value!=="") await apiCall('updatePorcentaje', { id_cliente: id, id_financiera: i.dataset.fin, factor_cliente: i.value }); }
-        closeModals();
-    }
-
-    function openFinanciera(id) {
-        const f = db.financieras.find(x => String(x.id_financiera).trim() === String(id).trim()); if(!f) return;
-        document.getElementById('ed-fin-id').value = f.id_financiera; document.getElementById('ed-fin-nom').value = f.nombre_financiera; document.getElementById('ed-fin-fac').value = f.factor_financiera;
-        let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Plan</th><th>% Int</th><th>% Fia</th><th class="has-text-centered">X</th></tr></thead><tbody>';
-        db.cuotas.filter(c => String(c.id_financiera).trim() === String(id).trim()).forEach(c => {
-            h += `<tr><td class="is-size-7">${c.tipo_cuota.toUpperCase()} (${c.numero_cuotas})</td><td><input class="input is-small p-int" data-id="${c.id_cuota}" type="number" step="0.0001" value="${toNum(c.tasa_interes)}"></td><td><input class="input is-small p-fia" data-id="${c.id_cuota}" type="number" step="0.0001" value="${toNum(c.tasa_fianza)}"></td><td class="has-text-centered"><span class="btn-delete-row" onclick="event.stopPropagation(); confirmDeletePlan('${c.id_cuota}', '${id}')"><i data-lucide="trash-2" style="width:16px;"></i></span></td></tr>`;
-        });
-        document.getElementById('planes-container').innerHTML = h + '</tbody></table>'; document.getElementById('mod-fin').classList.add('is-active'); lucide.createIcons();
-    }
-
-    async function saveFinanciera() {
-        const id = document.getElementById('ed-fin-id').value;
-        await apiCall('updateFinanciera', { id_financiera: id, nombre_financiera: document.getElementById('ed-fin-nom').value, factor_financiera: document.getElementById('ed-fin-fac').value });
-        const ints = document.querySelectorAll('.p-int'), fias = document.querySelectorAll('.p-fia');
-        for(let i=0; i<ints.length; i++) { await apiCall('updatePlanCuota', { id_cuota: ints[i].dataset.id, tasa_interes: ints[i].value, tasa_fianza: fias[i].value }); }
-        closeModals();
-    }
-
-    // --- LÓGICA DE NEGOCIO ---
-    function filterSimulations() {
-      const d = document.getElementById('f-desde').value, h = document.getElementById('f-hasta').value;
-      const t1 = d ? new Date(d + 'T00:00:00').getTime() : null, t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
-      let list = db.simulaciones || [];
-      const parseP = (s) => { if(!s) return 0; const b = s.split('/'); return new Date(b[2], b[1]-1, b[0]).getTime(); };
-      if(t1 && t2) list = list.filter(s => { const t = parseP(s.fecha || s.Fecha); return t >= t1 && t <= t2; });
-      let sc = 0, su = 0;
-      const html = list.length ? list.slice().reverse().map(s => {
-        const t = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim())?.nombre_cliente || 'Aliado';
-        const e = db.financieras.find(fi => String(fi.id_financiera).trim() === String(s.id_financiera).trim())?.nombre_financiera || 'Entidad';
-        sc += toNum(s.valor_a_consignar); su += toNum(s.utilidad);
-        return `<tr><td class="is-size-7">${s.fecha || s.Fecha}</td><td class="has-text-weight-bold" style="color:var(--gets-purple)">${t}</td><td>${e}</td><td>${s.cc}</td><td>${s.nombre}</td><td>${s.correo}</td><td>${s.celular}</td><td class="has-text-right">${fmtCop(toNum(s.valor_a_consignar))}</td><td class="has-text-right" style="color:#059669">${fmtCop(toNum(s.utilidad))}</td><td class="has-text-right">${fmtCop(toNum(s.valor_cuota))}</td><td class="has-text-centered">${s.n_cuotas}</td><td class="has-text-right has-text-weight-bold">${fmtCop(toNum(s.total_financiado))}</td></tr>`;
-      }).join('') : '<tr><td colspan="12" class="has-text-centered py-4">Sin datos</td></tr>';
-      document.getElementById('tb-simulaciones').innerHTML = html; document.getElementById('total-count').innerText = list.length; document.getElementById('total-creditos').innerText = fmtCop(sc); document.getElementById('total-utilidad').innerText = fmtCop(su); lucide.createIcons();
+    // --- WHATSAPP MEJORADO (Gets Aliados + Sin Emojis + Viñetas Grandes) ---
+    function sendWhatsApp(data) {
+        const storeName = db.clientes.find(c => String(c.id_cliente).trim() === String(data.id_cliente).trim())?.nombre_cliente || "Tienda Aliada";
+        const bankName = db.financieras.find(f => String(f.id_financiera).trim() === String(data.id_financiera).trim())?.nombre_financiera || "Entidad Financiera";
+        const planObj = db.cuotas.find(c => String(c.id_cuota).trim() === String(data.id_cuota).trim());
+        
+        const message = encodeURIComponent(
+            `*NUEVA SIMULACION - GETS ALIADOS*\n\n` +
+            `*DATOS DE LA TIENDA*\n` +
+            `*●* Tienda: ${storeName}\n` +
+            `*●* Entidad: ${bankName}\n` +
+            `*●* Plan: ${planObj ? planObj.tipo_cuota : ''} (${data.n_cuotas} cuotas)\n\n` +
+            `*DETALLES FINANCIEROS*\n` +
+            `*●* Precio Producto: ${fmtCop(data.precio_producto)}\n` +
+            `*●* Total Credito: ${fmtCop(data.valor_a_consignar)}\n` +
+            `*●* Cuota Aprox: ${fmtCop(data.valor_cuota)}\n\n` +
+            `*DATOS DEL CLIENTE*\n` +
+            `*●* Nombre: ${data.nombre}\n` +
+            `*●* Documento: ${data.cc}\n` +
+            `*●* Celular: ${data.celular}\n` +
+            `*●* Correo: ${data.correo}\n\n` +
+            `_Enviado desde el sistema Gets Aliados_`
+        );
+        window.open(`https://wa.me/?text=${message}`, '_blank');
     }
 
     async function fetchApi(action, data = null) {
@@ -429,15 +388,12 @@
     async function apiCall(action, data = null) {
       const res = await fetchApi(action, data);
       if(res) { 
-        // LIMPIEZA SEGÚN ACCIÓN
-        if(action==='guardarSimulacion') clearInputs();
-        if(action==='crearCliente') clearAllyForm();
-        if(action==='asignarFactorCliente') clearVinculoForm();
-        if(action==='crearFinanciera') clearEntityForm();
-        if(action==='crearPlanCuota') clearPlanForm();
-
-        showToast(res); 
-        refresh(true); 
+          if(action==='guardarSimulacion') { sendWhatsApp(data); clearInputs(); }
+          if(action==='crearCliente') { ['new_cli_nom', 'new_cli_pass', 'new_cli_bank'].forEach(id => document.getElementById(id).value = ""); }
+          if(action==='asignarFactorCliente') { ['rel_fac_val'].forEach(id => document.getElementById(id).value = ""); document.getElementById('rel_cli_id').value = "placeholder"; document.getElementById('rel_fin_id').value = "placeholder"; }
+          if(action==='crearFinanciera') { ['new_fin_nom', 'new_fin_fac'].forEach(id => document.getElementById(id).value = ""); }
+          if(action==='crearPlanCuota') { ['plan_num', 'plan_int', 'plan_fia'].forEach(id => document.getElementById(id).value = ""); document.getElementById('plan_fin_id').value = "placeholder"; }
+          showToast(res); refresh(true); 
       }
     }
 
@@ -453,8 +409,8 @@
     function switchQuery(sec) {
       document.querySelectorAll('.q-section').forEach(s => s.style.display = 'none');
       document.querySelectorAll('.query-tab-item').forEach(a => a.classList.remove('is-active'));
-      const target = document.getElementById('q-' + sec), tab = document.getElementById('m-' + sec);
-      if(target) target.style.display = 'block'; if(tab) tab.classList.add('is-active');
+      document.getElementById('q-' + sec).style.display = 'block';
+      document.getElementById('m-' + sec).classList.add('is-active');
     }
 
     function fill(id, list, v, t, hasP = false) {
@@ -463,8 +419,13 @@
       el.innerHTML = list.length ? opts + list.map(i => `<option value="${i[v]}">${i[t]}</option>`).join('') : '<option value="">Sin datos</option>';
     }
 
-    function handleAllyChange() { loadAssignedEntities(document.getElementById('sel_cliente').value); }
-    function loadAssignedEntities(id) { fill('sel_financiera', db.financieras.filter(f => db.porcentajes.some(p => String(p.id_cliente).trim()===String(id).trim() && String(p.id_financiera).trim()===String(f.id_financiera).trim())), 'id_financiera', 'nombre_financiera', true); }
+    function handleAllyChange() { 
+        const id = document.getElementById('sel_cliente').value;
+        const t = db.clientes.find(c => String(c.id_cliente).trim() === String(id).trim());
+        if(t) document.getElementById('display-store-name').innerText = t.nombre_cliente;
+        const assignedIds = db.porcentajes.filter(p => String(p.id_cliente).trim() === String(id).trim()).map(p => String(p.id_financiera).trim());
+        fill('sel_financiera', db.financieras.filter(f => assignedIds.includes(String(f.id_financiera).trim())), 'id_financiera', 'nombre_financiera', true); 
+    }
     function loadPlanes() { fill('sel_plan', db.cuotas.filter(c => String(c.id_financiera).trim() === String(document.getElementById('sel_financiera').value).trim()).map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true); }
     function loadNumCuotas() {
         const p = db.cuotas.find(c => String(c.id_cuota).trim() === String(document.getElementById('sel_plan').value).trim());
@@ -473,38 +434,41 @@
     }
 
     function calc() {
-      const idCli = document.getElementById('sel_cliente').value, idFin = document.getElementById('sel_financiera').value, idCuo = document.getElementById('sel_plan').value, n = parseInt(document.getElementById('sel_n_cuotas').value) || 0, p = parseFloat(document.getElementById('in_precio').value) || 0;
+      const idCli = document.getElementById('sel_cliente').value, idFin = document.getElementById('sel_financiera').value, idCuo = document.getElementById('sel_plan').value, n = parseInt(document.getElementById('sel_n_cuotas').value) || 0, p = toNum(document.getElementById('in_precio').value);
       if (!idCli || idCli === "placeholder" || !idFin || idFin === "placeholder") return null;
       const fin = db.financieras.find(f => String(f.id_financiera).trim() === String(idFin).trim()), rel = db.porcentajes.find(p => String(p.id_cliente).trim() === String(idCli).trim() && String(p.id_financiera).trim() === String(idFin).trim()), cuo = db.cuotas.find(c => String(c.id_cuota).trim() === String(idCuo).trim());
       if(!fin || !rel || !cuo || p <= 0 || n <= 0) { render(0,0); return null; }
-      
-      const factorAliado = toNum(rel.factor_cliente);
-      const factorBase = toNum(fin.factor_financiera);
-      
-      // 1. Total Crédito (Capital)
-      const cons = p / factorAliado;
-      
-      // 2. Utilidad según nueva fórmula: (Capital * Factor Financiera) - Precio
-      const util = (cons * factorBase) - p;
-      
-      // 3. Tasas como porcentajes (/100)
-      const tI = toNum(cuo.tasa_interes) / 100;
-      const tF = toNum(cuo.tasa_fianza) / 100;
-      
-      // 4. Cuota base e IVA/Fianza
-      const cB = (cons + (cons * tI * n)) / n;
-      const vC = cB + (cB * tF);
-      
+      const cons = p / toNum(rel.factor_cliente), util = (cons * toNum(fin.factor_financiera)) - p;
+      const tI = toNum(cuo.tasa_interes) / 100, tF = toNum(cuo.tasa_fianza) / 100, cB = (cons + (cons * tI * n)) / n, vC = cB + (cB * tF);
       render(cons, vC);
       return { id_cliente: idCli, id_financiera: idFin, id_cuota: idCuo, precio_producto: p, valor_a_consignar: cons, utilidad: util, valor_cuota: vC, total_financiado: vC * n, n_cuotas: n };
     }
 
     function render(c, q) { document.getElementById('out_consignar').innerText = fmtCop(c); document.getElementById('out_cuota').innerText = fmtCop(q); }
     function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active')); }
+    function clearInputs() { ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio'].forEach(id => document.getElementById(id).value = ""); render(0,0); }
+
     function validateAndSave() {
       const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
-      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Faltan datos requeridos", 'error'); return; } }
-      apiCall('guardarSimulacion', { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value });
+      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Complete los datos del cliente.", 'error'); return; } }
+      const data = { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value };
+      apiCall('guardarSimulacion', data);
+    }
+
+    function filterSimulations() {
+      const d = document.getElementById('f-desde').value, h = document.getElementById('f-hasta').value;
+      const t1 = d ? new Date(d + 'T00:00:00').getTime() : null, t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
+      let list = db.simulaciones || [];
+      const parseP = (s) => { if(!s) return 0; const b = s.split('/'); return new Date(b[2], b[1]-1, b[0]).getTime(); };
+      if(t1 && t2) list = list.filter(s => { const t = parseP(s.fecha || s.Fecha); return t >= t1 && t <= t2; });
+      let sc = 0, su = 0;
+      const html = list.length ? list.slice().reverse().map(s => {
+        const t = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim())?.nombre_cliente || 'Aliado';
+        const e = db.financieras.find(fi => String(fi.id_financiera).trim() === String(s.id_financiera).trim())?.nombre_financiera || 'Entidad';
+        sc += toNum(s.valor_a_consignar); su += toNum(s.utilidad);
+        return `<tr><td>${s.fecha || s.Fecha}</td><td class="has-text-weight-bold" style="color:var(--gets-purple)">${t}</td><td>${e}</td><td>${s.cc}</td><td>${s.nombre}</td><td>${s.correo}</td><td>${s.celular}</td><td class="has-text-right">${fmtCop(toNum(s.valor_a_consignar))}</td><td class="has-text-right" style="color:#059669">${fmtCop(toNum(s.utilidad))}</td><td class="has-text-right">${fmtCop(toNum(s.valor_cuota))}</td><td class="has-text-centered">${s.n_cuotas}</td><td class="has-text-right has-text-weight-bold">${fmtCop(toNum(s.total_financiado))}</td></tr>`;
+      }).join('') : '<tr><td colspan="12" class="has-text-centered py-4">Sin datos</td></tr>';
+      document.getElementById('tb-simulaciones').innerHTML = html; document.getElementById('total-count').innerText = list.length; document.getElementById('total-creditos').innerText = fmtCop(sc); document.getElementById('total-utilidad').innerText = fmtCop(su); lucide.createIcons();
     }
   </script>
 </body>
