@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gets Aliados | Gestión empresarial V2.73</title>
+  <title>Gets Aliados | Gestión empresarial V2.74</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -17,7 +17,6 @@
       --gets-blue: #2563eb;
       --soft-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
       
-      /* Colores de Marca Específicos */
       --color-brilla: #e30613;
       --color-sumas: #e1005d;
       --color-bogota: #003e9a;
@@ -64,9 +63,10 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     .section-view.is-active-view { display: block !important; }
 
-    /* Estilo Especial Filtros Historial (Tablet) */
+    /* Estilo Especial Filtros Historial (Tablet y PC) */
     .filter-panel-history { background: #f8fafc; padding: 1.5rem; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
-    .select.is-period-select-large select { font-size: 1.05rem !important; font-weight: 700; height: 50px; border-radius: 12px; color: var(--gets-purple) !important; border-color: #cbd5e1; }
+    /* AUMENTADO: Fuente del menú desplegable para PC */
+    .select.is-period-select-large select { font-size: 1.2rem !important; font-weight: 800; height: 55px; border-radius: 14px; color: var(--gets-purple) !important; border-color: #cbd5e1; }
     .input-date-history { height: 45px !important; border-radius: 10px !important; border-color: #e2e8f0 !important; font-weight: 600; }
 
     .query-tabs { display: flex; gap: 12px; padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #f1f5f9; overflow-x: auto; }
@@ -156,7 +156,7 @@
       <div class="field mt-4"><label class="label is-small">Contraseña</label><div class="control has-icons-left"><input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" style="border-radius:12px;" onkeypress="if(event.key==='Enter') attemptLogin()"><span class="icon is-small is-left"><i data-lucide="key"></i></span></div></div>
       <button class="button btn-modern is-save is-fullwidth is-medium mt-6" onclick="attemptLogin()">Ingresar al Portal</button>
     </div>
-    <div class="footer-v">Gets Aliados | Gestión empresarial V2.73</div>
+    <div class="footer-v">Gets Aliados | Gestión empresarial V2.74</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -196,8 +196,8 @@
     <!-- CRÉDITO EN LÍNEA -->
     <div id="v-ext" class="section-view">
         <div class="columns is-multiline">
-            <div class="column is-6-tablet is-4-desktop"><div class="ext-card gets"><h3>Gets Solutions</h3><p>Crédito inmediato para reportados. Estrena tecnología hoy mismo con cuota inicial mínima.</p><button class="btn-ext btn-gets" onclick="sendAssessorWhatsApp('Gets Solutions')"><i data-lucide="message-circle"></i> Solicita tu crédito</button></div></div>
-            <div class="column is-6-tablet is-4-desktop"><div class="ext-card brilla"><h3 style="color:var(--color-brilla)">Cupo Brilla</h3><p>Usa tu Cupo Brilla Surtigas para comprar tecnología y hogar. Paga en tu factura del gas.</p><button class="btn-ext btn-brilla" onclick="sendAssessorWhatsApp('Brilla Surtigas')"><i data-lucide="message-circle"></i> Contacta un asesor</button></div></div>
+            <div class="column is-6-tablet is-4-desktop"><div class="ext-card gets"><h3>Gets Solutions</h3><p>Crédito inmediato para reportados. Estrena tecnología hoy mismo con cuota inicial mínima.</p><button class="btn-ext btn-gets" onclick="sendAssessorWhatsApp('Gets Solutions')">Solicita tu crédito</button></div></div>
+            <div class="column is-6-tablet is-4-desktop"><div class="ext-card brilla"><h3 style="color:var(--color-brilla)">Cupo Brilla</h3><p>Usa tu Cupo Brilla Surtigas para comprar tecnología y hogar. Paga en tu factura del gas.</p><button class="btn-ext btn-brilla" onclick="sendAssessorWhatsApp('Brilla Surtigas')">Contacta un asesor</button></div></div>
             <div class="column is-6-tablet is-4-desktop"><div class="ext-card sumas"><h3 style="color:var(--color-sumas)">Sumas Pay</h3><p>Financiación 100% digital y sin papeles para celulares y accesorios. Respuesta inmediata.</p><a href="https://solicitud.mundosumas.com/v2/home/mai" target="_blank" class="btn-ext btn-sumas"><i data-lucide="external-link"></i> Autogestiona aquí</a></div></div>
             <div class="column is-6-tablet is-4-desktop"><div class="ext-card bogota"><h3 style="color:var(--color-bogota)">Banco de Bogotá</h3><p>Crédito fácil y sin trámites físicos. Obtén tu aprobación en menos de 5 minutos.</p><a href="https://slm.bancodebogota.com/lyzz2kdc" target="_blank" class="btn-ext btn-bogota"><i data-lucide="external-link"></i> Iniciar solicitud</a></div></div>
             <div class="column is-6-tablet is-4-desktop"><div class="ext-card addi"><h3>Addi</h3><p>Compra lo que quieras y paga después. Pregunta por las cuotas con 0% de interés.</p><a href="https://preapproval.addi.com/?allySlug=addi-preapproval" target="_blank" class="btn-ext btn-addi"><i data-lucide="check-circle"></i> Ver pre-aprobado</a></div></div>
@@ -215,7 +215,7 @@
       </nav>
       <div class="py-5">
           <div id="asec-ali" class="admin-sec is-active"><div class="box-admin"><span class="admin-label">Nuevo Aliado Comercial</span><div class="field"><input id="new_cli_nom" class="input is-medium" placeholder="Nombre Comercial"></div><div class="field mt-4"><input id="new_cli_pass" class="input is-medium" placeholder="Contraseña"></div><button class="button btn-modern is-save is-fullwidth mt-5" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value})">Registrar Nuevo Aliado</button></div></div>
-          <div id="asec-vin" class="admin-sec"><div class="box-admin"><span class="admin-label">Vincular Factor de Aliado</span><div class="field"><label class="label is-size-7">Aliado</label><div class="select is-fullwidth is-medium"><select id="rel_cli_id"></select></div></div><div class="field"><label class="label is-size-7">Entidad</label><div class="select is-fullwidth is-medium"><select id="rel_fin_id"></select></div></div><div class="field mb-5"><label class="label is-size-7">Factor Aliado</label><input id="rel_fac_val" class="input is-medium" type="number" step="0.01" placeholder="0.00"></div><button class="button btn-modern is-save is-fullwidth mt-5" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value})">Guardar Vinculación</button></div></div>
+          <div id="asec-vin" class="admin-sec"><div class="box-admin"><span class="admin-label">Vincular Factor de Aliado</span><div class="field"><label class="label is-size-7">Seleccionar Tienda</label><div class="select is-fullwidth is-medium"><select id="rel_cli_id"></select></div></div><div class="field"><label class="label is-size-7">Seleccionar Financiera</label><div class="select is-fullwidth is-medium"><select id="rel_fin_id"></select></div></div><div class="field mb-5"><label class="label is-size-7">Factor Aliado</label><input id="rel_fac_val" class="input is-medium" type="number" step="0.01" placeholder="0.00"></div><button class="button btn-modern is-save is-fullwidth mt-5" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value})">Guardar Vinculación</button></div></div>
           <div id="asec-ent" class="admin-sec"><div class="box-admin"><span class="admin-label">Nueva Entidad Financiera</span><div class="field"><input id="new_fin_nom" class="input is-medium" placeholder="Nombre"></div><div class="field mt-4"><label class="label is-size-7">Factor Base</label><input id="new_fin_fac" class="input is-medium" type="number" step="0.01" placeholder="0.00"></div><button class="button btn-modern is-save is-fullwidth mt-5" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value})">Registrar Entidad</button></div></div>
           <div id="asec-pla" class="admin-sec"><div class="box-admin"><span class="admin-label">Planes de Entidades</span><div class="field"><div class="select is-fullwidth is-medium"><select id="plan_fin_id"></select></div></div><div class="columns is-mobile is-multiline mb-2"><div class="column is-6"><label class="label is-size-7">Frecuencia</label><div class="select is-fullwidth is-medium"><select id="plan_tipo"><option value="Mensual">Mensual</option><option value="Quincenal">Quincenal</option><option value="Semanal">Semanal</option></select></div></div><div class="column is-6"><label class="label is-size-7">Máx Cuotas</label><input id="plan_num" class="input is-medium" type="number"></div><div class="column is-6"><label class="label is-size-7">% Int</label><input id="plan_int" class="input is-medium" type="number" step="0.01"></div><div class="column is-6"><label class="label is-size-7">% Fia</label><input id="plan_fia" class="input is-medium" type="number" step="0.01"></div></div><button class="button btn-modern is-save is-fullwidth mt-4" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, tipo_cuota: document.getElementById('plan_tipo').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tasa_fianza: document.getElementById('plan_fia').value})">Registrar Plan</button></div></div>
       </div>
@@ -236,7 +236,7 @@
           <!-- PANEL DE FILTROS REESTRUCTURADO -->
           <div class="filter-panel-history">
             <div class="columns is-multiline is-mobile">
-                <!-- ARRIBA: Filtro predefinido -->
+                <!-- ARRIBA: Filtro predefinido (GRANDE PARA PC) -->
                 <div class="column is-12 mb-3">
                     <div class="field">
                         <label class="label is-small" style="text-transform: uppercase; letter-spacing: 0.1em; opacity:0.8;">Filtro Rápido de Periodo</label>
@@ -280,7 +280,7 @@
         </div>
       </div>
     </div>
-    <div class="footer-v">Gets Aliados | Gestión empresarial V2.73</div>
+    <div class="footer-v">Gets Aliados | Gestión empresarial V2.74</div>
   </div>
 
   <script>
@@ -359,7 +359,7 @@
         const cred = toNum(s.valor_a_consignar), util = toNum(s.utilidad);
         sc += cred; su += util;
         return `<tr><td>${s.fecha || s.Fecha}</td><td style="color:var(--gets-purple); font-weight:bold;">${t}</td><td>${e}</td><td>${s.cc || s.CC || '-'}</td><td>${s.nombre || s.Nombre || '-'}</td><td class="has-text-right">${fmtCop(cred)}</td><td class="has-text-right" style="color:var(--gets-green); font-weight:700;">${fmtCop(util)}</td><td class="has-text-right">${fmtCop(toNum(s.valor_cuota))}</td><td class="has-text-centered">${s.n_cuotas}</td></tr>`;
-      }).join('') : '<tr><td colspan="9" class="has-text-centered py-6 has-text-grey">Sin datos en este periodo</td></tr>';
+      }).join('') : '<tr><td colspan="9" class="has-text-centered py-6 has-text-grey">Sin datos en el periodo</td></tr>';
       
       document.getElementById('tb-simulaciones').innerHTML = html;
       document.getElementById('total-count').innerText = list.length;
