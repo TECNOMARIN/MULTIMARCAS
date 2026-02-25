@@ -24,7 +24,6 @@
 
         /* =========================================================
            BLOQUE DE SEGURIDAD: CONFIGURACIÓN ESTRICTA CARTA
-           ¡NO MODIFICAR ESTOS VALORES! Garantizan 1 sola hoja.
            ========================================================= */
         .letter-size {
             width: 8.5in !important;
@@ -36,33 +35,30 @@
             flex-direction: column;
             box-sizing: border-box;
             position: relative;
-            overflow: hidden; /* Evita cualquier desborde accidental */
+            overflow: hidden; 
         }
 
         @media print {
             body { background: white; }
             .print\:hidden { display: none !important; }
-            .letter-size {
-                box-shadow: none !important;
-                margin: 0 !important;
-            }
-            @page {
-                size: letter;
-                margin: 0;
-            }
+            .letter-size { box-shadow: none !important; margin: 0 !important; }
+            @page { size: letter; margin: 0; }
         }
 
-        /* Scrollbar personalizado */
         .custom-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #2C4C8C; border-radius: 10px; border: 2px solid #f8fafc; }
+        
+        /* Animación de carga para el botón/tabla */
+        .animate-spin-slow { animation: spin 2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useMemo } = React;
+        const { useState, useMemo, useEffect } = React;
 
         const Icon = ({ name, size = 20, className = "" }) => {
             const icons = {
@@ -75,17 +71,18 @@
                 Calculator: <><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="16" y1="14" x2="16" y2="18" /><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01" /></>,
                 Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>,
                 ChevronDown: <path d="m6 9 6 6 6-6" />,
-                ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />
+                ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />,
+                Loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />
             };
             return (
-                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={name === 'Loader' ? `animate-spin-slow ${className}` : className}>
                     {icons[name]}
                 </svg>
             );
         };
 
         const App = () => {
-            // DATOS CORPORATIVOS BLINDADOS
+            // DATOS CORPORATIVOS
             const companyInfo = {
                 name: "SOLUCIONES EFECTIVAS CTG S.A.S",
                 nit: "901.831.921-2",
@@ -99,18 +96,15 @@
                 logoUrl: "https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png"
             };
 
-            // BASE DE DATOS RETAIL B (Valores Exactos Inalterables)
-            const retailData = [
-                { brand: 'TECNO', ref: 'SPARK GO2 64GB + 3+3RAM', cost: '265.000', sale: '730.000', initial: '219.000', receive: '146.000', return: '43.800', commTienda: '102.200', commDist: '83.800' },
-                { brand: 'TECNO', ref: 'SPARK GO2 128GB + 3+3RAM', cost: '310.000', sale: '790.000', initial: '237.000', receive: '158.000', return: '47.400', commTienda: '110.600', commDist: '87.400' },
-                { brand: 'TECNO', ref: 'SPARK GO3 64GB + 3+3RAM', cost: '300.000', sale: '780.000', initial: '234.000', receive: '156.000', return: '46.800', commTienda: '109.200', commDist: '86.800' },
-                { brand: 'TECNO', ref: 'SPARK GO3 128GB + 3+3RAM', cost: '345.000', sale: '850.000', initial: '255.000', receive: '170.000', return: '51.000', commTienda: '119.000', commDist: '91.000' },
-                { brand: 'TECNO', ref: 'SPARK 40 256GB + 4RAM', cost: '450.000', sale: '1.000.000', initial: '300.000', receive: '200.000', return: '60.000', commTienda: '140.000', commDist: '100.000' },
-                { brand: 'SAMSUNG', ref: 'GALAXY A05 64GB + 3RAM', cost: '237.000', sale: '650.000', initial: '195.000', receive: '130.000', return: '39.000', commTienda: '91.000', commDist: '79.000' },
-                { brand: 'SAMSUNG', ref: 'GALAXY A06 64GB + 4RAM', cost: '275.000', sale: '750.000', initial: '225.000', receive: '150.000', return: '45.000', commTienda: '105.000', commDist: '85.000' },
-                { brand: 'SAMSUNG', ref: 'GALAXY A06 128GB + 4RAM', cost: '310.000', sale: '800.000', initial: '240.000', receive: '160.000', return: '48.000', commTienda: '112.000', commDist: '88.000' },
-                { brand: 'XIAOMI', ref: 'REDMI 15 6/128GB', cost: '465.000', sale: '1.050.000', initial: '315.000', receive: '210.000', return: '63.000', commTienda: '147.000', commDist: '103.000' }
+            // BASE DE DATOS DE RESPALDO (Por si el enlace de Google Sheets falla o está vacío temporalmente)
+            const fallbackData = [
+                { brand: 'TECNO', ref: 'SPARK GO2 64GB + 3+3RAM', cost: '265.000', sale: '730.000', initial: '146.000', receive: '219.000', return: '43.800', commTienda: '102.200', commDist: '83.800' },
+                { brand: 'TECNO', ref: 'SPARK GO2 128GB + 3+3RAM', cost: '310.000', sale: '790.000', initial: '158.000', receive: '237.000', return: '47.400', commTienda: '110.600', commDist: '87.400' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A05 64GB + 3RAM', cost: '237.000', sale: '650.000', initial: '130.000', receive: '195.000', return: '39.000', commTienda: '91.000', commDist: '79.000' }
             ];
+
+            const [retailData, setRetailData] = useState([]);
+            const [isLoadingPrices, setIsLoadingPrices] = useState(true);
 
             const [formData, setFormData] = useState({
                 fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
@@ -124,13 +118,48 @@
             const [searchTerm, setSearchTerm] = useState('');
             const [isGenerating, setIsGenerating] = useState(false);
 
+            // =========================================================
+            // CONEXIÓN CON GOOGLE SHEETS ACTUALIZADA
+            // =========================================================
+            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec"; 
+
+            useEffect(() => {
+                const fetchPrecios = async () => {
+                    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "TU_URL_AQUI") {
+                        console.warn("No se ha configurado la URL de Google Sheets. Usando datos de respaldo locales.");
+                        setRetailData(fallbackData);
+                        setIsLoadingPrices(false);
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(GOOGLE_SCRIPT_URL);
+                        const data = await response.json();
+                        
+                        if (data && !data.error && data.length > 0) {
+                            setRetailData(data);
+                        } else {
+                            console.error("Respuesta vacía o error de Google:", data.error);
+                            setRetailData(fallbackData); 
+                        }
+                    } catch (error) {
+                        console.error("Error al conectar con Google Sheets:", error);
+                        setRetailData(fallbackData); 
+                    } finally {
+                        setIsLoadingPrices(false);
+                    }
+                };
+                
+                fetchPrecios();
+            }, []);
+
             const filteredData = useMemo(() => {
                 return retailData.filter(item => {
-                    const matchesSearch = item.ref.toLowerCase().includes(searchTerm.toLowerCase()) || item.brand.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesSearch = item.ref?.toLowerCase().includes(searchTerm.toLowerCase()) || item.brand?.toLowerCase().includes(searchTerm.toLowerCase());
                     const matchesBrand = selectedBrand === 'TODAS LAS MARCAS' || item.brand === selectedBrand;
                     return matchesSearch && matchesBrand;
                 });
-            }, [searchTerm, selectedBrand]);
+            }, [searchTerm, selectedBrand, retailData]);
 
             const brandsList = ['TODAS LAS MARCAS', ...new Set(retailData.map(item => item.brand))];
 
@@ -150,7 +179,7 @@
             return (
                 <div className="min-h-screen py-8 px-4 flex flex-col items-center">
                     
-                    {/* CONTROLES DE APLICACIÓN */}
+                    {/* PANEL DE CONTROL */}
                     <div className="w-full max-w-4xl bg-white p-6 rounded-3xl shadow-xl mb-8 print:hidden border-t-[10px] border-[#2C4C8C]">
                         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6">
                             <div className="flex items-center gap-4">
@@ -158,8 +187,13 @@
                                 <div><h2 className="text-xl font-black text-[#2C4C8C] uppercase tracking-tighter italic">Gestión Soluciones</h2><p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Generador PDF - Retail B</p></div>
                             </div>
                             <div className="flex gap-3">
-                                <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-5 py-2.5 bg-[#67B74D] text-white rounded-xl font-black text-xs shadow-lg hover:bg-[#559e3d] transition-all uppercase tracking-widest"><Icon name="Calculator" size={16} /> Ver Precios</button>
-                                <button onClick={handleGeneratePDF} disabled={isGenerating} className={`flex items-center gap-2 px-5 py-2.5 ${isGenerating ? 'bg-gray-400' : 'bg-[#2C4C8C]'} text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest`}><Icon name="Download" size={16} /> {isGenerating ? 'Generando...' : 'Descargar PDF'}</button>
+                                <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-5 py-2.5 bg-[#67B74D] text-white rounded-xl font-black text-xs shadow-lg hover:bg-[#559e3d] transition-all uppercase tracking-widest">
+                                    <Icon name="Calculator" size={16} /> Ver Precios
+                                </button>
+                                <button onClick={handleGeneratePDF} disabled={isGenerating} className={`flex items-center gap-2 px-5 py-2.5 ${isGenerating ? 'bg-gray-400' : 'bg-[#2C4C8C]'} text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} 
+                                    {isGenerating ? 'Generando...' : 'Descargar PDF'}
+                                </button>
                             </div>
                         </div>
                         <div className="bg-emerald-50/40 p-5 rounded-[25px] border border-emerald-100">
@@ -171,13 +205,19 @@
                         </div>
                     </div>
 
-                    {/* MODAL DE PRECIOS */}
+                    {/* MODAL DE PRECIOS CONECTADO A GOOGLE SHEETS */}
                     {showPriceModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md print:hidden">
                             <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-300 border-8 border-white">
-                                <div className="p-6 bg-[#2C4C8C] text-white flex justify-between items-center"><h3 className="text-xl font-black uppercase italic tracking-tighter leading-none">Lista de Rentabilidad</h3><button onClick={() => setShowPriceModal(false)}><Icon name="X" size={28}/></button></div>
+                                <div className="p-6 bg-[#2C4C8C] text-white flex justify-between items-center">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter leading-none">Lista de Rentabilidad</h3>
+                                    <div className="flex gap-4 items-center">
+                                        {isLoadingPrices && <span className="text-xs font-bold flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full"><Icon name="Loader" size={14}/> Conectando a Sheets...</span>}
+                                        <button onClick={() => setShowPriceModal(false)}><Icon name="X" size={28}/></button>
+                                    </div>
+                                </div>
                                 <div className="p-5 bg-slate-50 border-b flex flex-col md:flex-row gap-4">
-                                    <div className="relative flex-1 group"><div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#67B74D]"><Icon name="Search" size={18} /></div><input type="text" placeholder="Buscar modelo..." className="w-full pl-12 pr-6 py-3 rounded-2xl border-2 border-slate-200 font-bold outline-none focus:border-[#67B74D] bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+                                    <div className="relative flex-1 group"><div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#67B74D]"><Icon name="Search" size={18} /></div><input type="text" placeholder="Buscar modelo o marca..." className="w-full pl-12 pr-6 py-3 rounded-2xl border-2 border-slate-200 font-bold outline-none focus:border-[#67B74D] bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
                                     <div className="relative w-full md:w-64">
                                         <select className="w-full pl-6 pr-10 py-3 rounded-2xl border-2 border-slate-200 font-black text-[11px] uppercase tracking-widest outline-none focus:border-[#67B74D] bg-white appearance-none cursor-pointer text-[#2C4C8C]" value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)}>
                                             {brandsList.map(brand => (<option key={brand} value={brand}>{brand}</option>))}
@@ -185,7 +225,13 @@
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><Icon name="ChevronDown" size={16} /></div>
                                     </div>
                                 </div>
-                                <div className="flex-1 overflow-auto custom-scroll bg-white px-4">
+                                <div className="flex-1 overflow-auto custom-scroll bg-white px-4 relative">
+                                    {isLoadingPrices ? (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-20 text-[#2C4C8C]">
+                                            <Icon name="Loader" size={48} className="mb-4" />
+                                            <p className="font-black uppercase tracking-widest text-sm">Descargando Precios de Sheets...</p>
+                                        </div>
+                                    ) : null}
                                     <table className="min-w-full divide-y divide-slate-100">
                                         <thead className="sticky top-0 bg-white z-10 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                             <tr><th className="px-4 py-4 text-left">Referencia</th><th className="px-2 py-4">Costo</th><th className="px-2 py-4">Venta</th><th className="px-4 py-4 bg-emerald-50 text-[#67B74D]">Inicial plataforma</th><th className="px-2 py-4 text-blue-600">Recibe Tienda</th><th className="px-2 py-4">Devuelve</th><th className="px-4 py-4 bg-[#2C4C8C] text-white">Comisión</th></tr>
