@@ -1,0 +1,425 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  Printer, Building2, MapPin, Mail, Phone, FileText, 
+  CreditCard, ShieldCheck, Search, X, Info, ChevronRight,
+  Smartphone, DollarSign, Percent, Calculator, UserPlus, 
+  Upload, CheckCircle2, AlertCircle, Camera, Video, FileCheck, Loader2, Globe, Download
+} from 'lucide-react';
+
+const App = () => {
+  // --- Configuración de Colores Corporativos ---
+  const colors = {
+    blue: "#2C4C8C", // Azul Soluciones
+    green: "#67B74D", // Verde Efectivas
+    lightBlue: "#E8F0FE",
+    lightGreen: "#F1F8EE"
+  };
+
+  // --- Estados Generales ---
+  const [formData, setFormData] = useState({
+    fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
+    ciudad: 'Cartagena',
+    nombreCliente: '',
+    cedulaCliente: '',
+    expedicionCedula: '',
+    numeroCuenta: '788-000110-50', 
+  });
+
+  const [showPriceModal, setShowPriceModal] = useState(false);
+  const [showAffiliateModal, setShowAffiliateModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState(null); 
+
+  // --- Estado para el Proceso de Afiliación ---
+  const [affiliateForm, setAffiliateForm] = useState({
+    tienda: '',
+    email: '',
+    celular: '',
+    nombreRep: '',
+    cedulaRep: '',
+    expedicionRep: '',
+  });
+
+  const [uploads, setUploads] = useState({
+    camaraComercio: { status: 'pending', name: 'Cámara de Comercio (< 30 días)' },
+    cedulaRep: { status: 'pending', name: 'Cédula Rep. Legal (Ambas caras)' },
+    rut: { status: 'pending', name: 'RUT (CIIU 4741 o 6110)' },
+    autorizacion: { status: 'pending', name: 'Autorización firmada y autenticada' },
+    fotos: { status: 'pending', name: 'Fotos Internas/Externas (Fachada)' },
+    video: { status: 'pending', name: 'Video 360° desde fachada' },
+    cedulaVendedor: { status: 'pending', name: 'Cédula del Usuario Vendedor' },
+  });
+
+  // --- Datos Retail (Base de Datos Completa) ---
+  const retailData = [
+    { brand: 'TECNO', ref: 'TECNO SPARK GO2 64GB + 3+3RAM', cost: '265.000', sale: '730.000', initial: '146.000', receive: '219.000', comm: '102.200', dist: '83.800' },
+    { brand: 'TECNO', ref: 'TECNO SPARK GO2 128GB + 3+3RAM', cost: '310.000', sale: '790.000', initial: '158.000', receive: '237.000', comm: '110.600', dist: '87.400' },
+    { brand: 'TECNO', ref: 'TECNO SPARK GO3 64GB + 3+3RAM', cost: '300.000', sale: '780.000', initial: '156.000', receive: '234.000', comm: '109.200', dist: '86.800' },
+    { brand: 'TECNO', ref: 'TECNO SPARK GO3 128GB + 3+3RAM', cost: '345.000', sale: '850.000', initial: '170.000', receive: '255.000', comm: '119.000', dist: '91.000' },
+    { brand: 'TECNO', ref: 'TECNO SPARK 40 256GB + 4RAM', cost: '450.000', sale: '1.000.000', initial: '200.000', receive: '300.000', comm: '140.000', dist: '100.000' },
+    { brand: 'SAMSUNG', ref: 'SAMSUNG A05 64GB + 3RAM', cost: '237.000', sale: '650.000', initial: '130.000', receive: '195.000', comm: '91.000', dist: '79.000' },
+    { brand: 'SAMSUNG', ref: 'SAMSUNG A05 128GB + 4RAM', cost: '311.000', sale: '780.000', initial: '156.000', receive: '234.000', comm: '109.200', dist: '86.800' },
+    { brand: 'SAMSUNG', ref: 'SAMSUNG A05S 128GB + 6RAM', cost: '391.000', sale: '980.000', initial: '196.000', receive: '294.000', comm: '137.200', dist: '98.800' },
+    { brand: 'SAMSUNG', ref: 'SAMSUNG A06 64GB + 4RAM', cost: '275.000', sale: '750.000', initial: '150.000', receive: '225.000', comm: '105.000', dist: '85.000' },
+    { brand: 'SAMSUNG', ref: 'SAMSUNG A06 128GB + 4RAM', cost: '310.000', sale: '800.000', initial: '160.000', receive: '240.000', comm: '112.000', dist: '88.000' },
+    { brand: 'SAMSUNG', ref: 'SAMSUNG A07 64GB + 4RAM', cost: '320.000', sale: '820.000', initial: '164.000', receive: '246.000', comm: '114.800', dist: '89.200' },
+    { brand: 'SAMSUNG', ref: 'SAMSUNG A07 128GB + 4RAM', cost: '380.000', sale: '950.000', initial: '190.000', receive: '285.000', comm: '133.000', dist: '97.000' },
+    { brand: 'SAMSUNG', ref: 'SAMSUNG A16 128GB + 4RAM', cost: '435.000', sale: '970.000', initial: '194.000', receive: '291.000', comm: '135.800', dist: '98.200' },
+    { brand: 'XIAOMI', ref: 'REDMI A5 64GB + 3RAM', cost: '260.000', sale: '720.000', initial: '144.000', receive: '216.000', comm: '100.800', dist: '83.200' },
+    { brand: 'XIAOMI', ref: 'REDMI 15 6/128GB', cost: '465.000', sale: '1.050.000', initial: '210.000', receive: '315.000', comm: '147.000', dist: '103.000' },
+    { brand: 'MOTOROLA', ref: 'MOTOROLA G05 128GB + 4RAM', cost: '305.000', sale: '780.000', initial: '156.000', receive: '234.000', comm: '109.200', dist: '86.800' },
+  ];
+
+  const filteredData = useMemo(() => {
+    return retailData.filter(item => 
+      item.ref.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      item.brand.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
+
+  const handlePrint = () => {
+    // La mayoría de navegadores modernos abren el diálogo con "Guardar como PDF" por defecto.
+    window.print();
+  };
+
+  const companyInfo = {
+    name: "SOLUCIONES EFECTIVAS CTG S.A.S",
+    nit: "901831921-2",
+    address: "Calle 31 # 80 - 16, Cond. Atlantic, T5 Apt 1102, Barrio El Recreo",
+    city: "Cartagena, Bolívar",
+    email: "ctgsolucionesefectivas@gmail.com",
+    phone: "322 255 9184",
+    bank: "Bancolombia",
+    tipoCuenta: "Ahorros",
+    logoUrl: "https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true"
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center font-sans">
+      
+      {/* Panel de Control Principal (No se imprime) */}
+      <div className="w-full max-w-5xl bg-white p-6 rounded-2xl shadow-xl mb-8 print:hidden border-t-8 border-[#2C4C8C]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div className="flex items-center gap-4">
+             <img src={companyInfo.logoUrl} alt="Logo" className="h-16 w-auto" />
+             <div>
+                <h2 className="text-xl font-black text-gray-900 tracking-tighter uppercase leading-none">
+                  Gestión Soluciones Efectivas
+                </h2>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Aliado Estratégico PayJoy</p>
+             </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setShowAffiliateModal(true); setSubmissionStatus(null); }}
+              className="flex items-center gap-2 px-4 py-2 bg-[#2C4C8C] text-white rounded-xl hover:bg-black transition-all font-bold text-sm shadow-lg"
+            >
+              <UserPlus size={18} />
+              Afiliar Tienda
+            </button>
+            <button
+              onClick={() => setShowPriceModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#67B74D] text-white rounded-xl hover:bg-[#559e3d] transition-all font-bold text-sm shadow-lg"
+            >
+              <Calculator size={18} />
+              Ver Precios
+            </button>
+          </div>
+        </div>
+        
+        <div className="bg-[#F1F8EE] p-6 rounded-2xl border border-[#67B74D]/20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="md:col-span-1">
+              <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1">Nombre del Cliente</label>
+              <input
+                type="text"
+                value={formData.nombreCliente}
+                onChange={(e) => setFormData({...formData, nombreCliente: e.target.value})}
+                placeholder="Nombre del titular"
+                className="w-full rounded-xl border-gray-200 shadow-sm focus:ring-[#67B74D] border p-3 text-sm font-bold"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1">Cédula</label>
+              <input
+                type="text"
+                value={formData.cedulaCliente}
+                onChange={(e) => setFormData({...formData, cedulaCliente: e.target.value})}
+                placeholder="No. Documento"
+                className="w-full rounded-xl border-gray-200 shadow-sm focus:ring-[#67B74D] border p-3 text-sm font-bold"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 italic">Expedida en:</label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-[#67B74D]" size={16}/>
+                <input
+                  type="text"
+                  value={formData.expedicionCedula}
+                  onChange={(e) => setFormData({...formData, expedicionCedula: e.target.value})}
+                  placeholder="Ciudad"
+                  className="w-full pl-10 rounded-xl border-gray-200 shadow-sm focus:ring-[#67B74D] border p-3 text-sm font-bold text-[#2C4C8C]"
+                />
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={handlePrint}
+            className="w-full flex justify-center items-center gap-3 px-6 py-4 border border-transparent text-sm font-black rounded-xl shadow-xl text-white bg-[#2C4C8C] hover:bg-black transition-all uppercase tracking-[3px]"
+          >
+            <Download size={20} />
+            Descargar PDF / Imprimir Carta
+          </button>
+        </div>
+      </div>
+
+      {/* --- MODAL DE PRECIOS (NUEVO DISEÑO DE TABLA) --- */}
+      {showPriceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md print:hidden">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-300">
+            {/* Header del Modal */}
+            <div className="p-6 border-b flex justify-between items-center bg-[#2C4C8C] text-white">
+              <div className="flex items-center gap-4">
+                 <div className="bg-white/20 p-2 rounded-lg">
+                    <Calculator size={32} />
+                 </div>
+                 <div>
+                    <h3 className="text-2xl font-black uppercase tracking-tighter italic">Lista Maestra de Rentabilidad</h3>
+                    <p className="text-xs font-bold text-blue-200 uppercase tracking-widest">Soluciones Efectivas CTG S.A.S.</p>
+                 </div>
+              </div>
+              <button 
+                onClick={() => setShowPriceModal(false)}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <X size={32}/>
+              </button>
+            </div>
+
+            {/* Barra de Búsqueda */}
+            <div className="p-4 bg-gray-50 border-b">
+                <div className="relative max-w-2xl mx-auto">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <input 
+                      type="text" 
+                      placeholder="Buscar por equipo o marca (ej. Samsung A06)..." 
+                      className="w-full pl-12 pr-6 py-4 rounded-2xl shadow-sm outline-none font-bold text-md border-2 border-gray-200 focus:border-[#67B74D] transition-all"
+                      value={searchTerm} 
+                      onChange={(e) => setSearchTerm(e.target.value)} 
+                    />
+                </div>
+            </div>
+
+            {/* Contenido: Tabla Profesional */}
+            <div className="flex-1 overflow-auto bg-white p-4">
+              <div className="min-w-full inline-block align-middle">
+                <div className="border rounded-2xl overflow-hidden border-gray-100 shadow-sm">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Marca</th>
+                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Referencia del Equipo</th>
+                        <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">Precio Venta</th>
+                        <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">Inicial</th>
+                        <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest bg-green-50 text-green-700">Recibe Tienda</th>
+                        <th className="px-6 py-4 text-center text-[10px] font-black text-white uppercase tracking-widest bg-[#2C4C8C]">Tu Comisión</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {filteredData.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-blue-50/50 transition-colors group">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-[9px] font-black rounded-md uppercase">
+                                {item.brand}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-bold text-gray-800 uppercase tracking-tighter">
+                            {item.ref}
+                          </td>
+                          <td className="px-4 py-4 text-center text-sm font-medium text-gray-500">
+                            ${item.sale}
+                          </td>
+                          <td className="px-4 py-4 text-center text-sm font-bold text-blue-600">
+                            ${item.initial}
+                          </td>
+                          <td className="px-4 py-4 text-center text-md font-black text-green-600 bg-green-50/30">
+                            ${item.receive}
+                          </td>
+                          <td className="px-6 py-4 text-center bg-[#2C4C8C]/5 group-hover:bg-[#2C4C8C]/10 transition-all">
+                            <span className="text-lg font-black text-[#2C4C8C] italic">
+                                ${item.comm}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filteredData.length === 0 && (
+                    <div className="py-20 text-center">
+                        <Info className="mx-auto text-gray-300 mb-4" size={48} />
+                        <p className="text-gray-400 font-bold uppercase tracking-widest">No se encontraron resultados para "{searchTerm}"</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer del Modal */}
+            <div className="p-4 bg-gray-50 border-t flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+               <span>Total Referencias: {filteredData.length}</span>
+               <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full"></div> Pago Inmediato</span>
+                  <span className="flex items-center gap-1"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> Comisiones Netas</span>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL AFILIACIÓN (Simplificado) --- */}
+      {showAffiliateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2C4C8C]/90 backdrop-blur-md print:hidden overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
+            <div className="p-8">
+               <div className="flex justify-between items-start mb-8">
+                  <h4 className="text-3xl font-black text-gray-900 uppercase italic">Registro de Tienda</h4>
+                  <button onClick={() => setShowAffiliateModal(false)}><X size={32} className="text-gray-300 hover:text-red-500"/></button>
+               </div>
+               {submissionStatus === 'success' ? (
+                  <div className="py-12 text-center space-y-6">
+                    <CheckCircle2 size={72} className="text-green-600 mx-auto" />
+                    <h5 className="text-2xl font-black uppercase">¡Datos Guardados en el Simulador!</h5>
+                    <button onClick={() => setShowAffiliateModal(false)} className="px-10 py-4 bg-[#2C4C8C] text-white rounded-2xl font-black uppercase">Volver al Inicio</button>
+                  </div>
+               ) : (
+                  <form className="space-y-6">
+                    <input required type="text" placeholder="Nombre de la Tienda" className="w-full p-4 bg-gray-50 border rounded-2xl font-bold border-gray-200" value={affiliateForm.tienda} onChange={(e) => setAffiliateForm({...affiliateForm, tienda: e.target.value})} />
+                    <div className="grid grid-cols-2 gap-4">
+                        <input type="email" placeholder="Email" className="w-full p-4 bg-gray-50 border rounded-2xl font-bold border-gray-200" />
+                        <input type="tel" placeholder="WhatsApp" className="w-full p-4 bg-gray-50 border rounded-2xl font-bold border-gray-200" />
+                    </div>
+                    <button type="button" onClick={() => setSubmissionStatus('success')} className="w-full py-6 bg-[#67B74D] text-white rounded-3xl font-black uppercase tracking-[5px] shadow-2xl">
+                      Finalizar Registro en Google
+                    </button>
+                  </form>
+               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- DOCUMENTO: CARTA DE AUTORIZACIÓN (A4) --- */}
+      <div className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] print:shadow-none print:p-0 text-gray-900 font-serif overflow-hidden relative border-t-[15px] border-[#2C4C8C]">
+        
+        {/* Encabezado con Logo */}
+        <header className="flex flex-col items-center border-b-2 border-gray-100 pb-10 mb-12">
+          <img src={companyInfo.logoUrl} alt="Logo Corporativo" className="h-44 w-auto mb-6 object-contain" />
+          <div className="text-center">
+            <h1 className="text-2xl font-black text-[#2C4C8C] leading-none tracking-tighter uppercase italic">
+              {companyInfo.name}
+            </h1>
+            <p className="text-lg font-bold text-gray-700 mt-1 tracking-widest italic uppercase">NIT: {companyInfo.nit}</p>
+            <div className="flex justify-center gap-6 mt-4 text-[8pt] text-gray-400 font-sans uppercase font-bold tracking-widest">
+                <span className="flex items-center gap-1"><MapPin size={10} className="text-[#67B74D]"/> {companyInfo.city}</span>
+                <span className="flex items-center gap-1"><Phone size={10} className="text-[#67B74D]"/> {companyInfo.phone}</span>
+                <span className="flex items-center gap-1 font-normal lowercase italic">{companyInfo.email}</span>
+            </div>
+          </div>
+        </header>
+
+        <div className="mb-14">
+          <p className="font-black text-right text-gray-900 uppercase text-sm italic">
+            Cartagena D.T. y C., {formData.fecha}
+          </p>
+        </div>
+
+        <div className="mb-14 space-y-1">
+          <p className="font-bold text-xs text-[#2C4C8C] uppercase tracking-[2px] mb-4 italic underline decoration-[#67B74D] underline-offset-4">Dirigido a:</p>
+          <p className="text-2xl font-black text-gray-900 uppercase tracking-tighter">PAYJOY COLOMBIA S.A.S.</p>
+          <p className="text-sm font-bold text-gray-500 italic">Departamento de Cartera y Dispersión de Pagos</p>
+        </div>
+
+        <div className="mb-12 bg-[#F1F8EE] p-6 border-l-8 border-[#67B74D]">
+          <p className="font-black text-[11pt] text-[#2C4C8C] uppercase tracking-tighter leading-tight italic">
+            Asunto: Autorización expresa de dispersión de pagos a cuenta empresarial de Soluciones Efectivas CTG S.A.S.
+          </p>
+        </div>
+
+        <div className="text-justify leading-relaxed text-[11pt] space-y-8 font-sans">
+          <p>Cordial saludo,</p>
+          <p>
+            Yo, <span className="font-black border-b-2 border-[#2C4C8C]/20 px-2 text-[#2C4C8C] uppercase tracking-tight">{formData.nombreCliente || "_________________________________________"}</span>, 
+            identificado(a) con cédula de ciudadanía No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-2 tracking-widest">{formData.cedulaCliente || "_________________"}</span> expedida en 
+            <span className="font-black border-b-2 border-[#2C4C8C]/20 px-2 italic text-[#67B74D]"> {formData.expedicionCedula || "_______________"}</span>, 
+            en mi calidad de aliado/afiliado de <span className="font-black text-[#2C4C8C] uppercase tracking-tighter">{companyInfo.name}</span>, 
+            autorizo de forma voluntaria e irrevocable para que los recursos financieros generados por mi operación comercial sean depositados en la siguiente cuenta empresarial:
+          </p>
+
+          <div className="mx-auto max-w-lg border-[3px] border-[#2C4C8C] rounded-3xl overflow-hidden shadow-2xl my-12 print:shadow-none">
+            <div className="bg-[#2C4C8C] text-white p-3 text-center font-black uppercase tracking-[3px] text-[10px]">
+              Credenciales Bancarias Autorizadas
+            </div>
+            <div className="bg-white p-8 space-y-4 text-sm font-bold">
+              <div className="flex justify-between border-b pb-1 font-sans text-gray-400 uppercase text-[9px] font-black"><span>Beneficiario</span><span className="text-[#2C4C8C] uppercase tracking-tight font-black">{companyInfo.name}</span></div>
+              <div className="flex justify-between border-b pb-1 font-sans text-gray-400 uppercase text-[9px] font-black"><span>NIT</span><span className="text-gray-800">{companyInfo.nit}</span></div>
+              <div className="flex justify-between border-b pb-1 font-sans text-gray-400 uppercase text-[9px] font-black"><span>Tipo de Cuenta</span><span className="text-[#67B74D] uppercase font-black">{companyInfo.tipoCuenta}</span></div>
+              <div className="flex justify-between items-center pt-4">
+                <span className="text-[9px] font-black text-[#2C4C8C] uppercase italic font-sans">Banco Bancolombia</span>
+                <span className="font-black text-[#2C4C8C] text-3xl tracking-[2px] font-mono italic leading-none">{formData.numeroCuenta}</span>
+              </div>
+            </div>
+            <div className="bg-[#67B74D] h-2"></div>
+          </div>
+
+          <p>
+            Manifiesto que el abono realizado en dicha cuenta constituirá prueba plena de pago y extinción de las obligaciones por parte de <span className="font-bold uppercase tracking-tighter italic">PAYJOY COLOMBIA S.A.S.</span>
+          </p>
+        </div>
+
+        <div className="mt-32 flex justify-between items-end font-sans">
+          <div className="w-1/2">
+            <div className="w-full border-b-4 border-[#2C4C8C] mb-4"></div>
+            <p className="font-black uppercase text-sm text-[#2C4C8C]">{formData.nombreCliente || "Firma del Aliado Autorizante"}</p>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">C.C. {formData.cedulaCliente || "__________________"}</p>
+          </div>
+          <div className="w-24 h-32 border-4 border-gray-100 rounded-2xl flex flex-col items-center justify-end text-[7pt] text-gray-300 text-center uppercase p-4 font-black bg-gray-50 italic">
+            <div className="border-t w-full pt-1 border-gray-200">Huella Digital</div>
+          </div>
+        </div>
+
+        <footer className="absolute bottom-[10mm] left-[25mm] right-[25mm] border-t-2 border-[#67B74D] pt-6 flex justify-between items-center text-[7pt] text-gray-400 font-black uppercase tracking-widest italic font-sans">
+          <p className="text-[#2C4C8C] italic tracking-tighter leading-none">Soluciones Efectivas CTG S.A.S. <br/><span className="text-[6pt] text-[#67B74D]">Soluciones a Crédito</span></p>
+          <p className="font-bold">Copia de Seguridad Corporativa - Retail B</p>
+        </footer>
+      </div>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+        
+        @media print {
+          body { background-color: white !important; }
+          .min-h-screen { background-color: white !important; padding: 0 !important; }
+          .shadow-2xl, .shadow-xl { box-shadow: none !important; }
+          .print\\:hidden { display: none !important; }
+          @page { size: A4; margin: 0; }
+        }
+
+        /* Estilos personalizados para el scrollbar de la tabla */
+        .flex-1::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        .flex-1::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+        .flex-1::-webkit-scrollbar-thumb {
+          background: #2C4C8C;
+          border-radius: 10px;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
