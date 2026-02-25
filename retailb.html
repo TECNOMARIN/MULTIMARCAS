@@ -1,425 +1,371 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  Printer, Building2, MapPin, Mail, Phone, FileText, 
-  CreditCard, ShieldCheck, Search, X, Info, ChevronRight,
-  Smartphone, DollarSign, Percent, Calculator, UserPlus, 
-  Upload, CheckCircle2, AlertCircle, Camera, Video, FileCheck, Loader2, Globe, Download
-} from 'lucide-react';
-
-const App = () => {
-  // --- Configuración de Colores Corporativos ---
-  const colors = {
-    blue: "#2C4C8C", // Azul Soluciones
-    green: "#67B74D", // Verde Efectivas
-    lightBlue: "#E8F0FE",
-    lightGreen: "#F1F8EE"
-  };
-
-  // --- Estados Generales ---
-  const [formData, setFormData] = useState({
-    fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
-    ciudad: 'Cartagena',
-    nombreCliente: '',
-    cedulaCliente: '',
-    expedicionCedula: '',
-    numeroCuenta: '788-000110-50', 
-  });
-
-  const [showPriceModal, setShowPriceModal] = useState(false);
-  const [showAffiliateModal, setShowAffiliateModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionStatus, setSubmissionStatus] = useState(null); 
-
-  // --- Estado para el Proceso de Afiliación ---
-  const [affiliateForm, setAffiliateForm] = useState({
-    tienda: '',
-    email: '',
-    celular: '',
-    nombreRep: '',
-    cedulaRep: '',
-    expedicionRep: '',
-  });
-
-  const [uploads, setUploads] = useState({
-    camaraComercio: { status: 'pending', name: 'Cámara de Comercio (< 30 días)' },
-    cedulaRep: { status: 'pending', name: 'Cédula Rep. Legal (Ambas caras)' },
-    rut: { status: 'pending', name: 'RUT (CIIU 4741 o 6110)' },
-    autorizacion: { status: 'pending', name: 'Autorización firmada y autenticada' },
-    fotos: { status: 'pending', name: 'Fotos Internas/Externas (Fachada)' },
-    video: { status: 'pending', name: 'Video 360° desde fachada' },
-    cedulaVendedor: { status: 'pending', name: 'Cédula del Usuario Vendedor' },
-  });
-
-  // --- Datos Retail (Base de Datos Completa) ---
-  const retailData = [
-    { brand: 'TECNO', ref: 'TECNO SPARK GO2 64GB + 3+3RAM', cost: '265.000', sale: '730.000', initial: '146.000', receive: '219.000', comm: '102.200', dist: '83.800' },
-    { brand: 'TECNO', ref: 'TECNO SPARK GO2 128GB + 3+3RAM', cost: '310.000', sale: '790.000', initial: '158.000', receive: '237.000', comm: '110.600', dist: '87.400' },
-    { brand: 'TECNO', ref: 'TECNO SPARK GO3 64GB + 3+3RAM', cost: '300.000', sale: '780.000', initial: '156.000', receive: '234.000', comm: '109.200', dist: '86.800' },
-    { brand: 'TECNO', ref: 'TECNO SPARK GO3 128GB + 3+3RAM', cost: '345.000', sale: '850.000', initial: '170.000', receive: '255.000', comm: '119.000', dist: '91.000' },
-    { brand: 'TECNO', ref: 'TECNO SPARK 40 256GB + 4RAM', cost: '450.000', sale: '1.000.000', initial: '200.000', receive: '300.000', comm: '140.000', dist: '100.000' },
-    { brand: 'SAMSUNG', ref: 'SAMSUNG A05 64GB + 3RAM', cost: '237.000', sale: '650.000', initial: '130.000', receive: '195.000', comm: '91.000', dist: '79.000' },
-    { brand: 'SAMSUNG', ref: 'SAMSUNG A05 128GB + 4RAM', cost: '311.000', sale: '780.000', initial: '156.000', receive: '234.000', comm: '109.200', dist: '86.800' },
-    { brand: 'SAMSUNG', ref: 'SAMSUNG A05S 128GB + 6RAM', cost: '391.000', sale: '980.000', initial: '196.000', receive: '294.000', comm: '137.200', dist: '98.800' },
-    { brand: 'SAMSUNG', ref: 'SAMSUNG A06 64GB + 4RAM', cost: '275.000', sale: '750.000', initial: '150.000', receive: '225.000', comm: '105.000', dist: '85.000' },
-    { brand: 'SAMSUNG', ref: 'SAMSUNG A06 128GB + 4RAM', cost: '310.000', sale: '800.000', initial: '160.000', receive: '240.000', comm: '112.000', dist: '88.000' },
-    { brand: 'SAMSUNG', ref: 'SAMSUNG A07 64GB + 4RAM', cost: '320.000', sale: '820.000', initial: '164.000', receive: '246.000', comm: '114.800', dist: '89.200' },
-    { brand: 'SAMSUNG', ref: 'SAMSUNG A07 128GB + 4RAM', cost: '380.000', sale: '950.000', initial: '190.000', receive: '285.000', comm: '133.000', dist: '97.000' },
-    { brand: 'SAMSUNG', ref: 'SAMSUNG A16 128GB + 4RAM', cost: '435.000', sale: '970.000', initial: '194.000', receive: '291.000', comm: '135.800', dist: '98.200' },
-    { brand: 'XIAOMI', ref: 'REDMI A5 64GB + 3RAM', cost: '260.000', sale: '720.000', initial: '144.000', receive: '216.000', comm: '100.800', dist: '83.200' },
-    { brand: 'XIAOMI', ref: 'REDMI 15 6/128GB', cost: '465.000', sale: '1.050.000', initial: '210.000', receive: '315.000', comm: '147.000', dist: '103.000' },
-    { brand: 'MOTOROLA', ref: 'MOTOROLA G05 128GB + 4RAM', cost: '305.000', sale: '780.000', initial: '156.000', receive: '234.000', comm: '109.200', dist: '86.800' },
-  ];
-
-  const filteredData = useMemo(() => {
-    return retailData.filter(item => 
-      item.ref.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      item.brand.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
-
-  const handlePrint = () => {
-    // La mayoría de navegadores modernos abren el diálogo con "Guardar como PDF" por defecto.
-    window.print();
-  };
-
-  const companyInfo = {
-    name: "SOLUCIONES EFECTIVAS CTG S.A.S",
-    nit: "901831921-2",
-    address: "Calle 31 # 80 - 16, Cond. Atlantic, T5 Apt 1102, Barrio El Recreo",
-    city: "Cartagena, Bolívar",
-    email: "ctgsolucionesefectivas@gmail.com",
-    phone: "322 255 9184",
-    bank: "Bancolombia",
-    tipoCuenta: "Ahorros",
-    logoUrl: "https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true"
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col items-center font-sans">
-      
-      {/* Panel de Control Principal (No se imprime) */}
-      <div className="w-full max-w-5xl bg-white p-6 rounded-2xl shadow-xl mb-8 print:hidden border-t-8 border-[#2C4C8C]">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div className="flex items-center gap-4">
-             <img src={companyInfo.logoUrl} alt="Logo" className="h-16 w-auto" />
-             <div>
-                <h2 className="text-xl font-black text-gray-900 tracking-tighter uppercase leading-none">
-                  Gestión Soluciones Efectivas
-                </h2>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Aliado Estratégico PayJoy</p>
-             </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => { setShowAffiliateModal(true); setSubmissionStatus(null); }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#2C4C8C] text-white rounded-xl hover:bg-black transition-all font-bold text-sm shadow-lg"
-            >
-              <UserPlus size={18} />
-              Afiliar Tienda
-            </button>
-            <button
-              onClick={() => setShowPriceModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#67B74D] text-white rounded-xl hover:bg-[#559e3d] transition-all font-bold text-sm shadow-lg"
-            >
-              <Calculator size={18} />
-              Ver Precios
-            </button>
-          </div>
-        </div>
-        
-        <div className="bg-[#F1F8EE] p-6 rounded-2xl border border-[#67B74D]/20">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="md:col-span-1">
-              <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1">Nombre del Cliente</label>
-              <input
-                type="text"
-                value={formData.nombreCliente}
-                onChange={(e) => setFormData({...formData, nombreCliente: e.target.value})}
-                placeholder="Nombre del titular"
-                className="w-full rounded-xl border-gray-200 shadow-sm focus:ring-[#67B74D] border p-3 text-sm font-bold"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1">Cédula</label>
-              <input
-                type="text"
-                value={formData.cedulaCliente}
-                onChange={(e) => setFormData({...formData, cedulaCliente: e.target.value})}
-                placeholder="No. Documento"
-                className="w-full rounded-xl border-gray-200 shadow-sm focus:ring-[#67B74D] border p-3 text-sm font-bold"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 italic">Expedida en:</label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-[#67B74D]" size={16}/>
-                <input
-                  type="text"
-                  value={formData.expedicionCedula}
-                  onChange={(e) => setFormData({...formData, expedicionCedula: e.target.value})}
-                  placeholder="Ciudad"
-                  className="w-full pl-10 rounded-xl border-gray-200 shadow-sm focus:ring-[#67B74D] border p-3 text-sm font-bold text-[#2C4C8C]"
-                />
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={handlePrint}
-            className="w-full flex justify-center items-center gap-3 px-6 py-4 border border-transparent text-sm font-black rounded-xl shadow-xl text-white bg-[#2C4C8C] hover:bg-black transition-all uppercase tracking-[3px]"
-          >
-            <Download size={20} />
-            Descargar PDF / Imprimir Carta
-          </button>
-        </div>
-      </div>
-
-      {/* --- MODAL DE PRECIOS (NUEVO DISEÑO DE TABLA) --- */}
-      {showPriceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md print:hidden">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-300">
-            {/* Header del Modal */}
-            <div className="p-6 border-b flex justify-between items-center bg-[#2C4C8C] text-white">
-              <div className="flex items-center gap-4">
-                 <div className="bg-white/20 p-2 rounded-lg">
-                    <Calculator size={32} />
-                 </div>
-                 <div>
-                    <h3 className="text-2xl font-black uppercase tracking-tighter italic">Lista Maestra de Rentabilidad</h3>
-                    <p className="text-xs font-bold text-blue-200 uppercase tracking-widest">Soluciones Efectivas CTG S.A.S.</p>
-                 </div>
-              </div>
-              <button 
-                onClick={() => setShowPriceModal(false)}
-                className="p-2 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <X size={32}/>
-              </button>
-            </div>
-
-            {/* Barra de Búsqueda */}
-            <div className="p-4 bg-gray-50 border-b">
-                <div className="relative max-w-2xl mx-auto">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                    <input 
-                      type="text" 
-                      placeholder="Buscar por equipo o marca (ej. Samsung A06)..." 
-                      className="w-full pl-12 pr-6 py-4 rounded-2xl shadow-sm outline-none font-bold text-md border-2 border-gray-200 focus:border-[#67B74D] transition-all"
-                      value={searchTerm} 
-                      onChange={(e) => setSearchTerm(e.target.value)} 
-                    />
-                </div>
-            </div>
-
-            {/* Contenido: Tabla Profesional */}
-            <div className="flex-1 overflow-auto bg-white p-4">
-              <div className="min-w-full inline-block align-middle">
-                <div className="border rounded-2xl overflow-hidden border-gray-100 shadow-sm">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Marca</th>
-                        <th className="px-6 py-4 text-left text-[10px] font-black text-gray-500 uppercase tracking-widest">Referencia del Equipo</th>
-                        <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">Precio Venta</th>
-                        <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">Inicial</th>
-                        <th className="px-4 py-4 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest bg-green-50 text-green-700">Recibe Tienda</th>
-                        <th className="px-6 py-4 text-center text-[10px] font-black text-white uppercase tracking-widest bg-[#2C4C8C]">Tu Comisión</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
-                      {filteredData.map((item, idx) => (
-                        <tr key={idx} className="hover:bg-blue-50/50 transition-colors group">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-[9px] font-black rounded-md uppercase">
-                                {item.brand}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm font-bold text-gray-800 uppercase tracking-tighter">
-                            {item.ref}
-                          </td>
-                          <td className="px-4 py-4 text-center text-sm font-medium text-gray-500">
-                            ${item.sale}
-                          </td>
-                          <td className="px-4 py-4 text-center text-sm font-bold text-blue-600">
-                            ${item.initial}
-                          </td>
-                          <td className="px-4 py-4 text-center text-md font-black text-green-600 bg-green-50/30">
-                            ${item.receive}
-                          </td>
-                          <td className="px-6 py-4 text-center bg-[#2C4C8C]/5 group-hover:bg-[#2C4C8C]/10 transition-all">
-                            <span className="text-lg font-black text-[#2C4C8C] italic">
-                                ${item.comm}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {filteredData.length === 0 && (
-                    <div className="py-20 text-center">
-                        <Info className="mx-auto text-gray-300 mb-4" size={48} />
-                        <p className="text-gray-400 font-bold uppercase tracking-widest">No se encontraron resultados para "{searchTerm}"</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Footer del Modal */}
-            <div className="p-4 bg-gray-50 border-t flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-               <span>Total Referencias: {filteredData.length}</span>
-               <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1"><div className="w-2 h-2 bg-green-500 rounded-full"></div> Pago Inmediato</span>
-                  <span className="flex items-center gap-1"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> Comisiones Netas</span>
-               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- MODAL AFILIACIÓN (Simplificado) --- */}
-      {showAffiliateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2C4C8C]/90 backdrop-blur-md print:hidden overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
-            <div className="p-8">
-               <div className="flex justify-between items-start mb-8">
-                  <h4 className="text-3xl font-black text-gray-900 uppercase italic">Registro de Tienda</h4>
-                  <button onClick={() => setShowAffiliateModal(false)}><X size={32} className="text-gray-300 hover:text-red-500"/></button>
-               </div>
-               {submissionStatus === 'success' ? (
-                  <div className="py-12 text-center space-y-6">
-                    <CheckCircle2 size={72} className="text-green-600 mx-auto" />
-                    <h5 className="text-2xl font-black uppercase">¡Datos Guardados en el Simulador!</h5>
-                    <button onClick={() => setShowAffiliateModal(false)} className="px-10 py-4 bg-[#2C4C8C] text-white rounded-2xl font-black uppercase">Volver al Inicio</button>
-                  </div>
-               ) : (
-                  <form className="space-y-6">
-                    <input required type="text" placeholder="Nombre de la Tienda" className="w-full p-4 bg-gray-50 border rounded-2xl font-bold border-gray-200" value={affiliateForm.tienda} onChange={(e) => setAffiliateForm({...affiliateForm, tienda: e.target.value})} />
-                    <div className="grid grid-cols-2 gap-4">
-                        <input type="email" placeholder="Email" className="w-full p-4 bg-gray-50 border rounded-2xl font-bold border-gray-200" />
-                        <input type="tel" placeholder="WhatsApp" className="w-full p-4 bg-gray-50 border rounded-2xl font-bold border-gray-200" />
-                    </div>
-                    <button type="button" onClick={() => setSubmissionStatus('success')} className="w-full py-6 bg-[#67B74D] text-white rounded-3xl font-black uppercase tracking-[5px] shadow-2xl">
-                      Finalizar Registro en Google
-                    </button>
-                  </form>
-               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- DOCUMENTO: CARTA DE AUTORIZACIÓN (A4) --- */}
-      <div className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] print:shadow-none print:p-0 text-gray-900 font-serif overflow-hidden relative border-t-[15px] border-[#2C4C8C]">
-        
-        {/* Encabezado con Logo */}
-        <header className="flex flex-col items-center border-b-2 border-gray-100 pb-10 mb-12">
-          <img src={companyInfo.logoUrl} alt="Logo Corporativo" className="h-44 w-auto mb-6 object-contain" />
-          <div className="text-center">
-            <h1 className="text-2xl font-black text-[#2C4C8C] leading-none tracking-tighter uppercase italic">
-              {companyInfo.name}
-            </h1>
-            <p className="text-lg font-bold text-gray-700 mt-1 tracking-widest italic uppercase">NIT: {companyInfo.nit}</p>
-            <div className="flex justify-center gap-6 mt-4 text-[8pt] text-gray-400 font-sans uppercase font-bold tracking-widest">
-                <span className="flex items-center gap-1"><MapPin size={10} className="text-[#67B74D]"/> {companyInfo.city}</span>
-                <span className="flex items-center gap-1"><Phone size={10} className="text-[#67B74D]"/> {companyInfo.phone}</span>
-                <span className="flex items-center gap-1 font-normal lowercase italic">{companyInfo.email}</span>
-            </div>
-          </div>
-        </header>
-
-        <div className="mb-14">
-          <p className="font-black text-right text-gray-900 uppercase text-sm italic">
-            Cartagena D.T. y C., {formData.fecha}
-          </p>
-        </div>
-
-        <div className="mb-14 space-y-1">
-          <p className="font-bold text-xs text-[#2C4C8C] uppercase tracking-[2px] mb-4 italic underline decoration-[#67B74D] underline-offset-4">Dirigido a:</p>
-          <p className="text-2xl font-black text-gray-900 uppercase tracking-tighter">PAYJOY COLOMBIA S.A.S.</p>
-          <p className="text-sm font-bold text-gray-500 italic">Departamento de Cartera y Dispersión de Pagos</p>
-        </div>
-
-        <div className="mb-12 bg-[#F1F8EE] p-6 border-l-8 border-[#67B74D]">
-          <p className="font-black text-[11pt] text-[#2C4C8C] uppercase tracking-tighter leading-tight italic">
-            Asunto: Autorización expresa de dispersión de pagos a cuenta empresarial de Soluciones Efectivas CTG S.A.S.
-          </p>
-        </div>
-
-        <div className="text-justify leading-relaxed text-[11pt] space-y-8 font-sans">
-          <p>Cordial saludo,</p>
-          <p>
-            Yo, <span className="font-black border-b-2 border-[#2C4C8C]/20 px-2 text-[#2C4C8C] uppercase tracking-tight">{formData.nombreCliente || "_________________________________________"}</span>, 
-            identificado(a) con cédula de ciudadanía No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-2 tracking-widest">{formData.cedulaCliente || "_________________"}</span> expedida en 
-            <span className="font-black border-b-2 border-[#2C4C8C]/20 px-2 italic text-[#67B74D]"> {formData.expedicionCedula || "_______________"}</span>, 
-            en mi calidad de aliado/afiliado de <span className="font-black text-[#2C4C8C] uppercase tracking-tighter">{companyInfo.name}</span>, 
-            autorizo de forma voluntaria e irrevocable para que los recursos financieros generados por mi operación comercial sean depositados en la siguiente cuenta empresarial:
-          </p>
-
-          <div className="mx-auto max-w-lg border-[3px] border-[#2C4C8C] rounded-3xl overflow-hidden shadow-2xl my-12 print:shadow-none">
-            <div className="bg-[#2C4C8C] text-white p-3 text-center font-black uppercase tracking-[3px] text-[10px]">
-              Credenciales Bancarias Autorizadas
-            </div>
-            <div className="bg-white p-8 space-y-4 text-sm font-bold">
-              <div className="flex justify-between border-b pb-1 font-sans text-gray-400 uppercase text-[9px] font-black"><span>Beneficiario</span><span className="text-[#2C4C8C] uppercase tracking-tight font-black">{companyInfo.name}</span></div>
-              <div className="flex justify-between border-b pb-1 font-sans text-gray-400 uppercase text-[9px] font-black"><span>NIT</span><span className="text-gray-800">{companyInfo.nit}</span></div>
-              <div className="flex justify-between border-b pb-1 font-sans text-gray-400 uppercase text-[9px] font-black"><span>Tipo de Cuenta</span><span className="text-[#67B74D] uppercase font-black">{companyInfo.tipoCuenta}</span></div>
-              <div className="flex justify-between items-center pt-4">
-                <span className="text-[9px] font-black text-[#2C4C8C] uppercase italic font-sans">Banco Bancolombia</span>
-                <span className="font-black text-[#2C4C8C] text-3xl tracking-[2px] font-mono italic leading-none">{formData.numeroCuenta}</span>
-              </div>
-            </div>
-            <div className="bg-[#67B74D] h-2"></div>
-          </div>
-
-          <p>
-            Manifiesto que el abono realizado en dicha cuenta constituirá prueba plena de pago y extinción de las obligaciones por parte de <span className="font-bold uppercase tracking-tighter italic">PAYJOY COLOMBIA S.A.S.</span>
-          </p>
-        </div>
-
-        <div className="mt-32 flex justify-between items-end font-sans">
-          <div className="w-1/2">
-            <div className="w-full border-b-4 border-[#2C4C8C] mb-4"></div>
-            <p className="font-black uppercase text-sm text-[#2C4C8C]">{formData.nombreCliente || "Firma del Aliado Autorizante"}</p>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">C.C. {formData.cedulaCliente || "__________________"}</p>
-          </div>
-          <div className="w-24 h-32 border-4 border-gray-100 rounded-2xl flex flex-col items-center justify-end text-[7pt] text-gray-300 text-center uppercase p-4 font-black bg-gray-50 italic">
-            <div className="border-t w-full pt-1 border-gray-200">Huella Digital</div>
-          </div>
-        </div>
-
-        <footer className="absolute bottom-[10mm] left-[25mm] right-[25mm] border-t-2 border-[#67B74D] pt-6 flex justify-between items-center text-[7pt] text-gray-400 font-black uppercase tracking-widest italic font-sans">
-          <p className="text-[#2C4C8C] italic tracking-tighter leading-none">Soluciones Efectivas CTG S.A.S. <br/><span className="text-[6pt] text-[#67B74D]">Soluciones a Crédito</span></p>
-          <p className="font-bold">Copia de Seguridad Corporativa - Retail B</p>
-        </footer>
-      </div>
-
-      <style>{`
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión Soluciones Efectivas CTG</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM (Production) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
         
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
         @media print {
-          body { background-color: white !important; }
-          .min-h-screen { background-color: white !important; padding: 0 !important; }
-          .shadow-2xl, .shadow-xl { box-shadow: none !important; }
-          .print\\:hidden { display: none !important; }
-          @page { size: A4; margin: 0; }
+            body { background-color: white !important; }
+            .print\:hidden { display: none !important; }
+            .no-print { display: none !important; }
+            .shadow-2xl, .shadow-xl { box-shadow: none !important; }
+            @page { size: A4; margin: 0; }
+            .print-container { padding: 0 !important; margin: 0 !important; width: 100% !important; border: none !important; }
+            .print-header-border { border-top: 15px solid #2C4C8C !important; }
+            .page-break-avoid { page-break-inside: avoid; }
         }
 
-        /* Estilos personalizados para el scrollbar de la tabla */
-        .flex-1::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        .flex-1::-webkit-scrollbar-track {
-          background: #f1f1f1;
-        }
-        .flex-1::-webkit-scrollbar-thumb {
-          background: #2C4C8C;
-          border-radius: 10px;
-        }
-      `}</style>
-    </div>
-  );
-};
+        /* Scrollbar estilo Soluciones Efectivas */
+        .custom-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #2C4C8C; border-radius: 10px; border: 2px solid #f8fafc; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #67B74D; }
+        
+        .brand-pill { transition: all 0.2s; cursor: pointer; }
+        .brand-pill:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
 
-export default App;
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        // --- Componente de Iconos SVG Robustos ---
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                Printer: <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />,
+                Building2: <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2m12-10h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M10 6h4m-4 4h4m-4 4h4m-4 4h4" />,
+                MapPin: <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />,
+                Mail: <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6" />,
+                Phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />,
+                FileText: <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2zM14 2v6h6M8 13h8M8 17h8" />,
+                CreditCard: <><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></>,
+                ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />,
+                Search: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
+                X: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+                Info: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></>,
+                Calculator: <><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="16" y1="14" x2="16" y2="18" /><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01" /></>,
+                UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="17" y1="11" x2="23" y2="11" /></>,
+                Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>
+            };
+
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name]}
+                </svg>
+            );
+        };
+
+        const App = () => {
+            const companyInfo = {
+                name: "SOLUCIONES EFECTIVAS CTG S.A.S",
+                nit: "901.831.921-2",
+                address: "Calle 31 # 80 - 16, Cond. Atlantic, T5 Apt 1102",
+                city: "Cartagena, Bolívar",
+                email: "ctgsolucionesefectivas@gmail.com",
+                phone: "322 255 9184",
+                bank: "Bancolombia",
+                tipoCuenta: "Ahorros",
+                numeroCuenta: "788-000110-50",
+                logoUrl: "https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true"
+            };
+
+            const retailData = [
+                { brand: 'TECNO', ref: 'SPARK GO2 64GB + 3+3RAM', cost: '265.000', sale: '730.000', initial: '146.000', receive: '219.000', return: '43.800', commTienda: '102.200', commDist: '83.800' },
+                { brand: 'TECNO', ref: 'SPARK GO2 128GB + 3+3RAM', cost: '310.000', sale: '790.000', initial: '158.000', receive: '237.000', return: '47.400', commTienda: '110.600', commDist: '87.400' },
+                { brand: 'TECNO', ref: 'SPARK GO3 64GB + 3+3RAM', cost: '300.000', sale: '780.000', initial: '156.000', receive: '234.000', return: '46.800', commTienda: '109.200', commDist: '86.800' },
+                { brand: 'TECNO', ref: 'SPARK GO3 128GB + 3+3RAM', cost: '345.000', sale: '850.000', initial: '170.000', receive: '255.000', return: '51.000', commTienda: '119.000', commDist: '91.000' },
+                { brand: 'TECNO', ref: 'SPARK 40 256GB + 4RAM', cost: '450.000', sale: '1.000.000', initial: '200.000', receive: '300.000', return: '60.000', commTienda: '140.000', commDist: '100.000' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A05 64GB + 3RAM', cost: '237.000', sale: '650.000', initial: '130.000', receive: '195.000', return: '39.000', commTienda: '91.000', commDist: '79.000' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A05 128GB + 4RAM', cost: '311.000', sale: '780.000', initial: '156.000', receive: '234.000', return: '46.800', commTienda: '109.200', commDist: '86.800' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A05S 128GB + 6RAM', cost: '391.000', sale: '980.000', initial: '196.000', receive: '294.000', return: '58.800', commTienda: '137.200', commDist: '98.800' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A06 64GB + 4RAM', cost: '275.000', sale: '750.000', initial: '150.000', receive: '225.000', return: '45.000', commTienda: '105.000', commDist: '85.000' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A06 128GB + 4RAM', cost: '310.000', sale: '800.000', initial: '160.000', receive: '240.000', return: '48.000', commTienda: '112.000', commDist: '88.000' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A07 64GB + 4RAM', cost: '320.000', sale: '820.000', initial: '164.000', receive: '246.000', return: '49.200', commTienda: '114.800', commDist: '89.200' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A07 128GB + 4RAM', cost: '380.000', sale: '950.000', initial: '190.000', receive: '285.000', return: '57.000', commTienda: '133.000', commDist: '97.000' },
+                { brand: 'SAMSUNG', ref: 'GALAXY A16 128GB + 4RAM', cost: '435.000', sale: '970.000', initial: '194.000', receive: '291.000', return: '58.200', commTienda: '135.800', commDist: '98.200' },
+                { brand: 'XIAOMI', ref: 'REDMI A5 64GB + 3RAM', cost: '260.000', sale: '720.000', initial: '144.000', receive: '216.000', return: '43.200', commTienda: '100.800', commDist: '83.200' },
+                { brand: 'XIAOMI', ref: 'REDMI 15 6/128GB', cost: '465.000', sale: '1.050.000', initial: '210.000', receive: '315.000', return: '63.000', commTienda: '147.000', commDist: '103.000' },
+                { brand: 'MOTOROLA', ref: 'E15 64GB + 2RAM', cost: '220.000', sale: '660.000', initial: '132.000', receive: '198.000', return: '39.600', commTienda: '92.400', commDist: '79.600' },
+                { brand: 'MOTOROLA', ref: 'G05 128GB + 4RAM', cost: '305.000', sale: '780.000', initial: '156.000', receive: '234.000', return: '46.800', commTienda: '109.200', commDist: '86.800' },
+                { brand: 'MOTOROLA', ref: 'G06 256GB + 4RAM', cost: '420.000', sale: '980.000', initial: '196.000', receive: '294.000', return: '58.800', commTienda: '137.200', commDist: '98.800' },
+                { brand: 'INFINIX', ref: 'SMART 10 128GB + 4+4RAM', cost: '325.000', sale: '820.000', initial: '164.000', receive: '246.000', return: '49.200', commTienda: '114.800', commDist: '89.200' },
+                { brand: 'OPPO', ref: 'A20 128GB + 4RAM', cost: '403.000', sale: '950.000', initial: '190.000', receive: '285.000', return: '57.000', commTienda: '133.000', commDist: '97.000' },
+                { brand: 'HONOR', ref: 'X5c 4/128GB', cost: '340.000', sale: '850.000', initial: '170.000', receive: '255.000', return: '51.000', commTienda: '119.000', commDist: '91.000' },
+                { brand: 'VIVO', ref: 'Y04 128GB + 4RAM', cost: '405.000', sale: '950.000', initial: '190.000', receive: '285.000', return: '57.000', commTienda: '133.000', commDist: '97.000' },
+                { brand: 'ZTE', ref: 'A56 PRO 128GB + 4RAM', cost: '265.000', sale: '750.000', initial: '150.000', receive: '225.000', return: '45.000', commTienda: '105.000', commDist: '85.000' }
+            ];
+
+            const brands = ['TODAS', ...new Set(retailData.map(item => item.brand))];
+
+            const [formData, setFormData] = useState({
+                fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
+                nombreCliente: '',
+                cedulaCliente: '',
+                expedicionCedula: '',
+            });
+
+            const [showPriceModal, setShowPriceModal] = useState(false);
+            const [selectedBrand, setSelectedBrand] = useState('TODAS');
+            const [searchTerm, setSearchTerm] = useState('');
+
+            const filteredData = useMemo(() => {
+                return retailData.filter(item => {
+                    const matchesSearch = item.ref.toLowerCase().includes(searchTerm.toLowerCase()) || item.brand.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesBrand = selectedBrand === 'TODAS' || item.brand === selectedBrand;
+                    return matchesSearch && matchesBrand;
+                });
+            }, [searchTerm, selectedBrand]);
+
+            return (
+                <div className="min-h-screen py-8 px-4 flex flex-col items-center bg-slate-50">
+                    
+                    {/* PANEL DE CONTROL */}
+                    <div className="w-full max-w-5xl bg-white p-6 rounded-3xl shadow-2xl mb-8 print:hidden border-t-[10px] border-[#2C4C8C]">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-6">
+                            <div className="flex items-center gap-4">
+                                <img src={companyInfo.logoUrl} alt="Logo Soluciones" className="h-20 w-auto" />
+                                <div className="hidden sm:block">
+                                    <h2 className="text-xl font-black text-[#2C4C8C] uppercase tracking-tighter italic">Gestión Comercial</h2>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Soluciones Efectivas CTG</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-6 py-3 bg-[#67B74D] text-white rounded-2xl font-black text-sm shadow-xl hover:bg-[#559e3d] transition-all uppercase tracking-widest scale-100 active:scale-95">
+                                    <Icon name="Calculator" size={18} /> Precios Retail B
+                                </button>
+                                <button onClick={() => window.print()} className="flex items-center gap-2 px-6 py-3 bg-[#2C4C8C] text-white rounded-2xl font-black text-sm shadow-xl hover:bg-black transition-all uppercase tracking-widest scale-100 active:scale-95">
+                                    <Icon name="Printer" size={18} /> Imprimir / PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-emerald-50/30 p-6 rounded-[30px] border-2 border-emerald-100/50">
+                            <h3 className="text-[10px] font-black text-emerald-700 uppercase mb-4 tracking-widest flex items-center gap-2">
+                                <Icon name="FileText" size={12}/> Datos del Aliado para la Carta
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-2 ml-1">Nombre Completo</label>
+                                    <input type="text" placeholder="Ej: Juan Pérez" className="w-full rounded-2xl border-2 border-emerald-100 p-4 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] transition-all" value={formData.nombreCliente} onChange={(e) => setFormData({...formData, nombreCliente: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-2 ml-1">Cédula</label>
+                                    <input type="text" placeholder="No. Documento" className="w-full rounded-2xl border-2 border-emerald-100 p-4 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] transition-all" value={formData.cedulaCliente} onChange={(e) => setFormData({...formData, cedulaCliente: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-2 ml-1 italic text-emerald-700">Expedida en:</label>
+                                    <input type="text" placeholder="Ciudad" className="w-full rounded-2xl border-2 border-emerald-100 p-4 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] transition-all" value={formData.expedicionCedula} onChange={(e) => setFormData({...formData, expedicionCedula: e.target.value})} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* MODAL DE PRECIOS */}
+                    {showPriceModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md print:hidden">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-300 border-8 border-white">
+                                <div className="p-8 bg-[#2C4C8C] text-white flex justify-between items-center">
+                                    <div className="flex items-center gap-6">
+                                        <div className="p-4 bg-white/10 rounded-3xl backdrop-blur-sm"><Icon name="Calculator" size={40}/></div>
+                                        <div>
+                                            <h3 className="text-3xl font-black uppercase italic leading-none tracking-tighter">Simulador Retail B</h3>
+                                            <p className="text-xs font-bold text-blue-200 uppercase tracking-[3px] mt-2 opacity-80 italic underline decoration-[#67B74D] underline-offset-8">Tablas de comisiones vigentes</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShowPriceModal(false)} className="p-3 hover:bg-white/20 rounded-full transition-all scale-100 active:scale-75"><Icon name="X" size={40}/></button>
+                                </div>
+
+                                <div className="p-6 bg-slate-50 border-b flex flex-col gap-6 shadow-inner">
+                                    <div className="relative w-full max-w-3xl mx-auto group">
+                                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-[#67B74D] transition-colors"><Icon name="Search" size={24} /></div>
+                                        <input type="text" placeholder="Escribe el modelo o marca para filtrar..." className="w-full pl-16 pr-8 py-5 rounded-[25px] border-2 border-slate-200 font-bold text-lg focus:border-[#67B74D] outline-none shadow-sm transition-all bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                                    </div>
+                                    <div className="flex flex-wrap gap-3 justify-center">
+                                        {brands.map(brand => (
+                                            <button 
+                                                key={brand} 
+                                                onClick={() => setSelectedBrand(brand)}
+                                                className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-[2px] brand-pill border-2 shadow-sm transition-all ${selectedBrand === brand ? 'bg-[#2C4C8C] text-white border-[#2C4C8C] shadow-[#2C4C8C]/20' : 'bg-white text-slate-400 border-slate-100 hover:border-[#67B74D] hover:text-[#67B74D]'}`}
+                                            >
+                                                {brand}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-auto custom-scroll bg-white px-8 py-4">
+                                    <table className="min-w-full divide-y-4 divide-slate-50">
+                                        <thead className="bg-white sticky top-0 z-10">
+                                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-[3px] italic">
+                                                <th className="px-6 py-6 text-left bg-white">Equipo / Modelo</th>
+                                                <th className="px-4 py-6 text-center bg-white">Costo Base</th>
+                                                <th className="px-4 py-6 text-center bg-white">P. Venta</th>
+                                                <th className="px-4 py-6 text-center bg-white">Inicial</th>
+                                                <th className="px-6 py-6 text-center bg-emerald-50 text-[#67B74D] rounded-t-3xl">Recibe Tienda</th>
+                                                <th className="px-4 py-6 text-center bg-white">Devuelve</th>
+                                                <th className="px-8 py-6 text-center bg-[#2C4C8C] text-white rounded-t-3xl">Tu Comisión</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {filteredData.map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-blue-50/40 transition-all group">
+                                                    <td className="px-6 py-6">
+                                                        <div className="text-[10px] font-black text-[#67B74D] tracking-widest italic">{item.brand}</div>
+                                                        <div className="text-sm font-black text-slate-800 uppercase tracking-tighter group-hover:text-[#2C4C8C] transition-colors">{item.ref}</div>
+                                                    </td>
+                                                    <td className="px-4 py-6 text-center text-xs font-bold text-slate-300 italic">${item.cost}</td>
+                                                    <td className="px-4 py-6 text-center text-sm font-black text-slate-600">${item.sale}</td>
+                                                    <td className="px-4 py-6 text-center text-sm font-black text-blue-500 bg-blue-50/20">${item.initial}</td>
+                                                    <td className="px-6 py-6 text-center bg-emerald-50/50">
+                                                        <span className="text-base font-black text-[#67B74D] drop-shadow-sm">${item.receive}</span>
+                                                    </td>
+                                                    <td className="px-4 py-6 text-center text-xs font-bold text-slate-300 italic">-${item.return}</td>
+                                                    <td className="px-8 py-6 text-center bg-[#2C4C8C]/5 group-hover:bg-[#2C4C8C]/10 transition-colors">
+                                                        <span className="text-2xl font-black text-[#2C4C8C] italic tracking-tighter drop-shadow-sm">${item.commTienda}</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div className="p-6 bg-slate-50 border-t flex justify-between items-center text-[10px] font-black text-slate-400 uppercase tracking-[2px]">
+                                    <div className="flex gap-6">
+                                        <span>Total: <span className="text-[#2C4C8C]">{filteredData.length} equipos</span></span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Icon name="ShieldCheck" size={14} className="text-[#67B74D]"/>
+                                        <span>Precios Oficiales Retail B</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* FORMATO DE CARTA A4 */}
+                    <div className="w-full max-w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] text-gray-900 font-serif relative border-t-[20px] border-[#2C4C8C] flex flex-col print-container print-header-border overflow-hidden">
+                        
+                        <div className="flex-1">
+                            {/* ENCABEZADO MEJORADO: Espaciado robusto y centrado impecable */}
+                            <header className="flex flex-col items-center border-b-2 border-slate-100 pb-8 mb-10 w-full">
+                                <div className="h-44 w-full flex justify-center items-center mb-6">
+                                    <img src={companyInfo.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                                </div>
+                                <div className="text-center font-sans w-full">
+                                    <h1 className="text-2xl sm:text-3xl font-black text-[#2C4C8C] uppercase italic leading-tight tracking-tighter whitespace-nowrap">
+                                        {companyInfo.name}
+                                    </h1>
+                                    <div className="flex flex-col items-center mt-2 gap-1">
+                                        <p className="text-lg font-bold text-gray-700 tracking-widest uppercase">NIT: {companyInfo.nit}</p>
+                                        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-4 text-[9pt] text-gray-400 font-bold uppercase tracking-widest px-4">
+                                            <span className="flex items-center gap-1.5 shrink-0"><Icon name="MapPin" size={12} className="text-[#67B74D]"/> {companyInfo.city}</span>
+                                            <span className="flex items-center gap-1.5 shrink-0"><Icon name="Phone" size={12} className="text-[#67B74D]"/> {companyInfo.phone}</span>
+                                            <span className="lowercase italic font-normal shrink-0 border-l border-slate-200 pl-4 ml-4 hidden sm:inline">{companyInfo.email}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </header>
+
+                            <div className="mb-14 font-sans font-bold text-right italic uppercase tracking-tighter text-sm">Cartagena D.T. y C., {formData.fecha}</div>
+
+                            <div className="mb-14 space-y-2 font-sans">
+                                <p className="text-xs font-black text-[#2C4C8C] uppercase border-b-2 border-[#67B74D] w-fit mb-4 pb-1 italic">Dirigido a:</p>
+                                <div className="space-y-1">
+                                    <p className="text-2xl font-black uppercase tracking-tighter text-gray-900 leading-none">PAYJOY COLOMBIA S.A.S.</p>
+                                    <p className="text-sm font-bold text-[#2C4C8C] italic">Departamento de Operaciones - Gestión de Cartera y Dispersión de Pagos</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Bogotá D.C. / Nacional</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-[#F1F8EE] p-8 border-l-[10px] border-[#67B74D] mb-14 rounded-r-2xl">
+                                <p className="font-black text-[12pt] text-[#2C4C8C] uppercase italic leading-tight">
+                                    Asunto: Autorización expresa de dispersión de fondos a cuenta de ahorros empresarial de Soluciones Efectivas CTG S.A.S.
+                                </p>
+                            </div>
+
+                            <div className="text-justify leading-relaxed text-[11pt] space-y-10 font-sans">
+                                <p>Cordial saludo,</p>
+                                <p>
+                                    En la presente Yo, <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#2C4C8C] uppercase italic">{formData.nombreCliente || "_________________________________________"}</span>, 
+                                    con C.C. No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1">{formData.cedulaCliente || "_________________"}</span> expedida en 
+                                    <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#67B74D] italic"> {formData.expedicionCedula || "_______________"}</span>, 
+                                    actuando en mi calidad de aliado comercial de la sociedad jurídica <span className="font-black uppercase text-[#2C4C8C] tracking-tighter italic">{companyInfo.name}</span>, 
+                                    autorizo de manera voluntaria, expresa e irrevocable a <span className="font-black uppercase">PAYJOY COLOMBIA S.A.S.</span> para que la totalidad de los recursos económicos, comisiones y saldos a mi favor sean consignados en la siguiente cuenta corporativa:
+                                </p>
+                                
+                                {/* CUADRO DE CREDENCIALES: Ajuste de espaciado y tamaños */}
+                                <div className="max-w-xl mx-auto border-[3px] border-[#2C4C8C] rounded-[30px] overflow-visible shadow-2xl my-14 print:shadow-none bg-white">
+                                    <div className="bg-[#2C4C8C] text-white py-4 text-center text-[11px] font-black uppercase tracking-[4px] rounded-t-[25px]">Credenciales Bancarias Autorizadas</div>
+                                    <div className="p-8 space-y-6 text-sm font-bold">
+                                        <div className="flex justify-between border-b pb-2 text-[10px] uppercase text-gray-400 font-black tracking-widest"><span>Beneficiario Titular</span><span className="text-[#2C4C8C] uppercase tracking-tighter italic">{companyInfo.name}</span></div>
+                                        <div className="flex justify-between border-b pb-2 text-[10px] uppercase text-gray-400 font-black tracking-widest"><span>NIT Bancario</span><span className="text-gray-800">901.831.921-2</span></div>
+                                        <div className="flex justify-between border-b pb-2 text-[10px] uppercase text-gray-400 font-black tracking-widest"><span>Tipo de Cuenta</span><span className="text-[#67B74D] uppercase italic">{companyInfo.tipoCuenta}</span></div>
+                                        <div className="pt-6 text-center">
+                                            <p className="text-[10px] text-[#2C4C8C] uppercase mb-2 font-black italic tracking-[3px]">Banco Bancolombia S.A.</p>
+                                            <div className="bg-[#F1F8EE] py-4 px-6 rounded-2xl border-2 border-dashed border-[#67B74D]/30 inline-block">
+                                                <span className="text-2xl font-black text-[#2C4C8C] tracking-[4px] font-mono leading-none italic">{companyInfo.numeroCuenta}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-[#67B74D] h-4 rounded-b-[25px]"></div>
+                                </div>
+
+                                <p>
+                                    Manifiesto que el abono realizado en la cuenta anteriormente descrita constituirá prueba fehaciente de pago y extinción total de las obligaciones monetarias por parte de <span className="font-black uppercase tracking-tighter italic">PAYJOY COLOMBIA S.A.S.</span> hacia mi persona.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-auto page-break-avoid">
+                            <div className="flex justify-between items-end font-sans mb-12">
+                                <div className="w-1/2">
+                                    <div className="w-full border-b-4 border-[#2C4C8C] mb-4"></div>
+                                    <p className="font-black text-[#2C4C8C] uppercase text-sm tracking-tighter">{formData.nombreCliente || "Firma del Aliado Autorizante"}</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C. No. {formData.cedulaCliente || "__________________"}</p>
+                                </div>
+                                <div className="w-32 h-40 border-4 border-slate-100 rounded-[25px] flex flex-col items-center justify-end text-[8pt] text-slate-300 p-4 font-black bg-slate-50 italic border-dotted">
+                                    <div className="w-full border-t border-slate-200 pt-2 text-center">Huella Digital</div>
+                                </div>
+                            </div>
+
+                            <footer className="border-t-2 border-[#67B74D] pt-8 pb-4 flex justify-between text-[8pt] text-gray-400 font-black uppercase font-sans tracking-[2px] italic">
+                                <div className="italic tracking-tighter leading-tight text-blue-900">
+                                    {companyInfo.name} <br/>
+                                    <span className="text-[#67B74D] lowercase font-bold tracking-normal italic text-[7pt]">soluciones a crédito</span>
+                                </div>
+                                <div className="text-right">
+                                    <p>Registro de Alianzas Retail B</p>
+                                    <p className="text-[6pt] font-bold text-slate-300">DOC: AUT-DISP-0226</p>
+                                </div>
+                            </footer>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
