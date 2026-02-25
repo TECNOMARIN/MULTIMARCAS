@@ -176,6 +176,21 @@
                 html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
             };
 
+            // Función para redondear valores al millar más cercano
+            const formatRoundToThousand = (val) => {
+                if (!val) return '0';
+                // Quitamos los puntos que pudieran venir en el formato de origen
+                const strVal = String(val).replace(/\./g, '').trim();
+                const num = parseFloat(strVal);
+                if (isNaN(num)) return val;
+                
+                // Redondeamos al millar más cercano (Ej: 102200 -> 102000, 110600 -> 111000)
+                const rounded = Math.round(num / 1000) * 1000;
+                
+                // Retornamos el valor en formato moneda con punto para los miles (locale es-CO)
+                return rounded.toLocaleString('es-CO');
+            };
+
             return (
                 <div className="min-h-screen py-8 px-4 flex flex-col items-center">
                     
@@ -236,7 +251,24 @@
                                         <thead className="sticky top-0 bg-white z-10 text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                             <tr><th className="px-4 py-4 text-left">Referencia</th><th className="px-2 py-4">Costo</th><th className="px-2 py-4">Venta</th><th className="px-4 py-4 bg-emerald-50 text-[#67B74D]">Inicial plataforma</th><th className="px-2 py-4 text-blue-600">Recibe Tienda</th><th className="px-2 py-4">Devuelve</th><th className="px-4 py-4 bg-[#2C4C8C] text-white">Comisión</th></tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-50 font-bold text-[11px] uppercase">{filteredData.map((item, idx) => (<tr key={idx} className="hover:bg-blue-50/30 transition-all"><td className="px-4 py-4"><span className="text-[9px] text-[#67B74D] block font-black">{item.brand}</span>{item.ref}</td><td className="px-2 py-4 text-center text-slate-400 italic">${item.cost}</td><td className="px-2 py-4 text-center">${item.sale}</td><td className="px-4 py-4 text-center text-[#67B74D] bg-emerald-50/20">${item.initial}</td><td className="px-2 py-4 text-center text-blue-600">${item.receive}</td><td className="px-2 py-4 text-center text-slate-400 italic">${item.return}</td><td className="px-4 py-4 text-center bg-[#2C4C8C]/5 group-hover:bg-[#2C4C8C]/10"><span className="text-base font-black text-[#2C4C8C] italic">${item.commTienda}</span></td></tr>))}</tbody>
+                                        <tbody className="divide-y divide-slate-50 font-bold text-[11px] uppercase">
+                                            {filteredData.map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-blue-50/30 transition-all">
+                                                    <td className="px-4 py-4">
+                                                        <span className="text-[9px] text-[#67B74D] block font-black">{item.brand}</span>
+                                                        {item.ref}
+                                                    </td>
+                                                    <td className="px-2 py-4 text-center text-slate-400 italic">${formatRoundToThousand(item.cost)}</td>
+                                                    <td className="px-2 py-4 text-center">${formatRoundToThousand(item.sale)}</td>
+                                                    <td className="px-4 py-4 text-center text-[#67B74D] bg-emerald-50/20">${formatRoundToThousand(item.initial)}</td>
+                                                    <td className="px-2 py-4 text-center text-blue-600">${formatRoundToThousand(item.receive)}</td>
+                                                    <td className="px-2 py-4 text-center text-slate-400 italic">${formatRoundToThousand(item.return)}</td>
+                                                    <td className="px-4 py-4 text-center bg-[#2C4C8C]/5 group-hover:bg-[#2C4C8C]/10">
+                                                        <span className="text-base font-black text-[#2C4C8C] italic">${formatRoundToThousand(item.commTienda)}</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>
