@@ -71,8 +71,12 @@
                 Calculator: <><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="16" y1="14" x2="16" y2="18" /><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01" /></>,
                 Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>,
                 ChevronDown: <path d="m6 9 6 6 6-6" />,
+                ChevronUp: <path d="m18 15-6-6-6 6" />,
                 ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />,
-                Loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                Loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />,
+                UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="17" y1="11" x2="23" y2="11" /></>,
+                Upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>,
+                CheckCircle2: <><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></>
             };
             return (
                 <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={name === 'Loader' ? `animate-spin-slow ${className}` : className}>
@@ -96,16 +100,14 @@
                 logoUrl: "https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png"
             };
 
-            // BASE DE DATOS DE RESPALDO (Por si el enlace de Google Sheets falla o está vacío temporalmente)
             const fallbackData = [
-                { brand: 'TECNO', ref: 'SPARK GO2 64GB + 3+3RAM', cost: '265.000', sale: '730.000', initial: '146.000', receive: '219.000', return: '43.800', commTienda: '102.200', commDist: '83.800' },
-                { brand: 'TECNO', ref: 'SPARK GO2 128GB + 3+3RAM', cost: '310.000', sale: '790.000', initial: '158.000', receive: '237.000', return: '47.400', commTienda: '110.600', commDist: '87.400' },
-                { brand: 'SAMSUNG', ref: 'GALAXY A05 64GB + 3RAM', cost: '237.000', sale: '650.000', initial: '130.000', receive: '195.000', return: '39.000', commTienda: '91.000', commDist: '79.000' }
+                { brand: 'TECNO', ref: 'SPARK GO2 64GB + 3+3RAM', cost: '265.000', sale: '730.000', initial: '146.000', receive: '219.000', return: '43.800', commTienda: '102.200', commDist: '83.800' }
             ];
 
             const [retailData, setRetailData] = useState([]);
             const [isLoadingPrices, setIsLoadingPrices] = useState(true);
 
+            // Estados de la Carta de Autorización
             const [formData, setFormData] = useState({
                 fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
                 nombreCliente: '',
@@ -113,43 +115,40 @@
                 expedicionCedula: '',
             });
 
+            // Estados del Modal de Precios
             const [showPriceModal, setShowPriceModal] = useState(false);
             const [selectedBrand, setSelectedBrand] = useState('TODAS LAS MARCAS');
             const [searchTerm, setSearchTerm] = useState('');
             const [isGenerating, setIsGenerating] = useState(false);
 
+            // Estados de Afiliación de Tienda
+            const [showAffiliateModal, setShowAffiliateModal] = useState(false);
+            const [submitStatus, setSubmitStatus] = useState(null); // 'loading', 'success', 'error'
+            const [affiliateForm, setAffiliateForm] = useState({ tienda: '', email: '' });
+            const [affiliateFiles, setAffiliateFiles] = useState({});
+
             // =========================================================
-            // CONEXIÓN CON GOOGLE SHEETS ACTUALIZADA
+            // CONEXIÓN CON GOOGLE SHEETS
             // =========================================================
             const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec"; 
 
+            // Cargar datos de la pestaña PRECIOS
             useEffect(() => {
                 const fetchPrecios = async () => {
-                    if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "TU_URL_AQUI") {
-                        console.warn("No se ha configurado la URL de Google Sheets. Usando datos de respaldo locales.");
-                        setRetailData(fallbackData);
-                        setIsLoadingPrices(false);
-                        return;
-                    }
-
                     try {
                         const response = await fetch(GOOGLE_SCRIPT_URL);
                         const data = await response.json();
-                        
                         if (data && !data.error && data.length > 0) {
                             setRetailData(data);
                         } else {
-                            console.error("Respuesta vacía o error de Google:", data.error);
                             setRetailData(fallbackData); 
                         }
                     } catch (error) {
-                        console.error("Error al conectar con Google Sheets:", error);
                         setRetailData(fallbackData); 
                     } finally {
                         setIsLoadingPrices(false);
                     }
                 };
-                
                 fetchPrecios();
             }, []);
 
@@ -176,19 +175,70 @@
                 html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
             };
 
-            // Función para redondear valores al millar más cercano
             const formatRoundToThousand = (val) => {
                 if (!val) return '0';
-                // Quitamos los puntos que pudieran venir en el formato de origen
                 const strVal = String(val).replace(/\./g, '').trim();
                 const num = parseFloat(strVal);
                 if (isNaN(num)) return val;
-                
-                // Redondeamos al millar más cercano (Ej: 102200 -> 102000, 110600 -> 111000)
                 const rounded = Math.round(num / 1000) * 1000;
-                
-                // Retornamos el valor en formato moneda con punto para los miles (locale es-CO)
                 return rounded.toLocaleString('es-CO');
+            };
+
+            // =========================================================
+            // LÓGICA DE SUBIDA DE ARCHIVOS Y AFILIACIÓN
+            // =========================================================
+            const handleFileChange = (e, fileType) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64String = reader.result.split(',')[1];
+                        setAffiliateFiles(prev => ({
+                            ...prev,
+                            [fileType]: {
+                                filename: file.name,
+                                mimeType: file.type,
+                                data: base64String
+                            }
+                        }));
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const handleAffiliateSubmit = async (e) => {
+                e.preventDefault();
+                setSubmitStatus('loading');
+                try {
+                    const payload = {
+                        action: 'afiliar',
+                        tienda: affiliateForm.tienda,
+                        email: affiliateForm.email,
+                        archivos: affiliateFiles
+                    };
+
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    setSubmitStatus('success');
+                } catch (error) {
+                    console.error("Error al enviar solicitud:", error);
+                    setSubmitStatus('error');
+                }
+            };
+
+            // Helpers para botones de desplazamiento en modales
+            const scrollToTop = (id) => {
+                const el = document.getElementById(id);
+                if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+            const scrollToBottom = (id) => {
+                const el = document.getElementById(id);
+                if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
             };
 
             return (
@@ -201,13 +251,16 @@
                                 <img src={companyInfo.logoUrl} alt="Logo" className="h-14 w-auto" />
                                 <div><h2 className="text-xl font-black text-[#2C4C8C] uppercase tracking-tighter italic">Gestión Soluciones</h2><p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Generador PDF - Retail B</p></div>
                             </div>
-                            <div className="flex gap-3">
-                                <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-5 py-2.5 bg-[#67B74D] text-white rounded-xl font-black text-xs shadow-lg hover:bg-[#559e3d] transition-all uppercase tracking-widest">
-                                    <Icon name="Calculator" size={16} /> Ver Precios
+                            <div className="flex gap-3 flex-wrap justify-center md:justify-end">
+                                {/* NUEVO BOTÓN AFILIAR TIENDA */}
+                                <button onClick={() => { setShowAffiliateModal(true); setSubmitStatus(null); setAffiliateForm({tienda:'', email:''}); setAffiliateFiles({}); }} className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest">
+                                    <Icon name="UserPlus" size={16} /> Afiliar
                                 </button>
-                                <button onClick={handleGeneratePDF} disabled={isGenerating} className={`flex items-center gap-2 px-5 py-2.5 ${isGenerating ? 'bg-gray-400' : 'bg-[#2C4C8C]'} text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest`}>
-                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} 
-                                    {isGenerating ? 'Generando...' : 'Descargar PDF'}
+                                <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[#67B74D] text-white rounded-xl font-black text-xs shadow-lg hover:bg-[#559e3d] transition-all uppercase tracking-widest">
+                                    <Icon name="Calculator" size={16} /> Precios
+                                </button>
+                                <button onClick={handleGeneratePDF} disabled={isGenerating} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating ? 'bg-gray-400' : 'bg-[#2C4C8C]'} text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} PDF
                                 </button>
                             </div>
                         </div>
@@ -220,18 +273,102 @@
                         </div>
                     </div>
 
+                    {/* MODAL DE AFILIACIÓN */}
+                    {showAffiliateModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2C4C8C]/90 backdrop-blur-md print:hidden">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border-8 border-white">
+                                {/* Encabezado Fijo */}
+                                <div className="p-6 bg-[#2C4C8C] text-white flex justify-between items-center shrink-0">
+                                    <div className="flex items-center gap-4">
+                                        <Icon name="UserPlus" size={28}/>
+                                        <div>
+                                            <h3 className="text-xl font-black uppercase tracking-tighter leading-none italic">Afiliar Nuevo Aliado</h3>
+                                            <p className="text-[10px] text-blue-200 uppercase tracking-widest mt-1">Conexión con Retail B</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShowAffiliateModal(false)} className="hover:bg-white/20 p-2 rounded-full transition-all"><Icon name="X" size={28}/></button>
+                                </div>
+                                
+                                {/* Contenedor Scrolleable */}
+                                <div id="scroll-afiliar" className="p-6 bg-slate-50 flex-1 overflow-y-auto custom-scroll relative">
+                                    {submitStatus === 'loading' ? (
+                                        <div className="py-20 flex flex-col items-center justify-center text-[#2C4C8C]">
+                                            <Icon name="Loader" size={64} className="mb-6" />
+                                            <h4 className="text-xl font-black uppercase tracking-widest">Enviando Documentos...</h4>
+                                            <p className="text-sm font-bold text-gray-500 mt-2">Creando carpeta en Drive y guardando datos en Sheets.</p>
+                                        </div>
+                                    ) : submitStatus === 'success' ? (
+                                        <div className="py-20 flex flex-col items-center justify-center text-green-600">
+                                            <Icon name="CheckCircle2" size={64} className="mb-6" />
+                                            <h4 className="text-2xl font-black uppercase tracking-widest text-[#2C4C8C]">¡Afiliación Completada!</h4>
+                                            <p className="text-sm font-bold text-gray-500 mt-2 text-center max-w-md">La tienda y sus documentos han sido vinculados correctamente a tu base de datos y carpeta de Drive.</p>
+                                        </div>
+                                    ) : (
+                                        <form id="afiliar-form" onSubmit={handleAffiliateSubmit} className="space-y-6 pb-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-2 tracking-widest">Nombre de la Tienda</label>
+                                                    <input required type="text" placeholder="Ej: Celulares VIP" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-[#67B74D] text-sm" value={affiliateForm.tienda} onChange={(e) => setAffiliateForm({...affiliateForm, tienda: e.target.value})} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-2 tracking-widest">Correo Electrónico</label>
+                                                    <input required type="email" placeholder="tienda@correo.com" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-[#67B74D] text-sm" value={affiliateForm.email} onChange={(e) => setAffiliateForm({...affiliateForm, email: e.target.value})} />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-3 tracking-widest border-b pb-2">Adjuntar Documentación Obligatoria</label>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    {[
+                                                        { id: 'camara', title: 'Certificado de Comercio', subtitle: 'Impresión < 30 días', accept: '.pdf,image/*' },
+                                                        { id: 'cedula', title: 'Cédula Rep. Legal', subtitle: 'Ambas caras a color', accept: '.pdf,image/*' },
+                                                        { id: 'autorizacion', title: 'Autorización Tercerización', subtitle: 'Firmada y autenticada (< 30 días)', accept: '.pdf,image/*' },
+                                                        { id: 'fotos', title: 'Fotografías (Int/Ext)', subtitle: 'Internas y fachada con nomenclatura', accept: 'image/*,.pdf' },
+                                                        { id: 'video', title: 'Video 360°', subtitle: 'Desde fachada hasta el interior', accept: 'video/*' }
+                                                    ].map((doc) => (
+                                                        <label key={doc.id} className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${affiliateFiles[doc.id] ? 'border-[#67B74D] bg-emerald-50' : 'border-slate-300 hover:bg-slate-100'} ${doc.id === 'video' ? 'sm:col-span-2' : ''}`}>
+                                                            {affiliateFiles[doc.id] ? <Icon name="CheckCircle2" size={28} className="text-[#67B74D] mb-2"/> : <Icon name="Upload" size={28} className="text-gray-300 mb-2"/>}
+                                                            <span className={`text-[11px] font-black uppercase text-center ${affiliateFiles[doc.id] ? 'text-[#67B74D]' : 'text-[#2C4C8C]'}`}>{doc.title}</span>
+                                                            <span className="text-[9px] text-gray-500 font-bold text-center mt-1 leading-tight px-2">{doc.subtitle}</span>
+                                                            <span className="text-[9px] text-[#67B74D] font-black truncate max-w-full px-2 mt-2">{affiliateFiles[doc.id] ? affiliateFiles[doc.id].filename : 'Clic para examinar'}</span>
+                                                            <input type="file" className="hidden" accept={doc.accept} onChange={(e) => handleFileChange(e, doc.id)} required />
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" className="w-full py-4 bg-[#67B74D] text-white rounded-2xl font-black uppercase tracking-[3px] shadow-xl hover:bg-[#559e3d] transition-all flex items-center justify-center gap-3">
+                                                <Icon name="Upload" size={20} /> Registrar Tienda y Subir Documentos
+                                            </button>
+                                        </form>
+                                    )}
+                                </div>
+
+                                {/* Pie Fijo con Botones de Scroll y Cerrar */}
+                                <div className="p-4 bg-white border-t flex justify-between items-center shrink-0">
+                                    <div className="flex gap-2">
+                                        <button onClick={(e) => { e.preventDefault(); scrollToTop('scroll-afiliar'); }} className="p-2 bg-slate-100 text-[#2C4C8C] rounded-xl hover:bg-slate-200 transition-colors shadow-sm" title="Subir"><Icon name="ChevronUp" size={20}/></button>
+                                        <button onClick={(e) => { e.preventDefault(); scrollToBottom('scroll-afiliar'); }} className="p-2 bg-slate-100 text-[#2C4C8C] rounded-xl hover:bg-slate-200 transition-colors shadow-sm" title="Bajar"><Icon name="ChevronDown" size={20}/></button>
+                                    </div>
+                                    <button onClick={() => setShowAffiliateModal(false)} className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-black text-[11px] hover:bg-gray-200 transition-all uppercase tracking-[2px]">Cerrar Panel</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* MODAL DE PRECIOS CONECTADO A GOOGLE SHEETS */}
                     {showPriceModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md print:hidden">
-                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-7xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-300 border-8 border-white">
-                                <div className="p-6 bg-[#2C4C8C] text-white flex justify-between items-center">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-300 border-8 border-white">
+                                {/* Encabezado Fijo */}
+                                <div className="p-6 bg-[#2C4C8C] text-white flex justify-between items-center shrink-0">
                                     <h3 className="text-xl font-black uppercase italic tracking-tighter leading-none">Lista de Rentabilidad</h3>
                                     <div className="flex gap-4 items-center">
                                         {isLoadingPrices && <span className="text-xs font-bold flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full"><Icon name="Loader" size={14}/> Conectando a Sheets...</span>}
-                                        <button onClick={() => setShowPriceModal(false)}><Icon name="X" size={28}/></button>
+                                        <button onClick={() => setShowPriceModal(false)} className="hover:bg-white/20 p-2 rounded-full transition-all"><Icon name="X" size={28}/></button>
                                     </div>
                                 </div>
-                                <div className="p-5 bg-slate-50 border-b flex flex-col md:flex-row gap-4">
+                                <div className="p-5 bg-slate-50 border-b flex flex-col md:flex-row gap-4 shrink-0">
                                     <div className="relative flex-1 group"><div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#67B74D]"><Icon name="Search" size={18} /></div><input type="text" placeholder="Buscar modelo o marca..." className="w-full pl-12 pr-6 py-3 rounded-2xl border-2 border-slate-200 font-bold outline-none focus:border-[#67B74D] bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
                                     <div className="relative w-full md:w-64">
                                         <select className="w-full pl-6 pr-10 py-3 rounded-2xl border-2 border-slate-200 font-black text-[11px] uppercase tracking-widest outline-none focus:border-[#67B74D] bg-white appearance-none cursor-pointer text-[#2C4C8C]" value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)}>
@@ -240,7 +377,9 @@
                                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><Icon name="ChevronDown" size={16} /></div>
                                     </div>
                                 </div>
-                                <div className="flex-1 overflow-auto custom-scroll bg-white px-4 relative">
+                                
+                                {/* Contenedor Scrolleable de la Tabla */}
+                                <div id="scroll-precios" className="flex-1 overflow-auto custom-scroll bg-white px-4 relative">
                                     {isLoadingPrices ? (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm z-20 text-[#2C4C8C]">
                                             <Icon name="Loader" size={48} className="mb-4" />
@@ -248,8 +387,8 @@
                                         </div>
                                     ) : null}
                                     <table className="min-w-full divide-y divide-slate-100">
-                                        <thead className="sticky top-0 bg-white z-10 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                            <tr><th className="px-4 py-4 text-left">Referencia</th><th className="px-2 py-4">Costo</th><th className="px-2 py-4">Venta</th><th className="px-4 py-4 bg-emerald-50 text-[#67B74D]">Inicial plataforma</th><th className="px-2 py-4 text-blue-600">Recibe Tienda</th><th className="px-2 py-4">Devuelve</th><th className="px-4 py-4 bg-[#2C4C8C] text-white">Comisión</th></tr>
+                                        <thead className="sticky top-0 bg-white z-10 text-[9px] font-black text-slate-400 uppercase tracking-widest shadow-sm">
+                                            <tr><th className="px-4 py-4 text-left">Referencia</th><th className="px-2 py-4">Costo</th><th className="px-2 py-4">Venta</th><th className="px-4 py-4 bg-emerald-50 text-[#67B74D]">Inicial plataforma</th><th className="px-2 py-4 text-blue-600">Recibe Tienda</th><th className="px-2 py-4">Devuelve</th><th className="px-4 py-4 bg-[#2C4C8C] text-white rounded-tr-lg">Comisión</th></tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50 font-bold text-[11px] uppercase">
                                             {filteredData.map((item, idx) => (
@@ -270,6 +409,15 @@
                                             ))}
                                         </tbody>
                                     </table>
+                                </div>
+
+                                {/* Pie Fijo con Botones de Scroll y Cerrar */}
+                                <div className="p-4 bg-white border-t flex justify-between items-center shrink-0">
+                                    <div className="flex gap-2">
+                                        <button onClick={() => scrollToTop('scroll-precios')} className="p-2 bg-slate-100 text-[#2C4C8C] rounded-xl hover:bg-slate-200 transition-colors shadow-sm" title="Subir"><Icon name="ChevronUp" size={20}/></button>
+                                        <button onClick={() => scrollToBottom('scroll-precios')} className="p-2 bg-slate-100 text-[#2C4C8C] rounded-xl hover:bg-slate-200 transition-colors shadow-sm" title="Bajar"><Icon name="ChevronDown" size={20}/></button>
+                                    </div>
+                                    <button onClick={() => setShowPriceModal(false)} className="px-6 py-3 bg-[#2C4C8C] text-white rounded-xl font-black text-[11px] shadow-lg hover:bg-black transition-all uppercase tracking-[2px]">Cerrar Precios</button>
                                 </div>
                             </div>
                         </div>
