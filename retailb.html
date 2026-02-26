@@ -137,7 +137,8 @@
             useEffect(() => {
                 const fetchPrecios = async () => {
                     try {
-                        const response = await fetch(GOOGLE_SCRIPT_URL);
+                        // AQUÍ SE CORRIGIÓ: Se añade ?action=getPrecios para que el Router sepa qué devolver
+                        const response = await fetch(GOOGLE_SCRIPT_URL + "?action=getPrecios");
                         const data = await response.json();
                         if (data && !data.error && data.length > 0) {
                             setRetailData(data);
