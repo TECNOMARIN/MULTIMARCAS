@@ -125,7 +125,13 @@
             // Estados de Afiliación de Tienda
             const [showAffiliateModal, setShowAffiliateModal] = useState(false);
             const [submitStatus, setSubmitStatus] = useState(null); // 'loading', 'success', 'error'
-            const [affiliateForm, setAffiliateForm] = useState({ tienda: '', email: '' });
+            const [affiliateForm, setAffiliateForm] = useState({ 
+                tienda: '', 
+                emailTienda: '',
+                nombreVendedor: '',
+                emailVendedor: '',
+                telefonoVendedor: ''
+            });
             const [affiliateFiles, setAffiliateFiles] = useState({});
 
             // =========================================================
@@ -137,7 +143,6 @@
             useEffect(() => {
                 const fetchPrecios = async () => {
                     try {
-                        // AQUÍ SE CORRIGIÓ: Se añade ?action=getPrecios para que el Router sepa qué devolver
                         const response = await fetch(GOOGLE_SCRIPT_URL + "?action=getPrecios");
                         const data = await response.json();
                         if (data && !data.error && data.length > 0) {
@@ -215,7 +220,10 @@
                     const payload = {
                         action: 'afiliar',
                         tienda: affiliateForm.tienda,
-                        email: affiliateForm.email,
+                        emailTienda: affiliateForm.emailTienda,
+                        nombreVendedor: affiliateForm.nombreVendedor,
+                        emailVendedor: affiliateForm.emailVendedor,
+                        telefonoVendedor: affiliateForm.telefonoVendedor,
                         archivos: affiliateFiles
                     };
 
@@ -262,7 +270,7 @@
                             </div>
                             <div className="flex gap-3 flex-wrap justify-center md:justify-end">
                                 {/* NUEVO BOTÓN AFILIAR TIENDA */}
-                                <button onClick={() => { setShowAffiliateModal(true); setSubmitStatus(null); setAffiliateForm({tienda:'', email:''}); setAffiliateFiles({}); }} className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest">
+                                <button onClick={() => { setShowAffiliateModal(true); setSubmitStatus(null); setAffiliateForm({tienda:'', emailTienda:'', nombreVendedor:'', emailVendedor:'', telefonoVendedor:''}); setAffiliateFiles({}); }} className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest">
                                     <Icon name="UserPlus" size={16} /> Afiliar
                                 </button>
                                 <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[#67B74D] text-white rounded-xl font-black text-xs shadow-lg hover:bg-[#559e3d] transition-all uppercase tracking-widest">
@@ -285,7 +293,7 @@
                     {/* MODAL DE AFILIACIÓN */}
                     {showAffiliateModal && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2C4C8C]/90 backdrop-blur-md print:hidden">
-                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-3xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border-8 border-white">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border-8 border-white">
                                 {/* Encabezado Fijo */}
                                 <div className="p-6 bg-[#2C4C8C] text-white flex justify-between items-center shrink-0">
                                     <div className="flex items-center gap-4">
@@ -310,32 +318,61 @@
                                         <div className="py-20 flex flex-col items-center justify-center text-green-600">
                                             <Icon name="CheckCircle2" size={64} className="mb-6" />
                                             <h4 className="text-2xl font-black uppercase tracking-widest text-[#2C4C8C]">¡Afiliación Completada!</h4>
-                                            <p className="text-sm font-bold text-gray-500 mt-2 text-center max-w-md">La tienda y sus documentos han sido vinculados correctamente a tu base de datos y carpeta de Drive.</p>
+                                            <p className="text-sm font-bold text-gray-500 mt-2 text-center max-w-md">La tienda, el asesor y sus documentos han sido vinculados correctamente a tu base de datos y carpeta de Drive.</p>
                                         </div>
                                     ) : (
-                                        <form id="afiliar-form" onSubmit={handleAffiliateSubmit} className="space-y-6 pb-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-2 tracking-widest">Nombre de la Tienda</label>
-                                                    <input required type="text" placeholder="Ej: Celulares VIP" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-[#67B74D] text-sm" value={affiliateForm.tienda} onChange={(e) => setAffiliateForm({...affiliateForm, tienda: e.target.value})} />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-2 tracking-widest">Correo Electrónico</label>
-                                                    <input required type="email" placeholder="tienda@correo.com" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-[#67B74D] text-sm" value={affiliateForm.email} onChange={(e) => setAffiliateForm({...affiliateForm, email: e.target.value})} />
+                                        <form id="afiliar-form" onSubmit={handleAffiliateSubmit} className="space-y-8 pb-4">
+                                            
+                                            {/* SECCIÓN 1: DATOS TIENDA */}
+                                            <div>
+                                                <h4 className="text-[11px] font-black text-[#2C4C8C] uppercase tracking-widest border-b-2 border-slate-200 pb-2 mb-4">1. Datos de la Tienda Comercial</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Nombre de la Tienda</label>
+                                                        <input required type="text" placeholder="Ej: Celulares VIP" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-[#67B74D] text-sm bg-white" value={affiliateForm.tienda} onChange={(e) => setAffiliateForm({...affiliateForm, tienda: e.target.value})} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Correo de la Tienda</label>
+                                                        <input required type="email" placeholder="tienda@correo.com" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-[#67B74D] text-sm bg-white" value={affiliateForm.emailTienda} onChange={(e) => setAffiliateForm({...affiliateForm, emailTienda: e.target.value})} />
+                                                    </div>
                                                 </div>
                                             </div>
 
+                                            {/* SECCIÓN 3: DOCUMENTACIÓN DE LA TIENDA */}
                                             <div>
-                                                <label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-3 tracking-widest border-b pb-2">Adjuntar Documentación Obligatoria</label>
+                                                <h4 className="text-[11px] font-black text-[#2C4C8C] uppercase tracking-widest border-b-2 border-slate-200 pb-2 mb-4">3. Documentación de la Tienda</h4>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                                    {[
+                                                        { id: 'camara', title: 'C. de Comercio', subtitle: 'Impresión < 30 días', accept: '.pdf,image/*' },
+                                                        { id: 'autorizacion', title: 'Autorización Terc.', subtitle: 'Firmada y autenticada', accept: '.pdf,image/*' },
+                                                        { id: 'cedulaFrontal', title: 'Cédula RL (Frente)', subtitle: 'Representante Legal', accept: '.pdf,image/*' },
+                                                        { id: 'cedulaReversa', title: 'Cédula RL (Reverso)', subtitle: 'Representante Legal', accept: '.pdf,image/*' },
+                                                        { id: 'foto1', title: 'Foto Fachada', subtitle: 'Exterior c/ Nomenclatura', accept: 'image/*,.pdf' },
+                                                        { id: 'foto2', title: 'Foto Exterior 2', subtitle: 'Ángulo diferente exterior', accept: 'image/*,.pdf' },
+                                                        { id: 'foto3', title: 'Foto Interna 1', subtitle: 'Vista general interior', accept: 'image/*,.pdf' },
+                                                        { id: 'foto4', title: 'Foto Interna 2', subtitle: 'Detalle exhibición/caja', accept: 'image/*,.pdf' },
+                                                        { id: 'video', title: 'Video 360°', subtitle: 'Desde fachada hasta interior', accept: 'video/*' }
+                                                    ].map((doc) => (
+                                                        <label key={doc.id} className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all bg-white ${affiliateFiles[doc.id] ? 'border-[#67B74D] bg-emerald-50' : 'border-slate-300 hover:bg-slate-100'} ${doc.id === 'video' ? 'sm:col-span-2 md:col-span-2' : ''}`}>
+                                                            {affiliateFiles[doc.id] ? <Icon name="CheckCircle2" size={28} className="text-[#67B74D] mb-2"/> : <Icon name="Upload" size={28} className="text-gray-300 mb-2"/>}
+                                                            <span className={`text-[11px] font-black uppercase text-center ${affiliateFiles[doc.id] ? 'text-[#67B74D]' : 'text-[#2C4C8C]'}`}>{doc.title}</span>
+                                                            <span className="text-[9px] text-gray-500 font-bold text-center mt-1 leading-tight px-2">{doc.subtitle}</span>
+                                                            <span className="text-[9px] text-[#67B74D] font-black truncate max-w-full px-2 mt-2">{affiliateFiles[doc.id] ? affiliateFiles[doc.id].filename : 'Clic para examinar'}</span>
+                                                            <input type="file" className="hidden" accept={doc.accept} onChange={(e) => handleFileChange(e, doc.id)} required />
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* SECCIÓN 4: DOCUMENTACIÓN DEL ASESOR */}
+                                            <div>
+                                                <h4 className="text-[11px] font-black text-[#2C4C8C] uppercase tracking-widest border-b-2 border-slate-200 pb-2 mb-4">4. Documentación del Asesor</h4>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                     {[
-                                                        { id: 'camara', title: 'Certificado de Comercio', subtitle: 'Impresión < 30 días', accept: '.pdf,image/*' },
-                                                        { id: 'cedula', title: 'Cédula Rep. Legal', subtitle: 'Ambas caras a color', accept: '.pdf,image/*' },
-                                                        { id: 'autorizacion', title: 'Autorización Tercerización', subtitle: 'Firmada y autenticada (< 30 días)', accept: '.pdf,image/*' },
-                                                        { id: 'fotos', title: 'Fotografías (Int/Ext)', subtitle: 'Internas y fachada con nomenclatura', accept: 'image/*,.pdf' },
-                                                        { id: 'video', title: 'Video 360°', subtitle: 'Desde fachada hasta el interior', accept: 'video/*' }
+                                                        { id: 'cedulaFrontalVendedor', title: 'Cédula Asesor (Frente)', subtitle: 'Vendedor encargado', accept: '.pdf,image/*' },
+                                                        { id: 'cedulaReversaVendedor', title: 'Cédula Asesor (Reverso)', subtitle: 'Vendedor encargado', accept: '.pdf,image/*' }
                                                     ].map((doc) => (
-                                                        <label key={doc.id} className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all ${affiliateFiles[doc.id] ? 'border-[#67B74D] bg-emerald-50' : 'border-slate-300 hover:bg-slate-100'} ${doc.id === 'video' ? 'sm:col-span-2' : ''}`}>
+                                                        <label key={doc.id} className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all bg-white ${affiliateFiles[doc.id] ? 'border-[#67B74D] bg-emerald-50' : 'border-slate-300 hover:bg-slate-100'}`}>
                                                             {affiliateFiles[doc.id] ? <Icon name="CheckCircle2" size={28} className="text-[#67B74D] mb-2"/> : <Icon name="Upload" size={28} className="text-gray-300 mb-2"/>}
                                                             <span className={`text-[11px] font-black uppercase text-center ${affiliateFiles[doc.id] ? 'text-[#67B74D]' : 'text-[#2C4C8C]'}`}>{doc.title}</span>
                                                             <span className="text-[9px] text-gray-500 font-bold text-center mt-1 leading-tight px-2">{doc.subtitle}</span>
@@ -347,7 +384,7 @@
                                             </div>
 
                                             <button type="submit" className="w-full py-4 bg-[#67B74D] text-white rounded-2xl font-black uppercase tracking-[3px] shadow-xl hover:bg-[#559e3d] transition-all flex items-center justify-center gap-3">
-                                                <Icon name="Upload" size={20} /> Registrar Tienda y Subir Documentos
+                                                <Icon name="Upload" size={20} /> Registrar Aliado Completo
                                             </button>
                                         </form>
                                     )}
