@@ -6,9 +6,9 @@
     <title>Gestión Soluciones Efectivas CTG - ALOCREDIT</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & ReactDOM (Production) -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- React & ReactDOM -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
     <!-- Babel para JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
@@ -116,17 +116,28 @@
 
             const brandsList = ['TODAS LAS MARCAS', ...new Set(retailData.map(item => item.brand))];
 
+            // FUNCIÓN CORREGIDA PARA PREVENIR EL BUG DE DECIMALES
             const formatRoundToThousand = (val) => {
-                if (!val) return '0';
-                const strVal = String(val).replace(/\./g, '').trim();
-                const num = parseFloat(strVal);
+                if (val === null || val === undefined || val === '') return '0';
+                
+                let num;
+                // Si el valor ya es un número matemático, no le quitamos puntos con .replace
+                if (typeof val === 'number') {
+                    num = val;
+                } else {
+                    const strVal = String(val).replace(/\./g, '').trim();
+                    num = parseFloat(strVal);
+                }
+                
                 if (isNaN(num)) return val;
                 const rounded = Math.round(num / 1000) * 1000;
                 return rounded.toLocaleString('es-CO');
             };
 
+            // FUNCIÓN CORREGIDA PARA PREVENIR EL BUG DE DECIMALES
             const parseCurrency = (val) => {
-                if (!val) return 0;
+                if (val === null || val === undefined || val === '') return 0;
+                if (typeof val === 'number') return val;
                 const strVal = String(val).replace(/\./g, '').trim();
                 return parseFloat(strVal) || 0;
             };
@@ -152,7 +163,7 @@
                 try {
                     const payload = {
                         action: 'afiliar',
-                        linea: 'Alocredit', // Guardando explícitamente como línea Alocredit
+                        linea: 'Alocredit',
                         tienda: affiliateForm.tienda,
                         emailTienda: affiliateForm.emailTienda,
                         telefonoTienda: affiliateForm.telefonoTienda,
@@ -188,8 +199,8 @@
                     {/* ACCESO RÁPIDO Y NAVEGACIÓN */}
                     <div className="w-full max-w-4xl mb-4 flex flex-wrap gap-3 justify-between items-center">
                         <div className="flex gap-2">
-                           <button onClick={() => window.location.href = 'index.html'} className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#2C4C8C] rounded-xl shadow-md font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all border-2 border-transparent">
-                            <Icon name="ArrowLeft" size={14} /> Regresar App
+                            <button onClick={() => window.location.href = 'index.html'} className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#2C4C8C] rounded-xl shadow-md font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all border-2 border-transparent">
+                                <Icon name="ArrowLeft" size={14} /> Regresar App
                             </button>
                         </div>
 
@@ -333,8 +344,8 @@
                                 </div>
                                 <div className="p-4 bg-white border-t flex justify-between items-center shrink-0">
                                     <div className="flex gap-2">
-                                        <button onClick={() => scrollToTop('scroll-afiliar')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl hover:bg-slate-200 transition-colors shadow-sm"><Icon name="ChevronUp" size={20}/></button>
-                                        <button onClick={() => scrollToBottom('scroll-afiliar')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl hover:bg-slate-200 transition-colors shadow-sm"><Icon name="ChevronDown" size={20}/></button>
+                                        <button onClick={() => scrollToTop('scroll-afiliar')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl"><Icon name="ChevronUp" size={20}/></button>
+                                        <button onClick={() => scrollToBottom('scroll-afiliar')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl"><Icon name="ChevronDown" size={20}/></button>
                                     </div>
                                     <button onClick={() => setShowAffiliateModal(false)} className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-black text-[11px] hover:bg-gray-200 transition-all uppercase tracking-[2px]">Cerrar</button>
                                 </div>
@@ -365,19 +376,28 @@
                                             <tr><th className="px-4 py-4 text-left">Referencia</th><th className="px-2 py-4">Costo</th><th className="px-2 py-4">Venta</th><th className="px-4 py-4 bg-indigo-50 text-indigo-600">Inicial plataforma</th><th className="px-2 py-4 text-blue-600">Recibe Tienda</th><th className="px-2 py-4 text-indigo-800">Te Consignamos</th><th className="px-4 py-4 bg-indigo-800 text-white rounded-tr-lg">Comisión</th></tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50 font-bold text-[11px] uppercase">
-                                            {filteredData.map((item, idx) => (
-                                                <tr key={idx} className="hover:bg-indigo-50/30 transition-all">
-                                                    <td className="px-4 py-4"><span className="text-[9px] text-indigo-500 block font-black">{item.brand}</span>{item.ref}</td>
-                                                    <td className="px-2 py-4 text-center text-slate-400 italic">${formatRoundToThousand(item.cost)}</td>
-                                                    <td className="px-2 py-4 text-center">${formatRoundToThousand(item.sale)}</td>
-                                                    <td className="px-4 py-4 text-center text-indigo-600 bg-indigo-50/30">${formatRoundToThousand(item.initial)}</td>
-                                                    <td className="px-2 py-4 text-center text-blue-600">${formatRoundToThousand(item.receive)}</td>
-                                                    <td className="px-2 py-4 text-center text-indigo-800 font-black bg-indigo-50/50">${formatRoundToThousand(parseCurrency(item.cost) - parseCurrency(item.return))}</td>
-                                                    <td className="px-4 py-4 text-center bg-indigo-800/5">
-                                                        <span className="text-base font-black text-indigo-800 italic">${formatRoundToThousand(item.commTienda)}</span>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {filteredData.map((item, idx) => {
+                                                const costo = parseCurrency(item.cost);
+                                                const recibeTienda = parseCurrency(item.receive);
+                                                
+                                                // La lógica corregida al 100%:
+                                                const comision = recibeTienda * 0.55; 
+                                                const teConsignamos = (costo + comision) - recibeTienda;
+
+                                                return (
+                                                    <tr key={idx} className="hover:bg-indigo-50/30 transition-all">
+                                                        <td className="px-4 py-4"><span className="text-[9px] text-indigo-500 block font-black">{item.brand}</span>{item.ref}</td>
+                                                        <td className="px-2 py-4 text-center text-slate-400 italic">${formatRoundToThousand(item.cost)}</td>
+                                                        <td className="px-2 py-4 text-center">${formatRoundToThousand(item.sale)}</td>
+                                                        <td className="px-4 py-4 text-center text-indigo-600 bg-indigo-50/30">${formatRoundToThousand(item.initial)}</td>
+                                                        <td className="px-2 py-4 text-center text-blue-600">${formatRoundToThousand(item.receive)}</td>
+                                                        <td className="px-2 py-4 text-center text-indigo-800 font-black bg-indigo-50/50">${formatRoundToThousand(teConsignamos)}</td>
+                                                        <td className="px-4 py-4 text-center bg-indigo-800/5">
+                                                            <span className="text-base font-black text-indigo-800 italic">${formatRoundToThousand(comision)}</span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
