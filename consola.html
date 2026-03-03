@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consola de Equipos | Soluciones Efectivas CTG</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+
+    :root {
+      --primary-gradient: linear-gradient(135deg, #1e3a6d 0%, #2C4C8C 100%);
+      --action-gradient: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+      --brand-blue: #2C4C8C;
+      --brand-green: #67B74D;
+      --brand-yellow: #eab308;
+      --gets-dark: #1e293b;
+      --gets-red: #ef4444;
+      --soft-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+    
+    body { 
+      background: var(--primary-gradient); 
+      min-height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 1rem; 
+      margin: 0; 
+      font-family: 'Montserrat', sans-serif;
+      -webkit-font-smoothing: antialiased; 
+    }
+    
+    .main-card { width: 100%; max-width: 500px; background: white; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; display: none; transition: max-width 0.4s ease; position: relative; }
+    .main-card.wide { max-width: 1200px; } 
+
+    .modal { z-index: 5000; }
+    #toast-container { z-index: 100000; position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+    .toast { background: white; border-radius: 16px; padding: 14px 20px; box-shadow: 0 15px 30px -5px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 15px; transform: translateX(120%); transition: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: auto; border-left: 6px solid var(--brand-blue); min-width: 280px; }
+    .toast.is-active { transform: translateX(0); }
+    .toast.is-success { border-left-color: var(--brand-green); }
+    .toast.is-error { border-left-color: var(--gets-red); }
+    .toast-content { color: var(--brand-blue); font-size: 0.85rem; font-weight: 800; }
+
+    #bg-sync-indicator { position: absolute; top: 10px; right: 20px; font-size: 0.65rem; color: var(--brand-blue); font-weight: 700; display: none; align-items: center; gap: 5px; background: rgba(255,255,255,0.95); padding: 5px 12px; border-radius: 20px; box-shadow: var(--soft-shadow); }
+
+    .brand-header { padding: 0.5rem 1.5rem; text-align: center; border-bottom: 1px solid #f1f5f9; background: white; overflow: hidden; min-height: 100px; display: flex; align-items: center; justify-content: space-between; }
+    .brand-logo { max-height: 90px; width: auto; display: block; margin: 0; object-fit: contain; }
+
+    #login-container .brand-header { height: auto; min-height: 300px; padding-top: 3rem; padding-bottom: 1.5rem; border-bottom: none; display: flex; align-items: center; justify-content: center; }
+    #login-container .brand-logo { max-height: 120px; margin-bottom: 1rem; }
+
+    .btn-modern { border-radius: 14px; font-weight: 800; transition: all 0.3s; padding: 0.8rem 1.5rem; height: auto; font-size: 0.9rem; border: none; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+    .btn-modern.is-save { background: var(--action-gradient); color: white; box-shadow: 0 10px 20px -5px rgba(234, 179, 8, 0.45); }
+    .btn-modern.is-save:hover { transform: translateY(-3px); filter: brightness(1.05); box-shadow: 0 12px 25px -5px rgba(234, 179, 8, 0.55); color: white; }
+
+    .table-container { border-radius: 12px; border: 1px solid #f1f5f9; max-height: 600px; overflow: auto; background: white; }
+    .table { font-size: 0.8rem; width: 100%; color: var(--brand-blue); font-weight: 600; }
+    .table thead th { position: sticky; top: 0; background: #fcfcfd; z-index: 5; font-weight: 900; color: var(--brand-blue) !important; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; border-bottom: 2px solid var(--brand-yellow); }
+
+    .footer-v { text-align: center; padding: 1.5rem; font-size: 0.7rem; color: var(--brand-blue); background: #fcfcfd; border-top: 1px solid #f1f5f9; font-weight: 800; }
+    
+    .btn-action-icon { cursor: pointer; padding: 5px; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; }
+    .btn-action-icon:hover { transform: scale(1.15); background: #f1f5f9; }
+    .btn-edit { color: var(--brand-blue); }
+    .btn-delete { color: var(--gets-red); }
+
+    .input, .select select { border-color: #e2e8f0; font-weight: 700; color: var(--brand-blue); border-radius: 10px; }
+    .input:focus, .select select:focus { border-color: var(--brand-yellow) !important; box-shadow: 0 0 0 0.125em rgba(234, 179, 8, 0.25) !important; }
+    .label { color: var(--brand-blue) !important; font-weight: 800 !important; font-size: 0.75rem; }
+    
+    .auto-field input { background-color: #f8fafc; border-style: dashed; }
+    .auto-field label { color: #64748b !important; }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: var(--brand-yellow); border-radius: 10px; border: 2px solid #f8fafc; }
+
+    @media screen and (max-width: 768px) {
+      .brand-header { flex-direction: column; gap: 15px; height: auto; padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toast-container"></div>
+
+  <!-- LOGIN DE ADMINISTRADOR -->
+  <div id="login-container" class="main-card" style="display: block;">
+    <div class="brand-header"><img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Soluciones Efectivas CTG" class="brand-logo"></div>
+    <div id="login-view" style="padding: 1.5rem 2rem 2.5rem 2rem;">
+      <div style="text-align: center; margin-bottom: 2.5rem;">
+        <div style="color: white; background: var(--brand-yellow); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);"><i data-lucide="database" style="width:32px; height:32px;"></i></div>
+        <h2 class="title is-3 mb-4" style="font-weight:900; color: var(--brand-blue); letter-spacing: -0.02em;">Consola Equipos</h2>
+        <p class="subtitle is-6" style="margin-top: 0.5rem; font-weight: 700; color: var(--brand-yellow);">Acceso exclusivo para Administrador</p>
+      </div>
+      <div class="field"><label class="label">Usuario</label><div class="control has-icons-left"><input id="login-user" class="input is-medium" type="text" placeholder="Administrador"><span class="icon is-small is-left"><i data-lucide="user"></i></span></div></div>
+      <div class="field mt-4"><label class="label">Contraseña</label><div class="control has-icons-left"><input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') attemptLogin()"><span class="icon is-small is-left"><i data-lucide="key"></i></span></div></div>
+      <button id="btn-login" class="button btn-modern is-save is-fullwidth is-medium mt-6" onclick="attemptLogin()"><i data-lucide="log-in" style="width: 18px;"></i> Ingresar a Consola</button>
+    </div>
+    <div class="footer-v">Soluciones Efectivas CTG | Consola V1.0</div>
+  </div>
+
+  <!-- DASHBOARD PRINCIPAL -->
+  <div id="app-container" class="main-card wide">
+    <div id="bg-sync-indicator"><div class="button is-loading is-small is-white" style="height:15px; width:15px; margin-right:5px;"></div> Sincronizando datos...</div>
+    
+    <div class="brand-header">
+        <div class="is-flex is-align-items-center" style="gap: 15px;">
+            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Logo" class="brand-logo">
+            <div>
+                <h1 class="is-size-5 has-text-weight-bold" style="color: var(--brand-blue); line-height: 1;">Gestión de Catálogo</h1>
+                <p class="is-size-7 has-text-weight-bold" style="color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 2px;">Lista de Precios Central</p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="button is-small" style="font-weight:900; background: var(--action-gradient); color: white; border: none; border-radius: 8px;" onclick="openEquipoModal()">
+                <i data-lucide="plus" style="width:14px; margin-right:5px;"></i> Nuevo Equipo
+            </button>
+            <a href="index.html" class="button is-ghost is-small has-text-danger" style="font-weight:800;"><i data-lucide="log-out" style="width:14px; margin-right:5px;"></i>Salir</a>
+        </div>
+    </div>
+
+    <div style="padding: 1.5rem;">
+        <div class="field mb-4">
+            <div class="control has-icons-left">
+                <input id="search-input" class="input" type="text" placeholder="Buscar por marca o referencia..." oninput="renderTable()">
+                <span class="icon is-left"><i data-lucide="search"></i></span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+                <thead>
+                    <tr>
+                        <th>Marca</th>
+                        <th>Referencia</th>
+                        <th class="has-text-right">Costo</th>
+                        <th class="has-text-right">Venta Público</th>
+                        <th class="has-text-right" style="color:#64748b;">Inicial (30%)</th>
+                        <th class="has-text-right" style="color:var(--brand-blue);">Te Consignamos</th>
+                        <th class="has-text-right" style="color:var(--brand-green);">Ganancia Libre</th>
+                        <th class="has-text-centered">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tb-equipos">
+                    <!-- Los datos se inyectarán aquí -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="footer-v">Soluciones Efectivas CTG | Consola V1.0</div>
+  </div>
+
+  <!-- MODAL CREAR/EDITAR EQUIPO -->
+  <div id="mod-equipo" class="modal">
+    <div class="modal-background" onclick="closeModals()"></div>
+    <div class="modal-card" style="width: 95%; max-width: 600px; border-radius: 16px; overflow: hidden;">
+      <header class="modal-card-head" style="background: white; border-bottom: 2px solid var(--brand-yellow);">
+        <p id="modal-title" class="modal-card-title is-size-5 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif; color: var(--brand-blue);">Registrar Equipo</p>
+        <button class="delete" aria-label="close" onclick="closeModals()"></button>
+      </header>
+      <section class="modal-card-body p-5">
+        <input type="hidden" id="eq_original_ref"> <!-- Para saber si estamos editando -->
+        
+        <p class="is-size-7 has-text-grey has-text-weight-bold mb-4">Ingresa Costo y Venta. El sistema autocompletará el resto de campos usando la fórmula PayJoy.</p>
+        
+        <div class="columns is-mobile is-multiline">
+            <div class="column is-6">
+                <div class="field"><label class="label">Marca</label><input id="eq_marca" class="input" type="text" placeholder="Ej: SAMSUNG"></div>
+            </div>
+            <div class="column is-6">
+                <div class="field"><label class="label">Referencia</label><input id="eq_ref" class="input" type="text" placeholder="Ej: GALAXY A14 128GB"></div>
+            </div>
+            <div class="column is-6">
+                <div class="field"><label class="label">Costo Base ($)</label><input id="eq_costo" class="input" type="text" placeholder="0" oninput="formatCurrencyInput(this); autoCalcFields();"></div>
+            </div>
+            <div class="column is-6">
+                <div class="field"><label class="label" style="color:var(--brand-green) !important;">Precio Venta ($)</label><input id="eq_venta" class="input" style="border-color:var(--brand-green);" type="text" placeholder="0" oninput="formatCurrencyInput(this); autoCalcFields();"></div>
+            </div>
+        </div>
+
+        <hr class="my-4" style="background-color: #e2e8f0;">
+        <p class="is-size-7 has-text-weight-bold mb-3" style="color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 1px;">Proyección Financiera</p>
+
+        <div class="columns is-mobile is-multiline auto-field">
+            <div class="column is-4">
+                <div class="field">
+                    <label class="label">Inicial (30%)</label>
+                    <input id="eq_inicial" class="input is-small" type="text" readonly>
+                </div>
+            </div>
+            <div class="column is-4">
+                <div class="field">
+                    <label class="label" style="color:var(--brand-blue) !important;" title="Venta - Inicial - 40.000">Te Consignan</label>
+                    <input id="eq_utilidad_pj" class="input is-small" style="color:var(--brand-blue); font-weight:900;" type="text" readonly>
+                </div>
+            </div>
+            <div class="column is-4">
+                <div class="field">
+                    <label class="label" style="color:var(--brand-green) !important;" title="Lo que te consignan - Costo">Ganancia Libre</label>
+                    <input id="eq_utilidad_neta" class="input is-small" style="background:#f1f9ef; border-color:var(--brand-green); border-style:solid; color:var(--brand-green); font-weight:900;" type="text" readonly>
+                </div>
+            </div>
+        </div>
+
+      </section>
+      <footer class="modal-card-foot has-background-white is-justify-content-flex-end">
+        <button class="button is-light has-text-weight-bold" onclick="closeModals()">Cancelar</button>
+        <button id="btn-save-eq" class="button btn-modern is-save" onclick="saveEquipo()"><i data-lucide="save" style="width: 18px;"></i> Guardar Equipo</button>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // URL DEL ENRUTADOR PRINCIPAL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
+    let catalog = [];
+
+    window.onload = () => { lucide.createIcons(); };
+
+    function showToast(msg, type = 'success') {
+        const c = document.getElementById('toast-container'); const t = document.createElement('div');
+        t.className = `toast is-${type}`;
+        t.innerHTML = `<div class="toast-icon" style="color:${type==='success'?'var(--brand-green)':'var(--gets-red)'}"><i data-lucide="${type==='success'?'check-circle':'x-circle'}"></i></div><div class="toast-content" style="font-family: 'Montserrat', sans-serif;">${msg}</div>`;
+        c.appendChild(t); lucide.createIcons(); setTimeout(() => t.classList.add('is-active'), 50);
+        setTimeout(() => { t.classList.remove('is-active'); setTimeout(() => t.remove(), 600); }, 3500);
+    }
+
+    // PARSEADOR AVANZADO: Detecta si Google Sheets envió el número cortado y lo multiplica por mil
+    const parsePrice = (v) => {
+        if (v === null || v === undefined || v === '') return 0;
+        let num = 0;
+        if (typeof v === 'number') {
+            num = v;
+        } else {
+            let clean = v.toString().replace(/[\$\s]/g, '').replace(/\./g, '').replace(/,/g, '.');
+            num = parseFloat(clean) || 0;
+        }
+        if (Math.abs(num) > 0 && Math.abs(num) < 10000) num = num * 1000;
+        return Math.round(num / 1000) * 1000;
+    };
+
+    const fmtCop = (v) => Number(v || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+
+    function formatCurrencyInput(input) {
+        let val = input.value.replace(/\D/g, "");
+        input.value = val === "" ? "" : new Intl.NumberFormat('es-CO').format(parseInt(val));
+    }
+
+    /* --- LÓGICA DE LOGIN --- */
+    async function attemptLogin() {
+      const u = document.getElementById('login-user').value.trim().toLowerCase();
+      const p = document.getElementById('login-pass').value.trim();
+      
+      document.getElementById('btn-login').classList.add('is-loading');
+      try {
+          const res = await fetch(`${SCRIPT_URL}?action=getData`, { mode: 'cors' });
+          const data = await res.json();
+          if(data && data.data && data.data.clientes) {
+              const admin = data.data.clientes.find(c => String(c.nombre_cliente).toLowerCase().trim() === u && String(c.contrasena) === p);
+              if(admin && u === 'administrador') {
+                  document.getElementById('login-container').style.display = 'none';
+                  document.getElementById('app-container').style.display = 'block';
+                  loadCatalog();
+              } else {
+                  showToast("Acceso denegado. Solo administrador.", "error");
+              }
+          }
+      } catch(e) {
+          showToast("Error de conexión", "error");
+      }
+      document.getElementById('btn-login').classList.remove('is-loading');
+    }
+
+    /* --- CARGAR Y RENDERIZAR TABLA --- */
+    async function loadCatalog() {
+        document.getElementById('bg-sync-indicator').style.display = 'flex';
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=getPrecios`, { mode: 'cors' });
+            const data = await res.json();
+            if(data && !data.error) {
+                catalog = data;
+                renderTable();
+            }
+        } catch(e) {
+            showToast("Error cargando equipos", "error");
+        }
+        document.getElementById('bg-sync-indicator').style.display = 'none';
+    }
+
+    function renderTable() {
+        const search = document.getElementById('search-input').value.toLowerCase();
+        const tb = document.getElementById('tb-equipos');
+        tb.innerHTML = '';
+        
+        const filtered = catalog.filter(c => (c.brand||'').toLowerCase().includes(search) || (c.ref||'').toLowerCase().includes(search));
+        
+        if(filtered.length === 0) {
+            tb.innerHTML = '<tr><td colspan="8" class="has-text-centered py-5">No hay equipos registrados</td></tr>';
+            return;
+        }
+
+        filtered.forEach(eq => {
+            const cost = parsePrice(eq.cost);
+            const sale = parsePrice(eq.sale);
+            
+            // Re-calculamos dinámicamente para asegurar que la vista sea perfecta
+            const inicial = Math.round((sale * 0.30) / 1000) * 1000;
+            const consignaPj = sale - inicial - 40000;
+            const gananciaNeta = consignaPj - cost; // A la consignación le descontamos el costo
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:800; color:var(--brand-green);">${eq.brand}</td>
+                <td style="font-weight:700;">${eq.ref}</td>
+                <td class="has-text-right">$ ${fmtCop(cost)}</td>
+                <td class="has-text-right">$ ${fmtCop(sale)}</td>
+                <td class="has-text-right" style="color:#64748b;">$ ${fmtCop(inicial)}</td>
+                <td class="has-text-right" style="color:var(--brand-blue); font-weight:800;">$ ${fmtCop(consignaPj)}</td>
+                <td class="has-text-right" style="color:var(--brand-green); font-weight:900;">$ ${fmtCop(gananciaNeta)}</td>
+                <td class="has-text-centered">
+                    <span class="btn-action-icon btn-edit" onclick="openEquipoModal('${eq.ref}')"><i data-lucide="edit-3" style="width:16px;"></i></span>
+                    <span class="btn-action-icon btn-delete" onclick="deleteEquipo('${eq.ref}')"><i data-lucide="trash-2" style="width:16px;"></i></span>
+                </td>
+            `;
+            tb.appendChild(tr);
+        });
+        lucide.createIcons();
+    }
+
+    /* --- LÓGICA DEL FORMULARIO Y MATEMÁTICA PAYJOY --- */
+    function autoCalcFields() {
+        const getRawValue = (id) => parseFloat(document.getElementById(id).value.replace(/\./g, '')) || 0;
+        
+        const cost = getRawValue('eq_costo');
+        const sale = getRawValue('eq_venta');
+        
+        if(sale > 0) {
+            // Inicial es estrictamente el 30% de la venta (aproximado a miles)
+            const inicial = Math.round((sale * 0.30) / 1000) * 1000;
+            
+            // Fórmula indicada: Venta - Inicial - 40.000 (Esto es lo que consigna PayJoy)
+            const utilidadPj = sale - inicial - 40000;
+            
+            // Ganancia libre: Lo que te consigna PayJoy - El costo del equipo
+            const utilidadNeta = utilidadPj - cost;
+
+            document.getElementById('eq_inicial').value = fmtCop(inicial);
+            document.getElementById('eq_utilidad_pj').value = fmtCop(utilidadPj);
+            document.getElementById('eq_utilidad_neta').value = fmtCop(utilidadNeta); 
+        } else {
+            ['eq_inicial', 'eq_utilidad_pj', 'eq_utilidad_neta'].forEach(id => document.getElementById(id).value = '');
+        }
+    }
+
+    function openEquipoModal(ref = null) {
+        document.getElementById('modal-title').innerText = ref ? "Editar Equipo" : "Registrar Nuevo Equipo";
+        document.getElementById('eq_original_ref').value = ref || '';
+        
+        if(ref) {
+            const eq = catalog.find(c => c.ref === ref);
+            if(eq) {
+                document.getElementById('eq_marca').value = eq.brand;
+                document.getElementById('eq_ref').value = eq.ref;
+                document.getElementById('eq_costo').value = fmtCop(parsePrice(eq.cost));
+                document.getElementById('eq_venta').value = fmtCop(parsePrice(eq.sale));
+                
+                // Forzamos el recálculo en base a la nueva fórmula
+                autoCalcFields();
+            }
+        } else {
+            ['eq_marca', 'eq_ref', 'eq_costo', 'eq_venta', 'eq_inicial', 'eq_utilidad_pj', 'eq_utilidad_neta'].forEach(id => document.getElementById(id).value = '');
+        }
+        
+        document.getElementById('mod-equipo').classList.add('is-active');
+    }
+
+    function closeModals() {
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active'));
+    }
+
+    /* --- GUARDAR Y ELIMINAR --- */
+    async function saveEquipo() {
+        const getRawValue = (id) => parseFloat(document.getElementById(id).value.replace(/\./g, '')) || 0;
+
+        // Se mapean los nuevos valores calculados a las variables de la base de datos (para no romper el Google Sheets)
+        const payload = {
+            originalRef: document.getElementById('eq_original_ref').value,
+            brand: document.getElementById('eq_marca').value.toUpperCase(),
+            ref: document.getElementById('eq_ref').value.toUpperCase(),
+            cost: getRawValue('eq_costo'),
+            sale: getRawValue('eq_venta'),
+            initial: getRawValue('eq_inicial'),
+            receive: getRawValue('eq_utilidad_pj'), // Se guarda "Te Consignan" aquí
+            returnEq: 0, // Campo no utilizado, se manda en 0
+            commTienda: 0, // Campo no utilizado, se manda en 0
+            commDist: getRawValue('eq_utilidad_neta') // Se guarda la ganancia neta aquí
+        };
+
+        if(!payload.brand || !payload.ref || payload.cost <= 0 || payload.sale <= 0) {
+            showToast("Complete Marca, Referencia, Costo y Venta.", "error");
+            return;
+        }
+
+        document.getElementById('btn-save-eq').classList.add('is-loading');
+        try {
+            const url = new URL(SCRIPT_URL);
+            url.searchParams.append('action', 'savePrecio');
+            url.searchParams.append('data', JSON.stringify(payload));
+            
+            const res = await fetch(url.toString(), { method: 'GET', mode: 'cors' });
+            await res.json();
+            
+            showToast("Equipo guardado exitosamente");
+            closeModals();
+            loadCatalog();
+        } catch(e) {
+            showToast("Error al guardar el equipo", "error");
+        }
+        document.getElementById('btn-save-eq').classList.remove('is-loading');
+    }
+
+    async function deleteEquipo(ref) {
+        if(!confirm(`¿Estás seguro que deseas eliminar el equipo ${ref}?`)) return;
+        
+        document.getElementById('bg-sync-indicator').style.display = 'flex';
+        try {
+            const url = new URL(SCRIPT_URL);
+            url.searchParams.append('action', 'deletePrecio');
+            url.searchParams.append('data', JSON.stringify({ ref: ref }));
+            
+            await fetch(url.toString(), { method: 'GET', mode: 'cors' });
+            showToast("Equipo eliminado");
+            loadCatalog(); 
+        } catch(e) {
+            showToast("Error al eliminar", "error");
+            document.getElementById('bg-sync-indicator').style.display = 'none';
+        }
+    }
+  </script>
+</body>
+</html>
