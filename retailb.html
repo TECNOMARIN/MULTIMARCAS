@@ -248,24 +248,36 @@
             return (
                 <div className="min-h-screen py-8 px-4 flex flex-col items-center">
                     
-                    {/* ACCESO RÁPIDO */}
-                     <div className="w-full max-w-4xl mb-4 print:hidden flex flex-wrap gap-3 justify-between items-center">
+          
+                     {/* ACCESO RÁPIDO */}
+                    <div className="w-full max-w-4xl mb-4 print:hidden flex flex-wrap gap-3 justify-between items-center">
                         <div className="flex gap-2">
                             <button onClick={() => window.location.href = 'index.html'} className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#2C4C8C] rounded-xl shadow-md font-black text-[10px] uppercase tracking-widest hover:bg-[#2C4C8C] hover:text-white transition-all border-2 border-transparent">
                                 <Icon name="ArrowLeft" size={14} /> Regresar App
                             </button>
                         </div>
-                    <div className="flex gap-2 bg-white p-1 rounded-2xl shadow-lg border border-slate-100">
-    <button onClick={() => window.location.href = 'retailb.html'} className="flex items-center gap-2 px-4 py-2 bg-[#2C4C8C] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md scale-105 transition-all">
-        <Icon name="CreditCard" size={14} /> PayJoy
-    </button>
-    <button onClick={() => window.location.href = 'alocredit.html'} className="flex items-center gap-2 px-4 py-2 bg-transparent text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all">
-        <Icon name="CreditCard" size={14} /> Alocredit
-    </button>
-    <button onClick={() => window.location.href = 'credismart.html'} className="flex items-center gap-2 px-4 py-2 bg-transparent text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all">
-        <Icon name="CreditCard" size={14} /> Credismart
-    </button>
-</div>
+
+                        <div className="flex gap-2 bg-white p-1 rounded-2xl shadow-lg border border-slate-100">
+                            <button 
+                                onClick={() => window.location.href = 'retailb.html'}
+                                className="flex items-center gap-2 px-4 py-2 bg-[#2C4C8C] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md scale-105 transition-all"
+                            >
+                                <Icon name="CreditCard" size={14} /> PayJoy
+                            </button>
+                            <button 
+                                onClick={() => window.location.href = 'alocredit.html'}
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all"
+                            >
+                                <Icon name="CreditCard" size={14} /> Alocredit
+                            </button>
+                            <button 
+                                onClick={() => window.location.href = 'credismart.html'}
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all"
+                            >
+                                <Icon name="CreditCard" size={14} /> Credismart
+                            </button>
+                        </div>
+                    </div>
                     {/* PANEL DE CONTROL */}
                     <div className="w-full max-w-4xl bg-white p-6 rounded-3xl shadow-xl mb-8 print:hidden border-t-[10px] border-[#2C4C8C]">
                         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6">
