@@ -7,10 +7,12 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React & ReactDOM -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel para JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- html2pdf.js para generación de PDF directa -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
@@ -20,9 +22,30 @@
             background-color: #f1f5f9;
         }
 
+        /* CONFIGURACIÓN ESTRICTA CARTA PARA PDF */
+        .letter-size {
+            width: 8.5in !important;
+            height: 11in !important;
+            padding: 0.4in 0.6in !important; 
+            margin: 0 auto;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden; 
+        }
+
+        @media print {
+            body { background: white; }
+            .print\:hidden { display: none !important; }
+            .letter-size { box-shadow: none !important; margin: 0 !important; }
+            @page { size: letter; margin: 0; }
+        }
+
         .custom-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #4F46E5; border-radius: 10px; border: 2px solid #f8fafc; } /* Indigo scrollbar for Alocredit */
+        .custom-scroll::-webkit-scrollbar-thumb { background: #4F46E5; border-radius: 10px; border: 2px solid #f8fafc; }
         
         .animate-spin-slow { animation: spin 2s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -36,13 +59,18 @@
 
         const Icon = ({ name, size = 20, className = "" }) => {
             const icons = {
+                Printer: <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />,
                 Building2: <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2m12-10h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M10 6h4m-4 4h4m-4 4h4m-4 4h4" />,
+                MapPin: <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />,
+                Phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />,
                 Search: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
                 X: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
                 Calculator: <><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="16" y1="14" x2="16" y2="18" /><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01" /></>,
+                Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>,
                 ChevronDown: <path d="m6 9 6 6 6-6" />,
                 ChevronUp: <path d="m18 15-6-6-6 6" />,
                 ArrowLeft: <><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></>,
+                ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />,
                 Loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />,
                 UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="17" y1="11" x2="23" y2="11" /></>,
                 Upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>,
@@ -59,6 +87,14 @@
         const App = () => {
             const companyInfo = {
                 name: "SOLUCIONES EFECTIVAS CTG S.A.S",
+                nit: "901.831.921-2",
+                address: "Calle 31 # 80 - 16, Cond. Atlantic, T5 Apt 1102",
+                city: "Cartagena, Bolívar",
+                email: "ctgsolucionesefectivas@gmail.com",
+                phone: "322 255 9184",
+                bank: "Bancolombia",
+                tipoCuenta: "Ahorros",
+                numeroCuenta: "788-000110-50",
                 logoUrl: "https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png"
             };
 
@@ -69,9 +105,26 @@
             const [retailData, setRetailData] = useState([]);
             const [isLoadingPrices, setIsLoadingPrices] = useState(true);
 
+            // Formulario y Estados
+            const [formData, setFormData] = useState({
+                fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
+                nombreCliente: '',
+                cedulaCliente: '',
+                expedicionCedula: '',
+                direccionCliente: '',
+                ciudadCliente: 'Cartagena',
+                telefonoCliente: '',
+                imei: '',
+                valorCuota: ''
+            });
+
+            // Validación para mostrar Autorización (Antifraude siempre se muestra)
+            const isAutorizacionReady = formData.nombreCliente.trim() !== '' && formData.cedulaCliente.trim() !== '' && formData.expedicionCedula.trim() !== '';
+
             const [showPriceModal, setShowPriceModal] = useState(false);
             const [selectedBrand, setSelectedBrand] = useState('TODAS LAS MARCAS');
             const [searchTerm, setSearchTerm] = useState('');
+            const [isGenerating, setIsGenerating] = useState(false);
 
             const [showAffiliateModal, setShowAffiliateModal] = useState(false);
             const [submitStatus, setSubmitStatus] = useState(null); 
@@ -116,25 +169,48 @@
 
             const brandsList = ['TODAS LAS MARCAS', ...new Set(retailData.map(item => item.brand))];
 
-            // FUNCIÓN CORREGIDA PARA PREVENIR EL BUG DE DECIMALES
+            // Generadores de PDF
+            const handleGeneratePDF = () => {
+                setIsGenerating(true);
+                const element = document.getElementById('pdf-content');
+                const opt = {
+                    margin: 0,
+                    filename: `Autorizacion_Alocredit_${formData.nombreCliente || 'Aliado'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
+            };
+
+            const handleGeneratePDFAntifraude = () => {
+                setIsGenerating(true);
+                const element = document.getElementById('pdf-content-antifraude');
+                const opt = {
+                    margin: 0,
+                    filename: `Antifraude_Alocredit_${formData.nombreCliente || 'Cliente'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
+            };
+
+            // Helpers y Formato Matemático Correjido
             const formatRoundToThousand = (val) => {
                 if (val === null || val === undefined || val === '') return '0';
-                
                 let num;
-                // Si el valor ya es un número matemático, no le quitamos puntos con .replace
                 if (typeof val === 'number') {
                     num = val;
                 } else {
                     const strVal = String(val).replace(/\./g, '').trim();
                     num = parseFloat(strVal);
                 }
-                
                 if (isNaN(num)) return val;
                 const rounded = Math.round(num / 1000) * 1000;
                 return rounded.toLocaleString('es-CO');
             };
 
-            // FUNCIÓN CORREGIDA PARA PREVENIR EL BUG DE DECIMALES
             const parseCurrency = (val) => {
                 if (val === null || val === undefined || val === '') return 0;
                 if (typeof val === 'number') return val;
@@ -196,8 +272,7 @@
             return (
                 <div className="min-h-screen py-8 px-4 flex flex-col items-center">
                     
-                    {/* ACCESO RÁPIDO Y NAVEGACIÓN */}
-                     {/* ACCESO RÁPIDO Y NAVEGACIÓN */}
+                    {/* NAVEGACIÓN - ALOCREDIT ACTIVO */}
                     <div className="w-full max-w-4xl mb-4 print:hidden flex flex-wrap gap-3 justify-between items-center">
                         <div className="flex gap-2">
                             <button onClick={() => window.location.href = 'index.html'} className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#2C4C8C] rounded-xl shadow-md font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all border-2 border-transparent">
@@ -227,41 +302,118 @@
                         </div>
                     </div>
 
-                    {/* PANEL DE CONTROL CENTRAL - ALOCREDIT */}
-                    <div className="w-full max-w-4xl bg-white p-8 rounded-3xl shadow-xl mb-8 border-t-[10px] border-indigo-600">
-                        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                    {/* PANEL CENTRAL ALOCREDIT */}
+                    <div className="w-full max-w-4xl bg-white p-6 rounded-3xl shadow-xl mb-8 print:hidden border-t-[10px] border-indigo-600">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6">
                             <div className="flex items-center gap-4">
-                                <img src={companyInfo.logoUrl} alt="Logo" className="h-16 w-auto" />
+                                <img src={companyInfo.logoUrl} alt="Logo" className="h-14 w-auto" />
                                 <div>
-                                    <h2 className="text-2xl font-black text-[#2C4C8C] uppercase tracking-tighter italic leading-none">Gestión Soluciones</h2>
-                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">
-                                        Línea Activa: <span className="text-indigo-600 font-black">ALOCREDIT</span>
-                                    </p>
+                                    <h2 className="text-xl font-black text-[#2C4C8C] uppercase tracking-tighter italic leading-none">Gestión Soluciones</h2>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Línea Activa: <span className="text-indigo-600">ALOCREDIT</span></p>
                                 </div>
                             </div>
                             <div className="flex gap-3 flex-wrap justify-center md:justify-end">
-                                <button onClick={() => { setShowAffiliateModal(true); setSubmitStatus(null); }} className="flex items-center gap-2 px-5 py-3 bg-[#2C4C8C] text-white rounded-xl font-black text-sm shadow-lg hover:bg-black transition-all uppercase tracking-widest">
-                                    <Icon name="UserPlus" size={18} /> Afiliar Aliado
+                                <button onClick={() => { setShowAffiliateModal(true); setSubmitStatus(null); }} className="flex items-center gap-2 px-4 py-2.5 bg-blue-900 text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest">
+                                    <Icon name="UserPlus" size={16} /> Afiliar
                                 </button>
-                                <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white rounded-xl font-black text-sm shadow-lg hover:bg-indigo-700 transition-all uppercase tracking-widest">
-                                    <Icon name="Calculator" size={18} /> Ver Precios
+                                <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-black text-xs shadow-lg hover:bg-indigo-700 transition-all uppercase tracking-widest">
+                                    <Icon name="Calculator" size={16} /> Precios
+                                </button>
+                                {/* BOTÓN PDF AUTORIZACIÓN */}
+                                <button onClick={handleGeneratePDF} disabled={isGenerating || !isAutorizacionReady} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating || !isAutorizacionReady ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#2C4C8C] hover:bg-black'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} PDF Autorización
+                                </button>
+                                {/* BOTÓN PDF ANTIFRAUDE */}
+                                <button onClick={handleGeneratePDFAntifraude} disabled={isGenerating} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="ShieldCheck" size={16} />} PDF Antifraude
                                 </button>
                             </div>
                         </div>
-                        
-                        <div className="mt-8 p-6 bg-indigo-50/50 rounded-[25px] border border-indigo-100 flex items-center justify-center text-center">
-                            <div>
-                                <h3 className="text-indigo-800 font-black uppercase tracking-widest text-sm mb-2">Módulo de Alocredit</h3>
-                                <p className="text-indigo-600/80 font-bold text-xs max-w-md mx-auto">
-                                    En este módulo puedes gestionar la lista de precios actualizada y realizar nuevas afiliaciones específicamente para la línea de crédito Alocredit.
-                                </p>
+
+                        {/* FORMULARIO DE RECOPILACIÓN */}
+                        <div className="bg-indigo-50/40 p-5 rounded-[25px] border border-indigo-100 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div><label className="block text-[10px] font-black text-indigo-800 uppercase mb-1 tracking-widest">Nombre Completo</label><input type="text" placeholder="Ej: Juan Pérez" className="w-full rounded-xl border-2 border-indigo-50 p-3 font-bold shadow-sm outline-none focus:border-indigo-500 text-sm" value={formData.nombreCliente} onChange={(e) => setFormData({...formData, nombreCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-indigo-800 uppercase mb-1 tracking-widest">Cédula</label><input type="text" placeholder="No. Documento" className="w-full rounded-xl border-2 border-indigo-50 p-3 font-bold shadow-sm outline-none focus:border-indigo-500 text-sm" value={formData.cedulaCliente} onChange={(e) => setFormData({...formData, cedulaCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-indigo-800 uppercase mb-1 italic text-indigo-700">Expedida en:</label><input type="text" placeholder="Ciudad" className="w-full rounded-xl border-2 border-indigo-50 p-3 font-bold shadow-sm outline-none focus:border-indigo-500 text-sm" value={formData.expedicionCedula} onChange={(e) => setFormData({...formData, expedicionCedula: e.target.value})} /></div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-indigo-100 pt-4">
+                                <div><label className="block text-[10px] font-black text-indigo-800 uppercase mb-1 tracking-widest">Dirección Domicilio</label><input type="text" placeholder="Ej: Calle 1 # 2-3" className="w-full rounded-xl border-2 border-indigo-50 p-3 font-bold shadow-sm outline-none focus:border-indigo-500 text-sm" value={formData.direccionCliente} onChange={(e) => setFormData({...formData, direccionCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-indigo-800 uppercase mb-1 tracking-widest">Ciudad Domicilio</label><input type="text" placeholder="Ej: Cartagena" className="w-full rounded-xl border-2 border-indigo-50 p-3 font-bold shadow-sm outline-none focus:border-indigo-500 text-sm" value={formData.ciudadCliente} onChange={(e) => setFormData({...formData, ciudadCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-indigo-800 uppercase mb-1 tracking-widest">Teléfono Celular</label><input type="text" placeholder="Ej: 300 123 4567" className="w-full rounded-xl border-2 border-indigo-50 p-3 font-bold shadow-sm outline-none focus:border-indigo-500 text-sm" value={formData.telefonoCliente} onChange={(e) => setFormData({...formData, telefonoCliente: e.target.value})} /></div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-indigo-100 pt-4">
+                                <div><label className="block text-[10px] font-black text-indigo-800 uppercase mb-1 tracking-widest">IMEI del Equipo</label><input type="text" placeholder="Ej: 351234567890123" className="w-full rounded-xl border-2 border-indigo-50 p-3 font-bold shadow-sm outline-none focus:border-indigo-500 text-sm" value={formData.imei} onChange={(e) => setFormData({...formData, imei: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-indigo-800 uppercase mb-1 tracking-widest">Valor de Cuota</label><input type="text" placeholder="Ej: 50.000" className="w-full rounded-xl border-2 border-indigo-50 p-3 font-bold shadow-sm outline-none focus:border-indigo-500 text-sm" value={formData.valorCuota} onChange={(e) => setFormData({...formData, valorCuota: e.target.value})} /></div>
                             </div>
                         </div>
                     </div>
 
-                    {/* MODAL DE AFILIACIÓN */}
+                    {/* MODAL PRECIOS ALOCREDIT (MATEMÁTICA CORREGIDA) */}
+                    {showPriceModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-indigo-900/90 backdrop-blur-md print:hidden">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-300 border-8 border-white">
+                                <div className="p-6 bg-indigo-600 text-white flex justify-between items-center shrink-0">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter leading-none">Lista Rentabilidad - ALOCREDIT</h3>
+                                    <div className="flex gap-4 items-center">
+                                        {isLoadingPrices && <span className="text-xs font-bold flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full"><Icon name="Loader" size={14}/> Conectando...</span>}
+                                        <button onClick={() => setShowPriceModal(false)} className="hover:bg-white/20 p-2 rounded-full transition-all"><Icon name="X" size={28}/></button>
+                                    </div>
+                                </div>
+                                <div className="p-5 bg-slate-50 border-b flex flex-col md:flex-row gap-4 shrink-0">
+                                    <div className="relative flex-1 group"><div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600"><Icon name="Search" size={18} /></div><input type="text" placeholder="Buscar modelo..." className="w-full pl-12 pr-6 py-3 rounded-2xl border-2 border-slate-200 font-bold outline-none focus:border-indigo-500 bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+                                    <div className="relative w-full md:w-64">
+                                        <select className="w-full pl-6 pr-10 py-3 rounded-2xl border-2 border-slate-200 font-black text-[11px] uppercase tracking-widest outline-none focus:border-indigo-500 bg-white appearance-none cursor-pointer text-indigo-800" value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)}>
+                                            {brandsList.map(brand => (<option key={brand} value={brand}>{brand}</option>))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><Icon name="ChevronDown" size={16} /></div>
+                                    </div>
+                                </div>
+                                <div id="scroll-precios" className="flex-1 overflow-auto custom-scroll bg-white px-4">
+                                    <table className="min-w-full divide-y divide-slate-100">
+                                        <thead className="sticky top-0 bg-white z-10 text-[9px] font-black text-slate-400 uppercase tracking-widest shadow-sm">
+                                            <tr><th className="px-4 py-4 text-left">Referencia</th><th className="px-2 py-4">Costo</th><th className="px-2 py-4">Venta</th><th className="px-4 py-4 bg-indigo-50 text-indigo-600">Inicial plataforma</th><th className="px-2 py-4 text-blue-600">Recibe Tienda</th><th className="px-2 py-4 text-indigo-800">Te Consignamos</th><th className="px-4 py-4 bg-indigo-800 text-white rounded-tr-lg">Comisión</th></tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 font-bold text-[11px] uppercase">
+                                            {filteredData.map((item, idx) => {
+                                                const costo = parseCurrency(item.cost);
+                                                const recibeTienda = parseCurrency(item.receive);
+                                                
+                                                // La lógica corregida al 100% exclusiva de Alocredit:
+                                                const comision = recibeTienda * 0.55; 
+                                                const teConsignamos = (costo + comision) - recibeTienda;
+
+                                                return (
+                                                    <tr key={idx} className="hover:bg-indigo-50/30 transition-all">
+                                                        <td className="px-4 py-4"><span className="text-[9px] text-indigo-500 block font-black">{item.brand}</span>{item.ref}</td>
+                                                        <td className="px-2 py-4 text-center text-slate-400 italic">${formatRoundToThousand(item.cost)}</td>
+                                                        <td className="px-2 py-4 text-center">${formatRoundToThousand(item.sale)}</td>
+                                                        <td className="px-4 py-4 text-center text-indigo-600 bg-indigo-50/30">${formatRoundToThousand(item.initial)}</td>
+                                                        <td className="px-2 py-4 text-center text-blue-600">${formatRoundToThousand(item.receive)}</td>
+                                                        <td className="px-2 py-4 text-center text-indigo-800 font-black bg-indigo-50/50">${formatRoundToThousand(teConsignamos)}</td>
+                                                        <td className="px-4 py-4 text-center bg-indigo-800/5">
+                                                            <span className="text-base font-black text-indigo-800 italic">${formatRoundToThousand(comision)}</span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="p-4 bg-white border-t flex justify-between items-center shrink-0">
+                                    <div className="flex gap-2">
+                                        <button onClick={() => scrollToTop('scroll-precios')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl"><Icon name="ChevronUp" size={20}/></button>
+                                        <button onClick={() => scrollToBottom('scroll-precios')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl"><Icon name="ChevronDown" size={20}/></button>
+                                    </div>
+                                    <button onClick={() => setShowPriceModal(false)} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-[11px] shadow-lg hover:bg-indigo-700 transition-all uppercase tracking-[2px]">Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL AFILIACIÓN */}
                     {showAffiliateModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-indigo-900/90 backdrop-blur-md">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#2C4C8C]/90 backdrop-blur-md print:hidden">
                             <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border-8 border-white">
                                 <div className="p-6 bg-indigo-600 text-white flex justify-between items-center shrink-0">
                                     <div className="flex items-center gap-4">
@@ -351,73 +503,187 @@
                                 </div>
                                 <div className="p-4 bg-white border-t flex justify-between items-center shrink-0">
                                     <div className="flex gap-2">
-                                        <button onClick={() => scrollToTop('scroll-afiliar')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl"><Icon name="ChevronUp" size={20}/></button>
-                                        <button onClick={() => scrollToBottom('scroll-afiliar')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl"><Icon name="ChevronDown" size={20}/></button>
+                                        <button onClick={() => scrollToTop('scroll-afiliar')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl hover:bg-slate-200 transition-colors shadow-sm"><Icon name="ChevronUp" size={20}/></button>
+                                        <button onClick={() => scrollToBottom('scroll-afiliar')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl hover:bg-slate-200 transition-colors shadow-sm"><Icon name="ChevronDown" size={20}/></button>
                                     </div>
                                     <button onClick={() => setShowAffiliateModal(false)} className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-black text-[11px] hover:bg-gray-200 transition-all uppercase tracking-[2px]">Cerrar</button>
                                 </div>
                             </div>
                         </div>
                     )}
+                    
+                    {/* MENSAJE DE ESPERA AUTORIZACIÓN */}
+                    {!isAutorizacionReady && (
+                        <div className="w-full max-w-4xl bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-gray-300 text-center mb-8 flex flex-col items-center justify-center print:hidden">
+                            <Icon name="ShieldCheck" size={48} className="text-gray-300 mb-4" />
+                            <h3 className="text-lg font-black text-gray-500 uppercase tracking-widest">Autorización Oculta</h3>
+                            <p className="text-sm font-bold text-gray-400 mt-2 max-w-md">Complete Nombre, Cédula y Expedición en el formulario superior para visualizar la Carta de Autorización.</p>
+                        </div>
+                    )}
 
-                    {/* MODAL DE PRECIOS */}
-                    {showPriceModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-indigo-900/90 backdrop-blur-md">
-                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-300 border-8 border-white">
-                                <div className="p-6 bg-indigo-600 text-white flex justify-between items-center shrink-0">
-                                    <h3 className="text-xl font-black uppercase italic tracking-tighter leading-none">Lista de Rentabilidad - ALOCREDIT</h3>
-                                    <div className="flex gap-4 items-center">
-                                        {isLoadingPrices && <span className="text-xs font-bold flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full"><Icon name="Loader" size={14}/> Conectando a Sheets...</span>}
-                                        <button onClick={() => setShowPriceModal(false)} className="hover:bg-white/20 p-2 rounded-full transition-all"><Icon name="X" size={28}/></button>
+                    {/* CARTA 1: AUTORIZACIÓN (Visible si está lista) */}
+                    {isAutorizacionReady && (
+                        <div id="pdf-content" className="letter-size shadow-2xl border-t-[10px] border-[#2C4C8C] mb-8 bg-white">
+                            <header className="flex items-center justify-between border-b-2 border-slate-100 pb-3 mb-6 w-full">
+                                <img src={companyInfo.logoUrl} alt="Logo" className="h-24 w-auto object-contain" />
+                                <div className="text-right font-sans shrink-0">
+                                    <h1 className="text-xl font-black text-[#2C4C8C] uppercase italic leading-none tracking-tighter">{companyInfo.name}</h1>
+                                    <p className="text-sm font-bold text-gray-700 tracking-widest uppercase mt-1">NIT: {companyInfo.nit}</p>
+                                    <div className="flex flex-col gap-0.5 mt-2 text-[7.5pt] text-gray-400 font-bold uppercase tracking-widest">
+                                        <span className="flex items-center justify-end gap-1.5"><Icon name="MapPin" size={10} className="text-[#67B74D]"/> {companyInfo.city}</span>
+                                        <span className="flex items-center justify-end gap-1.5"><Icon name="Phone" size={10} className="text-[#67B74D]"/> {companyInfo.phone}</span>
+                                        <span className="lowercase italic font-normal">{companyInfo.email}</span>
                                     </div>
                                 </div>
-                                <div className="p-5 bg-slate-50 border-b flex flex-col md:flex-row gap-4 shrink-0">
-                                    <div className="relative flex-1 group"><div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><Icon name="Search" size={18} /></div><input type="text" placeholder="Buscar modelo o marca..." className="w-full pl-12 pr-6 py-3 rounded-2xl border-2 border-slate-200 font-bold outline-none focus:border-indigo-500 bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
-                                    <select className="px-6 py-3 rounded-2xl border-2 border-slate-200 font-black text-[11px] uppercase tracking-widest outline-none focus:border-indigo-500 bg-white text-indigo-800" value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)}>
-                                        {brandsList.map(brand => (<option key={brand} value={brand}>{brand}</option>))}
-                                    </select>
-                                </div>
-                                <div id="scroll-precios" className="flex-1 overflow-auto custom-scroll bg-white px-4">
-                                    <table className="min-w-full divide-y divide-slate-100">
-                                        <thead className="sticky top-0 bg-white z-10 text-[9px] font-black text-slate-400 uppercase tracking-widest shadow-sm">
-                                            <tr><th className="px-4 py-4 text-left">Referencia</th><th className="px-2 py-4">Costo</th><th className="px-2 py-4">Venta</th><th className="px-4 py-4 bg-indigo-50 text-indigo-600">Inicial plataforma</th><th className="px-2 py-4 text-blue-600">Recibe Tienda</th><th className="px-2 py-4 text-indigo-800">Te Consignamos</th><th className="px-4 py-4 bg-indigo-800 text-white rounded-tr-lg">Comisión</th></tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50 font-bold text-[11px] uppercase">
-                                            {filteredData.map((item, idx) => {
-                                                const costo = parseCurrency(item.cost);
-                                                const recibeTienda = parseCurrency(item.receive);
-                                                
-                                                // La lógica corregida al 100%:
-                                                const comision = recibeTienda * 0.55; 
-                                                const teConsignamos = (costo + comision) - recibeTienda;
+                            </header>
 
-                                                return (
-                                                    <tr key={idx} className="hover:bg-indigo-50/30 transition-all">
-                                                        <td className="px-4 py-4"><span className="text-[9px] text-indigo-500 block font-black">{item.brand}</span>{item.ref}</td>
-                                                        <td className="px-2 py-4 text-center text-slate-400 italic">${formatRoundToThousand(item.cost)}</td>
-                                                        <td className="px-2 py-4 text-center">${formatRoundToThousand(item.sale)}</td>
-                                                        <td className="px-4 py-4 text-center text-indigo-600 bg-indigo-50/30">${formatRoundToThousand(item.initial)}</td>
-                                                        <td className="px-2 py-4 text-center text-blue-600">${formatRoundToThousand(item.receive)}</td>
-                                                        <td className="px-2 py-4 text-center text-indigo-800 font-black bg-indigo-50/50">${formatRoundToThousand(teConsignamos)}</td>
-                                                        <td className="px-4 py-4 text-center bg-indigo-800/5">
-                                                            <span className="text-base font-black text-indigo-800 italic">${formatRoundToThousand(comision)}</span>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div className="p-4 bg-white border-t flex justify-between items-center shrink-0">
-                                    <div className="flex gap-2">
-                                        <button onClick={() => scrollToTop('scroll-precios')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl"><Icon name="ChevronUp" size={20}/></button>
-                                        <button onClick={() => scrollToBottom('scroll-precios')} className="p-2 bg-slate-100 text-indigo-800 rounded-xl"><Icon name="ChevronDown" size={20}/></button>
+                            <div className="mb-6 font-sans font-bold text-right italic uppercase tracking-tighter text-[9pt]">Cartagena D.T. y C., {formData.fecha}</div>
+
+                            <div className="mb-6 space-y-1 font-sans">
+                                <p className="text-[10px] font-black text-[#2C4C8C] uppercase border-b border-[#67B74D] w-fit mb-2 pb-0.5 italic tracking-widest">Dirigido a:</p>
+                                <p className="text-lg font-black uppercase tracking-tighter text-gray-900 leading-none">ALÓ CREDIT COLOMBIA S.A.S.</p>
+                                <p className="text-[9pt] font-bold text-[#2C4C8C] italic opacity-80 uppercase tracking-tighter">Gestión de Cartera y Dispersión de Pagos</p>
+                            </div>
+
+                            <div className="bg-[#F1F8EE] p-5 border-l-[8px] border-[#67B74D] mb-6 rounded-r-xl">
+                                <p className="font-black text-[9.5pt] text-[#2C4C8C] uppercase italic leading-tight">
+                                    Asunto: Autorización expresa de dispersión de recaudos a cuenta jurídica de Soluciones Efectivas CTG S.A.S.
+                                </p>
+                            </div>
+
+                            <div className="text-justify leading-relaxed text-[10.5pt] space-y-4 font-sans flex-1">
+                                <p>Cordial saludo,</p>
+                                <p>
+                                    Yo, <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#2C4C8C] uppercase italic tracking-tighter">{formData.nombreCliente}</span>, 
+                                    con C.C. No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1">{formData.cedulaCliente}</span> expedida en 
+                                    <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#67B74D] italic tracking-tight"> {formData.expedicionCedula}</span>, 
+                                    actuando en mi calidad de aliado comercial de la sociedad jurídica <span className="font-black uppercase text-[#2C4C8C] tracking-tighter italic">{companyInfo.name}</span>, 
+                                    autorizo de manera voluntaria, expresa e irrevocable a <span className="font-black uppercase">ALÓ CREDIT COLOMBIA S.A.S.</span> para que la totalidad de los recursos económicos generados sean consignados en la siguiente cuenta corporativa oficial:
+                                </p>
+                                
+                                <div className="max-w-md mx-auto border border-slate-200 rounded-2xl overflow-hidden shadow-sm my-4 bg-white">
+                                    <div className="bg-slate-50 py-1.5 text-center text-[7pt] font-black uppercase text-slate-500 tracking-[3px] border-b">Detalles de Transferencia</div>
+                                    <div className="p-4 space-y-1.5 text-[9pt] font-bold">
+                                        <div className="flex justify-between border-b pb-0.5 text-[7.5pt] uppercase text-gray-400 font-black"><span>Beneficiario</span><span className="text-[#2C4C8C] uppercase tracking-tighter italic">{companyInfo.name}</span></div>
+                                        <div className="flex justify-between border-b pb-0.5 text-[7.5pt] uppercase text-gray-400 font-black"><span>NIT Jurídico</span><span className="text-gray-800">{companyInfo.nit}</span></div>
+                                        <div className="flex justify-between items-center pt-1.5">
+                                            <div className="flex flex-col">
+                                                <span className="text-[6.5pt] uppercase text-gray-400 font-black">Entidad y Tipo</span>
+                                                <span className="text-gray-900 italic font-medium uppercase text-[8pt]">Bancolombia - {companyInfo.tipoCuenta}</span>
+                                            </div>
+                                            <span className="text-lg font-black text-[#2C4C8C] tracking-[2px] font-mono leading-none italic uppercase">No. {companyInfo.numeroCuenta}</span>
+                                        </div>
                                     </div>
-                                    <button onClick={() => setShowPriceModal(false)} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg hover:bg-indigo-700">Cerrar Precios</button>
+                                </div>
+
+                                <p>
+                                    El abono realizado en la cuenta anteriormente descrita constituirá prueba fehaciente de pago y extinción total de las obligaciones monetarias por parte de la entidad pagadora hacia mi persona.
+                                </p>
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-slate-50">
+                                <div className="flex justify-between items-end font-sans mb-4">
+                                    <div className="w-1/2">
+                                        <div className="w-full border-b-4 border-[#2C4C8C] mb-3"></div>
+                                        <p className="font-black text-[#2C4C8C] uppercase text-[10pt] tracking-tighter leading-none italic">{formData.nombreCliente}</p>
+                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C. No. {formData.cedulaCliente}</p>
+                                    </div>
+                                    <div className="w-22 h-28 border-2 border-slate-100 rounded-[20px] flex flex-col items-center justify-end text-[6.5pt] text-slate-300 p-3 font-black bg-slate-50 italic border-dotted">
+                                        <div className="w-full border-t border-slate-200 pt-1 text-center uppercase tracking-widest">Huella</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
+
+
+                    {/* CARTA 2: ANTIFRAUDE ALOCREDIT (Siempre Visible) */}
+                    <div id="pdf-content-antifraude" className="letter-size shadow-2xl border-t-[10px] border-indigo-600 bg-white mb-8">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <p className="text-xs font-bold text-gray-800 leading-tight">SEÑORES<br/>ALÓ CREDIT COLOMBIA S.A.S<br/>CIUDAD</p>
+                            </div>
+                            <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/alocredit.jpg?raw=true" alt="Alocredit Logo" className="h-10 w-auto object-contain" />
+                        </div>
+
+                        <div className="text-justify text-[8.5pt] leading-snug space-y-3 font-sans flex-1">
+                            <p>
+                                Yo <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.nombreCliente || "_________________________________________"}</span>, identificado con cédula de ciudadanía No. <span className="font-black border-b border-gray-400 px-2">{formData.cedulaCliente || "_________________"}</span> Expedida en <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.expedicionCedula || "_______________"}</span> de la ciudad de <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.ciudadCliente || "_______________"}</span> y con domicilio en la dirección (exacta) <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.direccionCliente || "_________________________________"}</span> y con número de celular <span className="font-black border-b border-gray-400 px-2">{formData.telefonoCliente || "_______________"}</span> y teléfono Otro Cual: <span className="font-black border-b border-gray-400 px-2 text-transparent select-none">________________</span> entendiendo que soy el único responsable de la compra del equipo terminal móvil, y lo estoy adquiriendo bajo mi única voluntad, responsabilidad y consentimiento.
+                            </p>
+                            <p>
+                                Entiendo que contractualmente no puedo vender el celular que ALÓ CREDIT COLOMBIA S.A.S. me está financiando hasta que complete el total de las cuotas por pagar. Entiendo y acepto que las condiciones del crédito exigen que ni el nuevo celular financiado por Aló Credit Colombia S.A.S., se le quite la aplicación de seguridad que permite inhabilitar el celular en caso de no pagar, que una vez pagadas todas mis cuotas el celular quede libre y solo ahí podré disponer del terminal, una vez la aplicación de seguridad haya sido instalada.
+                            </p>
+                            <p>
+                                Entiendo que cualquier intento de manipular esta aplicación es prohibido contractualmente y podría ser considerado un delito, entendiendo que este delito está tipificado en el Código Penal como "hurto calificado", sancionado por el cual tendré que aceptar las consecuencias penales y representar ante la fiscalía general de la Nación, por esos actos delictivos.
+                            </p>
+                            <p>
+                                En virtud de lo anterior, doy constancia de que no he sido contactado por ningún tercero ni estoy actuando como intermediario por tercero para tramitar este crédito, y soy consciente y responsable de que las consecuencias de incurrir en esos actos están consideradas como "Concierto para delinquir" delito tipificado en el Código Penal Colombiano, Artículo 340, y que cuando varias personas se concierten con el fin de cometer delitos, cada una de ellas podría ser penada, por ese solo conducta, con prisión de cuarenta y ocho (48) a ciento ocho (108) meses.
+                            </p>
+                            <p>
+                                Consecuentemente cometería también el delito de estafa, artículo 248 del Código Penal, por cuanto obtendría un lucro utilizando el engaño para producir error en otro (ALÓ CREDIT COLOMBIA S.A.S.) induciéndolo a realizar un acto en perjuicio propio o ajeno, la pena prevista para el delito de estafa será entre seis (6) y treinta y seis (36) meses de prisión.
+                            </p>
+                            
+                            <div className="mt-4 space-y-2">
+                                <p className="font-bold">He sido bien informado respecto a las condiciones del crédito y acepto lo siguiente:</p>
+                                <ol className="list-decimal list-inside space-y-2 ml-4">
+                                    <li>Cuotas son: CATORCENALES. Durante 12 Cuotas <span className="border-b border-gray-400 inline-block w-8"></span> 16 Cuotas <span className="border-b border-gray-400 inline-block w-8"></span></li>
+                                    <li>Valor de cada cuota: $ <span className="border-b border-gray-400 inline-block w-24 text-center font-bold">{formData.valorCuota || ""}</span></li>
+                                    <li>Debo guardar y reportar cada pago antes del vencimiento mediante la aplicación ALO CREDIT instalada en el teléfono enviando: Foto del recibo con pago oportuno para evitar el bloqueo del equipo.</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 pt-4 text-[8.5pt] font-sans border-t border-gray-200">
+                            <div className="flex justify-between items-start">
+                                <div className="w-2/3 space-y-3">
+                                    <div>
+                                        <span className="font-bold inline-block w-40">Nombre:</span> <span className="border-b border-gray-400 inline-block w-[60%] uppercase">{formData.nombreCliente}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-bold inline-block w-40">Número Cedula:</span> <span className="border-b border-gray-400 inline-block w-[60%]">{formData.cedulaCliente}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-bold inline-block w-40">Dirección:</span> <span className="border-b border-gray-400 inline-block w-[60%] uppercase">{formData.direccionCliente}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-bold inline-block w-40">Recibo equipo IMEI Número:</span> <span className="border-b border-gray-400 inline-block w-[60%] font-bold">{formData.imei}</span>
+                                    </div>
+                                    <div className="flex gap-4 pt-4">
+                                        <div className="flex-1">
+                                            <span className="font-bold block mb-1">Firma:</span>
+                                            <span className="border-b border-gray-400 block w-full mt-6"></span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <span className="font-bold inline-block mr-2 mt-7">Fecha:</span>
+                                            <span className="border-b border-gray-400 inline-block w-[70%] mt-7">{formData.fecha}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="w-24 h-32 border-2 border-gray-300 flex flex-col items-center justify-end text-[7.5pt] text-gray-500 p-2 font-bold shrink-0">
+                                    <div className="w-full border-t border-gray-300 pt-1 text-center uppercase tracking-wider">HUELLA</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 font-sans shrink-0">
+                            <h3 className="font-bold text-[8.5pt] mb-1.5 uppercase tracking-widest bg-gray-100 p-1 text-center border border-gray-400">REFERENCIAS</h3>
+                            <table className="w-full border-collapse border border-gray-400 text-[7.5pt]">
+                                <thead>
+                                    <tr className="bg-gray-50">
+                                        <th className="border border-gray-400 p-1.5 text-left w-1/4">Nombre</th>
+                                        <th className="border border-gray-400 p-1.5 text-left w-1/3">Dirección</th>
+                                        <th className="border border-gray-400 p-1.5 text-left w-1/6">Teléfono</th>
+                                        <th className="border border-gray-400 p-1.5 text-left w-1/4">Parentesco / Relación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td></tr>
+                                    <tr><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td></tr>
+                                    <tr><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td><td className="border border-gray-400 p-3"></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                 </div>
             );
