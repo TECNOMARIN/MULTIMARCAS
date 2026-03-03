@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Soluciones Efectivas CTG - VERSIÓN FINAL</title>
+    <title>Gestión Soluciones Efectivas CTG </title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React & ReactDOM (Production) -->
@@ -105,12 +105,20 @@
             const [retailData, setRetailData] = useState([]);
             const [isLoadingPrices, setIsLoadingPrices] = useState(true);
 
+            // ACTUALIZADO: Más campos para la Carta Antifraude
             const [formData, setFormData] = useState({
                 fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
                 nombreCliente: '',
                 cedulaCliente: '',
                 expedicionCedula: '',
+                direccionCliente: '',
+                ciudadCliente: 'Cartagena',
+                telefonoCliente: '',
             });
+
+            // NUEVO: Validaciones de estado
+            const isAutorizacionReady = formData.nombreCliente.trim() !== '' && formData.cedulaCliente.trim() !== '' && formData.expedicionCedula.trim() !== '';
+            const isAntifraudeReady = isAutorizacionReady && formData.direccionCliente.trim() !== '' && formData.ciudadCliente.trim() !== '' && formData.telefonoCliente.trim() !== '';
 
             const [showPriceModal, setShowPriceModal] = useState(false);
             const [selectedBrand, setSelectedBrand] = useState('TODAS LAS MARCAS');
@@ -160,12 +168,27 @@
 
             const brandsList = ['TODAS LAS MARCAS', ...new Set(retailData.map(item => item.brand))];
 
+            // Generador de PDF de Autorización (Original)
             const handleGeneratePDF = () => {
                 setIsGenerating(true);
                 const element = document.getElementById('pdf-content');
                 const opt = {
                     margin: 0,
                     filename: `Autorizacion_${formData.nombreCliente || 'Aliado'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
+            };
+
+            // NUEVO: Generador de PDF de Antifraude
+            const handleGeneratePDFAntifraude = () => {
+                setIsGenerating(true);
+                const element = document.getElementById('pdf-content-antifraude');
+                const opt = {
+                    margin: 0,
+                    filename: `Antifraude_PayJoy_${formData.nombreCliente || 'Cliente'}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
                     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -248,8 +271,6 @@
             return (
                 <div className="min-h-screen py-8 px-4 flex flex-col items-center">
                     
-          
-                     {/* ACCESO RÁPIDO */}
                     <div className="w-full max-w-4xl mb-4 print:hidden flex flex-wrap gap-3 justify-between items-center">
                         <div className="flex gap-2">
                             <button onClick={() => window.location.href = 'index.html'} className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#2C4C8C] rounded-xl shadow-md font-black text-[10px] uppercase tracking-widest hover:bg-[#2C4C8C] hover:text-white transition-all border-2 border-transparent">
@@ -278,6 +299,7 @@
                             </button>
                         </div>
                     </div>
+
                     {/* PANEL DE CONTROL */}
                     <div className="w-full max-w-4xl bg-white p-6 rounded-3xl shadow-xl mb-8 print:hidden border-t-[10px] border-[#2C4C8C]">
                         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6">
@@ -295,16 +317,27 @@
                                 <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[#67B74D] text-white rounded-xl font-black text-xs shadow-lg hover:bg-[#559e3d] transition-all uppercase tracking-widest">
                                     <Icon name="Calculator" size={16} /> Precios
                                 </button>
-                                <button onClick={handleGeneratePDF} disabled={isGenerating} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating ? 'bg-gray-400' : 'bg-[#2C4C8C]'} text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest`}>
-                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} PDF
+                                {/* BOTÓN PDF AUTORIZACIÓN (Se deshabilita si faltan datos) */}
+                                <button onClick={handleGeneratePDF} disabled={isGenerating || !isAutorizacionReady} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating || !isAutorizacionReady ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#2C4C8C] hover:bg-black'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} PDF Autorización
+                                </button>
+                                {/* BOTÓN PDF ANTIFRAUDE (Siempre activo para descargar en blanco o llena) */}
+                                <button onClick={handleGeneratePDFAntifraude} disabled={isGenerating} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="ShieldCheck" size={16} />} PDF Antifraude
                                 </button>
                             </div>
                         </div>
-                        <div className="bg-emerald-50/40 p-5 rounded-[25px] border border-emerald-100">
+                        <div className="bg-emerald-50/40 p-5 rounded-[25px] border border-emerald-100 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Nombre Completo</label><input type="text" placeholder="Ej: Juan Pérez" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.nombreCliente} onChange={(e) => setFormData({...formData, nombreCliente: e.target.value})} /></div>
                                 <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Cédula</label><input type="text" placeholder="No. Documento" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.cedulaCliente} onChange={(e) => setFormData({...formData, cedulaCliente: e.target.value})} /></div>
                                 <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 italic text-emerald-700">Expedida en:</label><input type="text" placeholder="Ciudad" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.expedicionCedula} onChange={(e) => setFormData({...formData, expedicionCedula: e.target.value})} /></div>
+                            </div>
+                            {/* NUEVOS CAMPOS PARA ANTIFRAUDE */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-emerald-100 pt-4">
+                                <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Dirección de Domicilio</label><input type="text" placeholder="Ej: Calle 1 # 2-3" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.direccionCliente} onChange={(e) => setFormData({...formData, direccionCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Ciudad de Domicilio</label><input type="text" placeholder="Ej: Cartagena" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.ciudadCliente} onChange={(e) => setFormData({...formData, ciudadCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Teléfono Celular</label><input type="text" placeholder="Ej: 300 123 4567" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.telefonoCliente} onChange={(e) => setFormData({...formData, telefonoCliente: e.target.value})} /></div>
                             </div>
                         </div>
                     </div>
@@ -472,89 +505,176 @@
                         </div>
                     )}
 
-                    {/* CARTA TAMAÑO CARTA PARA EXPORTAR */}
-                    <div id="pdf-content" className="letter-size shadow-2xl border-t-[10px] border-[#2C4C8C]">
-                        <header className="flex items-center justify-between border-b-2 border-slate-100 pb-3 mb-6 w-full">
-                            <img src={companyInfo.logoUrl} alt="Logo" className="h-24 w-auto object-contain" />
-                            <div className="text-right font-sans shrink-0">
-                                <h1 className="text-xl font-black text-[#2C4C8C] uppercase italic leading-none tracking-tighter">{companyInfo.name}</h1>
-                                <p className="text-sm font-bold text-gray-700 tracking-widest uppercase mt-1">NIT: {companyInfo.nit}</p>
-                                <div className="flex flex-col gap-0.5 mt-2 text-[7.5pt] text-gray-400 font-bold uppercase tracking-widest">
-                                    <span className="flex items-center justify-end gap-1.5"><Icon name="MapPin" size={10} className="text-[#67B74D]"/> {companyInfo.city}</span>
-                                    <span className="flex items-center justify-end gap-1.5"><Icon name="Phone" size={10} className="text-[#67B74D]"/> {companyInfo.phone}</span>
-                                    <span className="lowercase italic font-normal">{companyInfo.email}</span>
-                                </div>
-                            </div>
-                        </header>
-
-                        <div className="mb-6 font-sans font-bold text-right italic uppercase tracking-tighter text-[9pt]">Cartagena D.T. y C., {formData.fecha}</div>
-
-                        <div className="mb-6 space-y-1 font-sans">
-                            <p className="text-[10px] font-black text-[#2C4C8C] uppercase border-b border-[#67B74D] w-fit mb-2 pb-0.5 italic tracking-widest">Dirigido a:</p>
-                            <p className="text-lg font-black uppercase tracking-tighter text-gray-900 leading-none">PAYJOY COLOMBIA S.A.S.</p>
-                            <p className="text-[9pt] font-bold text-[#2C4C8C] italic opacity-80 uppercase tracking-tighter">Gestión de Cartera y Dispersión de Pagos</p>
+                    {/* ============================== */}
+                    {/* MENSAJE DE ESPERA AUTORIZACIÓN */}
+                    {/* ============================== */}
+                    {!isAutorizacionReady && (
+                        <div className="w-full max-w-4xl bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-gray-300 text-center mb-8 flex flex-col items-center justify-center print:hidden">
+                            <Icon name="ShieldCheck" size={48} className="text-gray-300 mb-4" />
+                            <h3 className="text-lg font-black text-gray-500 uppercase tracking-widest">Autorización Oculta</h3>
+                            <p className="text-sm font-bold text-gray-400 mt-2 max-w-md">Complete Nombre, Cédula y Expedición en el formulario superior para visualizar la Carta de Autorización.</p>
                         </div>
+                    )}
 
-                        <div className="bg-[#F1F8EE] p-5 border-l-[8px] border-[#67B74D] mb-6 rounded-r-xl">
-                            <p className="font-black text-[9.5pt] text-[#2C4C8C] uppercase italic leading-tight">
-                                Asunto: Autorización expresa de dispersión de recaudos a cuenta jurídica de Soluciones Efectivas CTG S.A.S.
-                            </p>
-                        </div>
-
-                        <div className="text-justify leading-relaxed text-[10.5pt] space-y-4 font-sans flex-1">
-                            <p>Cordial saludo,</p>
-                            <p>
-                                Yo, <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#2C4C8C] uppercase italic tracking-tighter">{formData.nombreCliente || "_________________________________________"}</span>, 
-                                con C.C. No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1">{formData.cedulaCliente || "_________________"}</span> expedida en 
-                                <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#67B74D] italic tracking-tight"> {formData.expedicionCedula || "_______________"}</span>, 
-                                actuando en mi calidad de aliado comercial de la sociedad jurídica <span className="font-black uppercase text-[#2C4C8C] tracking-tighter italic">{companyInfo.name}</span>, 
-                                autorizo de manera voluntaria, expresa e irrevocable a <span className="font-black uppercase">PAYJOY COLOMBIA S.A.S.</span> para que la totalidad de los recursos económicos generados sean consignados en la siguiente cuenta corporativa oficial:
-                            </p>
-                            
-                            <div className="max-w-md mx-auto border border-slate-200 rounded-2xl overflow-hidden shadow-sm my-4 bg-white">
-                                <div className="bg-slate-50 py-1.5 text-center text-[7pt] font-black uppercase text-slate-500 tracking-[3px] border-b">Detalles de Transferencia</div>
-                                <div className="p-4 space-y-1.5 text-[9pt] font-bold">
-                                    <div className="flex justify-between border-b pb-0.5 text-[7.5pt] uppercase text-gray-400 font-black"><span>Beneficiario</span><span className="text-[#2C4C8C] uppercase tracking-tighter italic">{companyInfo.name}</span></div>
-                                    <div className="flex justify-between border-b pb-0.5 text-[7.5pt] uppercase text-gray-400 font-black"><span>NIT Jurídico</span><span className="text-gray-800">{companyInfo.nit}</span></div>
-                                    <div className="flex justify-between items-center pt-1.5">
-                                        <div className="flex flex-col">
-                                            <span className="text-[6.5pt] uppercase text-gray-400 font-black">Entidad y Tipo</span>
-                                            <span className="text-gray-900 italic font-medium uppercase text-[8pt]">Bancolombia - {companyInfo.tipoCuenta}</span>
-                                        </div>
-                                        <span className="text-lg font-black text-[#2C4C8C] tracking-[2px] font-mono leading-none italic uppercase">No. {companyInfo.numeroCuenta}</span>
+                    {/* ============================== */}
+                    {/* CARTA 1: AUTORIZACIÓN BANCARIA */}
+                    {/* ============================== */}
+                    {isAutorizacionReady && (
+                        <div id="pdf-content" className="letter-size shadow-2xl border-t-[10px] border-[#2C4C8C] mb-8">
+                            <header className="flex items-center justify-between border-b-2 border-slate-100 pb-3 mb-6 w-full">
+                                <img src={companyInfo.logoUrl} alt="Logo" className="h-24 w-auto object-contain" />
+                                <div className="text-right font-sans shrink-0">
+                                    <h1 className="text-xl font-black text-[#2C4C8C] uppercase italic leading-none tracking-tighter">{companyInfo.name}</h1>
+                                    <p className="text-sm font-bold text-gray-700 tracking-widest uppercase mt-1">NIT: {companyInfo.nit}</p>
+                                    <div className="flex flex-col gap-0.5 mt-2 text-[7.5pt] text-gray-400 font-bold uppercase tracking-widest">
+                                        <span className="flex items-center justify-end gap-1.5"><Icon name="MapPin" size={10} className="text-[#67B74D]"/> {companyInfo.city}</span>
+                                        <span className="flex items-center justify-end gap-1.5"><Icon name="Phone" size={10} className="text-[#67B74D]"/> {companyInfo.phone}</span>
+                                        <span className="lowercase italic font-normal">{companyInfo.email}</span>
                                     </div>
                                 </div>
+                            </header>
+
+                            <div className="mb-6 font-sans font-bold text-right italic uppercase tracking-tighter text-[9pt]">Cartagena D.T. y C., {formData.fecha}</div>
+
+                            <div className="mb-6 space-y-1 font-sans">
+                                <p className="text-[10px] font-black text-[#2C4C8C] uppercase border-b border-[#67B74D] w-fit mb-2 pb-0.5 italic tracking-widest">Dirigido a:</p>
+                                <p className="text-lg font-black uppercase tracking-tighter text-gray-900 leading-none">PAYJOY COLOMBIA S.A.S.</p>
+                                <p className="text-[9pt] font-bold text-[#2C4C8C] italic opacity-80 uppercase tracking-tighter">Gestión de Cartera y Dispersión de Pagos</p>
                             </div>
 
+                            <div className="bg-[#F1F8EE] p-5 border-l-[8px] border-[#67B74D] mb-6 rounded-r-xl">
+                                <p className="font-black text-[9.5pt] text-[#2C4C8C] uppercase italic leading-tight">
+                                    Asunto: Autorización expresa de dispersión de recaudos a cuenta jurídica de Soluciones Efectivas CTG S.A.S.
+                                </p>
+                            </div>
+
+                            <div className="text-justify leading-relaxed text-[10.5pt] space-y-4 font-sans flex-1">
+                                <p>Cordial saludo,</p>
+                                <p>
+                                    Yo, <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#2C4C8C] uppercase italic tracking-tighter">{formData.nombreCliente || "_________________________________________"}</span>, 
+                                    con C.C. No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1">{formData.cedulaCliente || "_________________"}</span> expedida en 
+                                    <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#67B74D] italic tracking-tight"> {formData.expedicionCedula || "_______________"}</span>, 
+                                    actuando en mi calidad de aliado comercial de la sociedad jurídica <span className="font-black uppercase text-[#2C4C8C] tracking-tighter italic">{companyInfo.name}</span>, 
+                                    autorizo de manera voluntaria, expresa e irrevocable a <span className="font-black uppercase">PAYJOY COLOMBIA S.A.S.</span> para que la totalidad de los recursos económicos generados sean consignados en la siguiente cuenta corporativa oficial:
+                                </p>
+                                
+                                <div className="max-w-md mx-auto border border-slate-200 rounded-2xl overflow-hidden shadow-sm my-4 bg-white">
+                                    <div className="bg-slate-50 py-1.5 text-center text-[7pt] font-black uppercase text-slate-500 tracking-[3px] border-b">Detalles de Transferencia</div>
+                                    <div className="p-4 space-y-1.5 text-[9pt] font-bold">
+                                        <div className="flex justify-between border-b pb-0.5 text-[7.5pt] uppercase text-gray-400 font-black"><span>Beneficiario</span><span className="text-[#2C4C8C] uppercase tracking-tighter italic">{companyInfo.name}</span></div>
+                                        <div className="flex justify-between border-b pb-0.5 text-[7.5pt] uppercase text-gray-400 font-black"><span>NIT Jurídico</span><span className="text-gray-800">{companyInfo.nit}</span></div>
+                                        <div className="flex justify-between items-center pt-1.5">
+                                            <div className="flex flex-col">
+                                                <span className="text-[6.5pt] uppercase text-gray-400 font-black">Entidad y Tipo</span>
+                                                <span className="text-gray-900 italic font-medium uppercase text-[8pt]">Bancolombia - {companyInfo.tipoCuenta}</span>
+                                            </div>
+                                            <span className="text-lg font-black text-[#2C4C8C] tracking-[2px] font-mono leading-none italic uppercase">No. {companyInfo.numeroCuenta}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p>
+                                    El abono realizado en la cuenta anteriormente descrita constituirá prueba fehaciente de pago y extinción total de las obligaciones monetarias por parte de la entidad pagadora hacia mi persona.
+                                </p>
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-slate-50">
+                                <div className="flex justify-between items-end font-sans mb-4">
+                                    <div className="w-1/2">
+                                        <div className="w-full border-b-4 border-[#2C4C8C] mb-3"></div>
+                                        <p className="font-black text-[#2C4C8C] uppercase text-[10pt] tracking-tighter leading-none italic">{formData.nombreCliente || "Firma del Aliado"}</p>
+                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C. No. {formData.cedulaCliente || "__________________"}</p>
+                                    </div>
+                                    <div className="w-22 h-28 border-2 border-slate-100 rounded-[20px] flex flex-col items-center justify-end text-[6.5pt] text-slate-300 p-3 font-black bg-slate-50 italic border-dotted">
+                                        <div className="w-full border-t border-slate-200 pt-1 text-center uppercase tracking-widest">Huella</div>
+                                    </div>
+                                </div>
+
+                                <footer className="border-t-2 border-[#67B74D] pt-4 pb-2 flex justify-between text-[8pt] text-gray-400 font-black uppercase font-sans tracking-widest italic leading-tight">
+                                    <div className="italic tracking-tighter text-blue-900 leading-none">
+                                        {companyInfo.name} <br/>
+                                        <span className="text-[#67B74D] lowercase font-bold tracking-normal italic">soluciones a crédito</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <p>Registro de Alianzas Retail B</p>
+                                        <p className="text-[6.5pt] font-bold text-slate-300 uppercase tracking-tighter leading-none">Soluciones Efectivas CTG</p>
+                                    </div>
+                                </footer>
+                            </div>
+                        </div>
+                    )}
+
+
+                    {/* ============================== */}
+                    {/* CARTA 2: ANTIFRAUDE PAYJOY     */}
+                    {/* ============================== */}
+                    <div id="pdf-content-antifraude" className="letter-size shadow-2xl border-t-[10px] border-blue-600 bg-white mb-8">
+                        <div className="flex justify-between items-start mb-8">
+                            <div>
+                                <h2 className="text-xl font-black text-gray-900 tracking-tighter">CARTA ANTIFRAUDE</h2>
+                                <p className="mt-2 text-xs font-bold text-gray-800 leading-tight">SEÑORES<br/>PAYJOY COLOMBIA S.A.S<br/>CIUDAD</p>
+                            </div>
+                            <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/PayJoy_Logo.jpg?raw=true" alt="PayJoy Logo" className="h-12 w-auto object-contain" />
+                        </div>
+
+                        <div className="text-justify text-[9pt] leading-relaxed space-y-4 font-sans flex-1">
                             <p>
-                                El abono realizado en la cuenta anteriormente descrita constituirá prueba fehaciente de pago y extinción total de las obligaciones monetarias por parte de la entidad pagadora hacia mi persona.
+                                YO, <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.nombreCliente || "_________________________________________"}</span>, DE <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.expedicionCedula || "_______________"}</span>, IDENTIFICADO CON CEDULA DE CIUDADANIA # <span className="font-black border-b border-gray-400 px-2">{formData.cedulaCliente || "_________________"}</span> Y CON DOMICILIO EN (DIRECCION EXАСТА) <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.direccionCliente || "_________________________________"}</span> DE LA CIUDAD DE <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.ciudadCliente || "_______________"}</span> Y CON NUMERO CELULAR <span className="font-black border-b border-gray-400 px-2">{formData.telefonoCliente || "_______________"}</span> ENTIENDO QUE SOY EL ÚNICO RESPONSABLE DE LA COMPRA DEL EQUIPO TERMINAL MÓVIL Y LO ESTOY ADQUIRIENDO BAJO MI ÚNICA VOLUNTAD, RESPONSABILIDAD Y CONSENTIMIENTO.
+                            </p>
+                            <p>
+                                ENTIENDO QUE CONTRACTUALMENTE NO PUEDO VENDER EL CELULAR QUE PAYJOY ME ESTÁ FINANCIANDO HASTA QUE COMPLETE EL TOTAL DE LAS CUOTAS A PAGAR. ENTIENDO Y ACEPTO QUE LA CONDICIONES DEL CRÉDITO EXIGEN QUE A MI NUEVO CELULAR FINANCIADO POR PAYJOY SE LE INSTALE UNA APLICACIÓN DE SEGURIDAD QUE PERMITE INHABILITAR EL CELULAR EN CASO DE NO PAGO. QUE UNA VEZ PAGADAS TODAS MIS CUOTAS EL CELULAR QUEDARA LIBRE Y SOLO AHI, PODRE DISPONER DE ÉL, UNA VEZ LA APLICACIÓN DE SEGURIDAD HAYA SIDO DESINSTALADA.
+                            </p>
+                            <p>
+                                ENTIENDO QUE CUALQUIER INTENTO DE MANIPULAR ESTA APLICACIÓN, ES PROHIBIDO CONTRACTUALMENTE Y PODRÍA SER CONSIDERADO UN DELITO. ENTIENDO QUE ESTE DELITO ESTÁ TIPIFICADO EN CÓDIGO PENAL COMO "VIOLACION AL SISTEMA INFORMÁTICO" POR EL CUAL TENDRÉ QUE ACEPTAR LAS CONSECUENCIAS PENALES Y RESPONDER ANTE LA FISCALÍA POR ESTOS ACTOS DELICTIVOS.
+                            </p>
+                            <p>
+                                DOY CONSTANCIA QUE NO HE SIDO CONTACTADO POR UN TERCERO, NI ESTOY ACTUANDO COMO INTERMEDIARIO POR UN TERCERO, PARA TRAMITAR ESTE CRÉDITO Y SOY CONSCIENTE Y RESPONSABLE DE QUE LAS CONSECUENCIAS DE INCURRIR EN ESTE ACTO ESTÁN CONSIDERADAS COMO "CONCIERTO PARA DELINQUIR" TIPIFICADO EN EL CÓDIGO PENAL COLOMBIANO ARTÍCULO 340 Y QUE CUANDO VARIAS PERSONAS SE CONCIERTEN CON EL FIN DE COMETER DELITOS, CADA UNA DE ELLAS PODRÍA SER PENADA, POR ESA SOLA CONDUCTA, CON PRISIÓN DE CUARENTA Y OCHO (48) A CIENTO OCHO (108) MESES.
+                            </p>
+                            <p>
+                                CONSECUENTEMENTE COMETIENDO TAMBIÉN EL DELITO DE "ESTAFA"; ARTÍCULO 248 DEL CÓDIGO PENAL, PARA LOS QUE, CON ÁNIMO DE LUCRO, UTILIZAN EL ENGAÑO PARA PRODUCIR ERROR EN OTRO (PAYJOY COLOMBIA S.A.S.) INDUCIÉNDOLO A REALIZAR UN ACTO EN DISPOSICIÓN EN PERJUICIO PROPIO O AJENO. LA PENA PREVISTA PARA EL DELITO DE ESTAFA OSCILA ENTRE SEIS (6) MESES Y TREINTA Y SEIS MESES (36) DE PRISIÓN.
                             </p>
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-slate-50">
-                            <div className="flex justify-between items-end font-sans mb-4">
-                                <div className="w-1/2">
-                                    <div className="w-full border-b-4 border-[#2C4C8C] mb-3"></div>
-                                    <p className="font-black text-[#2C4C8C] uppercase text-[10pt] tracking-tighter leading-none italic">{formData.nombreCliente || "Firma del Aliado"}</p>
-                                    <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C. No. {formData.cedulaCliente || "__________________"}</p>
+                        <div className="mt-6 pt-4 text-[9pt] font-sans">
+                            <p className="mb-5 font-bold">ATENTAMENTE,</p>
+                            <div className="flex justify-between items-start">
+                                <div className="w-2/3 space-y-4">
+                                    <div>
+                                        <span className="font-bold inline-block w-20">NOMBRE:</span> <span className="border-b border-gray-400 inline-block w-[80%] uppercase">{formData.nombreCliente}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-bold inline-block w-20">CÉDULA:</span> <span className="border-b border-gray-400 inline-block w-[80%]">{formData.cedulaCliente}</span>
+                                    </div>
+                                    <div>
+                                        <span className="font-bold inline-block w-20">DIRECCIÓN:</span> <span className="border-b border-gray-400 inline-block w-[80%] uppercase">{formData.direccionCliente}</span>
+                                    </div>
                                 </div>
-                                <div className="w-22 h-28 border-2 border-slate-100 rounded-[20px] flex flex-col items-center justify-end text-[6.5pt] text-slate-300 p-3 font-black bg-slate-50 italic border-dotted">
-                                    <div className="w-full border-t border-slate-200 pt-1 text-center uppercase tracking-widest">Huella</div>
+                                <div className="w-24 h-28 border-2 border-gray-300 flex flex-col items-center justify-end text-[7.5pt] text-gray-500 p-2 font-bold shrink-0">
+                                    <div className="w-full border-t border-gray-300 pt-1 text-center uppercase tracking-wider">Índice Derecho</div>
                                 </div>
                             </div>
+                        </div>
 
-                            <footer className="border-t-2 border-[#67B74D] pt-4 pb-2 flex justify-between text-[8pt] text-gray-400 font-black uppercase font-sans tracking-widest italic leading-tight">
-                                <div className="italic tracking-tighter text-blue-900 leading-none">
-                                    {companyInfo.name} <br/>
-                                    <span className="text-[#67B74D] lowercase font-bold tracking-normal italic">soluciones a crédito</span>
-                                </div>
-                                <div className="text-right">
-                                    <p>Registro de Alianzas Retail B</p>
-                                    <p className="text-[6.5pt] font-bold text-slate-300 uppercase tracking-tighter leading-none">Soluciones Efectivas CTG</p>
-                                </div>
-                            </footer>
+                        <div className="mt-8 font-sans shrink-0">
+                            <h3 className="font-bold text-[9pt] mb-2 uppercase tracking-widest bg-gray-100 p-1.5 text-center border border-gray-400">Referencias</h3>
+                            <table className="w-full border-collapse border border-gray-400 text-[8pt]">
+                                <thead>
+                                    <tr className="bg-gray-50">
+                                        <th className="border border-gray-400 p-2 text-left w-1/3">Nombre</th>
+                                        <th className="border border-gray-400 p-2 text-left w-1/3">Dirección</th>
+                                        <th className="border border-gray-400 p-2 text-left w-1/6">Teléfono</th>
+                                        <th className="border border-gray-400 p-2 text-left w-1/6">Parentesco</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                    <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                    <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
+
                 </div>
             );
         };
