@@ -48,6 +48,7 @@
     /* CAPAS Z-INDEX */
     .modal { z-index: 5000; }
     #mod-confirm { z-index: 6000; }
+    #mod-precios { z-index: 7000; }
     #toast-container { z-index: 100000; }
     #bg-sync-indicator { z-index: 4000; }
 
@@ -187,7 +188,7 @@
     
     <div class="brand-header">
         <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true" alt="Soluciones Efectivas CTG" class="brand-logo header-left-logo">
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;">
             <a href="retailb.html" class="button is-small" style="font-weight:900; background: var(--action-gradient); color: white; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3);">
                 <i data-lucide="external-link" style="width:14px; margin-right:5px;"></i>Retail
             </a>
@@ -204,9 +205,21 @@
 
     <!-- CALCULADORA -->
     <div id="v-sim" class="section-view is-active-view">
-      <div class="welcome-banner">
-        <div class="welcome-icon" style="background: var(--brand-green);"><i data-lucide="store" style="color: white !important;"></i></div>
-        <div class="welcome-text"><p style="font-weight: 800; color: var(--brand-blue);">¡Bienvenido de nuevo!</p><p id="display-store-name" style="color:var(--brand-green); font-weight:900;">Cargando...</p></div>
+      <div class="welcome-banner" style="justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="welcome-icon" style="background: var(--brand-green);"><i data-lucide="store" style="color: white !important;"></i></div>
+            <div class="welcome-text">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <p style="font-weight: 800; color: var(--brand-blue);">¡Bienvenido de nuevo!</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <p id="display-store-name" style="color:var(--brand-green); font-weight:900;">Cargando...</p>
+                    <button id="btn-distribuidor" class="button is-small is-rounded" style="display:none; font-weight:900; background: #eab308; color: #1e293b; border: none; padding: 0 10px; height: 24px; font-size: 0.65rem;" onclick="showDistribuidorPrices()">
+                        <i data-lucide="award" style="width:12px; margin-right:4px;"></i>Distribuidor
+                    </button>
+                </div>
+            </div>
+        </div>
       </div>
       <div class="field"><label class="label is-small">Tienda / Aliado</label><div class="select is-fullwidth"><select id="sel_cliente" onchange="handleAllyChange()"></select></div></div>
       <div class="field"><label class="label is-small">Entidad Financiera</label><div class="select is-fullwidth"><select id="sel_financiera" onchange="loadPlanes()"></select></div></div>
@@ -357,6 +370,41 @@
 
   <div id="mod-fin" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Entidad</p></header><section class="modal-card-body"><input id="ed-fin-id" type="hidden"><div class="field"><label class="label is-small" style="font-weight: 700;">Entidad</label><input id="ed-fin-nom" class="input is-small" style="font-weight: 600;"></div><div class="field"><label class="label is-small" style="font-weight: 700;">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01" style="font-weight: 600;"></div><hr><span class="admin-label">Planes Asociados</span><div id="planes-container" class="table-container"></div></section><footer class="modal-card-foot"><button id="btn-del-fin" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteFinanciera()">Eliminar Entidad</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-fin" class="button btn-modern is-save" onclick="saveFinanciera()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar</button></footer></div></div>
 
+  <!-- MODAL LISTA DE PRECIOS DISTRIBUIDOR -->
+  <div id="mod-precios" class="modal">
+      <div class="modal-background" onclick="closeModals()"></div>
+      <div class="modal-card" style="width:95%; max-width:950px;">
+          <header class="modal-card-head" style="background: #eab308;">
+              <p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif; color: #1e293b;">Lista de Precios - Distribuidor</p>
+              <button class="delete" aria-label="close" onclick="closeModals()"></button>
+          </header>
+          <section class="modal-card-body custom-scroll">
+              <div id="precios-loader" class="has-text-centered py-5" style="display:none;">
+                  <div class="button is-loading is-white is-large" style="background:transparent; color: var(--brand-blue);"></div>
+                  <p class="mt-2 has-text-weight-bold" style="color: var(--brand-blue);">Consultando base de datos...</p>
+              </div>
+              <div class="table-container" id="precios-table-container" style="display:none; max-height: 400px; overflow-y: auto;">
+                  <table class="table is-fullwidth is-striped is-narrow">
+                      <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                          <tr>
+                              <th>Marca</th>
+                              <th>Referencia</th>
+                              <th class="has-text-right">Costo</th>
+                              <th class="has-text-right">Venta</th>
+                              <th class="has-text-right" style="color: var(--brand-blue);">Comisión PayJoy</th>
+                              <th class="has-text-right" style="color: #4F46E5;">Comisión Alocredit</th>
+                          </tr>
+                      </thead>
+                      <tbody id="tb-precios" style="font-weight: 500;"></tbody>
+                  </table>
+              </div>
+          </section>
+          <footer class="modal-card-foot">
+              <button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar Panel</button>
+          </footer>
+      </div>
+  </div>
+
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
     let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [], simulaciones: [], roles: [], roles_permisos: [] };
@@ -433,6 +481,10 @@
           document.getElementById('at-vin').style.display = isFullAdmin ? '' : 'none';
           document.getElementById('at-ent').style.display = isFullAdmin ? '' : 'none';
           document.getElementById('at-pla').style.display = isFullAdmin ? '' : 'none';
+
+          // Mostrar botón de distribuidor solo a administradores completos
+          const btnDist = document.getElementById('btn-distribuidor');
+          if (btnDist) btnDist.style.display = isFullAdmin ? 'inline-flex' : 'none';
 
           switchAdminTab('ali');
           handleAllyChange(); 
@@ -670,10 +722,48 @@
     
     function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Borrar factor personalizado?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
     function confirmDeleteVinculoRol(idRol, idFin) { openConfirm("¿Borrar factor de este rol?", async () => { await apiCall('deletePorcentajeRol', { id_rol: idRol, id_financiera: idFin }); openRol(idRol); }); }
+
+    // FUNCIONES DEL MODAL DE DISTRIBUIDOR
+    async function showDistribuidorPrices() {
+        document.getElementById('mod-precios').classList.add('is-active');
+        document.getElementById('precios-loader').style.display = 'block';
+        document.getElementById('precios-table-container').style.display = 'none';
+        document.getElementById('tb-precios').innerHTML = '';
+        
+        try {
+            const url = new URL(SCRIPT_URL);
+            url.searchParams.append('action', 'getPrecios');
+            const res = await fetch(url.toString(), { method: 'GET', mode: 'cors' });
+            const data = await res.json();
+            
+            let html = '';
+            if(data && !data.error && data.length > 0) {
+                data.forEach(item => {
+                    // Cálculo matemático redondeando al mil más cercano
+                    const payjoyComm = Math.round(toNum(item.commDist) / 1000) * 1000;
+                    const alocreditComm = Math.round((toNum(item.receive) * 0.45) / 1000) * 1000;
+                    
+                    html += `<tr>
+                        <td style="color:var(--brand-green); font-weight:800;">${item.brand || '-'}</td>
+                        <td>${item.ref || '-'}</td>
+                        <td class="has-text-right">${fmtCop(toNum(item.cost))}</td>
+                        <td class="has-text-right">${fmtCop(toNum(item.sale))}</td>
+                        <td class="has-text-right" style="color:var(--brand-blue); font-weight:900;">${fmtCop(payjoyComm)}</td>
+                        <td class="has-text-right" style="color:#4F46E5; font-weight:900;">${fmtCop(alocreditComm)}</td>
+                    </tr>`;
+                });
+            } else {
+                html = '<tr><td colspan="6" class="has-text-centered py-4">No hay precios disponibles o la lista está vacía.</td></tr>';
+            }
+            document.getElementById('tb-precios').innerHTML = html;
+        } catch (e) {
+            document.getElementById('tb-precios').innerHTML = '<tr><td colspan="6" class="has-text-centered py-4 has-text-danger"><b>Error:</b> No se pudieron cargar los precios. Revise la conexión.</td></tr>';
+        } finally {
+            document.getElementById('precios-loader').style.display = 'none';
+            document.getElementById('precios-table-container').style.display = 'block';
+            lucide.createIcons();
+        }
+    }
   </script>
 </body>
 </html>
-
-
-
-
