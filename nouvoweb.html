@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalador Maestro NuovoPay</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 500px; width: 100%; text-align: center; }
+        button { background: #007bff; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+        button:disabled { background: #ccc; }
+        #log { margin-top: 20px; text-align: left; background: #222; color: #0f0; padding: 15px; border-radius: 5px; height: 150px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Instalador Corporativo</h2>
+        <p>1. Conecta el celular por USB<br>2. Activa Depuración USB</p>
+        <button id="connect">CONECTAR Y CONFIGURAR</button>
+        <div id="log">Esperando dispositivo...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"></script>
+    <script>
+        const logBtn = document.getElementById('log');
+        const btn = document.getElementById('connect');
+
+        function logger(msg) {
+            logBtn.innerHTML += `> ${msg}<br>`;
+            logBtn.scrollTop = logBtn.scrollHeight;
+        }
+
+        btn.onclick = async () => {
+            try {
+                const adb = new Adb();
+                const webusb = await Adb.WebUsb.requestDevice();
+                if (!webusb) return;
+
+                const transport = await Adb.WebUsb.Transport.open(webusb);
+                await adb.connect(transport);
+                logger("Conectado con éxito.");
+
+                // 1. Descargar APK al navegador
+                logger("Descargando APK...");
+                const response = await fetch('nuovopay.apk');
+                const apkBlob = await response.blob();
+                const apkBuffer = await apkBlob.arrayBuffer();
+
+                // 2. Instalar APK
+                logger("Instalando NuovoPay (Esto puede tardar)...");
+                await adb.install(apkBuffer);
+                logger("Instalación completada.");
+
+                // 3. Ejecutar Comando de Device Owner
+                // IMPORTANTE: Aquí usaremos el comando de Device Owner
+                logger("Configurando Administrador de Dispositivo...");
+                const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
+                const result = await shell.receive();
+                logger(new TextDecoder().decode(result.data));
+
+                // 4. Abrir la App automáticamente
+                logger("Abriendo aplicación...");
+                await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
+
+                logger("TODO LISTO. Ya puedes desconectar.");
+            } catch (err) {
+                logger("ERROR: " + err.message);
+                console.error(err);
+            }
+        };
+    </script>
+</body>
+</html>
