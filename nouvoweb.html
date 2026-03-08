@@ -2,70 +2,217 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instalador Maestro NuovoPay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Soluciones CTG | Quick Install</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 500px; width: 100%; text-align: center; }
-        button { background: #007bff; color: white; border: none; padding: 15px 25px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 20px; }
-        button:disabled { background: #ccc; }
-        #log { margin-top: 20px; text-align: left; background: #222; color: #0f0; padding: 15px; border-radius: 5px; height: 150px; overflow-y: auto; font-family: monospace; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>Instalador Corporativo</h2>
-        <p>1. Conecta el celular por USB<br>2. Activa Depuración USB</p>
-        <button id="connect">CONECTAR Y CONFIGURAR</button>
-        <div id="log">Esperando dispositivo...</div>
-    </div>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap');
 
-    <script src="https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"></script>
-    <script>
-        const logBtn = document.getElementById('log');
-        const btn = document.getElementById('connect');
-
-        function logger(msg) {
-            logBtn.innerHTML += `> ${msg}<br>`;
-            logBtn.scrollTop = logBtn.scrollHeight;
+        :root {
+            --primary-gradient: linear-gradient(135deg, #1e3a6d 0%, #2C4C8C 100%);
+            --action-gradient: linear-gradient(135deg, #74c456 0%, #58a33f 100%);
+            --brand-blue: #2C4C8C;
+            --brand-green: #67B74D;
         }
 
-        btn.onclick = async () => {
+        body { 
+            background: var(--primary-gradient); 
+            min-height: 100vh; 
+            font-family: 'Montserrat', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-install {
+            background: var(--action-gradient);
+            box-shadow: 0 8px 20px rgba(103, 183, 77, 0.3);
+        }
+
+        .console-mini {
+            background: #1e293b;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+        }
+
+        .step-bubble {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dot-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Ocultar scrollbar en consola */
+        .console-mini::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-3 sm:p-6">
+
+    <div class="app-card w-full max-w-md overflow-hidden flex flex-col">
+        <!-- Header Minimalista -->
+        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-slate-100">
+            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo" class="h-10 w-auto">
+            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                <div id="status-dot" class="dot-pulse bg-slate-300"></div>
+                <span id="status-text" class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">OFFLINE</span>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-5">
+            <!-- Instrucciones Compactas -->
+            <div class="space-y-2">
+                <div class="step-bubble">
+                    <span class="text-emerald-600 font-black text-xs">01</span>
+                    <p class="text-[10px] font-bold text-slate-600 uppercase tracking-tight">Cuentas eliminadas</p>
+                </div>
+                <div class="step-bubble">
+                    <span class="text-emerald-600 font-black text-xs">02</span>
+                    <p class="text-[10px] font-bold text-slate-600 uppercase tracking-tight">Depuración USB ON</p>
+                </div>
+                <div class="step-bubble">
+                    <span class="text-emerald-600 font-black text-xs">03</span>
+                    <p class="text-[10px] font-bold text-slate-600 uppercase tracking-tight">Sin bloqueo de pantalla</p>
+                </div>
+            </div>
+
+            <!-- Botón Principal -->
+            <button id="btn-start" class="btn-install w-full py-4 rounded-xl text-white font-black text-sm flex items-center justify-center gap-3 active:scale-95 transition-transform">
+                <i class="fas fa-bolt-lightning"></i>
+                VINCULAR Y CONFIGURAR
+            </button>
+
+            <!-- Monitor y Progreso -->
+            <div class="space-y-2">
+                <div class="flex justify-between items-end px-1">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Monitor ADB</span>
+                    <span id="progress-percent" class="text-[10px] font-black text-emerald-600">0%</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="w-0 h-full bg-emerald-500 transition-all duration-500"></div>
+                </div>
+                <div id="console" class="console-mini w-full h-32 p-4 rounded-xl overflow-y-auto leading-relaxed text-slate-400">
+                    <div># SYSTEM_STANDBY</div>
+                    <div># READY_FOR_HANDSHAKE...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-50 py-3 text-center border-t border-slate-100">
+            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                TECNOMARIN & SOLUCIONES CTG
+            </p>
+        </div>
+    </div>
+
+    <!-- WebADB Library -->
+    <script src="https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"></script>
+
+    <script>
+        const consoleEl = document.getElementById('console');
+        const btnStart = document.getElementById('btn-start');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+
+        const APK_URL = 'https://github.com/TECNOMARIN/MULTIMARCAS/raw/refs/heads/main/nuovopay.apk';
+
+        function updateProgress(p) {
+            progressBar.style.width = p + '%';
+            progressPercent.innerText = Math.round(p) + '%';
+        }
+
+        function log(msg, type = 'info') {
+            const colors = {
+                info: 'text-slate-500',
+                success: 'text-emerald-400 font-bold',
+                error: 'text-red-400',
+                process: 'text-blue-400'
+            };
+            const div = document.createElement('div');
+            div.className = `mb-0.5 ${colors[type]}`;
+            div.innerHTML = `<span class="opacity-30">></span> ${msg}`;
+            consoleEl.appendChild(div);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        btnStart.onclick = async () => {
+            btnStart.disabled = true;
+            updateProgress(5);
+            log("Iniciando handshake WebUSB...", "process");
+
             try {
                 const adb = new Adb();
                 const webusb = await Adb.WebUsb.requestDevice();
-                if (!webusb) return;
+                
+                if (!webusb) {
+                    log("Cancelado por usuario.", "error");
+                    btnStart.disabled = false;
+                    updateProgress(0);
+                    return;
+                }
 
+                log("Hardware OK. Conectando...", "process");
                 const transport = await Adb.WebUsb.Transport.open(webusb);
                 await adb.connect(transport);
-                logger("Conectado con éxito.");
+                updateProgress(30);
 
-                // 1. Descargar APK al navegador
-                logger("Descargando APK...");
-                const response = await fetch('nuovopay.apk');
+                statusDot.className = "dot-pulse bg-emerald-500 shadow-[0_0_8px_#10b981]";
+                statusText.innerText = "ONLINE";
+                statusText.classList.replace('text-slate-500', 'text-emerald-600');
+                
+                log("CONEXIÓN ESTABLECIDA.", "success");
+
+                log("Descargando APK de MULTIMARCAS...", "info");
+                const response = await fetch(APK_URL);
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
+                updateProgress(55);
 
-                // 2. Instalar APK
-                logger("Instalando NuovoPay (Esto puede tardar)...");
+                log("Inyectando aplicación...", "process");
                 await adb.install(apkBuffer);
-                logger("Instalación completada.");
+                updateProgress(75);
+                log("APK INSTALADA.", "success");
 
-                // 3. Ejecutar Comando de Device Owner
-                // IMPORTANTE: Aquí usaremos el comando de Device Owner
-                logger("Configurando Administrador de Dispositivo...");
+                log("Configurando Device Owner...", "process");
                 const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
                 const result = await shell.receive();
-                logger(new TextDecoder().decode(result.data));
+                const decoded = new TextDecoder().decode(result.data);
+                updateProgress(90);
+                
+                if (decoded.includes("Success")) {
+                    log("ADMINISTRADOR OK.", "success");
+                } else {
+                    log("SYSTEM: " + (decoded.substring(0,25)) + "...", "info");
+                }
 
-                // 4. Abrir la App automáticamente
-                logger("Abriendo aplicación...");
+                log("Optimizando sistema...", "info");
+                await adb.shell("settings put global verifier_verify_adb_installs 0");
+                await adb.shell("dumpsys deviceidle whitelist +com.promobitech.nuovo");
                 await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
 
-                logger("TODO LISTO. Ya puedes desconectar.");
+                updateProgress(100);
+                log("PROCESO TERMINADO EXITOSAMENTE.", "success");
+
             } catch (err) {
-                logger("ERROR: " + err.message);
-                console.error(err);
+                log("ERROR: " + err.message.substring(0,30), "error");
+                statusDot.className = "dot-pulse bg-red-500";
+                statusText.innerText = "ERROR";
+            } finally {
+                btnStart.disabled = false;
             }
         };
     </script>
