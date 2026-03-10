@@ -82,7 +82,7 @@
             <!-- Info OTG -->
             <div class="bg-blue-50 px-3 py-2 rounded-lg border border-blue-100 flex items-center gap-3">
                 <i class="fas fa-mobile-nodes text-blue-500 text-[10px]"></i>
-                <span class="text-[8px] font-extrabold text-blue-700 uppercase">Soporte OTG Celular-a-Celular</span>
+                <span class="text-[8px] font-extrabold text-blue-700 uppercase tracking-tighter">Soporte OTG Celular-a-Celular</span>
             </div>
 
             <!-- Pasos -->
@@ -125,8 +125,8 @@
         </div>
     </div>
 
-    <!-- Carga de librería Adb de forma tradicional (Global) -->
-    <script src="https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"></script>
+    <!-- Carga de librería Adb - Cambio a unpkg para mayor estabilidad -->
+    <script id="adb-script" src="https://unpkg.com/webadb@1.0.1/webadb.js"></script>
 
     <script>
         const consoleEl = document.getElementById('console');
@@ -163,17 +163,28 @@
             let attempts = 0;
             const checkLib = setInterval(() => {
                 attempts++;
+                
+                // Verificamos tanto la variable global como la disponibilidad del constructor
                 if (typeof Adb !== 'undefined') {
                     clearInterval(checkLib);
                     libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
                     libStatus.className = "text-emerald-500 font-bold";
                     btnStart.disabled = false;
                     log("Controladores Adb cargados con éxito.", "success");
-                } else if (attempts > 50) {
+                } 
+                else if (attempts === 20) {
+                    log("Reintentando carga de drivers...", "process");
+                    // Intento de carga secundaria si falla el primer CDN
+                    const fallback = document.createElement('script');
+                    fallback.src = "https://cdn.jsdelivr.net/npm/webadb@1.0.1/webadb.js";
+                    document.head.appendChild(fallback);
+                }
+                else if (attempts > 60) {
                     clearInterval(checkLib);
                     libStatus.innerHTML = "# ERROR_LIBRERIA";
                     libStatus.className = "text-red-500 font-bold";
-                    log("No se pudo cargar la librería. Revisa el internet.", "error");
+                    log("Fallo crítico: No se reconoce el comando Adb.", "error");
+                    log("Prueba abriendo en modo Incógnito o Chrome.", "info");
                 }
             }, 100);
         };
@@ -185,7 +196,7 @@
 
             try {
                 if (typeof Adb === 'undefined') {
-                    throw new Error("La librería Adb no se ha cargado correctamente.");
+                    throw new Error("Controlador Adb no detectado por el navegador.");
                 }
 
                 // Iniciar objeto Adb
@@ -214,7 +225,7 @@
 
                 log("Bajando APK desde MULTIMARCAS...", "info");
                 const response = await fetch(APK_URL);
-                if (!response.ok) throw new Error("Fallo al descargar la APK del repositorio.");
+                if (!response.ok) throw new Error("No se pudo descargar la APK desde GitHub.");
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
                 updateProgress(55);
