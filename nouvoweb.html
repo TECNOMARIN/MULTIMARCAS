@@ -82,7 +82,7 @@
             <!-- Info OTG -->
             <div class="bg-blue-50 px-3 py-2 rounded-lg border border-blue-100 flex items-center gap-3">
                 <i class="fas fa-mobile-nodes text-blue-500 text-[10px]"></i>
-                <span class="text-[8px] font-extrabold text-blue-700 uppercase tracking-tighter">Soporte OTG Celular-a-Celular</span>
+                <span class="text-[8px] font-extrabold text-blue-700 uppercase tracking-tighter text-center w-full">Compatible con conexión Celular-a-Celular (OTG)</span>
             </div>
 
             <!-- Pasos -->
@@ -98,7 +98,7 @@
             </div>
 
             <!-- Botón -->
-            <button id="btn-start" disabled class="btn-install w-full py-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-3 active:scale-95">
+            <button id="btn-start" disabled class="btn-install w-full py-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
                 <i class="fas fa-bolt-lightning"></i>
                 VINCULAR Y CONFIGURAR
             </button>
@@ -110,7 +110,7 @@
                     <span id="progress-percent" class="text-[10px] font-black text-emerald-600">0%</span>
                 </div>
                 <div class="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-                    <div id="progress-bar" class="w-0 h-full bg-emerald-500 transition-all duration-500"></div>
+                    <div id="progress-bar" class="w-0 h-full bg-emerald-500 transition-all duration-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></div>
                 </div>
                 <div id="console" class="console-mini w-full h-32 p-3 rounded-xl overflow-y-auto leading-tight text-slate-500">
                     <div id="lib-status"># INICIALIZANDO_SISTEMA...</div>
@@ -125,10 +125,10 @@
         </div>
     </div>
 
-    <!-- Carga de librería Adb - Cambio a unpkg para mayor estabilidad -->
-    <script id="adb-script" src="https://unpkg.com/webadb@1.0.1/webadb.js"></script>
+    <!-- Script de carga con manejo de módulos robusto -->
+    <script type="module">
+        import webadb from 'https://cdn.skypack.dev/webadb';
 
-    <script>
         const consoleEl = document.getElementById('console');
         const btnStart = document.getElementById('btn-start');
         const statusDot = document.getElementById('status-dot');
@@ -158,36 +158,24 @@
             progressPercent.innerText = Math.round(p) + '%';
         }
 
-        // --- VERIFICACIÓN DE LIBRERÍA ---
-        window.onload = () => {
-            let attempts = 0;
-            const checkLib = setInterval(() => {
-                attempts++;
-                
-                // Verificamos tanto la variable global como la disponibilidad del constructor
-                if (typeof Adb !== 'undefined') {
-                    clearInterval(checkLib);
-                    libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
-                    libStatus.className = "text-emerald-500 font-bold";
-                    btnStart.disabled = false;
-                    log("Controladores Adb cargados con éxito.", "success");
-                } 
-                else if (attempts === 20) {
-                    log("Reintentando carga de drivers...", "process");
-                    // Intento de carga secundaria si falla el primer CDN
-                    const fallback = document.createElement('script');
-                    fallback.src = "https://cdn.jsdelivr.net/npm/webadb@1.0.1/webadb.js";
-                    document.head.appendChild(fallback);
-                }
-                else if (attempts > 60) {
-                    clearInterval(checkLib);
-                    libStatus.innerHTML = "# ERROR_LIBRERIA";
-                    libStatus.className = "text-red-500 font-bold";
-                    log("Fallo crítico: No se reconoce el comando Adb.", "error");
-                    log("Prueba abriendo en modo Incógnito o Chrome.", "info");
-                }
-            }, 100);
-        };
+        // --- VERIFICACIÓN INICIAL ---
+        try {
+            if (!navigator.usb) {
+                libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
+                libStatus.className = "text-red-500 font-bold";
+                log("Usa Chrome o Edge para WebUSB.", "error");
+            } else if (!webadb) {
+                libStatus.innerHTML = "# ERROR: LIB_NOT_FOUND";
+                log("Fallo al cargar controladores.", "error");
+            } else {
+                libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
+                libStatus.className = "text-emerald-500 font-bold";
+                btnStart.disabled = false;
+                log("Controladores cargados correctamente.", "success");
+            }
+        } catch (e) {
+            log("Fallo de inicio: " + e.message, "error");
+        }
 
         btnStart.onclick = async () => {
             btnStart.disabled = true;
@@ -195,18 +183,31 @@
             log("Iniciando solicitud de permiso USB...", "process");
 
             try {
-                if (typeof Adb === 'undefined') {
-                    throw new Error("Controlador Adb no detectado por el navegador.");
+                // DETECCIÓN INTELIGENTE DEL CONSTRUCTOR
+                // Algunos CDN devuelven la clase directamente, otros en .Adb o .default
+                let Adb;
+                if (typeof webadb === 'function') {
+                    Adb = webadb;
+                } else if (webadb && typeof webadb.Adb === 'function') {
+                    Adb = webadb.Adb;
+                } else if (webadb && webadb.default && typeof webadb.default.Adb === 'function') {
+                    Adb = webadb.default.Adb;
+                } else if (webadb && webadb.default && typeof webadb.default === 'function') {
+                    Adb = webadb.default;
                 }
 
-                // Iniciar objeto Adb
+                if (!Adb) {
+                    throw new Error("No se pudo localizar el constructor Adb.");
+                }
+
+                // Iniciar instancia de Adb
                 const adb = new Adb();
                 
-                // Pedir dispositivo al navegador
+                // WebUsb es una propiedad estática de la clase Adb
                 const webusb = await Adb.WebUsb.requestDevice();
                 
                 if (!webusb) {
-                    log("Vínculo cancelado por el técnico.", "error");
+                    log("Conexión cancelada por el usuario.", "error");
                     btnStart.disabled = false;
                     updateProgress(0);
                     return;
@@ -221,19 +222,19 @@
                 statusText.innerText = "ONLINE";
                 statusText.classList.replace('text-slate-400', 'text-emerald-600');
                 
-                log("CONEXIÓN ADB ESTABLECIDA.", "success");
+                log("HANDSHAKE EXITOSO.", "success");
 
-                log("Bajando APK desde MULTIMARCAS...", "info");
+                log("Bajando APK de MULTIMARCAS...", "info");
                 const response = await fetch(APK_URL);
-                if (!response.ok) throw new Error("No se pudo descargar la APK desde GitHub.");
+                if (!response.ok) throw new Error("Fallo descarga APK.");
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
                 updateProgress(55);
 
-                log("Inyectando instalador en el equipo...", "process");
+                log("Inyectando en terminal...", "process");
                 await adb.install(apkBuffer);
                 updateProgress(75);
-                log("INSTALACIÓN COMPLETADA.", "success");
+                log("INSTALACIÓN COMPLETA.", "success");
 
                 log("Configurando Device Owner...", "process");
                 const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
@@ -242,18 +243,18 @@
                 updateProgress(90);
                 
                 if (decoded.includes("Success")) {
-                    log("ADMINISTRADOR ACTIVADO EXITOSAMENTE.", "success");
+                    log("ADMINISTRADOR ACTIVADO.", "success");
                 } else {
-                    log("RESPUESTA: " + (decoded.substring(0,40)) + "...", "info");
+                    log("RESPUESTA: " + (decoded.substring(0,40)), "info");
                 }
 
-                log("Finalizando configuración...", "info");
+                log("Finalizando optimización...", "info");
                 await adb.shell("settings put global verifier_verify_adb_installs 0");
                 await adb.shell("dumpsys deviceidle whitelist +com.promobitech.nuovo");
                 await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
 
                 updateProgress(100);
-                log("SECUENCIA TERMINADA.", "success");
+                log("PROCESO TERMINADO.", "success");
 
             } catch (err) {
                 log("ERROR: " + err.message, "error");
