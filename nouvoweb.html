@@ -21,7 +21,7 @@
             min-height: 100vh; 
             font-family: 'Montserrat', sans-serif;
             -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -69,7 +69,6 @@
 <body class="p-3">
 
     <div class="app-card w-full max-w-sm flex flex-col">
-        <!-- Cabecera -->
         <div class="bg-white px-5 py-3 flex items-center justify-between border-b border-slate-100">
             <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo" class="h-8 w-auto">
             <div class="flex items-center gap-2">
@@ -79,13 +78,11 @@
         </div>
 
         <div class="p-4 space-y-4">
-            <!-- Info OTG -->
             <div class="bg-blue-50 px-3 py-2 rounded-lg border border-blue-100 flex items-center gap-3">
                 <i class="fas fa-mobile-nodes text-blue-500 text-[10px]"></i>
-                <span class="text-[8px] font-extrabold text-blue-700 uppercase tracking-tighter text-center w-full">Compatible con conexión Celular-a-Celular (OTG)</span>
+                <span class="text-[8px] font-extrabold text-blue-700 uppercase tracking-tighter text-center w-full">Soporte OTG Celular-a-Celular</span>
             </div>
 
-            <!-- Pasos -->
             <div class="grid grid-cols-1 gap-1.5">
                 <div class="step-bubble">
                     <i class="fas fa-check-circle text-emerald-500 text-[10px]"></i>
@@ -97,13 +94,11 @@
                 </div>
             </div>
 
-            <!-- Botón -->
             <button id="btn-start" disabled class="btn-install w-full py-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
                 <i class="fas fa-bolt-lightning"></i>
                 VINCULAR Y CONFIGURAR
             </button>
 
-            <!-- Monitor -->
             <div class="space-y-2">
                 <div class="flex justify-between items-center px-1">
                     <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest italic tracking-tighter">Status Terminal</span>
@@ -125,10 +120,7 @@
         </div>
     </div>
 
-    <!-- Script de carga con manejo de módulos robusto -->
-    <script type="module">
-        import webadb from 'https://cdn.skypack.dev/webadb';
-
+    <script>
         const consoleEl = document.getElementById('console');
         const btnStart = document.getElementById('btn-start');
         const statusDot = document.getElementById('status-dot');
@@ -158,106 +150,112 @@
             progressPercent.innerText = Math.round(p) + '%';
         }
 
-        // --- VERIFICACIÓN INICIAL ---
-        try {
-            if (!navigator.usb) {
-                libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
-                libStatus.className = "text-red-500 font-bold";
-                log("Usa Chrome o Edge para WebUSB.", "error");
-            } else if (!webadb) {
-                libStatus.innerHTML = "# ERROR: LIB_NOT_FOUND";
-                log("Fallo al cargar controladores.", "error");
-            } else {
-                libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
-                libStatus.className = "text-emerald-500 font-bold";
-                btnStart.disabled = false;
-                log("Controladores cargados correctamente.", "success");
-            }
-        } catch (e) {
-            log("Fallo de inicio: " + e.message, "error");
+        // --- SISTEMA DE CARGA REDUNDANTE ---
+        function loadScript(url) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
         }
+
+        async function initAdb() {
+            const sources = [
+                "https://unpkg.com/webadb@1.0.1/webadb.js",
+                "https://cdn.jsdelivr.net/npm/webadb@1.0.1/webadb.js",
+                "https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"
+            ];
+
+            for (let src of sources) {
+                try {
+                    log(`Cargando drivers desde: ${new URL(src).hostname}...`, "info");
+                    await loadScript(src);
+                    if (typeof Adb !== 'undefined') {
+                        libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
+                        libStatus.className = "text-emerald-500 font-bold";
+                        btnStart.disabled = false;
+                        log("Motor ADB sincronizado.", "success");
+                        return;
+                    }
+                } catch (e) {
+                    console.warn(`Fallo en fuente: ${src}`);
+                }
+            }
+
+            libStatus.innerHTML = "# ERROR_DRIVERS";
+            libStatus.className = "text-red-500 font-bold";
+            log("No se detectó el motor. Usa Chrome en modo Incógnito.", "error");
+        }
+
+        window.onload = initAdb;
 
         btnStart.onclick = async () => {
             btnStart.disabled = true;
             updateProgress(5);
-            log("Iniciando solicitud de permiso USB...", "process");
+            log("Handshake USB iniciado...", "process");
 
             try {
-                // DETECCIÓN INTELIGENTE DEL CONSTRUCTOR
-                // Algunos CDN devuelven la clase directamente, otros en .Adb o .default
-                let Adb;
-                if (typeof webadb === 'function') {
-                    Adb = webadb;
-                } else if (webadb && typeof webadb.Adb === 'function') {
-                    Adb = webadb.Adb;
-                } else if (webadb && webadb.default && typeof webadb.default.Adb === 'function') {
-                    Adb = webadb.default.Adb;
-                } else if (webadb && webadb.default && typeof webadb.default === 'function') {
-                    Adb = webadb.default;
-                }
+                // El motor ADB puede venir de dos formas dependiendo del CDN
+                let Constructor = (typeof Adb === 'function') ? Adb : Adb.Adb;
+                if (!Constructor) throw new Error("Constructor Adb no localizado.");
 
-                if (!Adb) {
-                    throw new Error("No se pudo localizar el constructor Adb.");
-                }
-
-                // Iniciar instancia de Adb
-                const adb = new Adb();
-                
-                // WebUsb es una propiedad estática de la clase Adb
-                const webusb = await Adb.WebUsb.requestDevice();
+                const adb = new Constructor();
+                const webusb = await Constructor.WebUsb.requestDevice();
                 
                 if (!webusb) {
-                    log("Conexión cancelada por el usuario.", "error");
+                    log("Cancelado por técnico.", "error");
                     btnStart.disabled = false;
                     updateProgress(0);
                     return;
                 }
 
-                log("Dispositivo vinculado. Conectando...", "process");
-                const transport = await Adb.WebUsb.Transport.open(webusb);
+                log("Hardware OK. Conectando...", "process");
+                const transport = await Constructor.WebUsb.Transport.open(webusb);
                 await adb.connect(transport);
-                updateProgress(30);
+                updateProgress(35);
 
                 statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]";
                 statusText.innerText = "ONLINE";
                 statusText.classList.replace('text-slate-400', 'text-emerald-600');
                 
-                log("HANDSHAKE EXITOSO.", "success");
+                log("CONEXIÓN ESTABLECIDA.", "success");
 
-                log("Bajando APK de MULTIMARCAS...", "info");
+                log("Descargando APK...", "info");
                 const response = await fetch(APK_URL);
-                if (!response.ok) throw new Error("Fallo descarga APK.");
+                if (!response.ok) throw new Error("Error al obtener la APK.");
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
-                updateProgress(55);
+                updateProgress(60);
 
-                log("Inyectando en terminal...", "process");
+                log("Inyectando instalador...", "process");
                 await adb.install(apkBuffer);
-                updateProgress(75);
-                log("INSTALACIÓN COMPLETA.", "success");
+                updateProgress(80);
+                log("APK INSTALADA.", "success");
 
-                log("Configurando Device Owner...", "process");
+                log("Asignando Device Owner...", "process");
                 const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
                 const result = await shell.receive();
                 const decoded = new TextDecoder().decode(result.data);
-                updateProgress(90);
+                updateProgress(95);
                 
                 if (decoded.includes("Success")) {
                     log("ADMINISTRADOR ACTIVADO.", "success");
                 } else {
-                    log("RESPUESTA: " + (decoded.substring(0,40)), "info");
+                    log("RESULTADO: " + (decoded.substring(0,40)), "info");
                 }
 
-                log("Finalizando optimización...", "info");
+                log("Lanzando NuovoPay...", "info");
                 await adb.shell("settings put global verifier_verify_adb_installs 0");
                 await adb.shell("dumpsys deviceidle whitelist +com.promobitech.nuovo");
                 await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
 
                 updateProgress(100);
-                log("PROCESO TERMINADO.", "success");
+                log("CONFIGURACIÓN EXITOSA.", "success");
 
             } catch (err) {
-                log("ERROR: " + err.message, "error");
+                log("FALLO: " + err.message, "error");
                 statusDot.className = "w-2 h-2 rounded-full bg-red-500";
                 statusText.innerText = "ERROR";
                 btnStart.disabled = false;
