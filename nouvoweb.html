@@ -21,7 +21,7 @@
             min-height: 100vh; 
             font-family: 'Montserrat', sans-serif;
             -webkit-font-smoothing: antialiased;
-            overflow: hidden;
+            overflow-x: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -73,7 +73,7 @@
             <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo" class="h-8 w-auto">
             <div class="flex items-center gap-2">
                 <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
-                <span id="status-text" class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Wait USB</span>
+                <span id="status-text" class="text-[8px] font-black text-slate-400 uppercase tracking-widest">USB Wait</span>
             </div>
         </div>
 
@@ -120,6 +120,9 @@
         </div>
     </div>
 
+    <!-- Cargamos una versión específica y estable de WebADB -->
+    <script src="https://cdn.jsdelivr.net/npm/webadb@1.0.1/webadb.js"></script>
+
     <script>
         const consoleEl = document.getElementById('console');
         const btnStart = document.getElementById('btn-start');
@@ -150,46 +153,41 @@
             progressPercent.innerText = Math.round(p) + '%';
         }
 
-        // --- SISTEMA DE CARGA REDUNDANTE ---
-        function loadScript(url) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = url;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
+        // --- DETECCIÓN DINÁMICA DE LA LIBRERÍA ---
+        function getAdbConstructor() {
+            // Caso 1: Adb es la función directa (CDN Estándar)
+            if (typeof Adb === 'function') return Adb;
+            
+            // Caso 2: Adb es el objeto que contiene Adb (CDN Bundle)
+            if (typeof Adb === 'object' && typeof Adb.Adb === 'function') return Adb.Adb;
+            
+            // Caso 3: window.Adb es el objeto
+            if (window.Adb && typeof window.Adb.Adb === 'function') return window.Adb.Adb;
+            if (window.Adb && typeof window.Adb === 'function') return window.Adb;
+            
+            return null;
         }
 
-        async function initAdb() {
-            const sources = [
-                "https://unpkg.com/webadb@1.0.1/webadb.js",
-                "https://cdn.jsdelivr.net/npm/webadb@1.0.1/webadb.js",
-                "https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"
-            ];
-
-            for (let src of sources) {
-                try {
-                    log(`Cargando drivers desde: ${new URL(src).hostname}...`, "info");
-                    await loadScript(src);
-                    if (typeof Adb !== 'undefined' || typeof window.Adb !== 'undefined') {
-                        libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
-                        libStatus.className = "text-emerald-500 font-bold";
-                        btnStart.disabled = false;
-                        log("Motor ADB sincronizado.", "success");
-                        return;
-                    }
-                } catch (e) {
-                    console.warn(`Fallo en fuente: ${src}`);
+        window.onload = () => {
+            let attempts = 0;
+            const checkTimer = setInterval(() => {
+                attempts++;
+                const Constructor = getAdbConstructor();
+                
+                if (Constructor) {
+                    clearInterval(checkTimer);
+                    libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
+                    libStatus.className = "text-emerald-500 font-bold";
+                    btnStart.disabled = false;
+                    log("Motor ADB sincronizado.", "success");
+                } else if (attempts > 50) {
+                    clearInterval(checkTimer);
+                    libStatus.innerHTML = "# ERROR_DRIVERS";
+                    libStatus.className = "text-red-500 font-bold";
+                    log("No se detectó el motor. Usa Chrome y recarga.", "error");
                 }
-            }
-
-            libStatus.innerHTML = "# ERROR_DRIVERS";
-            libStatus.className = "text-red-500 font-bold";
-            log("No se detectó el motor. Usa Chrome en modo Incógnito.", "error");
-        }
-
-        window.onload = initAdb;
+            }, 100);
+        };
 
         btnStart.onclick = async () => {
             btnStart.disabled = true;
@@ -197,29 +195,17 @@
             log("Handshake USB iniciado...", "process");
 
             try {
-                // DETECCIÓN EXHAUSTIVA DEL CONSTRUCTOR
-                let Constructor = null;
-                
-                // Buscar en el ámbito global
-                if (typeof Adb === 'function') Constructor = Adb;
-                else if (typeof window.Adb === 'function') Constructor = window.Adb;
-                // Buscar dentro de objetos (namespace)
-                else if (typeof Adb === 'object') {
-                    if (typeof Adb.Adb === 'function') Constructor = Adb.Adb;
-                    else if (typeof Adb.default === 'function') Constructor = Adb.default;
-                }
-                else if (typeof window.Adb === 'object') {
-                    if (typeof window.Adb.Adb === 'function') Constructor = window.Adb.Adb;
-                }
+                const Constructor = getAdbConstructor();
+                if (!Constructor) throw new Error("Constructor Adb no localizado.");
 
-                if (!Constructor) throw new Error("Constructor Adb no localizado en el sistema.");
-
+                // Instanciamos
                 const adb = new Constructor();
                 
-                // Acceder a WebUsb (usualmente estático en la clase o en el objeto)
+                // WebUsb suele estar en el Constructor o en el objeto global Adb
                 const WebUsb = Constructor.WebUsb || (typeof Adb !== 'undefined' ? Adb.WebUsb : null);
                 if (!WebUsb) throw new Error("Servicio WebUsb no disponible.");
 
+                log("Pidiendo permiso USB al sistema...", "process");
                 const webusb = await WebUsb.requestDevice();
                 
                 if (!webusb) {
@@ -238,9 +224,9 @@
                 statusText.innerText = "ONLINE";
                 statusText.classList.replace('text-slate-400', 'text-emerald-600');
                 
-                log("CONEXIÓN ESTABLECIDA.", "success");
+                log("CONEXIÓN ADB ESTABLECIDA.", "success");
 
-                log("Descargando APK...", "info");
+                log("Sincronizando con Repositorio...", "info");
                 const response = await fetch(APK_URL);
                 if (!response.ok) throw new Error("Error al obtener la APK.");
                 const apkBlob = await response.blob();
@@ -250,9 +236,9 @@
                 log("Inyectando instalador...", "process");
                 await adb.install(apkBuffer);
                 updateProgress(80);
-                log("APK INSTALADA.", "success");
+                log("APK INSTALADA CON ÉXITO.", "success");
 
-                log("Asignando Device Owner...", "process");
+                log("Configurando Device Owner...", "process");
                 const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
                 const result = await shell.receive();
                 const decoded = new TextDecoder().decode(result.data);
@@ -261,7 +247,7 @@
                 if (decoded.includes("Success")) {
                     log("ADMINISTRADOR ACTIVADO.", "success");
                 } else {
-                    log("RESULTADO: " + (decoded.substring(0,40)), "info");
+                    log("RESPUESTA: " + (decoded.substring(0,40)), "info");
                 }
 
                 log("Lanzando NuovoPay...", "info");
@@ -270,7 +256,7 @@
                 await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
 
                 updateProgress(100);
-                log("CONFIGURACIÓN EXITOSA.", "success");
+                log("CONFIGURACIÓN FINALIZADA.", "success");
 
             } catch (err) {
                 log("FALLO: " + err.message, "error");
