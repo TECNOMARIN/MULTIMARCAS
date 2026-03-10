@@ -120,9 +120,6 @@
         </div>
     </div>
 
-    <!-- Cargamos una versión específica y estable de WebADB -->
-    <script src="https://cdn.jsdelivr.net/npm/webadb@1.0.1/webadb.js"></script>
-
     <script>
         const consoleEl = document.getElementById('console');
         const btnStart = document.getElementById('btn-start');
@@ -153,69 +150,94 @@
             progressPercent.innerText = Math.round(p) + '%';
         }
 
-        // --- DETECCIÓN DINÁMICA DE LA LIBRERÍA ---
+        // --- CARGA DINÁMICA DE SCRIPTS CON FALLBACK ---
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        async function initializeCore() {
+            log("Verificando compatibilidad del navegador...", "info");
+            
+            // Verificación de WebUSB API
+            if (!navigator.usb) {
+                libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
+                libStatus.className = "text-red-500 font-bold";
+                log("Tu navegador no soporta WebUSB. Usa Chrome en Android o PC.", "error");
+                return;
+            }
+
+            const cdns = [
+                "https://cdn.jsdelivr.net/npm/webadb@1.0.1/webadb.js",
+                "https://unpkg.com/webadb@1.0.1/webadb.js",
+                "https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"
+            ];
+
+            let loaded = false;
+            for (const url of cdns) {
+                try {
+                    log(`Intentando cargar desde ${new URL(url).hostname}...`, "info");
+                    await loadScript(url);
+                    if (getAdbConstructor()) {
+                        loaded = true;
+                        break;
+                    }
+                } catch (e) {
+                    console.warn("Fallo carga desde:", url);
+                }
+            }
+
+            if (loaded) {
+                libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
+                libStatus.className = "text-emerald-500 font-bold";
+                btnStart.disabled = false;
+                log("Motor ADB sincronizado y listo.", "success");
+            } else {
+                libStatus.innerHTML = "# ERROR_DRIVERS";
+                libStatus.className = "text-red-500 font-bold";
+                log("No se pudo cargar el motor. Verifica tu conexión.", "error");
+            }
+        }
+
         function getAdbConstructor() {
-            // Caso 1: Adb es la función directa (CDN Estándar)
             if (typeof Adb === 'function') return Adb;
-            
-            // Caso 2: Adb es el objeto que contiene Adb (CDN Bundle)
             if (typeof Adb === 'object' && typeof Adb.Adb === 'function') return Adb.Adb;
-            
-            // Caso 3: window.Adb es el objeto
             if (window.Adb && typeof window.Adb.Adb === 'function') return window.Adb.Adb;
             if (window.Adb && typeof window.Adb === 'function') return window.Adb;
-            
             return null;
         }
 
-        window.onload = () => {
-            let attempts = 0;
-            const checkTimer = setInterval(() => {
-                attempts++;
-                const Constructor = getAdbConstructor();
-                
-                if (Constructor) {
-                    clearInterval(checkTimer);
-                    libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
-                    libStatus.className = "text-emerald-500 font-bold";
-                    btnStart.disabled = false;
-                    log("Motor ADB sincronizado.", "success");
-                } else if (attempts > 50) {
-                    clearInterval(checkTimer);
-                    libStatus.innerHTML = "# ERROR_DRIVERS";
-                    libStatus.className = "text-red-500 font-bold";
-                    log("No se detectó el motor. Usa Chrome y recarga.", "error");
-                }
-            }, 100);
-        };
+        window.onload = initializeCore;
 
         btnStart.onclick = async () => {
             btnStart.disabled = true;
             updateProgress(5);
-            log("Handshake USB iniciado...", "process");
+            log("Iniciando Handshake USB...", "process");
 
             try {
                 const Constructor = getAdbConstructor();
-                if (!Constructor) throw new Error("Constructor Adb no localizado.");
+                if (!Constructor) throw new Error("Controlador Adb no encontrado.");
 
-                // Instanciamos
                 const adb = new Constructor();
-                
-                // WebUsb suele estar en el Constructor o en el objeto global Adb
                 const WebUsb = Constructor.WebUsb || (typeof Adb !== 'undefined' ? Adb.WebUsb : null);
-                if (!WebUsb) throw new Error("Servicio WebUsb no disponible.");
+                if (!WebUsb) throw new Error("Interfaz WebUSB no disponible.");
 
-                log("Pidiendo permiso USB al sistema...", "process");
+                log("Esperando selección de dispositivo...", "info");
                 const webusb = await WebUsb.requestDevice();
                 
                 if (!webusb) {
-                    log("Cancelado por técnico.", "error");
+                    log("Operación cancelada.", "error");
                     btnStart.disabled = false;
                     updateProgress(0);
                     return;
                 }
 
-                log("Hardware OK. Conectando...", "process");
+                log("Dispositivo vinculado. Conectando...", "process");
                 const transport = await WebUsb.Transport.open(webusb);
                 await adb.connect(transport);
                 updateProgress(35);
@@ -224,19 +246,19 @@
                 statusText.innerText = "ONLINE";
                 statusText.classList.replace('text-slate-400', 'text-emerald-600');
                 
-                log("CONEXIÓN ADB ESTABLECIDA.", "success");
+                log("CONEXIÓN ESTABLECIDA.", "success");
 
-                log("Sincronizando con Repositorio...", "info");
+                log("Descargando APK de MULTIMARCAS...", "info");
                 const response = await fetch(APK_URL);
-                if (!response.ok) throw new Error("Error al obtener la APK.");
+                if (!response.ok) throw new Error("No se pudo descargar la APK.");
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
                 updateProgress(60);
 
-                log("Inyectando instalador...", "process");
+                log("Instalando NuovoPay...", "process");
                 await adb.install(apkBuffer);
                 updateProgress(80);
-                log("APK INSTALADA CON ÉXITO.", "success");
+                log("INSTALACIÓN COMPLETADA.", "success");
 
                 log("Configurando Device Owner...", "process");
                 const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
@@ -250,13 +272,13 @@
                     log("RESPUESTA: " + (decoded.substring(0,40)), "info");
                 }
 
-                log("Lanzando NuovoPay...", "info");
+                log("Lanzando aplicación...", "info");
                 await adb.shell("settings put global verifier_verify_adb_installs 0");
                 await adb.shell("dumpsys deviceidle whitelist +com.promobitech.nuovo");
                 await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
 
                 updateProgress(100);
-                log("CONFIGURACIÓN FINALIZADA.", "success");
+                log("CONFIGURACIÓN EXITOSA.", "success");
 
             } catch (err) {
                 log("FALLO: " + err.message, "error");
