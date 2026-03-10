@@ -125,10 +125,9 @@
         </div>
     </div>
 
-    <!-- Cargamos la librería original y estable de WebADB de forma asíncrona -->
-    <script src="https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"></script>
-
+    <!-- NÚCLEO ADB NATIVO INTEGRADO (Cero dependencias de red) -->
     <script>
+        // Utilidades de Consola y Progreso
         const consoleEl = document.getElementById('console');
         const btnStart = document.getElementById('btn-start');
         const statusDot = document.getElementById('status-dot');
@@ -140,12 +139,7 @@
         const APK_URL = 'https://github.com/TECNOMARIN/MULTIMARCAS/raw/refs/heads/main/nuovopay.apk';
 
         function log(msg, type = 'info') {
-            const colors = {
-                info: 'text-slate-500',
-                success: 'text-emerald-400 font-bold',
-                error: 'text-red-400',
-                process: 'text-blue-400'
-            };
+            const colors = { info: 'text-slate-500', success: 'text-emerald-400 font-bold', error: 'text-red-400', process: 'text-blue-400' };
             const div = document.createElement('div');
             div.className = `mb-0.5 ${colors[type]}`;
             div.innerHTML = `<span class="opacity-30">></span> ${msg}`;
@@ -158,46 +152,219 @@
             progressPercent.innerText = Math.round(p) + '%';
         }
 
-        let AdbConstructor = null;
+        // --- MOTOR ROBUST ADB NATIVO ---
+        class AdbStream {
+            constructor(transport, localId) {
+                this.transport = transport;
+                this.localId = localId;
+                this.remoteId = 0;
+                this.onData = null;
+                this.onClose = null;
+                this._ready = new Promise(resolve => { this._resolveReady = resolve; });
+            }
 
-        async function initializeCore() {
-            log("Verificando compatibilidad de hardware...", "info");
+            async write(data) {
+                await this._ready;
+                // Esperamos la confirmación del equipo para no desbordar su memoria
+                this._awaitingOkay = new Promise(resolve => { this._resolveOkay = resolve; });
+                await this.transport.write("WRTE", this.localId, this.remoteId, data);
+                await this._awaitingOkay; 
+            }
+
+            notifyOkay(remoteId) {
+                if (this.remoteId === 0) {
+                    this.remoteId = remoteId;
+                    this._resolveReady();
+                } else if (this._resolveOkay) {
+                    this._resolveOkay();
+                }
+            }
+
+            closeLocally() {
+                if (this.onClose) this.onClose();
+            }
+
+            async close() {
+                await this.transport.write("CLSE", this.localId, this.remoteId, new Uint8Array(0));
+                this.closeLocally();
+            }
+        }
+
+        class RobustAdb {
+            constructor() {
+                this.transport = null;
+                this.streams = new Map();
+                this.localId = 1;
+            }
+
+            async connect(device) {
+                await device.open();
+                await device.selectConfiguration(1);
+                
+                const iface = device.configuration.interfaces.find(i => 
+                    i.alternates.some(a => a.interfaceClass === 255 && a.interfaceSubclass === 66 && a.interfaceProtocol === 1)
+                );
+                if (!iface) throw new Error("Interfaz ADB no encontrada en el dispositivo.");
+                
+                await device.claimInterface(iface.interfaceNumber);
+                const alt = iface.alternates[0];
+                const inEp = alt.endpoints.find(e => e.direction === 'in').endpointNumber;
+                const outEp = alt.endpoints.find(e => e.direction === 'out').endpointNumber;
+
+                this.transport = {
+                    device, inEp, outEp, maxPayload: 4096,
+                    write: async (cmdStr, arg0, arg1, payload) => {
+                        const buf = new ArrayBuffer(24 + payload.length);
+                        const view = new DataView(buf);
+                        for (let i = 0; i < 4; i++) view.setUint8(i, cmdStr.charCodeAt(i));
+                        view.setUint32(4, arg0, true);
+                        view.setUint32(8, arg1, true);
+                        view.setUint32(12, payload.length, true);
+                        let checksum = 0;
+                        for (let i = 0; i < payload.length; i++) checksum = (checksum + payload[i]) >>> 0;
+                        view.setUint32(16, checksum, true);
+                        view.setUint32(20, (~view.getUint32(0, true)) >>> 0, true);
+                        new Uint8Array(buf, 24).set(payload);
+                        await device.transferOut(outEp, buf);
+                    },
+                    read: async () => {
+                        const res = await device.transferIn(inEp, 24);
+                        if (res.data.byteLength < 24) return null;
+                        const view = new DataView(res.data.buffer);
+                        const cmdStr = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
+                        const arg0 = view.getUint32(4, true);
+                        const arg1 = view.getUint32(8, true);
+                        const len = view.getUint32(12, true);
+                        let payload = new Uint8Array(len);
+                        let rec = 0;
+                        while (rec < len) {
+                            const chunk = await device.transferIn(inEp, len - rec);
+                            payload.set(new Uint8Array(chunk.data.buffer), rec);
+                            rec += chunk.data.byteLength;
+                        }
+                        return { command: cmdStr, arg0, arg1, payload };
+                    }
+                };
+
+                const msg = "CNXN\0\0\0\x01\0\0\x10\0\0\0\0\0";
+                const payload = new Uint8Array(msg.length);
+                for (let i=0; i<msg.length; i++) payload[i] = msg.charCodeAt(i);
+                await this.transport.write("CNXN", 0x01000001, 4096, payload);
+                
+                const response = await this.transport.read();
+                if (!response || response.command !== "CNXN") throw new Error("Handshake ADB rechazado.");
+                this.transport.maxPayload = response.arg1;
+
+                this._receiveLoop(); // Iniciar hilo de lectura en segundo plano
+            }
+
+            async _receiveLoop() {
+                try {
+                    while (true) {
+                        const packet = await this.transport.read();
+                        if (!packet) break;
+
+                        const stream = this.streams.get(packet.arg1);
+                        if (packet.command === "CLSE") {
+                            if (stream) {
+                                stream.closeLocally();
+                                this.streams.delete(packet.arg1);
+                            }
+                        } else if (packet.command === "WRTE") {
+                            if (stream && stream.onData) stream.onData(packet.payload);
+                            await this.transport.write("OKAY", packet.arg1, packet.arg0, new Uint8Array(0));
+                        } else if (packet.command === "OKAY") {
+                            if (stream) stream.notifyOkay(packet.arg0);
+                        }
+                    }
+                } catch (err) {
+                    console.log("Conexión ADB desconectada o finalizada.");
+                }
+            }
+
+            async open(destination) {
+                const localId = this.localId++;
+                const stream = new AdbStream(this.transport, localId);
+                this.streams.set(localId, stream);
+                
+                const destBytes = new TextEncoder().encode(destination + "\0");
+                await this.transport.write("OPEN", localId, 0, destBytes);
+                await stream._ready;
+                return stream;
+            }
+
+            async shell(command) {
+                const stream = await this.open("shell:" + command);
+                let chunks = [];
+                let finished = false;
+                
+                stream.onData = (d) => chunks.push(d);
+                stream.onClose = () => { finished = true; };
+
+                return new Promise(resolve => {
+                    const check = setInterval(() => {
+                        if (finished) {
+                            clearInterval(check);
+                            const len = chunks.reduce((acc, c) => acc + c.length, 0);
+                            const merged = new Uint8Array(len);
+                            let offset = 0;
+                            for (let c of chunks) {
+                                merged.set(c, offset);
+                                offset += c.length;
+                            }
+                            resolve(new TextDecoder().decode(merged));
+                        }
+                    }, 100);
+                });
+            }
+
+            async install(apkBuffer) {
+                const stream = await this.open("exec:cmd package install -S " + apkBuffer.byteLength);
+                const data = new Uint8Array(apkBuffer);
+                const chunkSize = Math.min(this.transport.maxPayload, 4096);
+                
+                // Enviar la APK por bloques y actualizar progreso real
+                for (let i = 0; i < data.length; i += chunkSize) {
+                    await stream.write(data.subarray(i, i + chunkSize));
+                    let simulatedProgress = 60 + ((i / data.length) * 25);
+                    updateProgress(simulatedProgress); // Sube del 60% al 85% durante la transferencia
+                }
+
+                let responseText = "";
+                let finished = false;
+                stream.onData = (d) => { responseText += new TextDecoder().decode(d); };
+                stream.onClose = () => { finished = true; };
+
+                await new Promise(resolve => {
+                    const check = setInterval(() => {
+                        if (finished || responseText.includes("Success")) {
+                            clearInterval(check);
+                            resolve();
+                        }
+                    }, 100);
+                });
+
+                if (!responseText.includes("Success")) {
+                    throw new Error("Sistema denegó la APK: " + responseText.substring(0, 50));
+                }
+            }
+        }
+
+        // --- FLUJO PRINCIPAL ---
+        window.onload = () => {
+            log("Verificando compatibilidad del sistema...", "info");
             
             if (!navigator.usb) {
                 libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
                 libStatus.className = "text-red-500 font-bold";
-                log("Navegador incompatible. Por favor usa Google Chrome.", "error");
-                return;
+                log("Navegador incompatible. Usa Chrome en Android o PC.", "error");
+            } else {
+                libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
+                libStatus.className = "text-emerald-500 font-bold";
+                btnStart.disabled = false;
+                log("Motor ADB Nativo cargado y listo en memoria.", "success");
             }
-
-            // Esperar a que la librería global cargue
-            let attempts = 0;
-            const checkInterval = setInterval(() => {
-                attempts++;
-                
-                // Buscar el constructor Adb
-                if (typeof Adb !== 'undefined') {
-                    AdbConstructor = typeof Adb === 'function' ? Adb : (Adb.Adb || Adb);
-                } else if (typeof window.Adb !== 'undefined') {
-                    AdbConstructor = typeof window.Adb === 'function' ? window.Adb : (window.Adb.Adb || window.Adb);
-                }
-
-                if (AdbConstructor && AdbConstructor.WebUsb) {
-                    clearInterval(checkInterval);
-                    libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
-                    libStatus.className = "text-emerald-500 font-bold";
-                    btnStart.disabled = false;
-                    log("Motor ADB interno cargado correctamente.", "success");
-                } else if (attempts > 50) {
-                    clearInterval(checkInterval);
-                    libStatus.innerHTML = "# ERROR_CRITICO";
-                    libStatus.className = "text-red-500 font-bold";
-                    log("Fallo al cargar el motor ADB desde la red.", "error");
-                }
-            }, 100);
-        }
-
-        window.onload = initializeCore;
+        };
 
         btnStart.onclick = async () => {
             btnStart.disabled = true;
@@ -205,12 +372,10 @@
             log("Iniciando Handshake USB...", "process");
 
             try {
-                if (!AdbConstructor) throw new Error("Motor Adb no detectado en memoria.");
-
                 log("Esperando selección de equipo en pantalla...", "info");
-                
-                // Usar la API estática WebUsb para solicitar el dispositivo
-                const webusb = await AdbConstructor.WebUsb.requestDevice();
+                const webusb = await navigator.usb.requestDevice({ 
+                    filters: [{ classCode: 255, subclassCode: 66, protocolCode: 1 }] 
+                });
                 
                 if (!webusb) {
                     log("Vínculo cancelado.", "error");
@@ -220,12 +385,8 @@
                 }
 
                 log("Conectando al terminal...", "process");
-                // Instanciar el transporte con el dispositivo seleccionado
-                const transport = await AdbConstructor.WebUsb.Transport.open(webusb);
-                
-                // Instanciar Adb y conectarlo usando el transporte
-                const adb = new AdbConstructor();
-                await adb.connect(transport);
+                const adb = new RobustAdb();
+                await adb.connect(webusb);
                 
                 updateProgress(35);
 
@@ -235,43 +396,38 @@
                 
                 log("CONEXIÓN ADB ESTABLECIDA.", "success");
 
-                log("Descargando paquete de seguridad...", "info");
+                log("Descargando paquete MULTIMARCAS...", "info");
                 const response = await fetch(APK_URL);
-                if (!response.ok) throw new Error("Error al descargar la APK.");
+                if (!response.ok) throw new Error("Error de red al descargar la APK.");
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
                 updateProgress(60);
 
                 log("Inyectando instalador en el dispositivo...", "process");
                 await adb.install(apkBuffer);
-                updateProgress(80);
+                updateProgress(85);
                 log("APK INSTALADA CORRECTAMENTE.", "success");
 
                 log("Configurando Device Owner...", "process");
-                const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
-                const result = await shell.receive();
-                
-                // Aseguramos que data es un Uint8Array antes de decodificar
-                const resultData = result && result.data instanceof Uint8Array ? result.data : new Uint8Array();
-                const decoded = new TextDecoder().decode(resultData);
-                
+                const result = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
                 updateProgress(95);
                 
-                if (decoded.includes("Success")) {
+                if (result.includes("Success")) {
                     log("ADMINISTRADOR ACTIVADO.", "success");
-                } else if (decoded.trim().length > 0) {
-                    log("RESPUESTA SISTEMA: " + (decoded.substring(0,40)), "info");
-                } else {
-                    log("Comando enviado, sin respuesta textual.", "info");
+                } else if (result.trim().length > 0) {
+                    log("RESPUESTA SISTEMA: " + (result.substring(0,40)), "info");
+                    if (result.includes("already some accounts")) {
+                        log("ERROR: EL EQUIPO AÚN TIENE CUENTAS.", "error");
+                    }
                 }
 
-                log("Finalizando ajustes...", "info");
+                log("Finalizando ajustes de optimización...", "info");
                 await adb.shell("settings put global verifier_verify_adb_installs 0");
                 await adb.shell("dumpsys deviceidle whitelist +com.promobitech.nuovo");
                 await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
 
                 updateProgress(100);
-                log("CONFIGURACIÓN COMPLETADA.", "success");
+                log("CONFIGURACIÓN COMPLETADA Y EXITOSA.", "success");
 
             } catch (err) {
                 log("FALLO: " + err.message, "error");
