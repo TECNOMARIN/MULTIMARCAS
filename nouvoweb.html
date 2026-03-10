@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Soluciones CTG | Quick Install</title>
+    <title>Soluciones CTG | OTG Install</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap');
 
         :root {
             --primary-gradient: linear-gradient(135deg, #1e3a6d 0%, #2C4C8C 100%);
@@ -21,106 +21,111 @@
             min-height: 100vh; 
             font-family: 'Montserrat', sans-serif;
             -webkit-font-smoothing: antialiased;
+            overflow: hidden;
         }
 
         .app-card {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
         }
 
         .btn-install {
             background: var(--action-gradient);
-            box-shadow: 0 8px 20px rgba(103, 183, 77, 0.3);
+            box-shadow: 0 6px 15px rgba(103, 183, 77, 0.3);
+        }
+
+        .btn-install:disabled {
+            background: #94a3b8;
+            box-shadow: none;
         }
 
         .console-mini {
-            background: #1e293b;
+            background: #0f172a;
             font-family: 'Courier New', monospace;
             font-size: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
 
         .step-bubble {
-            background: #f1f5f9;
-            border-radius: 12px;
-            padding: 10px;
+            background: #f8fafc;
+            border: 1px solid #f1f5f9;
+            border-radius: 10px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
-        .dot-pulse {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        /* Ocultar scrollbar en consola */
-        .console-mini::-webkit-scrollbar { display: none; }
+        /* Ocultar scrollbar */
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-3 sm:p-6">
+<body class="flex items-center justify-center p-3">
 
-    <div class="app-card w-full max-w-md overflow-hidden flex flex-col">
-        <!-- Header Minimalista -->
-        <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-slate-100">
-            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo" class="h-10 w-auto">
-            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                <div id="status-dot" class="dot-pulse bg-slate-300"></div>
-                <span id="status-text" class="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">OFFLINE</span>
+    <div class="app-card w-full max-w-sm flex flex-col">
+        <!-- Header -->
+        <div class="bg-white px-5 py-3 flex items-center justify-between border-b border-slate-100">
+            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo" class="h-8 w-auto">
+            <div class="flex items-center gap-2">
+                <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
+                <span id="status-text" class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Wait USB</span>
             </div>
         </div>
 
-        <div class="p-5 space-y-5">
-            <!-- Instrucciones Compactas -->
-            <div class="space-y-2">
+        <div class="p-4 space-y-4">
+            <!-- Info OTG -->
+            <div class="bg-blue-50 px-3 py-2 rounded-lg border border-blue-100 flex items-center gap-3">
+                <i class="fas fa-mobile-nodes text-blue-500 text-xs"></i>
+                <span class="text-[9px] font-extrabold text-blue-700 uppercase tracking-tight">Compatible con conexión Celular-a-Celular (OTG)</span>
+            </div>
+
+            <!-- Pasos -->
+            <div class="grid grid-cols-1 gap-1.5">
                 <div class="step-bubble">
-                    <span class="text-emerald-600 font-black text-xs">01</span>
-                    <p class="text-[10px] font-bold text-slate-600 uppercase tracking-tight">Cuentas eliminadas</p>
+                    <i class="fas fa-check-circle text-emerald-500 text-[10px]"></i>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">Sin cuentas Google</p>
                 </div>
                 <div class="step-bubble">
-                    <span class="text-emerald-600 font-black text-xs">02</span>
-                    <p class="text-[10px] font-bold text-slate-600 uppercase tracking-tight">Depuración USB ON</p>
-                </div>
-                <div class="step-bubble">
-                    <span class="text-emerald-600 font-black text-xs">03</span>
-                    <p class="text-[10px] font-bold text-slate-600 uppercase tracking-tight">Sin bloqueo de pantalla</p>
+                    <i class="fas fa-check-circle text-emerald-500 text-[10px]"></i>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">Depuración USB activa</p>
                 </div>
             </div>
 
-            <!-- Botón Principal -->
-            <button id="btn-start" class="btn-install w-full py-4 rounded-xl text-white font-black text-sm flex items-center justify-center gap-3 active:scale-95 transition-transform">
+            <!-- Botón -->
+            <button id="btn-start" class="btn-install w-full py-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
                 <i class="fas fa-bolt-lightning"></i>
                 VINCULAR Y CONFIGURAR
             </button>
 
-            <!-- Monitor y Progreso -->
+            <!-- Monitor -->
             <div class="space-y-2">
-                <div class="flex justify-between items-end px-1">
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Monitor ADB</span>
+                <div class="flex justify-between items-center px-1">
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest italic">Terminal Output</span>
                     <span id="progress-percent" class="text-[10px] font-black text-emerald-600">0%</span>
                 </div>
-                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div class="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                     <div id="progress-bar" class="w-0 h-full bg-emerald-500 transition-all duration-500"></div>
                 </div>
-                <div id="console" class="console-mini w-full h-32 p-4 rounded-xl overflow-y-auto leading-relaxed text-slate-400">
-                    <div># SYSTEM_STANDBY</div>
-                    <div># READY_FOR_HANDSHAKE...</div>
+                <div id="console" class="console-mini w-full h-28 p-3 rounded-xl overflow-y-auto leading-tight text-slate-500">
+                    <div># SYSTEM_INITIALIZED</div>
+                    <div># LOADING_WEB_ADB_DRIVERS...</div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-slate-50 py-3 text-center border-t border-slate-100">
-            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-                TECNOMARIN & SOLUCIONES CTG
+        <div class="bg-slate-50 py-2 text-center border-t border-slate-100">
+            <p class="text-[7px] font-black text-slate-300 uppercase tracking-[0.3em]">
+                TECNOMARIN & SOLUCIONES CTG 2024
             </p>
         </div>
     </div>
 
-    <!-- WebADB Library -->
-    <script src="https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"></script>
+    <!-- WebADB Library - Cargada como Módulo para evitar errores de "Adb is not defined" -->
+    <script type="module">
+        // Importamos la librería directamente como módulo para que las clases estén disponibles
+        import * as webadb from 'https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js';
 
-    <script>
         const consoleEl = document.getElementById('console');
         const btnStart = document.getElementById('btn-start');
         const statusDot = document.getElementById('status-dot');
@@ -149,35 +154,40 @@
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
+        // Informar que la librería cargó bien
+        log("Controladores WebADB listos.", "info");
+
         btnStart.onclick = async () => {
             btnStart.disabled = true;
             updateProgress(5);
             log("Iniciando handshake WebUSB...", "process");
 
             try {
-                const adb = new Adb();
-                const webusb = await Adb.WebUsb.requestDevice();
+                // Usamos las clases desde el módulo importado
+                const adb = new webadb.Adb();
+                const webusb = await webadb.Adb.WebUsb.requestDevice();
                 
                 if (!webusb) {
-                    log("Cancelado por usuario.", "error");
+                    log("Conexión rechazada.", "error");
                     btnStart.disabled = false;
                     updateProgress(0);
                     return;
                 }
 
-                log("Hardware OK. Conectando...", "process");
-                const transport = await Adb.WebUsb.Transport.open(webusb);
+                log("Dispositivo detectado. Conectando...", "process");
+                const transport = await webadb.Adb.WebUsb.Transport.open(webusb);
                 await adb.connect(transport);
                 updateProgress(30);
 
-                statusDot.className = "dot-pulse bg-emerald-500 shadow-[0_0_8px_#10b981]";
+                statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]";
                 statusText.innerText = "ONLINE";
-                statusText.classList.replace('text-slate-500', 'text-emerald-600');
+                statusText.classList.replace('text-slate-400', 'text-emerald-600');
                 
                 log("CONEXIÓN ESTABLECIDA.", "success");
 
-                log("Descargando APK de MULTIMARCAS...", "info");
+                log("Sincronizando con MULTIMARCAS...", "info");
                 const response = await fetch(APK_URL);
+                if (!response.ok) throw new Error("Error de descarga.");
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
                 updateProgress(55);
@@ -196,7 +206,7 @@
                 if (decoded.includes("Success")) {
                     log("ADMINISTRADOR OK.", "success");
                 } else {
-                    log("SYSTEM: " + (decoded.substring(0,25)) + "...", "info");
+                    log("SYSTEM_MSG: " + (decoded.substring(0,30)), "info");
                 }
 
                 log("Optimizando sistema...", "info");
@@ -205,11 +215,11 @@
                 await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
 
                 updateProgress(100);
-                log("PROCESO TERMINADO EXITOSAMENTE.", "success");
+                log("SECUENCIA FINALIZADA.", "success");
 
             } catch (err) {
-                log("ERROR: " + err.message.substring(0,30), "error");
-                statusDot.className = "dot-pulse bg-red-500";
+                log("ERROR: " + err.message, "error");
+                statusDot.className = "w-2 h-2 rounded-full bg-red-500";
                 statusText.innerText = "ERROR";
             } finally {
                 btnStart.disabled = false;
