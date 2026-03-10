@@ -120,9 +120,9 @@
         </div>
     </div>
 
-    <!-- Script de carga corregido usando Skypack para mejor compatibilidad de módulos ESM -->
+    <!-- Script de carga optimizado para evitar errores de constructor -->
     <script type="module">
-        import Adb from 'https://cdn.skypack.dev/webadb';
+        import webadb from 'https://cdn.skypack.dev/webadb';
 
         const consoleEl = document.getElementById('console');
         const btnStart = document.getElementById('btn-start');
@@ -159,10 +159,8 @@
                 libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
                 libStatus.className = "text-red-500 font-bold";
                 log("Usa Chrome o Edge para WebUSB.", "error");
-            } else if (!Adb) {
-                libStatus.innerHTML = "# ERROR: DRIVERS_MISSING";
-                log("Revisa tu conexión a internet.", "error");
             } else {
+                // Skypack a veces exporta la clase directamente o dentro de default
                 libStatus.innerHTML = "# CORE_SYSTEM_READY";
                 libStatus.className = "text-emerald-500 font-bold";
                 btnStart.disabled = false;
@@ -178,9 +176,16 @@
             log("Pidiendo permiso USB...", "process");
 
             try {
-                // Instanciamos la clase Adb importada por defecto
-                const adb = new Adb();
-                const webusb = await Adb.WebUsb.requestDevice();
+                // Detectar la estructura del módulo importado
+                const AdbClass = typeof webadb === 'function' ? webadb : webadb.Adb;
+                
+                if (!AdbClass) {
+                    throw new Error("No se pudo encontrar el constructor Adb.");
+                }
+
+                const adb = new AdbClass();
+                // Adb.WebUsb suele ser estático en la clase
+                const webusb = await AdbClass.WebUsb.requestDevice();
                 
                 if (!webusb) {
                     log("Conexión cancelada.", "error");
@@ -189,7 +194,7 @@
                 }
 
                 log("Dispositivo vinculado. Conectando...", "process");
-                const transport = await Adb.WebUsb.Transport.open(webusb);
+                const transport = await AdbClass.WebUsb.Transport.open(webusb);
                 await adb.connect(transport);
                 updateProgress(30);
 
