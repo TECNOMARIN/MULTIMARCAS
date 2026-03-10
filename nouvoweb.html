@@ -172,7 +172,7 @@
                 try {
                     log(`Cargando drivers desde: ${new URL(src).hostname}...`, "info");
                     await loadScript(src);
-                    if (typeof Adb !== 'undefined') {
+                    if (typeof Adb !== 'undefined' || typeof window.Adb !== 'undefined') {
                         libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
                         libStatus.className = "text-emerald-500 font-bold";
                         btnStart.disabled = false;
@@ -197,12 +197,30 @@
             log("Handshake USB iniciado...", "process");
 
             try {
-                // El motor ADB puede venir de dos formas dependiendo del CDN
-                let Constructor = (typeof Adb === 'function') ? Adb : Adb.Adb;
-                if (!Constructor) throw new Error("Constructor Adb no localizado.");
+                // DETECCIÓN EXHAUSTIVA DEL CONSTRUCTOR
+                let Constructor = null;
+                
+                // Buscar en el ámbito global
+                if (typeof Adb === 'function') Constructor = Adb;
+                else if (typeof window.Adb === 'function') Constructor = window.Adb;
+                // Buscar dentro de objetos (namespace)
+                else if (typeof Adb === 'object') {
+                    if (typeof Adb.Adb === 'function') Constructor = Adb.Adb;
+                    else if (typeof Adb.default === 'function') Constructor = Adb.default;
+                }
+                else if (typeof window.Adb === 'object') {
+                    if (typeof window.Adb.Adb === 'function') Constructor = window.Adb.Adb;
+                }
+
+                if (!Constructor) throw new Error("Constructor Adb no localizado en el sistema.");
 
                 const adb = new Constructor();
-                const webusb = await Constructor.WebUsb.requestDevice();
+                
+                // Acceder a WebUsb (usualmente estático en la clase o en el objeto)
+                const WebUsb = Constructor.WebUsb || (typeof Adb !== 'undefined' ? Adb.WebUsb : null);
+                if (!WebUsb) throw new Error("Servicio WebUsb no disponible.");
+
+                const webusb = await WebUsb.requestDevice();
                 
                 if (!webusb) {
                     log("Cancelado por técnico.", "error");
@@ -212,7 +230,7 @@
                 }
 
                 log("Hardware OK. Conectando...", "process");
-                const transport = await Constructor.WebUsb.Transport.open(webusb);
+                const transport = await WebUsb.Transport.open(webusb);
                 await adb.connect(transport);
                 updateProgress(35);
 
