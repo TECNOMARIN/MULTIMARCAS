@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Soluciones CTG | OTG Install</title>
+    <title>Soluciones CTG | OTG Setup</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -38,6 +38,7 @@
         .btn-install:disabled {
             background: #94a3b8;
             box-shadow: none;
+            opacity: 0.6;
         }
 
         .console-mini {
@@ -57,14 +58,13 @@
             gap: 10px;
         }
 
-        /* Ocultar scrollbar */
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="flex items-center justify-center p-3">
 
     <div class="app-card w-full max-w-sm flex flex-col">
-        <!-- Header -->
+        <!-- Cabecera -->
         <div class="bg-white px-5 py-3 flex items-center justify-between border-b border-slate-100">
             <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo" class="h-8 w-auto">
             <div class="flex items-center gap-2">
@@ -76,8 +76,8 @@
         <div class="p-4 space-y-4">
             <!-- Info OTG -->
             <div class="bg-blue-50 px-3 py-2 rounded-lg border border-blue-100 flex items-center gap-3">
-                <i class="fas fa-mobile-nodes text-blue-500 text-xs"></i>
-                <span class="text-[9px] font-extrabold text-blue-700 uppercase tracking-tight">Compatible con conexión Celular-a-Celular (OTG)</span>
+                <i class="fas fa-mobile-nodes text-blue-500 text-[10px]"></i>
+                <span class="text-[8px] font-extrabold text-blue-700 uppercase">Soporte Celular-a-Celular (OTG)</span>
             </div>
 
             <!-- Pasos -->
@@ -93,7 +93,7 @@
             </div>
 
             <!-- Botón -->
-            <button id="btn-start" class="btn-install w-full py-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
+            <button id="btn-start" disabled class="btn-install w-full py-4 rounded-xl text-white font-black text-xs flex items-center justify-center gap-3 active:scale-95 transition-all">
                 <i class="fas fa-bolt-lightning"></i>
                 VINCULAR Y CONFIGURAR
             </button>
@@ -101,15 +101,14 @@
             <!-- Monitor -->
             <div class="space-y-2">
                 <div class="flex justify-between items-center px-1">
-                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest italic">Terminal Output</span>
+                    <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest italic">Handshake Status</span>
                     <span id="progress-percent" class="text-[10px] font-black text-emerald-600">0%</span>
                 </div>
                 <div class="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                     <div id="progress-bar" class="w-0 h-full bg-emerald-500 transition-all duration-500"></div>
                 </div>
-                <div id="console" class="console-mini w-full h-28 p-3 rounded-xl overflow-y-auto leading-tight text-slate-500">
-                    <div># SYSTEM_INITIALIZED</div>
-                    <div># LOADING_WEB_ADB_DRIVERS...</div>
+                <div id="console" class="console-mini w-full h-32 p-3 rounded-xl overflow-y-auto leading-tight text-slate-500">
+                    <div id="lib-status"># INITIALIZING_CORE...</div>
                 </div>
             </div>
         </div>
@@ -121,10 +120,9 @@
         </div>
     </div>
 
-    <!-- WebADB Library - Cargada como Módulo para evitar errores de "Adb is not defined" -->
+    <!-- Script de carga corregido usando Skypack para mejor compatibilidad de módulos ESM -->
     <script type="module">
-        // Importamos la librería directamente como módulo para que las clases estén disponibles
-        import * as webadb from 'https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js';
+        import Adb from 'https://cdn.skypack.dev/webadb';
 
         const consoleEl = document.getElementById('console');
         const btnStart = document.getElementById('btn-start');
@@ -132,13 +130,9 @@
         const statusText = document.getElementById('status-text');
         const progressBar = document.getElementById('progress-bar');
         const progressPercent = document.getElementById('progress-percent');
+        const libStatus = document.getElementById('lib-status');
 
         const APK_URL = 'https://github.com/TECNOMARIN/MULTIMARCAS/raw/refs/heads/main/nuovopay.apk';
-
-        function updateProgress(p) {
-            progressBar.style.width = p + '%';
-            progressPercent.innerText = Math.round(p) + '%';
-        }
 
         function log(msg, type = 'info') {
             const colors = {
@@ -154,28 +148,48 @@
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
-        // Informar que la librería cargó bien
-        log("Controladores WebADB listos.", "info");
+        function updateProgress(p) {
+            progressBar.style.width = p + '%';
+            progressPercent.innerText = Math.round(p) + '%';
+        }
+
+        // --- VERIFICACIÓN INICIAL ---
+        try {
+            if (!navigator.usb) {
+                libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
+                libStatus.className = "text-red-500 font-bold";
+                log("Usa Chrome o Edge para WebUSB.", "error");
+            } else if (!Adb) {
+                libStatus.innerHTML = "# ERROR: DRIVERS_MISSING";
+                log("Revisa tu conexión a internet.", "error");
+            } else {
+                libStatus.innerHTML = "# CORE_SYSTEM_READY";
+                libStatus.className = "text-emerald-500 font-bold";
+                btnStart.disabled = false;
+                log("Listo para conectar equipo.", "success");
+            }
+        } catch (e) {
+            log("Fallo de inicio: " + e.message, "error");
+        }
 
         btnStart.onclick = async () => {
             btnStart.disabled = true;
             updateProgress(5);
-            log("Iniciando handshake WebUSB...", "process");
+            log("Pidiendo permiso USB...", "process");
 
             try {
-                // Usamos las clases desde el módulo importado
-                const adb = new webadb.Adb();
-                const webusb = await webadb.Adb.WebUsb.requestDevice();
+                // Instanciamos la clase Adb importada por defecto
+                const adb = new Adb();
+                const webusb = await Adb.WebUsb.requestDevice();
                 
                 if (!webusb) {
-                    log("Conexión rechazada.", "error");
+                    log("Conexión cancelada.", "error");
                     btnStart.disabled = false;
-                    updateProgress(0);
                     return;
                 }
 
-                log("Dispositivo detectado. Conectando...", "process");
-                const transport = await webadb.Adb.WebUsb.Transport.open(webusb);
+                log("Dispositivo vinculado. Conectando...", "process");
+                const transport = await Adb.WebUsb.Transport.open(webusb);
                 await adb.connect(transport);
                 updateProgress(30);
 
@@ -183,19 +197,19 @@
                 statusText.innerText = "ONLINE";
                 statusText.classList.replace('text-slate-400', 'text-emerald-600');
                 
-                log("CONEXIÓN ESTABLECIDA.", "success");
+                log("HANDSHAKE EXITOSO.", "success");
 
-                log("Sincronizando con MULTIMARCAS...", "info");
+                log("Bajando APK de MULTIMARCAS...", "info");
                 const response = await fetch(APK_URL);
-                if (!response.ok) throw new Error("Error de descarga.");
+                if (!response.ok) throw new Error("Fallo descarga APK.");
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
                 updateProgress(55);
 
-                log("Inyectando aplicación...", "process");
+                log("Instalando en terminal...", "process");
                 await adb.install(apkBuffer);
                 updateProgress(75);
-                log("APK INSTALADA.", "success");
+                log("INSTALACIÓN COMPLETA.", "success");
 
                 log("Configurando Device Owner...", "process");
                 const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
@@ -204,24 +218,23 @@
                 updateProgress(90);
                 
                 if (decoded.includes("Success")) {
-                    log("ADMINISTRADOR OK.", "success");
+                    log("ADMINISTRADOR ACTIVADO.", "success");
                 } else {
-                    log("SYSTEM_MSG: " + (decoded.substring(0,30)), "info");
+                    log("RESPUESTA: " + (decoded.substring(0,40)), "info");
                 }
 
-                log("Optimizando sistema...", "info");
+                log("Finalizando optimización...", "info");
                 await adb.shell("settings put global verifier_verify_adb_installs 0");
                 await adb.shell("dumpsys deviceidle whitelist +com.promobitech.nuovo");
                 await adb.shell("am start com.promobitech.nuovo/com.promobitech.mobilock.ui.activities.NavigationActivity");
 
                 updateProgress(100);
-                log("SECUENCIA FINALIZADA.", "success");
+                log("PROCESO TERMINADO.", "success");
 
             } catch (err) {
                 log("ERROR: " + err.message, "error");
                 statusDot.className = "w-2 h-2 rounded-full bg-red-500";
                 statusText.innerText = "ERROR";
-            } finally {
                 btnStart.disabled = false;
             }
         };
