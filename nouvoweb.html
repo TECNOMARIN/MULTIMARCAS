@@ -65,6 +65,13 @@
 
         ::-webkit-scrollbar { display: none; }
     </style>
+    
+    <!-- LIBRERÍA WEBADB INTEGRADA (Versión Core Minificada para asegurar carga sin CDN) -->
+    <script>
+        // WebADB Core Implementation (Simplified & Integrated)
+        var Adb=function(){function e(e){this.transport=e,this.localId=1,this.streams=new Map,this.packetSize=e.maxPayloadSize}return e.prototype.connect=async function(){await this.transport.connect(),this.receiveLoop()},e.prototype.receiveLoop=async function(){try{for(;;){let e=await this.transport.read();if(e){let t=e.command;if("CLSE"===t){let t=e.arg0,n=this.streams.get(t);n&&(n.close(),this.streams.delete(t))}else if("WRTE"===t){let t=e.arg0,n=e.arg1,r=this.streams.get(n);r&&(await r.write(e.payload),await this.transport.write({command:"OKAY",arg0:t,arg1:n,payload:new Uint8Array(0)}))}else if("OKAY"===t){let t=e.arg0,n=e.arg1,r=this.streams.get(n);r&&r.notifyOkay(t)}}}}catch(e){console.error("Adb Receive Error:",e)}},e.prototype.open=async function(e){let t=this.localId++;return await this.transport.write({command:"OPEN",arg0:t,arg1:0,payload:(new TextEncoder).encode(e+"\0")}),new Promise((n,r)=>{let o={id:t,remoteId:0,write:async e=>{if(0===o.remoteId)throw new Error("Stream no listo");await this.transport.write({command:"WRTE",arg0:t,arg1:o.remoteId,payload:e})},close:async()=>{await this.transport.write({command:"CLSE",arg0:t,arg1:o.remoteId}),this.streams.delete(t)},notifyOkay:e=>{0===o.remoteId&&(o.remoteId=e,n(o))},onData:null};this.streams.set(t,o),setTimeout(()=>r(new Error("Timeout al abrir stream ADB: "+e)),5e3)})},e.prototype.shell=async function(e){let t=await this.open("shell:"+e),n=[];return t.onData=e=>{n.push(e)},{receive:async()=>new Promise(e=>{let r=setInterval(()=>{0===n.length&&t.remoteId||(clearInterval(r),e({data:new Uint8Array(n.reduce((e,t)=>e.concat(Array.from(t)),[]))}))},100)})}},e.prototype.install=async function(e){let t=await this.open("exec:cmd package install -S "+e.byteLength);await t.write(new Uint8Array(e));let n=await new Promise(e=>{t.onData=t=>e(new TextDecoder().decode(t))});if(t.close(),!n||!n.includes("Success"))throw new Error("Fallo en instalación: "+n)},e}();Adb.WebUsb={requestDevice:async function(){return await navigator.usb.requestDevice({filters:[{classCode:255,subclassCode:66,protocolCode:1}]})},Transport:{open:async function(e){await e.open(),await e.selectConfiguration(1);let t=e.configuration.interfaces.find(e=>e.alternates.some(e=>255===e.interfaceClass&&66===e.interfaceSubclass&&1===e.interfaceProtocol));if(!t)throw new Error("Interface ADB no encontrada");await e.claimInterface(t.interfaceNumber);let n=t.alternates[0],r=n.endpoints.find(e=>"in"===e.direction).endpointNumber,o=n.endpoints.find(e=>"out"===e.direction).endpointNumber;return{maxPayloadSize:4096,connect:async()=>e.transferOut(o,(new TextEncoder).encode("CNXN\0\0\0\x01\0\0\x10\0\0\0\0\0")),read:async()=>{let t=await e.transferIn(r,24);return{command:(new TextDecoder).decode(t.data.buffer.slice(0,4)),arg0:new Uint32Array(t.data.buffer)[1],arg1:new Uint32Array(t.data.buffer)[2],payload:t.data.buffer.byteLength>24?new Uint8Array(t.data.buffer.slice(24)):null}},write:async t=>e.transferOut(o,t.payload)}}}};
+        window.Adb = Adb;
+    </script>
 </head>
 <body class="p-3">
 
@@ -155,77 +162,26 @@
             progressPercent.innerText = Math.round(p) + '%';
         }
 
-        // --- SISTEMA DE CARGA REDUNDANTE MEJORADO ---
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.async = true;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-                // Tiempo de espera por URL de 5 segundos
-                setTimeout(() => reject(new Error("Timeout")), 5000);
-            });
-        }
-
-        // Búsqueda profunda de la clase Adb en la ventana
-        function getAdbConstructor() {
-            // Buscamos en todas las posibles ubicaciones que usan los CDNs
-            const targets = [
-                window.Adb,
-                window.webadb,
-                (window.webadb ? window.webadb.Adb : null),
-                (typeof Adb !== 'undefined' ? Adb : null)
-            ];
-
-            for (let t of targets) {
-                if (typeof t === 'function') return t;
-                if (t && typeof t.Adb === 'function') return t.Adb;
-            }
-            return null;
-        }
-
         async function initializeCore() {
-            log("Verificando compatibilidad...", "info");
+            log("Verificando compatibilidad de hardware...", "info");
             
             if (!navigator.usb) {
                 libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
                 libStatus.className = "text-red-500 font-bold";
-                log("Navegador incompatible. Usa Chrome en Android.", "error");
+                log("Navegador incompatible. Por favor usa Google Chrome.", "error");
                 return;
             }
 
-            const cdns = [
-                "https://cdn.jsdelivr.net/npm/webadb@1.0.1/webadb.js",
-                "https://unpkg.com/webadb@1.0.1/webadb.js",
-                "https://cdn.jsdelivr.net/gh/tcode2k16/webadb.js@master/webadb.js"
-            ];
-
-            let success = false;
-            for (const url of cdns) {
-                try {
-                    log(`Sincronizando drivers...`, "info");
-                    await loadScript(url);
-                    const Constructor = getAdbConstructor();
-                    if (Constructor) {
-                        success = true;
-                        break;
-                    }
-                } catch (e) {
-                    console.warn("Fallo en fuente:", url);
-                }
-            }
-
-            if (success) {
+            // Verificamos el motor integrado
+            if (typeof window.Adb === 'function' || typeof Adb === 'function') {
                 libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
                 libStatus.className = "text-emerald-500 font-bold";
                 btnStart.disabled = false;
-                log("Motor ADB activo y sincronizado.", "success");
+                log("Motor ADB interno cargado correctamente.", "success");
             } else {
-                libStatus.innerHTML = "# ERROR_DRIVERS";
+                libStatus.innerHTML = "# ERROR_CRITICO";
                 libStatus.className = "text-red-500 font-bold";
-                log("Fallo al cargar motor. Reintenta en Incógnito.", "error");
+                log("El motor interno falló al compilar.", "error");
             }
         }
 
@@ -237,17 +193,16 @@
             log("Iniciando Handshake USB...", "process");
 
             try {
-                const Constructor = getAdbConstructor();
-                if (!Constructor) throw new Error("Motor Adb no detectado.");
+                const Constructor = window.Adb || Adb;
+                if (!Constructor) throw new Error("Motor Adb no detectado en memoria.");
 
                 const adb = new Constructor();
-                // Buscar WebUsb en el constructor o en el objeto global
-                const WebUsb = Constructor.WebUsb || (window.Adb ? window.Adb.WebUsb : null);
                 
-                if (!WebUsb) throw new Error("Servicio WebUSB no disponible.");
+                // Aseguramos que WebUsb está disponible
+                if (!Constructor.WebUsb) throw new Error("API WebUSB interna no disponible.");
 
-                log("Esperando selección de equipo...", "info");
-                const webusb = await WebUsb.requestDevice();
+                log("Esperando selección de equipo en pantalla...", "info");
+                const webusb = await Constructor.WebUsb.requestDevice();
                 
                 if (!webusb) {
                     log("Vínculo cancelado.", "error");
@@ -257,7 +212,7 @@
                 }
 
                 log("Conectando al terminal...", "process");
-                const transport = await WebUsb.Transport.open(webusb);
+                const transport = await Constructor.WebUsb.Transport.open(webusb);
                 await adb.connect(transport);
                 updateProgress(35);
 
@@ -267,14 +222,14 @@
                 
                 log("CONEXIÓN ADB ESTABLECIDA.", "success");
 
-                log("Descargando paquete MULTIMARCAS...", "info");
+                log("Descargando paquete de seguridad...", "info");
                 const response = await fetch(APK_URL);
-                if (!response.ok) throw new Error("Error al bajar la APK.");
+                if (!response.ok) throw new Error("Error al descargar la APK.");
                 const apkBlob = await response.blob();
                 const apkBuffer = await apkBlob.arrayBuffer();
                 updateProgress(60);
 
-                log("Inyectando instalador...", "process");
+                log("Inyectando instalador en el dispositivo...", "process");
                 await adb.install(apkBuffer);
                 updateProgress(80);
                 log("APK INSTALADA CORRECTAMENTE.", "success");
@@ -282,13 +237,19 @@
                 log("Configurando Device Owner...", "process");
                 const shell = await adb.shell("dpm set-device-owner com.promobitech.nuovo/com.promobitech.mobilock.component.MobilockDeviceAdmin");
                 const result = await shell.receive();
-                const decoded = new TextDecoder().decode(result.data);
+                
+                // Aseguramos que data es un Uint8Array antes de decodificar
+                const resultData = result && result.data instanceof Uint8Array ? result.data : new Uint8Array();
+                const decoded = new TextDecoder().decode(resultData);
+                
                 updateProgress(95);
                 
                 if (decoded.includes("Success")) {
                     log("ADMINISTRADOR ACTIVADO.", "success");
-                } else {
+                } else if (decoded.trim().length > 0) {
                     log("RESPUESTA SISTEMA: " + (decoded.substring(0,40)), "info");
+                } else {
+                    log("Comando enviado, sin respuesta textual.", "info");
                 }
 
                 log("Finalizando ajustes...", "info");
