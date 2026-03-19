@@ -6,6 +6,10 @@
   <title>Consola de Equipos | Soluciones Efectivas CTG</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Script para generar el PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Script para generar el Excel (SheetJS) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
 
@@ -33,7 +37,7 @@
     }
     
     .main-card { width: 100%; max-width: 500px; background: white; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); overflow: hidden; display: none; transition: max-width 0.4s ease; position: relative; }
-    .main-card.wide { max-width: 1200px; } 
+    .main-card.wide { max-width: 1250px; } 
 
     .modal { z-index: 5000; }
     #toast-container { z-index: 100000; position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
@@ -115,8 +119,14 @@
                 <p class="is-size-7 has-text-weight-bold" style="color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 2px;">Lista de Precios Central</p>
             </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <button class="button is-small" style="font-weight:900; background: var(--action-gradient); color: white; border: none; border-radius: 8px;" onclick="openEquipoModal()">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;">
+            <button class="button is-small" style="font-weight:900; background: #059669; color: white; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);" onclick="descargarExcelSocios()">
+                <i data-lucide="download" style="width:14px; margin-right:5px;"></i> Excel Socios
+            </button>
+            <button class="button is-small" style="font-weight:900; background: #ef4444; color: white; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);" onclick="generarPDFCliente()">
+                <i data-lucide="file-text" style="width:14px; margin-right:5px;"></i> Reporte PDF
+            </button>
+            <button class="button is-small" style="font-weight:900; background: var(--action-gradient); color: white; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(234, 179, 8, 0.3);" onclick="openEquipoModal()">
                 <i data-lucide="plus" style="width:14px; margin-right:5px;"></i> Nuevo Equipo
             </button>
             <a href="index.html" class="button is-ghost is-small has-text-danger" style="font-weight:800;"><i data-lucide="log-out" style="width:14px; margin-right:5px;"></i>Salir</a>
@@ -235,7 +245,6 @@
   </div>
 
   <script>
-    // URL DEL ENRUTADOR PRINCIPAL
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
     let catalog = [];
 
@@ -249,7 +258,6 @@
         setTimeout(() => { t.classList.remove('is-active'); setTimeout(() => t.remove(), 600); }, 3500);
     }
 
-    // PARSEADOR AVANZADO: Detecta si Google Sheets envió el número cortado y lo multiplica por mil
     const parsePrice = (v) => {
         if (v === null || v === undefined || v === '') return 0;
         let num = 0;
@@ -270,11 +278,9 @@
         input.value = val === "" ? "" : new Intl.NumberFormat('es-CO').format(parseInt(val));
     }
 
-    /* --- LÓGICA DE LOGIN --- */
     async function attemptLogin() {
       const u = document.getElementById('login-user').value.trim().toLowerCase();
       const p = document.getElementById('login-pass').value.trim();
-      
       document.getElementById('btn-login').classList.add('is-loading');
       try {
           const res = await fetch(`${SCRIPT_URL}?action=getData`, { mode: 'cors' });
@@ -295,7 +301,6 @@
       document.getElementById('btn-login').classList.remove('is-loading');
     }
 
-    /* --- CARGAR Y RENDERIZAR TABLA --- */
     async function loadCatalog() {
         document.getElementById('bg-sync-indicator').style.display = 'flex';
         try {
@@ -315,26 +320,18 @@
         const search = document.getElementById('search-input').value.toLowerCase();
         const tb = document.getElementById('tb-equipos');
         tb.innerHTML = '';
-        
         const filtered = catalog.filter(c => (c.brand||'').toLowerCase().includes(search) || (c.ref||'').toLowerCase().includes(search));
-        
         if(filtered.length === 0) {
             tb.innerHTML = '<tr><td colspan="8" class="has-text-centered py-5">No hay equipos registrados</td></tr>';
             return;
         }
-
         filtered.forEach(eq => {
             const cost = parsePrice(eq.cost);
             const sale = parsePrice(eq.sale);
-            
-            // Cálculos dinámicos
             const initial = Math.round((sale * 0.30) / 1000) * 1000;
             const receive = Math.round((sale * 0.20) / 1000) * 1000;
-            
-            // Ganancias
             const gananciaDist = Math.round(((receive * 0.30) + 40000) / 1000) * 1000;
             const gananciaSE = Math.round((sale - initial - 40000 - cost) / 1000) * 1000;
-
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="font-weight:800; color:var(--brand-green);">${eq.brand}</td>
@@ -354,25 +351,18 @@
         lucide.createIcons();
     }
 
-    /* --- LÓGICA DEL FORMULARIO Y MATEMÁTICA --- */
     function autoCalcFields() {
         const getRawValue = (id) => parseFloat(document.getElementById(id).value.replace(/\./g, '')) || 0;
         const round = (v) => Math.round(v / 1000) * 1000;
-
         const cost = getRawValue('eq_costo');
         const sale = getRawValue('eq_venta');
-        
         if(sale > 0) {
-            // Mapeo exacto de las reglas en resumen_consola.md
             const initial = round(sale * 0.30);
             const receive = round(sale * 0.20);
             const returnEq = round(receive * 0.30);
             const commTienda = round(receive * 0.70);
-            
-            // Ganancias
-            const commDist = round((receive * 0.30) + 40000); // Ganancia Distribuidor
-            const gananciaSE = round(sale - initial - 40000 - cost); // Ganancia Soluciones Efectivas
-
+            const commDist = round((receive * 0.30) + 40000); 
+            const gananciaSE = round(sale - initial - 40000 - cost); 
             document.getElementById('eq_inicial').value = fmtCop(initial);
             document.getElementById('eq_recibe').value = fmtCop(receive);
             document.getElementById('eq_retorno').value = fmtCop(returnEq);
@@ -387,7 +377,6 @@
     function openEquipoModal(ref = null) {
         document.getElementById('modal-title').innerText = ref ? "Editar Equipo" : "Registrar Nuevo Equipo";
         document.getElementById('eq_original_ref').value = ref || '';
-        
         if(ref) {
             const eq = catalog.find(c => c.ref === ref);
             if(eq) {
@@ -395,25 +384,18 @@
                 document.getElementById('eq_ref').value = eq.ref;
                 document.getElementById('eq_costo').value = fmtCop(parsePrice(eq.cost));
                 document.getElementById('eq_venta').value = fmtCop(parsePrice(eq.sale));
-                
-                autoCalcFields(); // Forzar el recálculo con la nueva fórmula
+                autoCalcFields();
             }
         } else {
             ['eq_marca', 'eq_ref', 'eq_costo', 'eq_venta', 'eq_inicial', 'eq_recibe', 'eq_retorno', 'eq_com_tienda', 'eq_com_dist', 'eq_ganancia_se'].forEach(id => document.getElementById(id).value = '');
         }
-        
         document.getElementById('mod-equipo').classList.add('is-active');
     }
 
-    function closeModals() {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active'));
-    }
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('is-active')); }
 
-    /* --- GUARDAR Y ELIMINAR --- */
     async function saveEquipo() {
         const getRawValue = (id) => parseFloat(document.getElementById(id).value.replace(/\./g, '')) || 0;
-
-        // Se mapean EXCLUSIVAMENTE los 9 valores para la DB. (eq_ganancia_se NO se incluye)
         const payload = {
             originalRef: document.getElementById('eq_original_ref').value,
             brand: document.getElementById('eq_marca').value.toUpperCase(),
@@ -426,21 +408,16 @@
             commTienda: getRawValue('eq_com_tienda'),
             commDist: getRawValue('eq_com_dist')
         };
-
         if(!payload.brand || !payload.ref || payload.cost <= 0 || payload.sale <= 0) {
             showToast("Complete Marca, Referencia, Costo y Venta.", "error");
             return;
         }
-
         document.getElementById('btn-save-eq').classList.add('is-loading');
         try {
             const url = new URL(SCRIPT_URL);
             url.searchParams.append('action', 'savePrecio');
             url.searchParams.append('data', JSON.stringify(payload));
-            
-            const res = await fetch(url.toString(), { method: 'GET', mode: 'cors' });
-            await res.json();
-            
+            await fetch(url.toString(), { method: 'GET', mode: 'cors' });
             showToast("Equipo guardado exitosamente");
             closeModals();
             loadCatalog();
@@ -452,13 +429,11 @@
 
     async function deleteEquipo(ref) {
         if(!confirm(`¿Estás seguro que deseas eliminar el equipo ${ref}?`)) return;
-        
         document.getElementById('bg-sync-indicator').style.display = 'flex';
         try {
             const url = new URL(SCRIPT_URL);
             url.searchParams.append('action', 'deletePrecio');
             url.searchParams.append('data', JSON.stringify({ ref: ref }));
-            
             await fetch(url.toString(), { method: 'GET', mode: 'cors' });
             showToast("Equipo eliminado");
             loadCatalog(); 
@@ -466,6 +441,92 @@
             showToast("Error al eliminar", "error");
             document.getElementById('bg-sync-indicator').style.display = 'none';
         }
+    }
+
+    function descargarExcelSocios() {
+        if(catalog.length === 0) {
+            showToast("No hay datos para exportar.", "error");
+            return;
+        }
+        showToast("Generando Excel con Ganancia S.E...", "success");
+        const exportData = catalog.map(eq => {
+            const sale = parsePrice(eq.sale);
+            const cost = parsePrice(eq.cost);
+            const initial = Math.round((sale * 0.30) / 1000) * 1000;
+            const gananciaSE = Math.round((sale - initial - 40000 - cost) / 1000) * 1000;
+            return {
+                "Marca": eq.brand,
+                "Referencia": eq.ref,
+                "Costo": cost,
+                "Venta Público": sale,
+                "Cuota Inicial (30%)": initial,
+                "Mín. Efectivo Tienda (20%)": parsePrice(eq.receive),
+                "Retorno Cliente (30%)": parsePrice(eq.return),
+                "Comisión Tienda (70%)": parsePrice(eq.commTienda),
+                "Ganancia Distribuidor": parsePrice(eq.commDist),
+                "GANANCIA SOLUCIONES EFECTIVAS": gananciaSE
+            };
+        });
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        XLSX.utils.book_append_sheet(wb, ws, "PRECIOS");
+        XLSX.writeFile(wb, `Reporte_Socios_SE_${new Date().getTime()}.xlsx`);
+    }
+
+    function generarPDFCliente() {
+        if(catalog.length === 0) {
+            showToast("No hay equipos para exportar.", "error");
+            return;
+        }
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <div style="padding: 30px; font-family: 'Montserrat', sans-serif;">
+                <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #2C4C8C; padding-bottom: 20px;">
+                    <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" style="height: 60px; margin-bottom: 10px;">
+                    <h2 style="color: #2C4C8C; font-weight: 900; margin: 0; font-size: 18px;">LISTA GENERAL DE PRECIOS Y COSTOS</h2>
+                    <p style="color: #64748b; font-size: 10px; font-weight: bold; margin-top: 5px;">ACTUALIZADO: ${new Date().toLocaleDateString('es-CO')}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 9px;">
+                    <thead>
+                        <tr style="background-color: #f8fafc; border-bottom: 2px solid #67B74D;">
+                            <th style="padding: 6px; text-align: left; color:#2C4C8C;">Marca</th>
+                            <th style="padding: 6px; text-align: left; color:#2C4C8C;">Referencia</th>
+                            <th style="padding: 6px; text-align: right; color:#ef4444;">Costo Base</th>
+                            <th style="padding: 6px; text-align: right; color:#2C4C8C;">Precio Contado</th>
+                            <th style="padding: 6px; text-align: right; color:#2C4C8C;">Inicial (30%)</th>
+                            <th style="padding: 6px; text-align: right; color:#67B74D;">Ef. Tienda (20%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${catalog.map(c => {
+                            const sale = parsePrice(c.sale);
+                            const cost = parsePrice(c.cost);
+                            const inicial = Math.round((sale * 0.30) / 1000) * 1000;
+                            const recibe = parsePrice(c.receive); 
+                            return `
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 6px; font-weight: bold; color: #67B74D;">${c.brand}</td>
+                                <td style="padding: 6px; font-weight: bold; color: #334155;">${c.ref}</td>
+                                <td style="padding: 6px; text-align: right; font-weight: bold; color: #ef4444;">$ ${fmtCop(cost)}</td>
+                                <td style="padding: 6px; text-align: right; font-weight: bold; color: #1e293b;">$ ${fmtCop(sale)}</td>
+                                <td style="padding: 6px; text-align: right; font-weight: bold; color: #2C4C8C;">$ ${fmtCop(inicial)}</td>
+                                <td style="padding: 6px; text-align: right; font-weight: bold; color: #67B74D;">$ ${fmtCop(recibe)}</td>
+                            </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+        const opt = {
+            margin: 0.2,
+            filename: `Lista_Costos_Equipos_${new Date().getTime()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        showToast("Generando reporte con costos...", "success");
+        html2pdf().from(div).set(opt).save();
     }
   </script>
 </body>
