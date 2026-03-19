@@ -139,9 +139,9 @@
                         <th>Referencia</th>
                         <th class="has-text-right">Costo</th>
                         <th class="has-text-right">Venta Público</th>
-                        <th class="has-text-right" style="color:#64748b;">Inicial (30%)</th>
-                        <th class="has-text-right" style="color:var(--brand-blue);">Te Consignamos</th>
-                        <th class="has-text-right" style="color:var(--brand-green);">Ganancia Libre</th>
+                        <th class="has-text-right" style="color:#64748b;">Mín. Efectivo (20%)</th>
+                        <th class="has-text-right" style="color:var(--brand-yellow);">Ganancia Dist.</th>
+                        <th class="has-text-right" style="color:var(--brand-blue);">Ganancia S.E.</th>
                         <th class="has-text-centered">Acciones</th>
                     </tr>
                 </thead>
@@ -157,15 +157,15 @@
   <!-- MODAL CREAR/EDITAR EQUIPO -->
   <div id="mod-equipo" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
-    <div class="modal-card" style="width: 95%; max-width: 600px; border-radius: 16px; overflow: hidden;">
+    <div class="modal-card" style="width: 95%; max-width: 700px; border-radius: 16px; overflow: hidden;">
       <header class="modal-card-head" style="background: white; border-bottom: 2px solid var(--brand-yellow);">
         <p id="modal-title" class="modal-card-title is-size-5 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif; color: var(--brand-blue);">Registrar Equipo</p>
         <button class="delete" aria-label="close" onclick="closeModals()"></button>
       </header>
-      <section class="modal-card-body p-5">
+      <section class="modal-card-body p-5 custom-scroll">
         <input type="hidden" id="eq_original_ref"> <!-- Para saber si estamos editando -->
         
-        <p class="is-size-7 has-text-grey has-text-weight-bold mb-4">Ingresa Costo y Venta. El sistema autocompletará el resto de campos usando la fórmula PayJoy.</p>
+        <p class="is-size-7 has-text-grey has-text-weight-bold mb-4">Ingresa Costo y Venta. El sistema autocompletará el resto de campos usando tu fórmula de rentabilidad.</p>
         
         <div class="columns is-mobile is-multiline">
             <div class="column is-6">
@@ -183,26 +183,46 @@
         </div>
 
         <hr class="my-4" style="background-color: #e2e8f0;">
-        <p class="is-size-7 has-text-weight-bold mb-3" style="color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 1px;">Proyección Financiera</p>
+        <p class="is-size-7 has-text-weight-bold mb-3" style="color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 1px;">Proyección Financiera Automática</p>
 
         <div class="columns is-mobile is-multiline auto-field">
-            <div class="column is-4">
+            <div class="column is-6">
                 <div class="field">
-                    <label class="label">Inicial (30%)</label>
+                    <label class="label mb-1">Inicial (30% Venta)</label>
                     <input id="eq_inicial" class="input is-small" type="text" readonly>
                 </div>
             </div>
-            <div class="column is-4">
+            <div class="column is-6">
                 <div class="field">
-                    <label class="label" style="color:var(--brand-blue) !important;" title="Venta - Inicial - 40.000">Te Consignan</label>
-                    <input id="eq_utilidad_pj" class="input is-small" style="color:var(--brand-blue); font-weight:900;" type="text" readonly>
+                    <label class="label mb-1" style="color:var(--brand-blue) !important;">Efectivo Mín. Tienda (20% Venta)</label>
+                    <input id="eq_recibe" class="input is-small" style="color:var(--brand-blue); font-weight:800;" type="text" readonly>
                 </div>
             </div>
-            <div class="column is-4">
+            <div class="column is-6">
                 <div class="field">
-                    <label class="label" style="color:var(--brand-green) !important;" title="Lo que te consignan - Costo">Ganancia Libre</label>
-                    <input id="eq_utilidad_neta" class="input is-small" style="background:#f1f9ef; border-color:var(--brand-green); border-style:solid; color:var(--brand-green); font-weight:900;" type="text" readonly>
+                    <label class="label mb-1">Devolución Cliente (30% del Mínimo)</label>
+                    <input id="eq_retorno" class="input is-small" type="text" readonly>
                 </div>
+            </div>
+            <div class="column is-6">
+                <div class="field">
+                    <label class="label mb-1">Comisión Tienda (70% del Mínimo)</label>
+                    <input id="eq_com_tienda" class="input is-small" type="text" readonly>
+                </div>
+            </div>
+            
+            <div class="column is-6 mt-2">
+                <div class="field">
+                    <label class="label" style="color:var(--brand-yellow) !important;" title="(Mínimo efectivo * 30%) + 40.000">Ganancia Distribuidor</label>
+                    <input id="eq_com_dist" class="input" style="background:#fefce8; border-color:var(--brand-yellow); border-style:solid; color:var(--brand-yellow); font-weight:900;" type="text" readonly>
+                </div>
+            </div>
+            <div class="column is-6 mt-2">
+                <div class="field">
+                    <label class="label" style="color:var(--brand-blue) !important;" title="(Venta - Inicial) - 40.000 - Costo">Ganancia Soluciones Efectivas</label>
+                    <input id="eq_ganancia_se" class="input" style="background:#eff6ff; border-color:var(--brand-blue); border-style:solid; color:var(--brand-blue); font-weight:900;" type="text" readonly>
+                </div>
+                <p class="is-size-7 has-text-grey-light mt-1">* Dato informativo. No se guarda en Excel.</p>
             </div>
         </div>
 
@@ -307,10 +327,13 @@
             const cost = parsePrice(eq.cost);
             const sale = parsePrice(eq.sale);
             
-            // Re-calculamos dinámicamente para asegurar que la vista sea perfecta
-            const inicial = Math.round((sale * 0.30) / 1000) * 1000;
-            const consignaPj = sale - inicial - 40000;
-            const gananciaNeta = consignaPj - cost; // A la consignación le descontamos el costo
+            // Cálculos dinámicos
+            const initial = Math.round((sale * 0.30) / 1000) * 1000;
+            const receive = Math.round((sale * 0.20) / 1000) * 1000;
+            
+            // Ganancias
+            const gananciaDist = Math.round(((receive * 0.30) + 40000) / 1000) * 1000;
+            const gananciaSE = Math.round((sale - initial - 40000 - cost) / 1000) * 1000;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -318,9 +341,9 @@
                 <td style="font-weight:700;">${eq.ref}</td>
                 <td class="has-text-right">$ ${fmtCop(cost)}</td>
                 <td class="has-text-right">$ ${fmtCop(sale)}</td>
-                <td class="has-text-right" style="color:#64748b;">$ ${fmtCop(inicial)}</td>
-                <td class="has-text-right" style="color:var(--brand-blue); font-weight:800;">$ ${fmtCop(consignaPj)}</td>
-                <td class="has-text-right" style="color:var(--brand-green); font-weight:900;">$ ${fmtCop(gananciaNeta)}</td>
+                <td class="has-text-right" style="color:#64748b; font-weight:800;">$ ${fmtCop(receive)}</td>
+                <td class="has-text-right" style="color:var(--brand-yellow); font-weight:900;">$ ${fmtCop(gananciaDist)}</td>
+                <td class="has-text-right" style="color:var(--brand-blue); font-weight:900;">$ ${fmtCop(gananciaSE)}</td>
                 <td class="has-text-centered">
                     <span class="btn-action-icon btn-edit" onclick="openEquipoModal('${eq.ref}')"><i data-lucide="edit-3" style="width:16px;"></i></span>
                     <span class="btn-action-icon btn-delete" onclick="deleteEquipo('${eq.ref}')"><i data-lucide="trash-2" style="width:16px;"></i></span>
@@ -331,28 +354,33 @@
         lucide.createIcons();
     }
 
-    /* --- LÓGICA DEL FORMULARIO Y MATEMÁTICA PAYJOY --- */
+    /* --- LÓGICA DEL FORMULARIO Y MATEMÁTICA --- */
     function autoCalcFields() {
         const getRawValue = (id) => parseFloat(document.getElementById(id).value.replace(/\./g, '')) || 0;
-        
+        const round = (v) => Math.round(v / 1000) * 1000;
+
         const cost = getRawValue('eq_costo');
         const sale = getRawValue('eq_venta');
         
         if(sale > 0) {
-            // Inicial es estrictamente el 30% de la venta (aproximado a miles)
-            const inicial = Math.round((sale * 0.30) / 1000) * 1000;
+            // Mapeo exacto de las reglas en resumen_consola.md
+            const initial = round(sale * 0.30);
+            const receive = round(sale * 0.20);
+            const returnEq = round(receive * 0.30);
+            const commTienda = round(receive * 0.70);
             
-            // Fórmula indicada: Venta - Inicial - 40.000 (Esto es lo que consigna PayJoy)
-            const utilidadPj = sale - inicial - 40000;
-            
-            // Ganancia libre: Lo que te consigna PayJoy - El costo del equipo
-            const utilidadNeta = utilidadPj - cost;
+            // Ganancias
+            const commDist = round((receive * 0.30) + 40000); // Ganancia Distribuidor
+            const gananciaSE = round(sale - initial - 40000 - cost); // Ganancia Soluciones Efectivas
 
-            document.getElementById('eq_inicial').value = fmtCop(inicial);
-            document.getElementById('eq_utilidad_pj').value = fmtCop(utilidadPj);
-            document.getElementById('eq_utilidad_neta').value = fmtCop(utilidadNeta); 
+            document.getElementById('eq_inicial').value = fmtCop(initial);
+            document.getElementById('eq_recibe').value = fmtCop(receive);
+            document.getElementById('eq_retorno').value = fmtCop(returnEq);
+            document.getElementById('eq_com_tienda').value = fmtCop(commTienda);
+            document.getElementById('eq_com_dist').value = fmtCop(commDist); 
+            document.getElementById('eq_ganancia_se').value = fmtCop(gananciaSE); 
         } else {
-            ['eq_inicial', 'eq_utilidad_pj', 'eq_utilidad_neta'].forEach(id => document.getElementById(id).value = '');
+            ['eq_inicial', 'eq_recibe', 'eq_retorno', 'eq_com_tienda', 'eq_com_dist', 'eq_ganancia_se'].forEach(id => document.getElementById(id).value = '');
         }
     }
 
@@ -368,11 +396,10 @@
                 document.getElementById('eq_costo').value = fmtCop(parsePrice(eq.cost));
                 document.getElementById('eq_venta').value = fmtCop(parsePrice(eq.sale));
                 
-                // Forzamos el recálculo en base a la nueva fórmula
-                autoCalcFields();
+                autoCalcFields(); // Forzar el recálculo con la nueva fórmula
             }
         } else {
-            ['eq_marca', 'eq_ref', 'eq_costo', 'eq_venta', 'eq_inicial', 'eq_utilidad_pj', 'eq_utilidad_neta'].forEach(id => document.getElementById(id).value = '');
+            ['eq_marca', 'eq_ref', 'eq_costo', 'eq_venta', 'eq_inicial', 'eq_recibe', 'eq_retorno', 'eq_com_tienda', 'eq_com_dist', 'eq_ganancia_se'].forEach(id => document.getElementById(id).value = '');
         }
         
         document.getElementById('mod-equipo').classList.add('is-active');
@@ -386,7 +413,7 @@
     async function saveEquipo() {
         const getRawValue = (id) => parseFloat(document.getElementById(id).value.replace(/\./g, '')) || 0;
 
-        // Se mapean los nuevos valores calculados a las variables de la base de datos (para no romper el Google Sheets)
+        // Se mapean EXCLUSIVAMENTE los 9 valores para la DB. (eq_ganancia_se NO se incluye)
         const payload = {
             originalRef: document.getElementById('eq_original_ref').value,
             brand: document.getElementById('eq_marca').value.toUpperCase(),
@@ -394,10 +421,10 @@
             cost: getRawValue('eq_costo'),
             sale: getRawValue('eq_venta'),
             initial: getRawValue('eq_inicial'),
-            receive: getRawValue('eq_utilidad_pj'), // Se guarda "Te Consignan" aquí
-            returnEq: 0, // Campo no utilizado, se manda en 0
-            commTienda: 0, // Campo no utilizado, se manda en 0
-            commDist: getRawValue('eq_utilidad_neta') // Se guarda la ganancia neta aquí
+            receive: getRawValue('eq_recibe'),
+            returnEq: getRawValue('eq_retorno'),
+            commTienda: getRawValue('eq_com_tienda'),
+            commDist: getRawValue('eq_com_dist')
         };
 
         if(!payload.brand || !payload.ref || payload.cost <= 0 || payload.sale <= 0) {
