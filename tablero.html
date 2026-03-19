@@ -1082,6 +1082,13 @@
                     {/* ENCABEZADO CON LOGO Y BOTONES ESTILO LANDING */}
                     <div className="bg-white rounded-3xl shadow-sm p-6 border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-5">
+                            <button 
+                                onClick={() => window.location.href = 'index.html'} 
+                                className="p-2.5 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm hover:shadow border border-slate-200" 
+                                title="Regresar al Inicio"
+                            >
+                                <Icons.ArrowLeft className="w-5 h-5" />
+                            </button>
                             <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true" alt="Logo Multimarcas" className="h-16 object-contain drop-shadow-sm" />
                             <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
                             <div>
