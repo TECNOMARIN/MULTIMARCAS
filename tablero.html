@@ -81,7 +81,7 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v4.1.0 (Gestión Temprana Fix)";
+        const APP_VERSION = "v5.2.0 (Smart Actions & Clean Edits)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -102,14 +102,15 @@
                     seller: ['responsable', 'vendedor', 'asesor'],
                     client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
                     device: ['modelo - equipo', 'equipo', 'modelo'],
-                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto'], 
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
                     date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'],
                     quotaDate: 'cuota',
                     paymentStatus: ['pagos'], 
                     comments: ['comentarios', 'observaciones', 'gestion'],
                     id: ['cedula', 'documento', 'cc', 'nit', 'id'],
                     email: ['email', 'correo', 'mail'],
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'] 
+                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia']
                 }
             },
             payjoy: {
@@ -120,14 +121,15 @@
                     seller: ['vendedor', 'asesor', 'ejecutivo'],
                     client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
                     device: ['equipo', 'modelo', 'celular'],
-                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto'], 
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
                     date: ['fecha venta', 'fecha desembolso', 'fecha'],
                     quotaDate: 'cuota',
                     paymentStatus: ['pagos'], 
                     comments: ['comentarios', 'notas', 'gestion'],
                     id: ['cedula', 'documento', 'cc', 'nit', 'id'],
                     email: ['email', 'correo', 'mail'],
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'] 
+                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia']
                 }
             }
         };
@@ -149,7 +151,7 @@
             const [selectedStore, setSelectedStore] = useState(''); 
             
             const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
-            const [showOnlyEarly, setShowOnlyEarly] = useState(false); // NUEVO ESTADO: Alerta Temprana
+            const [showOnlyEarly, setShowOnlyEarly] = useState(false); 
             
             // Filtros interactivos
             const [fpdQuotaFilter, setFpdQuotaFilter] = useState(null); 
@@ -162,6 +164,8 @@
 
             // Edición
             const [editModal, setEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
+            const [cleanEditModal, setCleanEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
+            const [confirmModal, setConfirmModal] = useState({ show: false, row: null, actionType: null, message: '' });
             const [isSaving, setIsSaving] = useState(false);
 
             // Paginación
@@ -304,13 +308,61 @@
                 const diffTime = today.getTime() - sDate.getTime();
                 const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-                // Verifica si la venta fue hace 12, 13 o 14 días (y no ha pagado)
                 if (diffDays >= 12 && diffDays <= 14) {
                     const obsVal = String(row[statusCol] || '').trim();
                     return isObsUnpaid(obsVal);
                 }
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
+
+            // --- LÓGICA DE MORA CRÍTICA EXACTA (7 DÍAS DESPUÉS DEL VENCIMIENTO) ---
+            const getRowCriticalStatus = useCallback((row, headersList) => {
+                const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
+                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
+                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+                
+                if (!dateCol || !statusCol) return false;
+                
+                const saleDate = parseDate(row[dateCol]);
+                if (!saleDate) return false;
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const dueDate = new Date(saleDate);
+                dueDate.setDate(dueDate.getDate() + 14); // Vencimiento = Venta + 14 días
+                dueDate.setHours(0,0,0,0);
+
+                const diffTime = today.getTime() - dueDate.getTime();
+                const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                // 🚨 Solo si han pasado EXACTAMENTE 7 días desde el vencimiento
+                if (diffDaysFromDue === 7) {
+                    const obsVal = String(row[statusCol] || '').trim();
+                    return isObsUnpaid(obsVal);
+                }
+                return false;
+            }, [activeConfig, findConfigColumn, findColumnName]);
+
+            // --- LÓGICA DE ALERTAS (5-7 DÍAS DESPUÉS DEL VENCIMIENTO DE CUOTA) ---
+            const checkSpecificQuotaAlert = useCallback((row, headersList, quotaId) => {
+                const qName = QUOTA_LABELS[quotaId]?.id; 
+                if (!qName) return false;
+                const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+
+                if (colFecha && colStatus) {
+                    const fechaVal = row[colFecha];
+                    const obsVal = String(row[colStatus] || '').trim();
+                    if (checkDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
+                }
+                return false;
+            }, [activeConfig, findColumnName]);
+
+            const getRowAlertStatus = useCallback((row, headersList) => {
+                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert(row, headersList, qId));
+            }, [checkSpecificQuotaAlert]);
 
             // --- FETCH DATA ---
             const fetchData = useCallback(async () => {
@@ -353,18 +405,18 @@
                 }
             }, [portfolio]); 
 
-            // Carga inicial (Sin Login)
             useEffect(() => { 
                 fetchData(); 
             }, [fetchData]);
 
             // --- MEMOS DE DATOS ---
-            const { sellers, sellerColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn } = useMemo(() => {
+            const { sellers, sellerColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn, idColumn } = useMemo(() => {
                 const sCol = findConfigColumn(activeConfig.columns.seller, headers);
                 const dCol = findConfigColumn(activeConfig.columns.device, headers);
                 const pCol = findConfigColumn(activeConfig.columns.phone, headers);
                 const cCol = findConfigColumn(activeConfig.columns.client, headers); 
                 const stCol = findConfigColumn(activeConfig.columns.store, headers);
+                const idCol = findConfigColumn(activeConfig.columns.id, headers);
 
                 const uniqueSellers = new Set();
                 const uniqueDevices = new Set();
@@ -379,11 +431,11 @@
                     sellers: Array.from(uniqueSellers).sort(), sellerColumn: sCol,
                     devices: Array.from(uniqueDevices).sort(), deviceColumn: dCol,
                     stores: Array.from(uniqueStores).sort(), storeColumn: stCol, 
-                    phoneColumn: pCol, clientColumn: cCol
+                    phoneColumn: pCol, clientColumn: cCol, idColumn: idCol
                 };
             }, [data, headers, activeConfig, findConfigColumn]);
 
-            // --- REPORTE DE VENDEDORES ---
+            // --- REPORTE DE VENDEDORES Y DETALLES ---
             const sellerReportData = useMemo(() => {
                 if (!showSellerModal || !sellerColumn) return [];
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
@@ -447,7 +499,6 @@
                 }).sort((a, b) => b.index - a.index);
             }, [showSellerModal, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn]);
 
-            // --- DETALLE VENDEDOR (DRILL-DOWN) ---
             const sellerDetailData = useMemo(() => {
                 if (!detailSeller) return [];
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
@@ -521,25 +572,6 @@
             }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn]);
 
             // --- RENDERIZADO TABLA PRINCIPAL Y PAGINACIÓN ---
-            const checkSpecificQuotaAlert = (row, headersList, quotaId) => {
-                const qName = QUOTA_LABELS[quotaId]?.id; 
-                if (!qName) return false;
-                const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
-                let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
-                if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
-
-                if (colFecha && colStatus) {
-                    const fechaVal = row[colFecha];
-                    const obsVal = String(row[colStatus] || '').trim();
-                    if (checkDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
-                }
-                return false;
-            };
-
-            const getRowAlertStatus = (row, headersList) => {
-                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert(row, headersList, qId));
-            };
-
             const filteredData = useMemo(() => {
                 let result = data;
                 if (selectedSeller && sellerColumn) result = result.filter(row => String(row[sellerColumn]).trim() === selectedSeller);
@@ -548,7 +580,6 @@
                 
                 if (searchTerm) result = result.filter(row => headers.some(header => String(row[header]).toLowerCase().includes(searchTerm.toLowerCase())));
                 
-                // Múltiples alertas globales
                 if (showOnlyAlerts) result = result.filter(row => getRowAlertStatus(row, headers));
                 if (showOnlyEarly) result = result.filter(row => getRowEarlyStatus(row, headers));
 
@@ -593,14 +624,12 @@
                     }
                 }
                 return result;
-            }, [data, headers, searchTerm, showOnlyAlerts, showOnlyEarly, fpdQuotaFilter, breakdownFilter, selectedSeller, sellerColumn, selectedDevice, deviceColumn, selectedStore, storeColumn, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus]);
+            }, [data, headers, searchTerm, showOnlyAlerts, showOnlyEarly, fpdQuotaFilter, breakdownFilter, selectedSeller, sellerColumn, selectedDevice, deviceColumn, selectedStore, storeColumn, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus]);
 
-            // Reset página cuando cambian los filtros
             useEffect(() => {
                 setCurrentPage(1);
             }, [filteredData.length, selectedSeller, selectedDevice, selectedStore, searchTerm, showOnlyAlerts, showOnlyEarly, fpdQuotaFilter, breakdownFilter]);
 
-            // Paginar los datos filtrados
             const paginatedData = useMemo(() => {
                 const startIndex = (currentPage - 1) * itemsPerPage;
                 return filteredData.slice(startIndex, startIndex + itemsPerPage);
@@ -621,9 +650,8 @@
                 let stats = { total: 0 };
                 dataForStats.forEach(row => { if (getRowAlertStatus(row, headers)) stats.total++; });
                 return stats;
-            }, [dataForStats, headers, activeConfig]);
+            }, [dataForStats, headers, getRowAlertStatus]);
 
-            // NUEVAS ESTADÍSTICAS PARA GESTIÓN TEMPRANA (12-14 DÍAS)
             const earlyStats = useMemo(() => {
                 let stats = { total: 0 };
                 dataForStats.forEach(row => { if (getRowEarlyStatus(row, headers)) stats.total++; });
@@ -793,15 +821,15 @@
                                         <span className="opacity-80">{quotaId === 'fpd10' ? 'Pendientes:' : 'Mora Real:'}</span><span className="font-bold underline">{fpdInfo.unpaid}</span>
                                     </div>
                                     {quotaId !== 'fpd10' && (
-                                        <>
-                                            <div className="flex justify-between p-1 -mx-1 rounded text-amber-700 bg-amber-50/50 mt-0.5">
-                                                <span className="text-[10px] flex items-center gap-1 opacity-90"><Icons.Clock className="w-3 h-3"/> Por Vencer:</span>
-                                                <span className="font-bold">{fpdInfo.upcoming}</span>
-                                            </div>
-                                            <div className="flex justify-between text-red-800 font-bold mt-1 bg-white/30 p-1 rounded -mx-1">
-                                                <span className="text-[10px] flex items-center gap-1"><Icons.Target className="w-3 h-3"/> Meta {targetPercent}%:</span><span>{recoverNeeded}</span>
-                                            </div>
-                                        </>
+                                        <div className="flex justify-between p-1 -mx-1 rounded text-amber-700 bg-amber-50/50 mt-0.5">
+                                            <span className="text-[10px] flex items-center gap-1 opacity-90"><Icons.Clock className="w-3 h-3"/> Por Vencer:</span>
+                                            <span className="font-bold">{fpdInfo.upcoming}</span>
+                                        </div>
+                                    )}
+                                    {quotaId !== 'fpd10' && (
+                                        <div className="flex justify-between text-red-800 font-bold mt-1 bg-white/30 p-1 rounded -mx-1">
+                                            <span className="text-[10px] flex items-center gap-1"><Icons.Target className="w-3 h-3"/> Meta {targetPercent}%:</span><span>{recoverNeeded}</span>
+                                        </div>
                                     )}
                                     <div className="text-[9px] text-right opacity-60 pt-1 mt-1 border-t border-black/5">{fpdInfo.rangeStr}</div>
                                 </div>
@@ -879,30 +907,139 @@
                 doc.save(`Detalle_${detailSeller}_${portfolio}.pdf`);
             };
 
+            // --- ACCIONES RÁPIDAS Y EDICIÓN (REFACTORIZADO PARA IFRAMES) ---
+            const triggerQuickAction = (row, actionType) => {
+                const msg = actionType === 'COMPLETADO' ? "¿Marcar cliente como COMPLETADO en Continuidad?" : "¿Registrar PAGO para este cliente de forma rápida?";
+                setConfirmModal({ show: true, row, actionType, message: msg });
+            };
+
+            const executeQuickAction = async () => {
+                const { row, actionType } = confirmModal;
+                const phone = phoneColumn ? row[phoneColumn] : '';
+                const idVal = idColumn ? row[idColumn] : '';
+                
+                if (!phone && !idVal) {
+                    setError("Cliente sin número de celular ni cédula, no se puede actualizar.");
+                    setConfirmModal({ show: false, row: null, actionType: null, message: '' });
+                    return;
+                }
+                
+                let targetCol = "";
+                let valToWrite = "";
+                let append = false;
+                let cleanWrite = false;
+
+                if (actionType === 'COMPLETADO') {
+                    targetCol = findConfigColumn(activeConfig.columns.comments, headers);
+                    valToWrite = "Completado";
+                    append = true;      
+                    cleanWrite = false; 
+                } else {
+                    targetCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
+                    if (!targetCol) targetCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                    valToWrite = "PAGO";
+                    append = false;     
+                    cleanWrite = true;  
+                }
+
+                if (!targetCol) {
+                    setError("No se encontró la columna destino en el Excel para esta acción.");
+                    setConfirmModal({ show: false, row: null, actionType: null, message: '' });
+                    return;
+                }
+
+                setIsSaving(true);
+                try {
+                    const payload = { type: portfolio, id: idVal, phone: phone || '', comment: valToWrite, column: targetCol, append, cleanWrite };
+                    await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+                    
+                    const newData = data.map(r => {
+                         const matchId = idVal && idColumn ? r[idColumn] === idVal : false;
+                         const matchPhone = phone && phoneColumn ? String(r[phoneColumn]).replace(/\D/g, '') === String(phone).replace(/\D/g, '') : false;
+                         
+                         if (matchId || matchPhone) {
+                             if (actionType === 'COMPLETADO') {
+                                 const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+                                 const oldVal = r[targetCol] || '';
+                                 return { ...r, [targetCol]: oldVal ? `[${dateStr}] ${valToWrite} | ${oldVal}` : `[${dateStr}] ${valToWrite}` };
+                             } else {
+                                 return { ...r, [targetCol]: valToWrite };
+                             }
+                         }
+                         return r;
+                    });
+                    setData(newData);
+                } catch(e) {
+                    setError("Error: " + e.message);
+                } finally {
+                    setIsSaving(false);
+                    setConfirmModal({ show: false, row: null, actionType: null, message: '' });
+                }
+            };
+
+            const openCleanEdit = (row, colName) => {
+                setCleanEditModal({ show: true, row, colName, currentValue: row[colName] || '' });
+            };
+
+            const saveCleanEdit = async () => {
+                const { row, colName, currentValue } = cleanEditModal;
+                const oldVal = row[colName] || '';
+                const newVal = currentValue.trim();
+                
+                if (newVal === oldVal) {
+                    setCleanEditModal({ show: false, row: null, colName: null, currentValue: '' });
+                    return;
+                }
+
+                const phone = phoneColumn ? row[phoneColumn] : '';
+                const idVal = idColumn ? row[idColumn] : '';
+
+                if (!idVal && !phone) {
+                    setError("El cliente no tiene Cédula ni Celular para ser identificado.");
+                    setCleanEditModal({ show: false, row: null, colName: null, currentValue: '' });
+                    return;
+                }
+
+                setIsSaving(true);
+                try {
+                    const payload = { type: portfolio, id: idVal, phone: phone || '', comment: newVal, column: colName, append: false, cleanWrite: true };
+                    await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+                    
+                    const newData = data.map(r => {
+                         const matchId = idVal && idColumn ? r[idColumn] === idVal : false;
+                         const matchPhone = phone && phoneColumn ? String(r[phoneColumn]).replace(/\D/g, '') === String(phone).replace(/\D/g, '') : false;
+                         
+                         if (matchId || matchPhone) {
+                             return { ...r, [colName]: newVal };
+                         }
+                         return r;
+                    });
+                    setData(newData);
+                } catch(e) {
+                    setError("Error al actualizar dato: " + e.message);
+                } finally {
+                    setIsSaving(false);
+                    setCleanEditModal({ show: false, row: null, colName: null, currentValue: '' });
+                }
+            };
+
             const handleSaveComment = async () => {
                 if (!editModal.row || !editModal.currentValue.trim()) return;
                 
                 setIsSaving(true);
-                const phone = editModal.row[phoneColumn];
+                const phone = phoneColumn ? editModal.row[phoneColumn] : '';
+                const idVal = idColumn ? editModal.row[idColumn] : '';
                 
-                const payload = {
-                    type: portfolio,
-                    phone: phone,
-                    comment: editModal.currentValue,
-                    column: editModal.colName, 
-                    append: true 
-                };
+                const payload = { type: portfolio, id: idVal, phone: phone || '', comment: editModal.currentValue, column: editModal.colName, append: true, cleanWrite: false };
 
                 try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: JSON.stringify(payload)
-                    });
+                    await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
 
                     const newData = data.map(r => {
-                         if (String(r[phoneColumn]).replace(/\D/g, '') === String(phone).replace(/\D/g, '')) {
+                         const matchId = idVal && idColumn ? r[idColumn] === idVal : false;
+                         const matchPhone = phone && phoneColumn ? String(r[phoneColumn]).replace(/\D/g, '') === String(phone).replace(/\D/g, '') : false;
+                         
+                         if (matchId || matchPhone) {
                              const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
                              const newEntry = `[${dateStr}] ${editModal.currentValue}`;
                              const oldVal = r[editModal.colName] || '';
@@ -913,32 +1050,36 @@
                     
                     setData(newData);
                     setEditModal({ ...editModal, show: false, currentValue: '' });
-
                 } catch (e) {
-                    alert("Error al guardar: " + e.message);
+                    setError("Error al guardar: " + e.message);
                 } finally {
                     setIsSaving(false);
                 }
             };
+
+            const commentsColName = useMemo(() => {
+                return headers.find(h => {
+                    const lowerH = h.toLowerCase();
+                    return activeConfig.columns.comments && (
+                        (typeof activeConfig.columns.comments === 'string' && lowerH.includes(activeConfig.columns.comments)) ||
+                        (Array.isArray(activeConfig.columns.comments) && activeConfig.columns.comments.some(n => lowerH.includes(n)))
+                    );
+                });
+            }, [headers, activeConfig.columns.comments]);
 
             return (
                 <div className="max-w-7xl mx-auto p-4 space-y-6">
                     {/* ENCABEZADO CON LOGO Y BOTONES ESTILO LANDING */}
                     <div className="bg-white rounded-3xl shadow-sm p-6 border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-5">
-                            {/* LOGO SOLUCIONES PNG MULTIMARCAS */}
-                            <img 
-                                src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true" 
-                                alt="Logo Multimarcas" 
-                                className="h-16 object-contain drop-shadow-sm" 
-                            />
+                            <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true" alt="Logo Multimarcas" className="h-16 object-contain drop-shadow-sm" />
                             <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
                             <div>
                                 <h1 className="text-2xl font-black text-slate-900 tracking-tight">Dashboard de Gestión</h1>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${loading ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                        <span className={`w-2 h-2 rounded-full ${loading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
-                                        {loading ? 'Sincronizando con nube...' : `Actualizado: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${loading || isSaving ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                        <span className={`w-2 h-2 rounded-full ${loading || isSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
+                                        {loading ? 'Sincronizando con nube...' : isSaving ? 'Guardando...' : `Actualizado: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
                                     </span>
                                 </div>
                             </div>
@@ -959,19 +1100,11 @@
                                 </div>
                             </div>
                             
-                            <button 
-                                onClick={() => setShowSellerModal(true)} 
-                                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-bold text-sm tracking-wide"
-                            >
+                            <button onClick={() => setShowSellerModal(true)} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-bold text-sm tracking-wide">
                                 <Icons.BarChart4 className="w-4 h-4"/> Reporte Analítico
                             </button>
                             
-                            <button 
-                                onClick={fetchData} 
-                                disabled={loading} 
-                                className="p-3 bg-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm hover:shadow-md disabled:opacity-50" 
-                                title="Recargar datos"
-                            >
+                            <button onClick={fetchData} disabled={loading} className="p-3 bg-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm hover:shadow-md disabled:opacity-50" title="Recargar datos">
                                 <Icons.RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
                             </button>
                         </div>
@@ -990,7 +1123,7 @@
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Vendedor</label>
                             <div className="relative">
                                 <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium" value={selectedSeller} onChange={e => setSelectedSeller(e.target.value)}>
-                                    <option value="">Todos los vendedores</option>
+                                    <option value="">Todos</option>
                                     {sellers.map((s,i) => <option key={i} value={s}>{s}</option>)}
                                 </select>
                             </div>
@@ -999,7 +1132,7 @@
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Tienda</label>
                             <div className="relative">
                                 <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium" value={selectedStore} onChange={e => setSelectedStore(e.target.value)}>
-                                    <option value="">Todas las tiendas</option>
+                                    <option value="">Todas</option>
                                     {stores.map((s,i) => <option key={i} value={s}>{s}</option>)}
                                 </select>
                             </div>
@@ -1008,13 +1141,13 @@
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Equipo</label>
                             <div className="relative">
                                 <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium" value={selectedDevice} onChange={e => setSelectedDevice(e.target.value)}>
-                                    <option value="">Todos los equipos</option>
+                                    <option value="">Todos</option>
                                     {devices.map((d,i) => <option key={i} value={d}>{d}</option>)}
                                 </select>
                             </div>
                         </div>
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Búsqueda Global</label>
+                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Búsqueda</label>
                              <div className="relative">
                                 <input type="text" className="w-full p-2.5 pl-10 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all placeholder:text-slate-400" placeholder="Nombre, cédula..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                                 <Icons.Search className="w-4 h-4 text-indigo-400 absolute left-3.5 top-3" />
@@ -1029,7 +1162,7 @@
                         </div>
                     </div>
 
-                    {/* ALERTA DE MORA RECIENTE */}
+                    {/* ALERTAS */}
                     {alertStats.total > 0 && (
                         <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
                              <div className="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
@@ -1046,7 +1179,6 @@
                         </div>
                     )}
 
-                    {/* NUEVA ALERTA DE GESTIÓN TEMPRANA */}
                     {earlyStats.total > 0 && (
                         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
                              <div className="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
@@ -1071,12 +1203,11 @@
                             </h3>
                             { (fpdQuotaFilter || breakdownFilter) && 
                                 <button onClick={() => { setFpdQuotaFilter(null); setBreakdownFilter(null); setShowOnlyAlerts(false); setShowOnlyEarly(false); }} className="text-xs bg-slate-800 text-white px-4 py-2 rounded-full flex gap-1.5 items-center hover:bg-slate-700 transition-all shadow-md hover:shadow-lg">
-                                    <Icons.X className="w-3.5 h-3.5"/> Limpiar Filtros de Tarjeta
+                                    <Icons.X className="w-3.5 h-3.5"/> Limpiar Filtros
                                 </button>
                             }
                         </div>
 
-                        {/* GRID DE TARJETAS */}
                         <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4`}>
                             {activeConfig.quotas.map(quotaId => (
                                 <StatCard key={quotaId} title={QUOTA_LABELS[quotaId].label} quotaId={quotaId} stats={observationStats[quotaId]} fpdInfo={fpdStats[quotaId]} />
@@ -1088,75 +1219,151 @@
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm text-slate-600">
                                 <thead className="bg-slate-50/80 text-xs uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200">
-                                    <tr>{headers.map((h, i) => {
-                                        const style = getColumnStyles(h);
-                                        const isPhoneCol = activeConfig.columns.phone && activeConfig.columns.phone.some(p => h.toLowerCase().includes(p));
-                                        return <th key={i} className={`px-4 py-4 whitespace-nowrap ${style?.head} ${isPhoneCol ? 'min-w-[140px]' : ''}`}>{h}</th>
-                                    })}</tr>
+                                    <tr>
+                                        {headers.map((h, i) => {
+                                            const style = getColumnStyles(h);
+                                            const isPhoneCol = activeConfig.columns.phone && activeConfig.columns.phone.some(p => h.toLowerCase().includes(p));
+                                            return (
+                                                <React.Fragment key={i}>
+                                                    <th className={`px-4 py-4 whitespace-nowrap ${style?.head} ${isPhoneCol ? 'min-w-[140px]' : ''}`}>{h}</th>
+                                                    {h === commentsColName && <th className="px-4 py-4 text-center whitespace-nowrap bg-indigo-50/50 text-indigo-800 border-l border-indigo-100">Acción Rápida</th>}
+                                                </React.Fragment>
+                                            );
+                                        })}
+                                        {!commentsColName && <th className="px-4 py-4 text-center whitespace-nowrap bg-indigo-50/50 text-indigo-800 border-l border-indigo-100">Acción Rápida</th>}
+                                    </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {paginatedData.length > 0 ? paginatedData.map((row, i) => {
-                                        // Detección de fila entera para alertas
+                                        const isCriticalRow = getRowCriticalStatus(row, headers);
                                         const isAlertRow = getRowAlertStatus(row, headers);
                                         const isEarlyRow = getRowEarlyStatus(row, headers);
 
+                                        let rowBgClass = 'hover:bg-indigo-50/30';
+                                        let rowBorderClass = '';
+
+                                        if (isCriticalRow) {
+                                            rowBgClass = 'bg-red-50 hover:bg-red-100/80 font-medium text-red-900';
+                                            rowBorderClass = 'border-l-4 border-red-600'; 
+                                        } else if (isAlertRow) {
+                                            rowBgClass = 'bg-rose-50/40 hover:bg-rose-100/50';
+                                        } else if (isEarlyRow) {
+                                            rowBgClass = 'bg-amber-50/40 hover:bg-amber-100/50';
+                                        }
+
+                                        const actionCell = (
+                                            <td key="action-cell" className="px-4 py-2 text-center whitespace-nowrap border-l border-slate-100 bg-slate-50/50">
+                                                {(() => {
+                                                    const activeQuotaForButton = fpdQuotaFilter || breakdownFilter?.quota;
+                                                    const actionType = activeQuotaForButton === 'fpd10' ? 'COMPLETADO' : 'PAGO';
+                                                    
+                                                    if (actionType === 'COMPLETADO') {
+                                                        const currentCom = commentsColName ? String(row[commentsColName] || '').toLowerCase() : '';
+                                                        if (currentCom.includes('completado')) return <span className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1"><Icons.CheckCircle className="w-3 h-3"/> Listo</span>;
+                                                    }
+                                                    if (actionType === 'PAGO') {
+                                                        let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
+                                                        if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                                                        const currentPay = statusCol ? String(row[statusCol] || '').toLowerCase() : '';
+                                                        if (currentPay === 'pago') return <span className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1"><Icons.CheckCircle className="w-3 h-3"/> Pagado</span>;
+                                                    }
+
+                                                    return (
+                                                        <button 
+                                                            onClick={() => triggerQuickAction(row, actionType)}
+                                                            className={`flex items-center gap-1.5 px-3 py-1.5 mx-auto rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50
+                                                                ${actionType === 'COMPLETADO' ? 'bg-violet-100 text-violet-700 border border-violet-200 hover:bg-violet-600 hover:text-white' : 'bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white'}`}
+                                                            title={actionType === 'COMPLETADO' ? 'Marcar Revisión Completada' : 'Registrar Pago Directo'}
+                                                            disabled={isSaving}
+                                                        >
+                                                            {actionType === 'COMPLETADO' ? <Icons.CheckCircle className="w-4 h-4"/> : <Icons.DollarSign className="w-4 h-4"/>}
+                                                            {actionType}
+                                                        </button>
+                                                    );
+                                                })()}
+                                            </td>
+                                        );
+
                                         return (
-                                        <tr key={i} className={`transition-colors ${isAlertRow ? 'bg-rose-50/50 hover:bg-rose-100/50' : isEarlyRow ? 'bg-amber-50/50 hover:bg-amber-100/50' : 'hover:bg-indigo-50/30'}`}>
+                                        <tr key={i} className={`transition-colors ${rowBgClass}`}>
                                             {headers.map((h, j) => {
                                                 const val = formatCellData(row[h]);
                                                 const style = getColumnStyles(h);
                                                 
                                                 const isPhoneCol = activeConfig.columns.phone && activeConfig.columns.phone.some(p => h.toLowerCase().includes(p));
-                                                if (isPhoneCol) {
+                                                const isCleanEditableCol = activeConfig.columns.editableText && activeConfig.columns.editableText.some(p => h.toLowerCase().includes(p));
+                                                
+                                                let tdContent = null;
+
+                                                if (isCleanEditableCol) {
                                                     const clientVal = clientColumn ? row[clientColumn] : '';
                                                     const deviceVal = deviceColumn ? row[deviceColumn] : '';
-                                                    const clean = cleanPhoneNumber(val);
-                                                    if (clean) {
-                                                        return (
-                                                            <td key={j} className="px-4 py-3 whitespace-nowrap">
-                                                                <div className="flex items-center gap-3">
-                                                                    <span className="font-mono text-xs text-slate-600 font-medium">{val}</span>
-                                                                    <div className="flex gap-1.5">
+                                                    const clean = isPhoneCol && val ? cleanPhoneNumber(val) : null;
+                                                    
+                                                    tdContent = (
+                                                        <td key={j} className={`px-4 py-3 whitespace-nowrap ${j===0 ? rowBorderClass : ''}`}>
+                                                            <div className="flex items-center gap-3">
+                                                                <span 
+                                                                    className="font-mono text-xs text-slate-600 font-bold group relative cursor-pointer hover:text-indigo-600 px-1 -mx-1 rounded flex items-center gap-1" 
+                                                                    title={`Clic para editar ${h}`} 
+                                                                    onClick={() => openCleanEdit(row, h)}
+                                                                >
+                                                                    {val || <span className="text-slate-300 italic font-normal">Vacío</span>}
+                                                                    <Icons.Edit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 text-indigo-500" />
+                                                                </span>
+                                                                {isPhoneCol && clean && (
+                                                                    <div className="flex gap-1.5 ml-2">
                                                                         <a href={getWhatsAppLink(val, clientVal, deviceVal)} target="_blank" className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors shadow-sm" title="WhatsApp"><Icons.MessageCircle className="w-4 h-4"/></a>
                                                                         <a href={`tel:${clean}`} className="p-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors shadow-sm" title="Llamar"><Icons.Phone className="w-4 h-4"/></a>
                                                                     </div>
-                                                                </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    );
+                                                } else {
+                                                    const isCommentsCol = h === commentsColName;
+
+                                                    if (isCommentsCol) {
+                                                         tdContent = (
+                                                            <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs group relative ${style?.bgColor} ${j===0 ? rowBorderClass : ''}`}>
+                                                                {isCriticalRow && <Icons.AlertTriangle className="w-4 h-4 inline mr-1.5 text-red-600 animate-pulse"/>}
+                                                                {!isCriticalRow && isAlertRow && <Icons.AlertCircle className="w-3.5 h-3.5 inline mr-1.5 text-rose-500"/>}
+                                                                {!isCriticalRow && !isAlertRow && isEarlyRow && <Icons.Clock className="w-3.5 h-3.5 inline mr-1.5 text-amber-500"/>}
+                                                                
+                                                                <span className={`inline-block max-w-[200px] truncate ${isCriticalRow ? 'text-red-800 font-bold' : ''}`} title={val}>{val}</span>
+                                                                
+                                                                <button 
+                                                                    onClick={() => setEditModal({ show: true, row, colName: h, currentValue: String(row[h] || '') })}
+                                                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-600 shadow-md border border-indigo-700 rounded-lg text-white hover:bg-indigo-700 transition-all z-10 opacity-0 group-hover:opacity-100 hover:scale-105"
+                                                                    title="Agregar gestión"
+                                                                >
+                                                                    <Icons.Edit2 className="w-3.5 h-3.5"/>
+                                                                </button>
                                                             </td>
-                                                        );
+                                                         )
+                                                    } else {
+                                                        tdContent = (
+                                                            <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs ${style?.bgColor} ${j===0 ? rowBorderClass : ''}`}>
+                                                                {val}
+                                                            </td>
+                                                        )
                                                     }
                                                 }
-                                                
-                                                const isCommentsCol = activeConfig.columns.comments && (
-                                                    (typeof activeConfig.columns.comments === 'string' && h.toLowerCase().includes(activeConfig.columns.comments)) ||
-                                                    (Array.isArray(activeConfig.columns.comments) && activeConfig.columns.comments.some(n => h.toLowerCase().includes(n)))
-                                                );
 
-                                                if (isCommentsCol) {
-                                                     return (
-                                                        <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs group relative ${style?.bgColor}`}>
-                                                            {isAlertRow && <Icons.AlertTriangle className="w-3.5 h-3.5 inline mr-1.5 text-rose-600"/>}
-                                                            {!isAlertRow && isEarlyRow && <Icons.Clock className="w-3.5 h-3.5 inline mr-1.5 text-amber-600"/>}
-                                                            <span className="inline-block max-w-[200px] truncate" title={val}>{val}</span>
-                                                            <button 
-                                                                onClick={() => setEditModal({ show: true, row, colName: h, currentValue: String(row[h] || '') })}
-                                                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-600 shadow-md border border-indigo-700 rounded-lg text-white hover:bg-indigo-700 transition-all z-10 opacity-0 group-hover:opacity-100 hover:scale-105"
-                                                                title="Agregar gestión"
-                                                            >
-                                                                <Icons.Edit2 className="w-3.5 h-3.5"/>
-                                                            </button>
-                                                        </td>
-                                                     )
+                                                if (h === commentsColName) {
+                                                    return (
+                                                        <React.Fragment key={j}>
+                                                            {tdContent}
+                                                            {actionCell}
+                                                        </React.Fragment>
+                                                    );
                                                 }
-
-                                                return (
-                                                    <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs ${style?.bgColor}`}>
-                                                        {val}
-                                                    </td>
-                                                )
+                                                return tdContent;
                                             })}
+                                            {!commentsColName && actionCell}
                                         </tr>
                                     )}) : (
-                                        <tr><td colSpan={headers.length} className="px-6 py-24 text-center text-slate-400">
+                                        <tr><td colSpan={headers.length + 1} className="px-6 py-24 text-center text-slate-400">
                                             <div className="flex flex-col items-center gap-4">
                                                 <div className="p-5 bg-slate-50 rounded-full border border-slate-100"><Icons.Search className="w-10 h-10 text-slate-300"/></div>
                                                 <p className="font-medium text-slate-500">No se encontraron resultados en esta página.</p>
@@ -1196,7 +1403,7 @@
                         )}
                     </div>
 
-                    {/* --- MODAL DE EDICIÓN (COMENTARIOS) --- */}
+                    {/* --- MODALES --- */}
                     {editModal.show && (
                         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                              <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
@@ -1222,7 +1429,7 @@
                                             value={editModal.currentValue === (editModal.row[editModal.colName] || '') ? '' : editModal.currentValue}
                                             onChange={(e) => setEditModal({ ...editModal, currentValue: e.target.value })}
                                             className="w-full p-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm min-h-[120px] transition-all bg-slate-50 focus:bg-white"
-                                            placeholder="Escribe la gestión... (Tip: Usa la palabra 'completado' para cerrar la Continuidad)"
+                                            placeholder="Escribe la gestión... (Tip: Para pagar o completar usa el botón rápido en la tabla)"
                                             autoFocus
                                         />
                                     </div>
@@ -1240,7 +1447,85 @@
                                         disabled={isSaving || !editModal.currentValue.trim()}
                                         className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center gap-2"
                                     >
-                                        {isSaving ? <><Icons.RefreshCw className="w-4 h-4 animate-spin"/> Guardando Nube...</> : 'Guardar y Sincronizar'}
+                                        {isSaving ? <><Icons.RefreshCw className="w-4 h-4 animate-spin"/> Guardando...</> : 'Guardar y Sincronizar'}
+                                    </button>
+                                </div>
+                             </div>
+                        </div>
+                    )}
+
+                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS) --- */}
+                    {cleanEditModal.show && (
+                        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                             <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
+                                <div className="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                    <h3 className="font-bold text-slate-800 flex items-center gap-3">
+                                        <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600 shadow-sm"><Icons.Edit2 className="w-4 h-4"/></div>
+                                        Editar {cleanEditModal.colName}
+                                    </h3>
+                                    <button onClick={() => !isSaving && setCleanEditModal({ ...cleanEditModal, show: false })} className="p-2 text-slate-400 hover:bg-slate-200 rounded-full transition-colors">
+                                        <Icons.X className="w-5 h-5"/>
+                                    </button>
+                                </div>
+                                <div className="p-6">
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 px-1">Nuevo Valor</label>
+                                        <input 
+                                            type="text"
+                                            value={cleanEditModal.currentValue}
+                                            onChange={(e) => setCleanEditModal({ ...cleanEditModal, currentValue: e.target.value })}
+                                            className="w-full p-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all bg-slate-50 focus:bg-white"
+                                            placeholder="Escribe aquí..."
+                                            autoFocus
+                                        />
+                                    </div>
+                                </div>
+                                <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 rounded-b-2xl">
+                                    <button 
+                                        onClick={() => setCleanEditModal({ ...cleanEditModal, show: false })} 
+                                        className="px-5 py-2.5 text-slate-600 font-bold text-sm hover:bg-slate-200 rounded-full transition-colors"
+                                        disabled={isSaving}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        onClick={saveCleanEdit}
+                                        disabled={isSaving}
+                                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {isSaving ? <><Icons.RefreshCw className="w-4 h-4 animate-spin"/> Guardando...</> : 'Guardar'}
+                                    </button>
+                                </div>
+                             </div>
+                        </div>
+                    )}
+
+                    {/* --- MODAL CONFIRMACIÓN ACCIÓN RÁPIDA --- */}
+                    {confirmModal.show && (
+                        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                             <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
+                                <div className="p-6 text-center">
+                                    <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${confirmModal.actionType === 'COMPLETADO' ? 'bg-violet-100 text-violet-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                                        {confirmModal.actionType === 'COMPLETADO' ? <Icons.CheckCircle className="w-8 h-8"/> : <Icons.DollarSign className="w-8 h-8"/>}
+                                    </div>
+                                    <h3 className="text-lg font-black text-slate-800 mb-2">Confirmar Acción</h3>
+                                    <p className="text-sm text-slate-500">{confirmModal.message}</p>
+                                </div>
+                                <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-center gap-3 rounded-b-2xl">
+                                    <button 
+                                        onClick={() => setConfirmModal({ show: false, row: null, actionType: null, message: '' })} 
+                                        className="px-6 py-2.5 text-slate-600 font-bold text-sm hover:bg-slate-200 rounded-full transition-colors"
+                                        disabled={isSaving}
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        onClick={executeQuickAction}
+                                        disabled={isSaving}
+                                        className={`px-6 py-2.5 text-white font-bold text-sm rounded-full transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2
+                                            ${confirmModal.actionType === 'COMPLETADO' ? 'bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700'}`}
+                                    >
+                                        {isSaving ? <><Icons.RefreshCw className="w-4 h-4 animate-spin"/> Procesando...</> : 'Sí, Confirmar'}
                                     </button>
                                 </div>
                              </div>
@@ -1380,7 +1665,6 @@
                                                                 {row.status}
                                                             </span>
                                                         </td>
-                                                        {/* COLUMNA DE ACCIONES */}
                                                         <td className="px-5 py-3 text-center bg-slate-50/30 group-hover:bg-white transition-colors">
                                                             <div className="flex justify-center gap-1.5">
                                                                 {cleanPhone && (
