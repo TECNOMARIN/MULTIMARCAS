@@ -81,7 +81,7 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v5.3.0 (Pago con Gestión)";
+        const APP_VERSION = "v5.4.0 (Filtro Asignado)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -99,7 +99,8 @@
                 theme: "indigo",
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10'], 
                 columns: {
-                    seller: ['responsable', 'vendedor', 'asesor'],
+                    seller: ['vendedor', 'asesor'],
+                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
                     client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
                     device: ['modelo - equipo', 'equipo', 'modelo'],
                     phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
@@ -119,6 +120,7 @@
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10'], 
                 columns: {
                     seller: ['vendedor', 'asesor', 'ejecutivo'],
+                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
                     client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
                     device: ['equipo', 'modelo', 'celular'],
                     phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
@@ -147,11 +149,13 @@
             // Filtros
             const [searchTerm, setSearchTerm] = useState('');
             const [selectedSeller, setSelectedSeller] = useState('');
+            const [selectedAssigned, setSelectedAssigned] = useState('');
             const [selectedDevice, setSelectedDevice] = useState('');
             const [selectedStore, setSelectedStore] = useState(''); 
             
             const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
             const [showOnlyEarly, setShowOnlyEarly] = useState(false); 
+            const [showOnlyCritical, setShowOnlyCritical] = useState(false); 
             
             // Filtros interactivos
             const [fpdQuotaFilter, setFpdQuotaFilter] = useState(null); 
@@ -193,7 +197,7 @@
                 const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
                 const diffTime = today - due;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                return diffDays >= 5 && diffDays <= 7;
+                return diffDays === 5 || diffDays === 6;
             };
 
             const findColumnName = useCallback((keyword1, keyword2, headersList) => {
@@ -369,12 +373,14 @@
                 setLoading(true);
                 setError(null);
                 setSelectedSeller('');
+                setSelectedAssigned('');
                 setSelectedDevice('');
                 setSelectedStore(''); 
                 setFpdQuotaFilter(null);
                 setBreakdownFilter(null);
                 setShowOnlyAlerts(false);
                 setShowOnlyEarly(false);
+                setShowOnlyCritical(false);
 
                 try {
                     const separator = API_URL.includes('?') ? '&' : '?';
@@ -410,8 +416,9 @@
             }, [fetchData]);
 
             // --- MEMOS DE DATOS ---
-            const { sellers, sellerColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn, idColumn } = useMemo(() => {
+            const { sellers, sellerColumn, assignees, assignedColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn, idColumn } = useMemo(() => {
                 const sCol = findConfigColumn(activeConfig.columns.seller, headers);
+                const aCol = findConfigColumn(activeConfig.columns.assigned, headers);
                 const dCol = findConfigColumn(activeConfig.columns.device, headers);
                 const pCol = findConfigColumn(activeConfig.columns.phone, headers);
                 const cCol = findConfigColumn(activeConfig.columns.client, headers); 
@@ -419,16 +426,19 @@
                 const idCol = findConfigColumn(activeConfig.columns.id, headers);
 
                 const uniqueSellers = new Set();
+                const uniqueAssignees = new Set();
                 const uniqueDevices = new Set();
                 const uniqueStores = new Set(); 
 
                 data.forEach(row => {
                     if (sCol && row[sCol]) uniqueSellers.add(String(row[sCol]).trim());
+                    if (aCol && row[aCol]) uniqueAssignees.add(String(row[aCol]).trim());
                     if (dCol && row[dCol]) uniqueDevices.add(String(row[dCol]).trim());
                     if (stCol && row[stCol]) uniqueStores.add(String(row[stCol]).trim());
                 });
                 return { 
                     sellers: Array.from(uniqueSellers).sort(), sellerColumn: sCol,
+                    assignees: Array.from(uniqueAssignees).sort(), assignedColumn: aCol,
                     devices: Array.from(uniqueDevices).sort(), deviceColumn: dCol,
                     stores: Array.from(uniqueStores).sort(), storeColumn: stCol, 
                     phoneColumn: pCol, clientColumn: cCol, idColumn: idCol
@@ -575,6 +585,7 @@
             const filteredData = useMemo(() => {
                 let result = data;
                 if (selectedSeller && sellerColumn) result = result.filter(row => String(row[sellerColumn]).trim() === selectedSeller);
+                if (selectedAssigned && assignedColumn) result = result.filter(row => String(row[assignedColumn]).trim() === selectedAssigned);
                 if (selectedDevice && deviceColumn) result = result.filter(row => String(row[deviceColumn]).trim() === selectedDevice);
                 if (selectedStore && storeColumn) result = result.filter(row => String(row[storeColumn]).trim() === selectedStore); 
                 
@@ -582,6 +593,7 @@
                 
                 if (showOnlyAlerts) result = result.filter(row => getRowAlertStatus(row, headers));
                 if (showOnlyEarly) result = result.filter(row => getRowEarlyStatus(row, headers));
+                if (showOnlyCritical) result = result.filter(row => getRowCriticalStatus(row, headers));
 
                 if (fpdQuotaFilter || breakdownFilter) {
                     const activeFilter = fpdQuotaFilter || breakdownFilter?.quota;
@@ -624,11 +636,11 @@
                     }
                 }
                 return result;
-            }, [data, headers, searchTerm, showOnlyAlerts, showOnlyEarly, fpdQuotaFilter, breakdownFilter, selectedSeller, sellerColumn, selectedDevice, deviceColumn, selectedStore, storeColumn, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus]);
+            }, [data, headers, searchTerm, showOnlyAlerts, showOnlyEarly, showOnlyCritical, fpdQuotaFilter, breakdownFilter, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus, getRowCriticalStatus]);
 
             useEffect(() => {
                 setCurrentPage(1);
-            }, [filteredData.length, selectedSeller, selectedDevice, selectedStore, searchTerm, showOnlyAlerts, showOnlyEarly, fpdQuotaFilter, breakdownFilter]);
+            }, [filteredData.length, selectedSeller, selectedAssigned, selectedDevice, selectedStore, searchTerm, showOnlyAlerts, showOnlyEarly, showOnlyCritical, fpdQuotaFilter, breakdownFilter]);
 
             const paginatedData = useMemo(() => {
                 const startIndex = (currentPage - 1) * itemsPerPage;
@@ -641,10 +653,11 @@
             const dataForStats = useMemo(() => {
                 let result = data;
                 if (selectedSeller && sellerColumn) result = result.filter(row => String(row[sellerColumn]).trim() === selectedSeller);
+                if (selectedAssigned && assignedColumn) result = result.filter(row => String(row[assignedColumn]).trim() === selectedAssigned);
                 if (selectedDevice && deviceColumn) result = result.filter(row => String(row[deviceColumn]).trim() === selectedDevice);
                 if (selectedStore && storeColumn) result = result.filter(row => String(row[storeColumn]).trim() === selectedStore); 
                 return result;
-            }, [data, selectedSeller, sellerColumn, selectedDevice, deviceColumn, selectedStore, storeColumn]);
+            }, [data, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn]);
 
             const alertStats = useMemo(() => {
                 let stats = { total: 0 };
@@ -657,6 +670,12 @@
                 dataForStats.forEach(row => { if (getRowEarlyStatus(row, headers)) stats.total++; });
                 return stats;
             }, [dataForStats, headers, getRowEarlyStatus]);
+
+            const criticalStats = useMemo(() => {
+                let stats = { total: 0 };
+                dataForStats.forEach(row => { if (getRowCriticalStatus(row, headers)) stats.total++; });
+                return stats;
+            }, [dataForStats, headers, getRowCriticalStatus]);
 
             // --- FPD STATS ---
             const fpdStats = useMemo(() => {
@@ -1135,13 +1154,22 @@
                     )}
 
                     {/* FILTROS BUSCADOR */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Vendedor</label>
                             <div className="relative">
                                 <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium" value={selectedSeller} onChange={e => setSelectedSeller(e.target.value)}>
                                     <option value="">Todos</option>
                                     {sellers.map((s,i) => <option key={i} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Asignado</label>
+                            <div className="relative">
+                                <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium" value={selectedAssigned} onChange={e => setSelectedAssigned(e.target.value)}>
+                                    <option value="">Todos</option>
+                                    {assignees.map((s,i) => <option key={i} value={s}>{s}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -1180,6 +1208,22 @@
                     </div>
 
                     {/* ALERTAS */}
+                    {criticalStats.total > 0 && (
+                        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-1 h-full bg-red-600"></div>
+                             <div className="flex gap-4 items-center">
+                                <div className="p-3 bg-white shadow-sm rounded-full text-red-600 border border-red-100"><Icons.AlertTriangle className="w-6 h-6 animate-pulse-slow"/></div>
+                                <div>
+                                    <h2 className="text-red-900 font-bold text-lg tracking-tight">{criticalStats.total} Clientes en Mora Crítica</h2>
+                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 días de mora. Prioridad máxima de gestión hoy.</p>
+                                </div>
+                             </div>
+                             <button onClick={() => { setShowOnlyCritical(!showOnlyCritical); setShowOnlyAlerts(false); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyCritical ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 hover:shadow-md' : 'bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300'}`}>
+                                {showOnlyCritical ? 'Quitar Filtro Crítico' : 'Gestionar Urgentes'}
+                             </button>
+                        </div>
+                    )}
+
                     {alertStats.total > 0 && (
                         <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
                              <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
@@ -1190,7 +1234,7 @@
                                     <p className="text-sm text-orange-700 opacity-90 mt-0.5">Vencidos hace 5-6 días sin gestión registrada.</p>
                                 </div>
                              </div>
-                             <button onClick={() => { setShowOnlyAlerts(!showOnlyAlerts); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyAlerts ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700 hover:shadow-md' : 'bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300'}`}>
+                             <button onClick={() => { setShowOnlyAlerts(!showOnlyAlerts); setShowOnlyEarly(false); setShowOnlyCritical(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyAlerts ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700 hover:shadow-md' : 'bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300'}`}>
                                 {showOnlyAlerts ? 'Quitar Filtro de Alertas' : 'Gestionar Alertas'}
                              </button>
                         </div>
@@ -1206,7 +1250,7 @@
                                     <p className="text-sm text-amber-700 opacity-90 mt-0.5">Ventas de hace 12 a 14 días. ¡Contactar antes del vencimiento!</p>
                                 </div>
                              </div>
-                             <button onClick={() => { setShowOnlyEarly(!showOnlyEarly); setShowOnlyAlerts(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyEarly ? 'bg-amber-600 text-white border-amber-600 hover:bg-amber-700 hover:shadow-md' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50 hover:border-amber-300'}`}>
+                             <button onClick={() => { setShowOnlyEarly(!showOnlyEarly); setShowOnlyAlerts(false); setShowOnlyCritical(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyEarly ? 'bg-amber-600 text-white border-amber-600 hover:bg-amber-700 hover:shadow-md' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50 hover:border-amber-300'}`}>
                                 {showOnlyEarly ? 'Quitar Filtro Temprano' : 'Gestión Preventiva'}
                              </button>
                         </div>
@@ -1219,7 +1263,7 @@
                                 Análisis de Cohortes
                             </h3>
                             { (fpdQuotaFilter || breakdownFilter) && 
-                                <button onClick={() => { setFpdQuotaFilter(null); setBreakdownFilter(null); setShowOnlyAlerts(false); setShowOnlyEarly(false); }} className="text-xs bg-slate-800 text-white px-4 py-2 rounded-full flex gap-1.5 items-center hover:bg-slate-700 transition-all shadow-md hover:shadow-lg">
+                                <button onClick={() => { setFpdQuotaFilter(null); setBreakdownFilter(null); setShowOnlyAlerts(false); setShowOnlyEarly(false); setShowOnlyCritical(false); }} className="text-xs bg-slate-800 text-white px-4 py-2 rounded-full flex gap-1.5 items-center hover:bg-slate-700 transition-all shadow-md hover:shadow-lg">
                                     <Icons.X className="w-3.5 h-3.5"/> Limpiar Filtros
                                 </button>
                             }
