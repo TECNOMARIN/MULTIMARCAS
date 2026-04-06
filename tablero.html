@@ -81,7 +81,7 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v5.4.0 (Filtro Asignado)";
+        const APP_VERSION = "v6.2.1 (Backend Fallback Fix)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -111,7 +111,7 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id'],
                     email: ['email', 'correo', 'mail'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia']
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
             },
             payjoy: {
@@ -131,7 +131,7 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id'],
                     email: ['email', 'correo', 'mail'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia']
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
             }
         };
@@ -161,15 +161,16 @@
             const [fpdQuotaFilter, setFpdQuotaFilter] = useState(null); 
             const [breakdownFilter, setBreakdownFilter] = useState(null);
 
-            // Reporte Vendedores
+            // Reporte Vendedores / Asignados
             const [showSellerModal, setShowSellerModal] = useState(false);
             const [reportFilter, setReportFilter] = useState('fpd7');
             const [detailSeller, setDetailSeller] = useState(null); 
+            const [detailFilter, setDetailFilter] = useState('all'); // 'all' | 'loans'
 
             // Edición
             const [editModal, setEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
             const [cleanEditModal, setCleanEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
-            const [confirmModal, setConfirmModal] = useState({ show: false, row: null, actionType: null, message: '' });
+            const [confirmModal, setConfirmModal] = useState({ show: false, row: null, actionType: null, message: '', amount: '' });
             const [isSaving, setIsSaving] = useState(false);
 
             // Paginación
@@ -293,6 +294,15 @@
                 return 'unpaid'; 
             };
 
+            // Convertir texto de moneda a número
+            const parseAmount = (val) => {
+                let s = String(val || '');
+                s = s.replace(/[^0-9.,]/g, '');
+                s = s.replace(/[.,]00$/, ''); // Limpia decimales .00 o ,00
+                s = s.replace(/[.,]/g, '');   // Limpia puntos/comas de miles
+                return parseInt(s, 10) || 0;
+            };
+
             // --- LÓGICA DE ALERTA TEMPRANA (12 a 14 DÍAS DE LA VENTA) ---
             const getRowEarlyStatus = useCallback((row, headersList) => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
@@ -348,7 +358,7 @@
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            // --- LÓGICA DE ALERTAS (5-7 DÍAS DESPUÉS DEL VENCIMIENTO DE CUOTA) ---
+            // --- LÓGICA DE ALERTAS (5-6 DÍAS DESPUÉS DEL VENCIMIENTO DE CUOTA) ---
             const checkSpecificQuotaAlert = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
@@ -445,11 +455,14 @@
                 };
             }, [data, headers, activeConfig, findConfigColumn]);
 
-            // --- REPORTE DE VENDEDORES Y DETALLES ---
+            // --- REPORTE DE GESTORES Y PRÉSTAMOS ---
             const sellerReportData = useMemo(() => {
-                if (!showSellerModal || !sellerColumn) return [];
+                if (!showSellerModal) return [];
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                 if (!dateCol) return [];
+
+                // IMPORTANTE: Ahora agrupamos por Asignado/Gestor de forma predeterminada
+                const reportCol = assignedColumn || sellerColumn;
 
                 let filterRanges = [];
                 const now = new Date();
@@ -467,17 +480,21 @@
                     const isInRange = filterRanges.some(r => d >= r.start && d <= r.end);
                     if (!isInRange) return;
 
-                    const sellerName = String(row[sellerColumn] || 'Sin Asignar').trim().toUpperCase();
-                    if (!report[sellerName]) {
-                        report[sellerName] = { name: sellerName, total: 0, pagas: 0, gestion: 0, noCancelo: 0, vacio: 0, porVencer: 0 };
+                    const personName = String(row[reportCol] || 'Sin Asignar').trim().toUpperCase();
+                    
+                    if (!report[personName]) {
+                        report[personName] = { name: personName, total: 0, pagas: 0, gestion: 0, noCancelo: 0, vacio: 0, porVencer: 0, prestamos: 0, prestamosDinero: 0 };
                     }
-                    report[sellerName].total++;
+                    report[personName].total++;
                     
                     const qName = 'primera';
                     let statusCol = findColumnName(activeConfig.columns.paymentStatus, qName, headers);
                     if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
                     
-                    const status = getStatus(statusCol ? row[statusCol] : '');
+                    const rawStatus = statusCol ? String(row[statusCol]).toLowerCase().trim() : '';
+                    const isPrestamo = rawStatus.includes('pago con gestion') || rawStatus.includes('pago con gestión');
+                    
+                    const status = getStatus(rawStatus);
 
                     const dueDate = new Date(d);
                     dueDate.setDate(d.getDate() + 14);
@@ -488,16 +505,25 @@
                     dueDateCheck.setHours(0,0,0,0);
 
                     if (status === 'clean') {
-                        report[sellerName].pagas++;
+                        report[personName].pagas++;
                     } else if (status === 'managed') {
-                        report[sellerName].gestion++;
+                        report[personName].gestion++;
                     } else {
                         if (dueDateCheck >= today) {
-                            report[sellerName].porVencer++;
+                            report[personName].porVencer++;
                         } else if (status === 'unpaid') {
-                            report[sellerName].noCancelo++;
+                            report[personName].noCancelo++;
                         } else {
-                            report[sellerName].vacio++; 
+                            report[personName].vacio++; 
+                        }
+                    }
+
+                    // Contabilizar dinero de los Préstamos
+                    if (isPrestamo) {
+                        report[personName].prestamos++;
+                        const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
+                        if (valCuotaCol) {
+                            report[personName].prestamosDinero += parseAmount(row[valCuotaCol]);
                         }
                     }
                 });
@@ -507,7 +533,7 @@
                     const index = r.total > 0 ? (numerator / r.total) * 100 : 0;
                     return { ...r, index: index.toFixed(1) };
                 }).sort((a, b) => b.index - a.index);
-            }, [showSellerModal, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn]);
+            }, [showSellerModal, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn]);
 
             const sellerDetailData = useMemo(() => {
                 if (!detailSeller) return [];
@@ -519,6 +545,9 @@
                 const clientCol = findConfigColumn(activeConfig.columns.client, headers);
                 const deviceCol = findConfigColumn(activeConfig.columns.device, headers);
                 const commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
+                const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
+
+                const reportCol = assignedColumn || sellerColumn;
 
                 let filterRanges = [];
                 const now = new Date();
@@ -535,13 +564,16 @@
                     const isInRange = filterRanges.some(r => d >= r.start && d <= r.end);
                     if (!isInRange) return;
 
-                    const rowSeller = String(row[sellerColumn] || 'Sin Asignar').trim().toUpperCase();
-                    if (rowSeller !== detailSeller) return;
+                    const rowPerson = String(row[reportCol] || 'Sin Asignar').trim().toUpperCase();
+                    if (rowPerson !== detailSeller) return;
 
                     const qName = 'primera';
                     let statusCol = findColumnName(activeConfig.columns.paymentStatus, qName, headers);
                     if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                    let status = getStatus(statusCol ? row[statusCol] : '');
+                    
+                    const rawStatus = statusCol ? String(row[statusCol]).toLowerCase().trim() : '';
+                    let status = getStatus(rawStatus);
+                    const isPrestamo = rawStatus.includes('pago con gestion') || rawStatus.includes('pago con gestión');
 
                     const dueDate = new Date(d);
                     dueDate.setDate(d.getDate() + 14);
@@ -563,11 +595,14 @@
                         email: emailCol ? row[emailCol] : '-',
                         device: deviceCol ? row[deviceCol] : '-',
                         dueDate: dueDateStr, 
-                        status: status === 'clean' ? 'Pagó' : 
+                        status: isPrestamo ? 'Gestión($)' : status === 'clean' ? 'Pagó' : 
                                 status === 'managed' ? 'Gestión' : 
                                 status === 'upcoming' ? 'Por Vencer' : 
                                 status === 'unpaid' ? 'Mora' : 'Sin Dato',
                         statusCode: status,
+                        isLoan: isPrestamo,
+                        amountStr: valCuotaCol && row[valCuotaCol] ? String(row[valCuotaCol]) : '$0',
+                        amountNum: valCuotaCol ? parseAmount(row[valCuotaCol]) : 0,
                         originalRow: row, 
                         commentColName: commentsCol, 
                         currentComment: commentsCol ? row[commentsCol] : '' 
@@ -575,11 +610,11 @@
                 });
                 
                 return result.sort((a,b) => {
-                    const weight = { 'Mora': 4, 'Gestión': 3, 'Por Vencer': 2, 'Sin Dato': 1, 'Pagó': 0 };
+                    const weight = { 'Mora': 5, 'Gestión': 4, 'Gestión($)': 3, 'Por Vencer': 2, 'Sin Dato': 1, 'Pagó': 0 };
                     return weight[b.status] - weight[a.status];
                 });
 
-            }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn]);
+            }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn]);
 
             // --- RENDERIZADO TABLA PRINCIPAL Y PAGINACIÓN ---
             const filteredData = useMemo(() => {
@@ -828,7 +863,7 @@
                              <Icons.FileText className={`w-4 h-4 ${headerIconColor}`} />
                              <h3 className={`text-sm font-bold uppercase tracking-wide ${headerColor}`}>{title}</h3>
                         </div>
-                        <div onClick={() => { if(hasSales) { setFpdQuotaFilter(isFpdActive ? null : quotaId); setBreakdownFilter(null); setShowOnlyAlerts(false); setShowOnlyEarly(false); }}} className={`mb-3 p-3 rounded-xl ${fpdColor} shadow-sm transition-all ${hasSales ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''} ${isFpdActive ? 'ring-2 ring-indigo-500' : ''}`}>
+                        <div onClick={() => { if(hasSales) { setFpdQuotaFilter(isFpdActive ? null : quotaId); setBreakdownFilter(null); setShowOnlyAlerts(false); setShowOnlyEarly(false); setShowOnlyCritical(false); }}} className={`mb-3 p-3 rounded-xl ${fpdColor} shadow-sm transition-all ${hasSales ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''} ${isFpdActive ? 'ring-2 ring-indigo-500' : ''}`}>
                             <div className="flex justify-between mb-2">
                                 <span className="text-[10px] font-bold uppercase opacity-80 flex items-center gap-1">{isFpdActive && <Icons.Filter className="w-3 h-3 animate-pulse"/>} Semanas -{QUOTA_LABELS[quotaId].weeksAgo}</span>
                                 <span className="text-xl font-bold">{hasSales ? `${fpdPercent}%` : 'N/A'}</span>
@@ -868,14 +903,28 @@
 
             const handleExportPDF = () => {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                const tableColumn = ["Vendedor", "Total", "Pagas", "Gestión", "No Canc.", "Por Vencer", "Sin Dato", "Mora %"];
+                const doc = new jsPDF('landscape'); // Horizontal para que quepan las nuevas columnas
+                const tableColumn = ["Gestor / Asignado", "Total", "Pagas", "Préstamos", "$ Prestado", "Gestión", "No Canc.", "Por Vencer", "S/D", "Mora %"];
                 const tableRows = [];
+                
+                const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+
                 sellerReportData.forEach(row => {
-                    tableRows.push([row.name, row.total, row.pagas, row.gestion, row.noCancelo, row.porVencer, row.vacio, `${row.index}%`]);
+                    tableRows.push([
+                        row.name, 
+                        row.total, 
+                        row.pagas, 
+                        row.prestamos, 
+                        formatter.format(row.prestamosDinero),
+                        row.gestion, 
+                        row.noCancelo, 
+                        row.porVencer, 
+                        row.vacio, 
+                        `${row.index}%`
+                    ]);
                 });
                 doc.setFontSize(16);
-                doc.text(`Reporte de Vendedores - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.text(`Reporte Analítico - ${portfolio.toUpperCase()}`, 14, 15);
                 doc.setFontSize(10);
                 const filterName = reportFilter === 'fpd7' ? 'FPD7 (3 Semanas)' : reportFilter === 'current' ? 'Este Mes' : reportFilter === 'last' ? 'Mes Pasado' : 'Toda la Cartera';
                 doc.text(`Filtro Aplicado: ${filterName}`, 14, 22);
@@ -889,16 +938,23 @@
                     styles: { fontSize: 8 },
                     alternateRowStyles: { fillColor: [245, 247, 255] }
                 });
-                doc.save(`Reporte_Vendedores_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
+                doc.save(`Reporte_Gestores_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
             const handleExportDetailPDF = () => {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Vencimiento", "Estado"];
+                const doc = new jsPDF('landscape');
+                
+                const isOnlyLoans = detailFilter === 'loans';
+                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Vencimiento", "Estado", "Valor Cuota"];
                 const tableRows = [];
-                sellerDetailData.forEach(row => {
-                    tableRows.push([row.name, row.id, row.phone, row.device, row.dueDate, row.status]);
+                
+                let exportData = isOnlyLoans ? sellerDetailData.filter(r => r.isLoan) : sellerDetailData;
+                let totalPrestado = 0;
+
+                exportData.forEach(row => {
+                    if (row.isLoan) totalPrestado += row.amountNum;
+                    tableRows.push([row.name, row.id, row.phone, row.device, row.dueDate, row.status, row.amountStr]);
                 });
                 
                 doc.setFontSize(16);
@@ -906,10 +962,17 @@
                 doc.setFontSize(10);
                 doc.text(`Cartera: ${portfolio.toUpperCase()} | Fecha: ${new Date().toLocaleDateString()}`, 14, 22);
                 
+                if (isOnlyLoans) {
+                    const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+                    doc.setFont(undefined, 'bold');
+                    doc.text(`Total Prestado / Gestión: ${formatter.format(totalPrestado)}`, 14, 28);
+                    doc.setFont(undefined, 'normal');
+                }
+                
                 doc.autoTable({
                     head: [tableColumn],
                     body: tableRows,
-                    startY: 30,
+                    startY: isOnlyLoans ? 33 : 30,
                     theme: 'grid',
                     headStyles: { fillColor: [63, 81, 181] }, 
                     styles: { fontSize: 8 },
@@ -919,81 +982,188 @@
                             if (val === 'Mora') data.cell.styles.textColor = [220, 38, 38]; 
                             else if (val === 'Pagó') data.cell.styles.textColor = [22, 163, 74]; 
                             else if (val === 'Gestión') data.cell.styles.textColor = [37, 99, 235]; 
+                            else if (val === 'Gestión($)') data.cell.styles.textColor = [124, 58, 237]; // Morado
                             else if (val === 'Por Vencer') data.cell.styles.textColor = [217, 119, 6]; 
                         }
                     }
                 });
-                doc.save(`Detalle_${detailSeller}_${portfolio}.pdf`);
+                const fileNamePrefix = isOnlyLoans ? `Prestamos` : `Detalle`;
+                doc.save(`${fileNamePrefix}_${detailSeller}_${portfolio}.pdf`);
+            };
+
+            const handleExportCriticalPDF = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+                
+                let amountCol = headers.find(h => {
+                    const l = h.toLowerCase();
+                    return l.includes('valor cuota') || l.includes('monto') || l.includes('valor de la cuota') || l === 'cuota';
+                });
+
+                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Tienda", "Valor Cuota"];
+                const tableRows = [];
+                let totalAmount = 0;
+
+                const exportRows = dataForStats.filter(row => getRowCriticalStatus(row, headers));
+
+                exportRows.forEach(row => {
+                    let amount = amountCol ? parseAmount(row[amountCol]) : 0;
+                    totalAmount += amount;
+
+                    let cellAmount = amountCol && row[amountCol] ? String(row[amountCol]) : '$0';
+
+                    tableRows.push([
+                        row[clientColumn] || '-',
+                        row[idColumn] || '-',
+                        row[phoneColumn] || '-',
+                        row[deviceColumn] || '-',
+                        row[storeColumn] || '-',
+                        cellAmount
+                    ]);
+                });
+
+                doc.setFontSize(16);
+                doc.text(`Reporte de Mora Crítica (7 Días Exactos) - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.setFontSize(11);
+                doc.text(`Fecha de Corte: ${new Date().toLocaleDateString()} | Total Clientes en Riesgo: ${exportRows.length}`, 14, 22);
+                
+                const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+                doc.setFont(undefined, 'bold');
+                doc.text(`Suma Total de Cuotas en Riesgo: ${formatter.format(totalAmount)}`, 14, 28);
+                doc.setFont(undefined, 'normal');
+
+                doc.autoTable({
+                    head: [tableColumn],
+                    body: tableRows,
+                    startY: 33,
+                    theme: 'grid',
+                    headStyles: { fillColor: [220, 38, 38] }, // Rojo intenso
+                    styles: { fontSize: 9 }
+                });
+
+                doc.save(`Mora_Critica_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
             // --- ACCIONES RÁPIDAS Y EDICIÓN ---
             const triggerQuickAction = (row, actionType) => {
                 let msg = "";
+                let defaultAmount = "";
+
                 if (actionType === 'COMPLETADO') msg = "¿Marcar cliente como COMPLETADO en Continuidad?";
-                else if (actionType === 'PAGO_GESTION') msg = "¿Registrar PAGO CON GESTIÓN (préstamo) para este cliente?";
+                else if (actionType === 'PAGO_GESTION') {
+                    msg = "¿Registrar PAGO CON GESTIÓN (préstamo) para este cliente?";
+                    const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
+                    if (valCuotaCol && row[valCuotaCol]) {
+                        defaultAmount = String(row[valCuotaCol]);
+                    }
+                }
                 else msg = "¿Registrar PAGO para este cliente de forma rápida?";
                 
-                setConfirmModal({ show: true, row, actionType, message: msg });
+                setConfirmModal({ show: true, row, actionType, message: msg, amount: defaultAmount });
             };
 
             const executeQuickAction = async () => {
-                const { row, actionType } = confirmModal;
+                const { row, actionType, amount } = confirmModal;
                 const phone = phoneColumn ? row[phoneColumn] : '';
                 const idVal = idColumn ? row[idColumn] : '';
                 
                 if (!phone && !idVal) {
                     setError("Cliente sin número de celular ni cédula, no se puede actualizar.");
-                    setConfirmModal({ show: false, row: null, actionType: null, message: '' });
+                    setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '' });
                     return;
                 }
-                
-                let targetCol = "";
-                let valToWrite = "";
-                let append = false;
-                let cleanWrite = false;
 
-                if (actionType === 'COMPLETADO') {
-                    targetCol = findConfigColumn(activeConfig.columns.comments, headers);
-                    valToWrite = "Completado";
-                    append = true;      
-                    cleanWrite = false; 
-                } else if (actionType === 'PAGO_GESTION') {
-                    targetCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
-                    if (!targetCol) targetCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                    valToWrite = "PAGO CON GESTION";
-                    append = false;     
-                    cleanWrite = true;  
-                } else {
-                    targetCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
-                    if (!targetCol) targetCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                    valToWrite = "PAGO";
-                    append = false;     
-                    cleanWrite = true;  
-                }
-
-                if (!targetCol) {
-                    setError("No se encontró la columna destino en el Excel para esta acción.");
-                    setConfirmModal({ show: false, row: null, actionType: null, message: '' });
-                    return;
-                }
+                let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
+                let paymentCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
 
                 setIsSaving(true);
                 try {
-                    const payload = { type: portfolio, id: idVal, phone: phone || '', comment: valToWrite, column: targetCol, append, cleanWrite };
-                    await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+                    let updatedRow = { ...row };
+                    let updatesPayload = [];
                     
+                    // FALLBACKS para Código Google Apps Script Viejo
+                    let fallbackComment = "";
+                    let fallbackCol = "";
+                    let fallbackAppend = false;
+                    let fallbackClean = false;
+                    
+                    if (actionType === 'COMPLETADO') {
+                        if (!commentsCol) throw new Error("No se encontró la columna de comentarios en el Excel.");
+                        
+                        updatesPayload.push({ column: commentsCol, value: "Completado", append: true, cleanWrite: false });
+                        
+                        fallbackComment = "Completado";
+                        fallbackCol = commentsCol;
+                        fallbackAppend = true;
+                        fallbackClean = false;
+                        
+                        const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+                        const oldVal = updatedRow[commentsCol] || '';
+                        updatedRow[commentsCol] = oldVal ? `[${dateStr}] Completado | ${oldVal}` : `[${dateStr}] Completado`;
+
+                    } else {
+                        // Es PAGO o PAGO_GESTION
+                        const isGestion = actionType === 'PAGO_GESTION';
+                        const valStatus = isGestion ? "PAGO CON GESTION" : "PAGO";
+                        const valComment = isGestion ? `Pago registrado con Gestión (Préstamo: $${amount || 0})` : "Pago registrado";
+
+                        // 1. Actualizar la columna de PAGOS (Status) - ESTE SERÁ EL FALLBACK PRINCIPAL
+                        if (paymentCol) {
+                            updatesPayload.push({ column: paymentCol, value: valStatus, append: false, cleanWrite: true });
+                            updatedRow[paymentCol] = valStatus;
+                            
+                            fallbackComment = valStatus;
+                            fallbackCol = paymentCol;
+                            fallbackAppend = false;
+                            fallbackClean = true;
+                        }
+
+                        // 2. Actualizar la columna de COMENTARIOS (Historial visible)
+                        if (commentsCol) {
+                            updatesPayload.push({ column: commentsCol, value: valComment, append: true, cleanWrite: false });
+                            
+                            const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+                            const oldVal = updatedRow[commentsCol] || '';
+                            updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
+                        }
+
+                        // 3. Actualizar el VALOR CUOTA (Solo si es PAGO_GESTION)
+                        if (isGestion) {
+                            const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
+                            if (valCuotaCol && amount !== undefined && amount !== '') {
+                                updatesPayload.push({ column: valCuotaCol, value: amount, append: false, cleanWrite: true });
+                                updatedRow[valCuotaCol] = amount;
+                            }
+                        }
+                    }
+
+                    if (updatesPayload.length === 0) {
+                        throw new Error("No hay columnas destino válidas para actualizar.");
+                    }
+
+                    // ENVIAR TODAS LAS ACTUALIZACIONES EN UN SOLO VIAJE AL SERVIDOR
+                    const payload = { 
+                        type: portfolio, 
+                        id: idVal, 
+                        phone: phone || '', 
+                        // Variables de retrocompatibilidad (por si el script viejo corre)
+                        comment: fallbackComment,
+                        column: fallbackCol,
+                        append: fallbackAppend,
+                        cleanWrite: fallbackClean,
+                        // Nuevo paquete de actualización masiva
+                        updates: updatesPayload 
+                    };
+                    
+                    await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+
+                    // Actualizar tabla en pantalla
                     const newData = data.map(r => {
                          const matchId = idVal && idColumn ? r[idColumn] === idVal : false;
                          const matchPhone = phone && phoneColumn ? String(r[phoneColumn]).replace(/\D/g, '') === String(phone).replace(/\D/g, '') : false;
                          
                          if (matchId || matchPhone) {
-                             if (actionType === 'COMPLETADO') {
-                                 const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
-                                 const oldVal = r[targetCol] || '';
-                                 return { ...r, [targetCol]: oldVal ? `[${dateStr}] ${valToWrite} | ${oldVal}` : `[${dateStr}] ${valToWrite}` };
-                             } else {
-                                 return { ...r, [targetCol]: valToWrite };
-                             }
+                             return updatedRow;
                          }
                          return r;
                     });
@@ -1002,7 +1172,7 @@
                     setError("Error: " + e.message);
                 } finally {
                     setIsSaving(false);
-                    setConfirmModal({ show: false, row: null, actionType: null, message: '' });
+                    setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '' });
                 }
             };
 
@@ -1031,7 +1201,16 @@
 
                 setIsSaving(true);
                 try {
-                    const payload = { type: portfolio, id: idVal, phone: phone || '', comment: newVal, column: colName, append: false, cleanWrite: true };
+                    const payload = { 
+                        type: portfolio, 
+                        id: idVal, 
+                        phone: phone || '', 
+                        comment: newVal, // Backwards compatible
+                        column: colName, // Backwards compatible
+                        append: false,   // Backwards compatible
+                        cleanWrite: true,// Backwards compatible
+                        updates: [{ column: colName, value: newVal, append: false, cleanWrite: true }] 
+                    };
                     await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
                     
                     const newData = data.map(r => {
@@ -1059,7 +1238,16 @@
                 const phone = phoneColumn ? editModal.row[phoneColumn] : '';
                 const idVal = idColumn ? editModal.row[idColumn] : '';
                 
-                const payload = { type: portfolio, id: idVal, phone: phone || '', comment: editModal.currentValue, column: editModal.colName, append: true, cleanWrite: false };
+                const payload = { 
+                    type: portfolio, 
+                    id: idVal, 
+                    phone: phone || '', 
+                    comment: editModal.currentValue, // Backwards compatible
+                    column: editModal.colName,       // Backwards compatible
+                    append: true,                    // Backwards compatible
+                    cleanWrite: false,               // Backwards compatible
+                    updates: [{ column: editModal.colName, value: editModal.currentValue, append: true, cleanWrite: false }] 
+                };
 
                 try {
                     await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
@@ -1072,7 +1260,7 @@
                              const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
                              const newEntry = `[${dateStr}] ${editModal.currentValue}`;
                              const oldVal = r[editModal.colName] || '';
-                             return { ...r, [editModal.colName]: `${newEntry} | ${oldVal}` };
+                             return { ...r, [editModal.colName]: oldVal ? `${newEntry} | ${oldVal}` : newEntry };
                          }
                          return r;
                     });
@@ -1218,9 +1406,16 @@
                                     <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 días de mora. Prioridad máxima de gestión hoy.</p>
                                 </div>
                              </div>
-                             <button onClick={() => { setShowOnlyCritical(!showOnlyCritical); setShowOnlyAlerts(false); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyCritical ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 hover:shadow-md' : 'bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300'}`}>
-                                {showOnlyCritical ? 'Quitar Filtro Crítico' : 'Gestionar Urgentes'}
-                             </button>
+                             <div className="flex gap-2">
+                                 {showOnlyCritical && (
+                                     <button onClick={handleExportCriticalPDF} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-700 rounded-full hover:bg-red-50 transition-all shadow-sm font-bold text-sm">
+                                         <Icons.Download className="w-4 h-4"/> Exportar PDF
+                                     </button>
+                                 )}
+                                 <button onClick={() => { setShowOnlyCritical(!showOnlyCritical); setShowOnlyAlerts(false); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyCritical ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 hover:shadow-md' : 'bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300'}`}>
+                                    {showOnlyCritical ? 'Quitar Filtro Crítico' : 'Gestionar Urgentes'}
+                                 </button>
+                             </div>
                         </div>
                     )}
 
@@ -1412,7 +1607,7 @@
                                                     const isCommentsCol = h === commentsColName;
 
                                                     if (isCommentsCol) {
-                                                     tdContent = (
+                                                         tdContent = (
                                                             <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs group relative ${style?.bgColor} ${j===0 ? rowBorderClass : ''} ${rowTextClass}`}>
                                                                 {isCriticalRow && <Icons.AlertTriangle className="w-4 h-4 inline mr-1.5 text-red-700 animate-pulse"/>}
                                                                 {!isCriticalRow && isAlertRow && <Icons.AlertCircle className="w-4 h-4 inline mr-1.5 text-orange-600"/>}
@@ -1602,11 +1797,25 @@
                                          <Icons.DollarSign className="w-8 h-8"/>}
                                     </div>
                                     <h3 className="text-lg font-black text-slate-800 mb-2">Confirmar Acción</h3>
-                                    <p className="text-sm text-slate-500">{confirmModal.message}</p>
+                                    <p className="text-sm text-slate-500 mb-4">{confirmModal.message}</p>
+
+                                    {/* NUEVO INPUT PARA PAGO GESTIÓN */}
+                                    {confirmModal.actionType === 'PAGO_GESTION' && (
+                                        <div className="text-left bg-blue-50 p-3 rounded-xl border border-blue-100 mb-4">
+                                            <label className="text-[10px] font-bold text-blue-800 uppercase tracking-wider block mb-1">Valor Prestado / Gestión</label>
+                                            <input 
+                                                type="text" 
+                                                value={confirmModal.amount} 
+                                                onChange={(e) => setConfirmModal({...confirmModal, amount: e.target.value})}
+                                                className="w-full p-2.5 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm font-bold text-blue-900 bg-white"
+                                                placeholder="Ej: 50000"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-center gap-3 rounded-b-2xl">
                                     <button 
-                                        onClick={() => setConfirmModal({ show: false, row: null, actionType: null, message: '' })} 
+                                        onClick={() => setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '' })} 
                                         className="px-6 py-2.5 text-slate-600 font-bold text-sm hover:bg-slate-200 rounded-full transition-colors"
                                         disabled={isSaving}
                                     >
@@ -1630,15 +1839,15 @@
                     {/* --- MODAL REPORTE VENDEDORES (NIVEL 1) --- */}
                     {showSellerModal && (
                         <div id="printable-modal-content" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-                            <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh] border border-slate-100 overflow-hidden transform scale-100 transition-transform">
+                            <div className="bg-white w-full max-w-6xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh] border border-slate-100 overflow-hidden transform scale-100 transition-transform">
                                 <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50 no-print">
                                     <div className="flex items-center gap-4">
                                         <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl shadow-sm hidden sm:block">
                                             <Icons.BarChart4 className="w-6 h-6"/>
                                         </div>
                                         <div>
-                                            <h3 className="text-xl font-black text-slate-800 tracking-tight">Rendimiento por Vendedor</h3>
-                                            <p className="text-xs text-slate-500 font-medium mt-0.5">Métricas de recaudo y morosidad</p>
+                                            <h3 className="text-xl font-black text-slate-800 tracking-tight">Rendimiento por Gestor</h3>
+                                            <p className="text-xs text-slate-500 font-medium mt-0.5">Métricas de recaudo, morosidad y préstamos (Caja)</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -1661,9 +1870,11 @@
                                     <table className="w-full text-sm text-left border-collapse">
                                         <thead className="text-[11px] text-slate-400 uppercase tracking-widest bg-white sticky top-0 z-10 shadow-sm border-b border-slate-100">
                                             <tr>
-                                                <th className="px-6 py-4 font-black">Asesor / Vendedor</th>
+                                                <th className="px-6 py-4 font-black">Gestor / Asignado</th>
                                                 <th className="px-4 py-4 text-center font-black">Ventas</th>
                                                 <th className="px-4 py-4 text-center font-black text-emerald-500">Pagas</th>
+                                                <th className="px-4 py-4 text-center font-black text-indigo-500" title="Cantidad de cuotas prestadas por la empresa">Préstamos</th>
+                                                <th className="px-4 py-4 text-right font-black text-indigo-500" title="Dinero total prestado">$ Gest. / Prestado</th>
                                                 <th className="px-4 py-4 text-center font-black text-blue-500">Gestión</th>
                                                 <th className="px-4 py-4 text-center font-black text-rose-500">Mora</th>
                                                 <th className="px-4 py-4 text-center font-black text-amber-500">Por Vencer</th>
@@ -1677,27 +1888,34 @@
                                                     <td className="px-6 py-3.5 font-bold text-slate-700">{row.name}</td>
                                                     <td className="px-4 py-3.5 text-center font-bold text-slate-800">{row.total}</td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-xs">{row.pagas}</span></td>
+                                                    
+                                                    {/* NUEVAS COLUMNAS DE PRÉSTAMO (CAJA) */}
+                                                    <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-bold text-xs">{row.prestamos}</span></td>
+                                                    <td className="px-4 py-3.5 text-right font-bold text-slate-700">
+                                                        {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(row.prestamosDinero)}
+                                                    </td>
+
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-bold text-xs">{row.gestion}</span></td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg font-bold text-xs">{row.noCancelo}</span></td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg font-bold text-xs">{row.porVencer}</span></td>
                                                     <td className="px-4 py-3.5 text-center text-slate-400 text-xs font-medium">{row.vacio}</td>
                                                     <td className="px-6 py-3.5 text-right">
                                                         <button 
-                                                            onClick={() => setDetailSeller(row.name)}
+                                                            onClick={() => { setDetailSeller(row.name); setDetailFilter('all'); }}
                                                             className={`px-4 py-1.5 rounded-full text-xs font-black border transition-all shadow-sm group-hover:shadow hover:scale-105 active:scale-95 ${parseFloat(row.index) > 20 ? 'bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-500 hover:text-white' : parseFloat(row.index) > 10 ? 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-500 hover:text-white' : 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-500 hover:text-white'}`}
-                                                            title="Clic para ver detalle de clientes"
+                                                            title="Clic para auditar detalles"
                                                         >
                                                             {row.index}%
                                                         </button>
                                                     </td>
                                                 </tr>
-                                            )) : <tr><td colSpan="8" className="px-6 py-16 text-center text-slate-400 font-medium">No hay ventas registradas para los filtros actuales.</td></tr>}
+                                            )) : <tr><td colSpan="10" className="px-6 py-16 text-center text-slate-400 font-medium">No hay ventas registradas para los filtros actuales.</td></tr>}
                                         </tbody>
                                     </table>
                                 </div>
                                 <div className="p-4 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-500 flex justify-between rounded-b-3xl font-medium no-print">
                                     <span>Fórmula: (Mora Real + Gestión) ÷ Total Ventas. "Por Vencer" no penaliza.</span>
-                                    <span className="flex items-center gap-1 text-indigo-500"><Icons.AlertCircle className="w-3 h-3"/> Clic en el porcentaje para auditar.</span>
+                                    <span className="flex items-center gap-1 text-indigo-500"><Icons.AlertCircle className="w-3 h-3"/> Clic en el porcentaje para ver detalle de Préstamos o Moras.</span>
                                 </div>
                             </div>
                         </div>
@@ -1721,13 +1939,31 @@
                                     </div>
                                     <div className="flex gap-2">
                                         <button onClick={handleExportDetailPDF} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-full hover:border-indigo-300 hover:text-indigo-600 transition-all font-bold text-sm shadow-sm hover:shadow">
-                                            <Icons.Download className="w-4 h-4"/> Exportar Detalles
+                                            <Icons.Download className="w-4 h-4"/> Exportar a PDF
                                         </button>
                                         <button onClick={() => setDetailSeller(null)} className="p-2 hover:bg-slate-200 rounded-full text-slate-400 transition-colors">
                                             <Icons.X className="w-6 h-6"/>
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* FILTRO DE PRÉSTAMOS DENTRO DEL DETALLE */}
+                                <div className="px-5 py-3 border-b border-slate-100 bg-white flex items-center gap-3">
+                                    <span className="text-xs font-bold text-slate-400 uppercase">Filtro de Vista:</span>
+                                    <button 
+                                        onClick={() => setDetailFilter('all')} 
+                                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${detailFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                                    >
+                                        Ver Toda la Cartera
+                                    </button>
+                                    <button 
+                                        onClick={() => setDetailFilter('loans')} 
+                                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors flex gap-1.5 items-center ${detailFilter === 'loans' ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                                    >
+                                        <Icons.Handshake className="w-3.5 h-3.5"/> Mostrar solo Pagos con Gestión (Préstamos)
+                                    </button>
+                                </div>
+
                                 <div className="flex-1 overflow-auto p-0 custom-scrollbar">
                                     <table className="w-full text-sm text-left border-collapse">
                                         <thead className="text-[10px] text-slate-400 uppercase tracking-widest bg-white sticky top-0 z-10 shadow-sm border-b border-slate-100">
@@ -1737,12 +1973,14 @@
                                                 <th className="px-4 py-4 font-black">Contacto</th>
                                                 <th className="px-4 py-4 font-black">Dispositivo</th>
                                                 <th className="px-4 py-4 text-center font-black">Vencimiento</th>
+                                                <th className="px-4 py-4 text-center font-black text-indigo-600">Valor Cuota</th>
                                                 <th className="px-4 py-4 text-center font-black">Status</th>
                                                 <th className="px-5 py-4 text-center font-black bg-slate-50 rounded-bl-lg">Acción Rápida</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50">
-                                            {sellerDetailData.length > 0 ? sellerDetailData.map((row, idx) => {
+                                            {(detailFilter === 'loans' ? sellerDetailData.filter(r => r.isLoan) : sellerDetailData).length > 0 ? 
+                                                (detailFilter === 'loans' ? sellerDetailData.filter(r => r.isLoan) : sellerDetailData).map((row, idx) => {
                                                 const cleanPhone = cleanPhoneNumber(row.phone);
                                                 return (
                                                     <tr key={idx} className="hover:bg-slate-50 transition-colors group">
@@ -1751,11 +1989,18 @@
                                                         <td className="px-4 py-3 text-slate-500 font-mono text-xs font-medium">{row.phone}</td>
                                                         <td className="px-4 py-3 text-slate-600 text-xs">{row.device}</td>
                                                         <td className="px-4 py-3 text-center text-slate-500 text-xs font-medium">{row.dueDate}</td>
+                                                        
+                                                        {/* CELDA DE VALOR CUOTA */}
+                                                        <td className={`px-4 py-3 text-center font-mono text-xs font-bold ${row.isLoan ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-500'}`}>
+                                                            {row.amountStr}
+                                                        </td>
+
                                                         <td className="px-4 py-3 text-center">
                                                             <span className={`inline-block px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-widest shadow-sm border
                                                                 ${row.statusCode === 'unpaid' ? 'bg-rose-50 text-rose-600 border-rose-100' : 
                                                                 row.statusCode === 'managed' ? 'bg-blue-50 text-blue-600 border-blue-100' : 
                                                                 row.statusCode === 'upcoming' ? 'bg-amber-50 text-amber-600 border-amber-100' : 
+                                                                row.isLoan ? 'bg-indigo-100 text-indigo-700 border-indigo-200' :
                                                                 row.statusCode === 'clean' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
                                                                 {row.status}
                                                             </span>
@@ -1781,7 +2026,7 @@
                                                         </td>
                                                     </tr>
                                                 );
-                                            }) : <tr><td colSpan="7" className="px-6 py-16 text-center text-slate-400 font-medium">No se encontraron clientes para este filtro.</td></tr>}
+                                            }) : <tr><td colSpan="8" className="px-6 py-16 text-center text-slate-400 font-medium">No se encontraron clientes para este filtro.</td></tr>}
                                         </tbody>
                                     </table>
                                 </div>
