@@ -1044,6 +1044,65 @@
                 doc.save(`Mora_Critica_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
+            const handleExportFilteredPDF = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+                
+                let amountCol = headers.find(h => {
+                    const l = h.toLowerCase();
+                    return l.includes('valor cuota') || l.includes('monto') || l.includes('valor de la cuota') || l === 'cuota';
+                });
+
+                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
+                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
+
+                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Tienda", "Estado", "Valor Cuota"];
+                const tableRows = [];
+                let totalAmount = 0;
+
+                filteredData.forEach(row => {
+                    let amount = amountCol ? parseAmount(row[amountCol]) : 0;
+                    totalAmount += amount;
+
+                    let cellAmount = amountCol && row[amountCol] ? String(row[amountCol]) : '$0';
+                    let cellStatus = statusCol && row[statusCol] ? String(row[statusCol]) : '-';
+
+                    tableRows.push([
+                        row[clientColumn] || '-',
+                        row[idColumn] || '-',
+                        row[phoneColumn] || '-',
+                        row[deviceColumn] || '-',
+                        row[storeColumn] || '-',
+                        cellStatus.substring(0, 40), // Limitar texto por si es muy largo
+                        cellAmount
+                    ]);
+                });
+
+                doc.setFontSize(16);
+                doc.text(`Reporte Filtrado Personalizado - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.setFontSize(11);
+                doc.text(`Fecha: ${new Date().toLocaleDateString()} | Total Registros Filtrados: ${filteredData.length}`, 14, 22);
+                
+                const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+                doc.setFont(undefined, 'bold');
+                doc.text(`Suma Total (Valor Cuota): ${formatter.format(totalAmount)}`, 14, 28);
+                doc.setFont(undefined, 'normal');
+
+                doc.autoTable({
+                    head: [tableColumn],
+                    body: tableRows,
+                    startY: 33,
+                    theme: 'grid',
+                    headStyles: { fillColor: [79, 70, 229] }, // Color Índigo
+                    styles: { fontSize: 8 },
+                    columnStyles: {
+                        5: { cellWidth: 45 } // Darle espacio a la columna de estado
+                    }
+                });
+
+                doc.save(`Filtro_Personalizado_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
+            };
+
             // --- ACCIONES RÁPIDAS Y EDICIÓN ---
             const triggerQuickAction = (row, actionType) => {
                 let msg = "";
@@ -1386,12 +1445,22 @@
                                 <Icons.Search className="w-4 h-4 text-indigo-400 absolute left-3.5 top-3" />
                              </div>
                         </div>
-                        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-4 rounded-2xl shadow-sm border border-indigo-100 flex justify-between items-center px-6">
-                            <div>
-                                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Total Filtro</p>
-                                <p className="text-3xl font-black text-indigo-900 tracking-tight">{filteredData.length}</p>
+                        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-4 rounded-2xl shadow-sm border border-indigo-100 flex flex-col justify-center relative">
+                            <div className="flex justify-between items-center px-1">
+                                <div>
+                                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Total Filtro</p>
+                                    <p className="text-3xl font-black text-indigo-900 tracking-tight">{filteredData.length}</p>
+                                </div>
+                                <div className="p-3 bg-white text-indigo-600 rounded-xl shadow-sm"><Icons.Users className="w-6 h-6" /></div>
                             </div>
-                            <div className="p-3 bg-white text-indigo-600 rounded-xl shadow-sm"><Icons.Users className="w-6 h-6" /></div>
+                            {filteredData.length > 0 && (
+                                <button 
+                                    onClick={handleExportFilteredPDF} 
+                                    className="mt-3 flex justify-center items-center gap-1.5 px-3 py-2 bg-white border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm hover:shadow font-bold text-xs group"
+                                >
+                                    <Icons.Download className="w-3.5 h-3.5 group-hover:animate-bounce"/> Exportar a PDF
+                                </button>
+                            )}
                         </div>
                     </div>
 
