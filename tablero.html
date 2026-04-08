@@ -275,21 +275,22 @@
 
             const isObsUnpaid = (val) => {
                 const v = String(val || '').toLowerCase().trim();
-                if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló')) {
-                    if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago')) return true; 
-                    return false; 
-                }
-                if (v.includes('compromiso') || v === '' || v.includes('pendiente')) return true;
-                return true;
+                // 1. Si es explícitamente negativo, es Mora
+                if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago')) return true; 
+                // 2. Si es un préstamo (pago con gestión), NO es mora para la empresa
+                if (v.includes('pago con gestion') || v.includes('pago con gestión')) return false; 
+                // 3. Si es un pago normal, NO es mora
+                if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló')) return false;
+                // 4. Todo lo demás (vacío, compromiso, en proceso) es Mora
+                return true; 
             };
 
             const getStatus = (val) => {
                 const v = String(val || '').toLowerCase().trim();
                 if (!v) return 'empty';
-                if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló')) {
-                     if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago')) return 'unpaid';
-                     return 'clean';
-                }
+                if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago')) return 'unpaid';
+                if (v.includes('pago con gestion') || v.includes('pago con gestión')) return 'managed';
+                if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló')) return 'clean';
                 if (v.includes('compromiso') || v.includes('gestion') || v.includes('gestión')) return 'managed';
                 return 'unpaid'; 
             };
@@ -616,13 +617,19 @@
 
             }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn]);
 
-            // --- RENDERIZADO TABLA PRINCIPAL Y PAGINACIÓN ---
-            const filteredData = useMemo(() => {
+            // --- ESTADISTICAS Y DATA TOP-LEVEL ---
+            const dataForStats = useMemo(() => {
                 let result = data;
                 if (selectedSeller && sellerColumn) result = result.filter(row => String(row[sellerColumn]).trim() === selectedSeller);
                 if (selectedAssigned && assignedColumn) result = result.filter(row => String(row[assignedColumn]).trim() === selectedAssigned);
                 if (selectedDevice && deviceColumn) result = result.filter(row => String(row[deviceColumn]).trim() === selectedDevice);
                 if (selectedStore && storeColumn) result = result.filter(row => String(row[storeColumn]).trim() === selectedStore); 
+                return result;
+            }, [data, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn]);
+
+            // --- RENDERIZADO TABLA PRINCIPAL Y PAGINACIÓN ---
+            const filteredData = useMemo(() => {
+                let result = dataForStats;
                 
                 if (searchTerm) result = result.filter(row => headers.some(header => String(row[header]).toLowerCase().includes(searchTerm.toLowerCase())));
                 
@@ -659,10 +666,15 @@
                                 const val = String(row[statusCol] || '').toLowerCase().trim();
 
                                 if (breakdownFilter) {
-                                     if (breakdownFilter.type === 'yaCancelo') return (val.includes('pago') || val.includes('cancelo')) && !val.includes('no ');
-                                     if (breakdownFilter.type === 'conGestion') return val.includes('compromiso') || val.includes('gestion');
+                                     const isUnpaidExplicit = val.includes('no se') || val.includes('no cancelo') || val.includes('no pago');
+                                     const isLoan = val.includes('pago con gestion') || val.includes('pago con gestión') || val.includes('prestamo');
+                                     const isPaid = !isUnpaidExplicit && !isLoan && (val.includes('pago') || val.includes('cancelo') || val.includes('canceló'));
+                                     const isManaged = isLoan || (!isPaid && !isUnpaidExplicit && (val.includes('compromiso') || val.includes('gestion') || val.includes('gestión')));
+
+                                     if (breakdownFilter.type === 'yaCancelo') return isPaid;
+                                     if (breakdownFilter.type === 'conGestion') return isManaged;
                                      if (breakdownFilter.type === 'vacio') return val === '';
-                                     if (breakdownFilter.type === 'noCancelo') return val !== '' && !((val.includes('pago') || val.includes('cancelo')) && !val.includes('no '));
+                                     if (breakdownFilter.type === 'noCancelo') return val !== '' && !isPaid && !isManaged;
                                 }
                                 
                                 return statusCol ? isObsUnpaid(row[statusCol]) : false;
@@ -671,11 +683,11 @@
                     }
                 }
                 return result;
-            }, [data, headers, searchTerm, showOnlyAlerts, showOnlyEarly, showOnlyCritical, fpdQuotaFilter, breakdownFilter, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus, getRowCriticalStatus]);
+            }, [dataForStats, headers, searchTerm, showOnlyAlerts, showOnlyEarly, showOnlyCritical, fpdQuotaFilter, breakdownFilter, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus, getRowCriticalStatus]);
 
             useEffect(() => {
                 setCurrentPage(1);
-            }, [filteredData.length, selectedSeller, selectedAssigned, selectedDevice, selectedStore, searchTerm, showOnlyAlerts, showOnlyEarly, showOnlyCritical, fpdQuotaFilter, breakdownFilter]);
+            }, [filteredData.length, searchTerm, showOnlyAlerts, showOnlyEarly, showOnlyCritical, fpdQuotaFilter, breakdownFilter]);
 
             const paginatedData = useMemo(() => {
                 const startIndex = (currentPage - 1) * itemsPerPage;
@@ -683,16 +695,6 @@
             }, [filteredData, currentPage, itemsPerPage]);
 
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
-            // --- ESTADISTICAS ---
-            const dataForStats = useMemo(() => {
-                let result = data;
-                if (selectedSeller && sellerColumn) result = result.filter(row => String(row[sellerColumn]).trim() === selectedSeller);
-                if (selectedAssigned && assignedColumn) result = result.filter(row => String(row[assignedColumn]).trim() === selectedAssigned);
-                if (selectedDevice && deviceColumn) result = result.filter(row => String(row[deviceColumn]).trim() === selectedDevice);
-                if (selectedStore && storeColumn) result = result.filter(row => String(row[storeColumn]).trim() === selectedStore); 
-                return result;
-            }, [data, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn]);
 
             const alertStats = useMemo(() => {
                 let stats = { total: 0 };
@@ -788,16 +790,28 @@
                 return statsObj;
             }, [dataForStats, headers, activeConfig, findColumnName, findConfigColumn, portfolio]);
 
+            // SE CORRIGIÓ: Ahora el cálculo de los botones usa los datos reales de esa cohorte (fecha exacta),
+            // en lugar de usar "filteredData" que reducía la muestra cuando hacías clic en el header del FPD.
             const observationStats = useMemo(() => {
                 const statsObj = { found: true };
+                const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                 
                 const calc = (quotaKey) => {
                     let s = { conGestion: 0, noCancelo: 0, yaCancelo: 0, vacio: 0 };
+                    if (!dateCol) return s;
+
+                    // Filtramos SOLO a los clientes de las fechas de esa cohorte (Ej. las 89 ventas)
+                    const weeksAgo = QUOTA_LABELS[quotaKey].weeksAgo;
+                    const range = getCohortRange(weeksAgo);
+                    const cohortSales = dataForStats.filter(row => {
+                        const d = parseDate(row[dateCol]);
+                        return d && d >= range.start && d <= range.end;
+                    });
                     
                     if (quotaKey === 'fpd10') {
                         let col = findConfigColumn(activeConfig.columns.comments, headers);
                         if (!col) return s;
-                        filteredData.forEach(row => {
+                        cohortSales.forEach(row => {
                             const val = String(row[col] || '').toLowerCase().trim();
                             if (val.includes('completado')) {
                                 s.yaCancelo++;
@@ -813,14 +827,22 @@
                         let col = findColumnName(activeConfig.columns.paymentStatus, qName, headers);
                         if (!col) col = findColumnName(activeConfig.columns.paymentStatus, '', headers);
                         if(!col) return s;
-                        filteredData.forEach(row => {
+
+                        cohortSales.forEach(row => {
                             const val = String(row[col] || '').toLowerCase().trim();
-                            if (!val) s.vacio++;
-                            else if (val.includes('no se cancelo cuota')) s.noCancelo++;
-                            else if (val.includes('no cancelo') || val.includes('no canceló') || val.includes('no pago')) s.noCancelo++;
-                            else if (val.includes('pago') || val.includes('cancelo')) s.yaCancelo++; 
-                            else if (val.includes('compromiso') || val.includes('gestion')) s.conGestion++;
-                            else s.noCancelo++;
+                            if (val === '') {
+                                s.vacio++;
+                            } else if (val.includes('no se') || val.includes('no cancelo') || val.includes('no pago')) {
+                                s.noCancelo++;
+                            } else if (val.includes('pago con gestion') || val.includes('pago con gestión')) {
+                                s.conGestion++; // Es un préstamo (No sumarlo a Ya Canceló)
+                            } else if (val.includes('pago') || val.includes('cancelo') || val.includes('canceló')) {
+                                s.yaCancelo++;
+                            } else if (val.includes('compromiso') || val.includes('gestion') || val.includes('gestión')) {
+                                s.conGestion++;
+                            } else {
+                                s.noCancelo++;
+                            }
                         });
                         return s;
                     }
@@ -831,7 +853,7 @@
                 });
                 
                 return statsObj;
-            }, [filteredData, headers, findColumnName, activeConfig, portfolio]);
+            }, [dataForStats, headers, findColumnName, findConfigColumn, activeConfig, portfolio]);
 
             const getColumnStyles = (headerName) => {
                 if (!headerName) return null;
@@ -891,9 +913,9 @@
                         </div>
                         <div className="space-y-1">
                              <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'yaCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('yaCancelo') ? 'bg-green-100 ring-2 ring-green-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-green-700 flex gap-1"><Icons.CheckCircle className="w-3 h-3"/> {quotaId === 'fpd10' ? 'Completado' : 'Ya Canceló'}</span><span className="font-bold">{stats.yaCancelo}</span></div>
-                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'conGestion'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('conGestion') ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-blue-700 flex gap-1"><Icons.Handshake className="w-3 h-3"/> {quotaId === 'fpd10' ? 'En Proceso' : 'Con Gestión'}</span><span className="font-bold">{stats.conGestion}</span></div>
+                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'conGestion'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('conGestion') ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-blue-700 flex gap-1"><Icons.Handshake className="w-3 h-3"/> {quotaId === 'fpd10' ? 'En Proceso' : 'Préstamo / Gestión'}</span><span className="font-bold">{stats.conGestion}</span></div>
                              {quotaId !== 'fpd10' && (
-                                 <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'noCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('noCancelo') ? 'bg-red-100 ring-2 ring-red-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-red-600 flex gap-1"><Icons.XCircle className="w-3 h-3"/> No Canceló</span><span className="font-bold">{stats.noCancelo}</span></div>
+                                 <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'noCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('noCancelo') ? 'bg-red-100 ring-2 ring-red-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-red-600 flex gap-1"><Icons.XCircle className="w-3 h-3"/> Mora Real</span><span className="font-bold">{stats.noCancelo}</span></div>
                              )}
                              <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'vacio'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('vacio') ? 'bg-slate-200 ring-2 ring-slate-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-slate-500 flex gap-1"><Icons.HelpCircle className="w-3 h-3"/> {quotaId === 'fpd10' ? 'Sin Revisar' : 'Sin dato'}</span><span className="font-bold">{stats.vacio}</span></div>
                         </div>
