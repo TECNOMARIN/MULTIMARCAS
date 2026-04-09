@@ -74,22 +74,24 @@
             Download: (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconBase>,
             Edit2: (p) => <IconBase {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconBase>,
             ArrowLeft: (p) => <IconBase {...p}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></IconBase>,
-            ArrowRight: (p) => <IconBase {...p}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></IconBase>,
+            ArrowRight: (p) => <IconBase {...p}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 19"/></IconBase>,
             Clock: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>,
             Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>
         };
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v6.2.1 (Backend Fallback Fix)";
+        const APP_VERSION = "v6.2.5 (Eliminado Cont. 8 y 9)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
             q1: { id: 'primera', label: 'Primera Cuota', weeksAgo: 3 },
             fpd3: { id: 'primera', label: 'FPD3 (Hace 2 Semanas)', weeksAgo: 2 },  
             fpd7: { id: 'primera', label: 'FPD7 (Hace 3 Semanas)', weeksAgo: 3 }, 
-            fpd15: { id: 'primera', label: 'FPD15 (Hace 4 Semanas)', weeksAgo: 4 },
-            fpd10: { id: 'primera', label: 'Continuidad (10 Sem.)', weeksAgo: 10 } 
+            fpd10: { id: 'primera', label: 'Continuidad (10 Sem.)', weeksAgo: 10 },
+            fpd11: { id: 'primera', label: 'Continuidad (11 Sem.)', weeksAgo: 11 },
+            fpd12: { id: 'primera', label: 'Continuidad (12 Sem.)', weeksAgo: 12 },
+            fpd15: { id: 'primera', label: 'FPD15 (Hace 4 Semanas)', weeksAgo: 4 }
         };
 
         // CONFIGURACIÓN DE CARTERAS
@@ -97,7 +99,7 @@
             alocredit: {
                 name: "ALOCREDIT",
                 theme: "indigo",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10'], 
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: {
                     seller: ['vendedor', 'asesor'],
                     assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
@@ -117,7 +119,7 @@
             payjoy: {
                 name: "PAYJOY",
                 theme: "blue",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10'], 
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: {
                     seller: ['vendedor', 'asesor', 'ejecutivo'],
                     assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
@@ -277,7 +279,7 @@
                 const v = String(val || '').toLowerCase().trim();
                 // 1. Si es explícitamente negativo, es Mora
                 if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago')) return true; 
-                // 2. Si es un préstamo (pago con gestión), NO es mora para la empresa
+                // 2. Si es un préstamo (pago con gestion), NO es mora para la empresa
                 if (v.includes('pago con gestion') || v.includes('pago con gestión')) return false; 
                 // 3. Si es un pago normal, NO es mora
                 if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló')) return false;
@@ -647,7 +649,7 @@
                             const d = parseDate(row[dateCol]);
                             if (!d || d < range.start || d > range.end) return false;
                             
-                            if (activeFilter === 'fpd10') {
+                            if (['fpd10', 'fpd11', 'fpd12'].includes(activeFilter)) {
                                 let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                                 const val = String(row[commentsCol] || '').toLowerCase().trim();
                                 
@@ -735,7 +737,7 @@
                     let unpaid = 0;
                     let upcoming = 0; 
 
-                    if (quotaKey === 'fpd10') {
+                    if (['fpd10', 'fpd11', 'fpd12'].includes(quotaKey)) {
                         let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                         if (commentsCol) {
                             cohortSales.forEach(row => {
@@ -779,7 +781,7 @@
                 activeConfig.quotas.forEach(qId => {
                     const s = calculateFPD(qId);
                     statsObj[qId] = s;
-                    if (qId !== 'fpd10') { 
+                    if (!['fpd10', 'fpd11', 'fpd12'].includes(qId)) { 
                         totalUnpaid += s.unpaid; 
                         totalSales += s.totalSales; 
                     }
@@ -808,7 +810,7 @@
                         return d && d >= range.start && d <= range.end;
                     });
                     
-                    if (quotaKey === 'fpd10') {
+                    if (['fpd10', 'fpd11', 'fpd12'].includes(quotaKey)) {
                         let col = findConfigColumn(activeConfig.columns.comments, headers);
                         if (!col) return s;
                         cohortSales.forEach(row => {
@@ -876,8 +878,9 @@
                 const isActive = (t) => breakdownFilter && breakdownFilter.quota === quotaId && breakdownFilter.type === t;
                 const baseRow = "flex justify-between items-center p-2 rounded cursor-pointer transition-colors hover:ring-1 hover:ring-indigo-300";
                 
-                const headerColor = quotaId === 'fpd10' ? "text-violet-700" : "text-slate-700";
-                const headerIconColor = quotaId === 'fpd10' ? "text-violet-600" : "text-slate-600";
+                const isContinuity = ['fpd10', 'fpd11', 'fpd12'].includes(quotaId);
+                const headerColor = isContinuity ? "text-violet-700" : "text-slate-700";
+                const headerIconColor = isContinuity ? "text-violet-600" : "text-slate-600";
 
                 return (
                     <div className={`p-4 rounded-2xl shadow-sm bg-white border ${isFpdActive ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-slate-200'}`}>
@@ -894,15 +897,15 @@
                                 <div className="text-[11px] space-y-1 border-t border-black/10 pt-2">
                                     <div className="flex justify-between"><span className="opacity-80">Ventas:</span><span className="font-bold">{fpdInfo.totalSales}</span></div>
                                     <div className={`flex justify-between p-1 -mx-1 rounded ${isFpdActive ? 'bg-white/40 font-bold' : ''}`}>
-                                        <span className="opacity-80">{quotaId === 'fpd10' ? 'Pendientes:' : 'Mora Real:'}</span><span className="font-bold underline">{fpdInfo.unpaid}</span>
+                                        <span className="opacity-80">{isContinuity ? 'Pendientes:' : 'Mora Real:'}</span><span className="font-bold underline">{fpdInfo.unpaid}</span>
                                     </div>
-                                    {quotaId !== 'fpd10' && (
+                                    {!isContinuity && (
                                         <div className="flex justify-between p-1 -mx-1 rounded text-amber-700 bg-amber-50/50 mt-0.5">
                                             <span className="text-[10px] flex items-center gap-1 opacity-90"><Icons.Clock className="w-3 h-3"/> Por Vencer:</span>
                                             <span className="font-bold">{fpdInfo.upcoming}</span>
                                         </div>
                                     )}
-                                    {quotaId !== 'fpd10' && (
+                                    {!isContinuity && (
                                         <div className="flex justify-between text-red-800 font-bold mt-1 bg-white/30 p-1 rounded -mx-1">
                                             <span className="text-[10px] flex items-center gap-1"><Icons.Target className="w-3 h-3"/> Meta {targetPercent}%:</span><span>{recoverNeeded}</span>
                                         </div>
@@ -912,12 +915,12 @@
                             ) : <span className="text-[10px] opacity-70">Sin ventas en {fpdInfo ? fpdInfo.rangeStr : 'periodo'}</span>}
                         </div>
                         <div className="space-y-1">
-                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'yaCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('yaCancelo') ? 'bg-green-100 ring-2 ring-green-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-green-700 flex gap-1"><Icons.CheckCircle className="w-3 h-3"/> {quotaId === 'fpd10' ? 'Completado' : 'Ya Canceló'}</span><span className="font-bold">{stats.yaCancelo}</span></div>
-                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'conGestion'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('conGestion') ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-blue-700 flex gap-1"><Icons.Handshake className="w-3 h-3"/> {quotaId === 'fpd10' ? 'En Proceso' : 'Préstamo / Gestión'}</span><span className="font-bold">{stats.conGestion}</span></div>
-                             {quotaId !== 'fpd10' && (
+                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'yaCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('yaCancelo') ? 'bg-green-100 ring-2 ring-green-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-green-700 flex gap-1"><Icons.CheckCircle className="w-3 h-3"/> {isContinuity ? 'Completado' : 'Ya Canceló'}</span><span className="font-bold">{stats.yaCancelo}</span></div>
+                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'conGestion'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('conGestion') ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-blue-700 flex gap-1"><Icons.Handshake className="w-3 h-3"/> {isContinuity ? 'En Proceso' : 'Préstamo / Gestión'}</span><span className="font-bold">{stats.conGestion}</span></div>
+                             {!isContinuity && (
                                  <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'noCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('noCancelo') ? 'bg-red-100 ring-2 ring-red-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-red-600 flex gap-1"><Icons.XCircle className="w-3 h-3"/> Mora Real</span><span className="font-bold">{stats.noCancelo}</span></div>
                              )}
-                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'vacio'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('vacio') ? 'bg-slate-200 ring-2 ring-slate-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-slate-500 flex gap-1"><Icons.HelpCircle className="w-3 h-3"/> {quotaId === 'fpd10' ? 'Sin Revisar' : 'Sin dato'}</span><span className="font-bold">{stats.vacio}</span></div>
+                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'vacio'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('vacio') ? 'bg-slate-200 ring-2 ring-slate-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-slate-500 flex gap-1"><Icons.HelpCircle className="w-3 h-3"/> {isContinuity ? 'Sin Revisar' : 'Sin dato'}</span><span className="font-bold">{stats.vacio}</span></div>
                         </div>
                     </div>
                 );
@@ -1555,7 +1558,8 @@
                             }
                         </div>
 
-                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4`}>
+                        {/* Modificado a xl:grid-cols-3 para que las 6 tarjetas formen dos filas perfectas */}
+                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4`}>
                             {activeConfig.quotas.map(quotaId => (
                                 <StatCard key={quotaId} title={QUOTA_LABELS[quotaId].label} quotaId={quotaId} stats={observationStats[quotaId]} fpdInfo={fpdStats[quotaId]} />
                             ))}
@@ -1608,9 +1612,9 @@
                                             <td key="action-cell" className="px-4 py-2 text-center whitespace-nowrap border-l border-slate-100 bg-slate-50/50">
                                                 {(() => {
                                                     const activeQuotaForButton = fpdQuotaFilter || breakdownFilter?.quota;
-                                                    const isFpd10 = activeQuotaForButton === 'fpd10';
+                                                    const isContinuityAction = ['fpd10', 'fpd11', 'fpd12'].includes(activeQuotaForButton);
                                                     
-                                                    if (isFpd10) {
+                                                    if (isContinuityAction) {
                                                         const currentCom = commentsColName ? String(row[commentsColName] || '').toLowerCase() : '';
                                                         if (currentCom.includes('completado')) return <span className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1"><Icons.CheckCircle className="w-3 h-3"/> Listo</span>;
                                                         
