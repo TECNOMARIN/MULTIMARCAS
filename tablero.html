@@ -81,25 +81,30 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v6.2.5 (Eliminado Cont. 8 y 9)";
+        const APP_VERSION = "v6.3.0 (Continuidad Mes -2 para Alocredit)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
             q1: { id: 'primera', label: 'Primera Cuota', weeksAgo: 3 },
             fpd3: { id: 'primera', label: 'FPD3 (Hace 2 Semanas)', weeksAgo: 2 },  
             fpd7: { id: 'primera', label: 'FPD7 (Hace 3 Semanas)', weeksAgo: 3 }, 
+            fpd15: { id: 'primera', label: 'FPD15 (Hace 4 Semanas)', weeksAgo: 4 },
             fpd10: { id: 'primera', label: 'Continuidad (10 Sem.)', weeksAgo: 10 },
             fpd11: { id: 'primera', label: 'Continuidad (11 Sem.)', weeksAgo: 11 },
             fpd12: { id: 'primera', label: 'Continuidad (12 Sem.)', weeksAgo: 12 },
-            fpd15: { id: 'primera', label: 'FPD15 (Hace 4 Semanas)', weeksAgo: 4 }
+            cont_m2: { id: 'primera', label: 'Continuidad (Mes)', isMonthlyLag: 2 } // Nuevo: Desfase de 2 meses (Ej: Abril mide Febrero)
         };
+
+        // Agrupación de métricas que se comportan como "Continuidad" (Miden la columna comentarios por "completado")
+        const CONTINUITY_QUOTAS = ['fpd10', 'fpd11', 'fpd12', 'cont_m2'];
 
         // CONFIGURACIÓN DE CARTERAS
         const PORTFOLIO_CONFIG = {
             alocredit: {
                 name: "ALOCREDIT",
                 theme: "indigo",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
+                // En Alocredit reemplazamos las semanas 10/11/12 por la métrica de Mes Completo (-2 meses)
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'cont_m2'], 
                 columns: {
                     seller: ['vendedor', 'asesor'],
                     assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
@@ -119,6 +124,7 @@
             payjoy: {
                 name: "PAYJOY",
                 theme: "blue",
+                // En Payjoy mantenemos la evaluación por semanas
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: {
                     seller: ['vendedor', 'asesor', 'ejecutivo'],
@@ -258,8 +264,21 @@
                 return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`;
             };
 
-            const getCohortRange = (weeksAgo) => {
+            const getCohortRange = (quotaKey) => {
                 const now = new Date();
+                const quotaDef = QUOTA_LABELS[quotaKey];
+
+                // NUEVO: Lógica para medir meses completos (Desfase en meses)
+                if (quotaDef && quotaDef.isMonthlyLag !== undefined) {
+                    const targetMonth = now.getMonth() - quotaDef.isMonthlyLag;
+                    const start = new Date(now.getFullYear(), targetMonth, 1);
+                    const end = new Date(now.getFullYear(), targetMonth + 1, 0, 23, 59, 59, 999);
+                    return { start, end };
+                }
+
+                // LÓGICA ANTERIOR: Semanas Móviles
+                const weeksAgo = quotaDef ? quotaDef.weeksAgo : (typeof quotaKey === 'number' ? quotaKey : 3);
+                
                 const currentDay = now.getDay(); 
                 const distanceToMonday = (currentDay === 0 ? 6 : currentDay - 1); 
                 const currentMonday = new Date(now);
@@ -464,13 +483,12 @@
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                 if (!dateCol) return [];
 
-                // IMPORTANTE: Ahora agrupamos por Asignado/Gestor de forma predeterminada
                 const reportCol = assignedColumn || sellerColumn;
 
                 let filterRanges = [];
                 const now = new Date();
 
-                if (reportFilter === 'fpd7') filterRanges = [getCohortRange(3)];
+                if (reportFilter === 'fpd7') filterRanges = [getCohortRange('fpd7')];
                 else if (reportFilter === 'current') filterRanges = [{start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)}];
                 else if (reportFilter === 'last') filterRanges = [{start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)}];
                 else filterRanges = [{start: new Date(2000, 0, 1), end: new Date(2100, 0, 1)}];
@@ -554,7 +572,7 @@
 
                 let filterRanges = [];
                 const now = new Date();
-                if (reportFilter === 'fpd7') filterRanges = [getCohortRange(3)];
+                if (reportFilter === 'fpd7') filterRanges = [getCohortRange('fpd7')];
                 else if (reportFilter === 'current') filterRanges = [{start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)}];
                 else if (reportFilter === 'last') filterRanges = [{start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)}];
                 else filterRanges = [{start: new Date(2000, 0, 1), end: new Date(2100, 0, 1)}];
@@ -643,13 +661,12 @@
                     const activeFilter = fpdQuotaFilter || breakdownFilter?.quota;
                     const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                     if (dateCol) {
-                        const weeksAgo = QUOTA_LABELS[activeFilter].weeksAgo;
-                        const range = getCohortRange(weeksAgo);
+                        const range = getCohortRange(activeFilter);
                         result = result.filter(row => {
                             const d = parseDate(row[dateCol]);
                             if (!d || d < range.start || d > range.end) return false;
                             
-                            if (['fpd10', 'fpd11', 'fpd12'].includes(activeFilter)) {
+                            if (CONTINUITY_QUOTAS.includes(activeFilter)) {
                                 let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                                 const val = String(row[commentsCol] || '').toLowerCase().trim();
                                 
@@ -724,8 +741,7 @@
                 const now = new Date(); now.setHours(0,0,0,0);
                 
                 const calculateFPD = (quotaKey) => {
-                    const weeksAgo = QUOTA_LABELS[quotaKey].weeksAgo;
-                    const range = getCohortRange(weeksAgo);
+                    const range = getCohortRange(quotaKey);
                     const cohortSales = dataForStats.filter(row => {
                         const d = parseDate(row[dateCol]);
                         return d && d >= range.start && d <= range.end;
@@ -737,7 +753,7 @@
                     let unpaid = 0;
                     let upcoming = 0; 
 
-                    if (['fpd10', 'fpd11', 'fpd12'].includes(quotaKey)) {
+                    if (CONTINUITY_QUOTAS.includes(quotaKey)) {
                         let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                         if (commentsCol) {
                             cohortSales.forEach(row => {
@@ -781,7 +797,7 @@
                 activeConfig.quotas.forEach(qId => {
                     const s = calculateFPD(qId);
                     statsObj[qId] = s;
-                    if (!['fpd10', 'fpd11', 'fpd12'].includes(qId)) { 
+                    if (!CONTINUITY_QUOTAS.includes(qId)) { 
                         totalUnpaid += s.unpaid; 
                         totalSales += s.totalSales; 
                     }
@@ -793,7 +809,6 @@
             }, [dataForStats, headers, activeConfig, findColumnName, findConfigColumn, portfolio]);
 
             // SE CORRIGIÓ: Ahora el cálculo de los botones usa los datos reales de esa cohorte (fecha exacta),
-            // en lugar de usar "filteredData" que reducía la muestra cuando hacías clic en el header del FPD.
             const observationStats = useMemo(() => {
                 const statsObj = { found: true };
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
@@ -802,15 +817,13 @@
                     let s = { conGestion: 0, noCancelo: 0, yaCancelo: 0, vacio: 0 };
                     if (!dateCol) return s;
 
-                    // Filtramos SOLO a los clientes de las fechas de esa cohorte (Ej. las 89 ventas)
-                    const weeksAgo = QUOTA_LABELS[quotaKey].weeksAgo;
-                    const range = getCohortRange(weeksAgo);
+                    const range = getCohortRange(quotaKey);
                     const cohortSales = dataForStats.filter(row => {
                         const d = parseDate(row[dateCol]);
                         return d && d >= range.start && d <= range.end;
                     });
                     
-                    if (['fpd10', 'fpd11', 'fpd12'].includes(quotaKey)) {
+                    if (CONTINUITY_QUOTAS.includes(quotaKey)) {
                         let col = findConfigColumn(activeConfig.columns.comments, headers);
                         if (!col) return s;
                         cohortSales.forEach(row => {
@@ -878,19 +891,29 @@
                 const isActive = (t) => breakdownFilter && breakdownFilter.quota === quotaId && breakdownFilter.type === t;
                 const baseRow = "flex justify-between items-center p-2 rounded cursor-pointer transition-colors hover:ring-1 hover:ring-indigo-300";
                 
-                const isContinuity = ['fpd10', 'fpd11', 'fpd12'].includes(quotaId);
+                const isContinuity = CONTINUITY_QUOTAS.includes(quotaId);
                 const headerColor = isContinuity ? "text-violet-700" : "text-slate-700";
                 const headerIconColor = isContinuity ? "text-violet-600" : "text-slate-600";
+
+                // Lógica de Título Dinámico para Meses
+                const isMonthly = QUOTA_LABELS[quotaId].isMonthlyLag !== undefined;
+                let displayTitle = title;
+                if (isMonthly) {
+                    const targetDate = new Date();
+                    targetDate.setMonth(targetDate.getMonth() - QUOTA_LABELS[quotaId].isMonthlyLag);
+                    const monthName = targetDate.toLocaleString('es-ES', { month: 'long' });
+                    displayTitle = `Continuidad (${monthName.charAt(0).toUpperCase() + monthName.slice(1)})`;
+                }
 
                 return (
                     <div className={`p-4 rounded-2xl shadow-sm bg-white border ${isFpdActive ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-slate-200'}`}>
                         <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
                              <Icons.FileText className={`w-4 h-4 ${headerIconColor}`} />
-                             <h3 className={`text-sm font-bold uppercase tracking-wide ${headerColor}`}>{title}</h3>
+                             <h3 className={`text-sm font-bold uppercase tracking-wide ${headerColor}`}>{displayTitle}</h3>
                         </div>
                         <div onClick={() => { if(hasSales) { setFpdQuotaFilter(isFpdActive ? null : quotaId); setBreakdownFilter(null); setShowOnlyAlerts(false); setShowOnlyEarly(false); setShowOnlyCritical(false); }}} className={`mb-3 p-3 rounded-xl ${fpdColor} shadow-sm transition-all ${hasSales ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''} ${isFpdActive ? 'ring-2 ring-indigo-500' : ''}`}>
                             <div className="flex justify-between mb-2">
-                                <span className="text-[10px] font-bold uppercase opacity-80 flex items-center gap-1">{isFpdActive && <Icons.Filter className="w-3 h-3 animate-pulse"/>} Semanas -{QUOTA_LABELS[quotaId].weeksAgo}</span>
+                                <span className="text-[10px] font-bold uppercase opacity-80 flex items-center gap-1">{isFpdActive && <Icons.Filter className="w-3 h-3 animate-pulse"/>} {isMonthly ? 'Mes Completo' : `Semanas -${QUOTA_LABELS[quotaId].weeksAgo}`}</span>
                                 <span className="text-xl font-bold">{hasSales ? `${fpdPercent}%` : 'N/A'}</span>
                             </div>
                             {hasSales && fpdInfo ? (
@@ -1558,8 +1581,8 @@
                             }
                         </div>
 
-                        {/* Modificado a xl:grid-cols-3 para que las 6 tarjetas formen dos filas perfectas */}
-                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4`}>
+                        {/* Modificado a xl:grid-cols-4 o 3 dinámicamente para que las tarjetas se acomoden perfectas */}
+                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-${activeConfig.quotas.length === 4 ? '4' : '3'} gap-4`}>
                             {activeConfig.quotas.map(quotaId => (
                                 <StatCard key={quotaId} title={QUOTA_LABELS[quotaId].label} quotaId={quotaId} stats={observationStats[quotaId]} fpdInfo={fpdStats[quotaId]} />
                             ))}
@@ -1612,7 +1635,7 @@
                                             <td key="action-cell" className="px-4 py-2 text-center whitespace-nowrap border-l border-slate-100 bg-slate-50/50">
                                                 {(() => {
                                                     const activeQuotaForButton = fpdQuotaFilter || breakdownFilter?.quota;
-                                                    const isContinuityAction = ['fpd10', 'fpd11', 'fpd12'].includes(activeQuotaForButton);
+                                                    const isContinuityAction = CONTINUITY_QUOTAS.includes(activeQuotaForButton);
                                                     
                                                     if (isContinuityAction) {
                                                         const currentCom = commentsColName ? String(row[commentsColName] || '').toLowerCase() : '';
