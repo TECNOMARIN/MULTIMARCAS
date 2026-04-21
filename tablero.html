@@ -81,7 +81,7 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v6.3.0 (Continuidad Mes -2 para Alocredit)";
+        const APP_VERSION = "v6.3.1 (F. Nacimiento en Exports)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -117,6 +117,7 @@
                     comments: ['comentarios', 'observaciones', 'gestion'],
                     id: ['cedula', 'documento', 'cc', 'nit', 'id'],
                     email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
@@ -138,6 +139,7 @@
                     comments: ['comentarios', 'notas', 'gestion'],
                     id: ['cedula', 'documento', 'cc', 'nit', 'id'],
                     email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
@@ -567,6 +569,8 @@
                 const deviceCol = findConfigColumn(activeConfig.columns.device, headers);
                 const commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                 const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
+                const birthDateCol = findConfigColumn(activeConfig.columns.birthDate, headers);
+                const assignedCol = findConfigColumn(activeConfig.columns.assigned, headers);
 
                 const reportCol = assignedColumn || sellerColumn;
 
@@ -612,9 +616,11 @@
                     result.push({
                         name: clientCol ? row[clientCol] : '-',
                         id: idCol ? row[idCol] : '-',
+                        birthDate: birthDateCol && row[birthDateCol] ? formatCellData(row[birthDateCol]) : '-',
                         phone: phoneCol ? row[phoneCol] : '-',
                         email: emailCol ? row[emailCol] : '-',
                         device: deviceCol ? row[deviceCol] : '-',
+                        assigned: assignedCol && row[assignedCol] ? row[assignedCol] : '-',
                         dueDate: dueDateStr, 
                         status: isPrestamo ? 'Gestión($)' : status === 'clean' ? 'Pagó' : 
                                 status === 'managed' ? 'Gestión' : 
@@ -994,7 +1000,7 @@
                 const doc = new jsPDF('landscape');
                 
                 const isOnlyLoans = detailFilter === 'loans';
-                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Vencimiento", "Estado", "Valor Cuota"];
+                const tableColumn = ["Cliente", "Cédula", "F. Nac.", "Celular", "Equipo", "Venc.", "Asignado", "Estado", "Cuota"];
                 const tableRows = [];
                 
                 let exportData = isOnlyLoans ? sellerDetailData.filter(r => r.isLoan) : sellerDetailData;
@@ -1002,7 +1008,7 @@
 
                 exportData.forEach(row => {
                     if (row.isLoan) totalPrestado += row.amountNum;
-                    tableRows.push([row.name, row.id, row.phone, row.device, row.dueDate, row.status, row.amountStr]);
+                    tableRows.push([row.name, row.id, row.birthDate, row.phone, row.device, row.dueDate, row.assigned, row.status, row.amountStr]);
                 });
                 
                 doc.setFontSize(16);
@@ -1025,7 +1031,7 @@
                     headStyles: { fillColor: [63, 81, 181] }, 
                     styles: { fontSize: 8 },
                     didParseCell: function(data) {
-                        if (data.section === 'body' && data.column.index === 5) {
+                        if (data.section === 'body' && data.column.index === 7) {
                             const val = data.cell.raw;
                             if (val === 'Mora') data.cell.styles.textColor = [220, 38, 38]; 
                             else if (val === 'Pagó') data.cell.styles.textColor = [22, 163, 74]; 
@@ -1047,8 +1053,9 @@
                     const l = h.toLowerCase();
                     return l.includes('valor cuota') || l.includes('monto') || l.includes('valor de la cuota') || l === 'cuota';
                 });
+                let birthDateCol = findConfigColumn(activeConfig.columns.birthDate, headers);
 
-                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Tienda", "Valor Cuota"];
+                const tableColumn = ["Cliente", "Cédula", "F. Nac.", "Celular", "Equipo", "Tienda", "Asignado", "Cuota"];
                 const tableRows = [];
                 let totalAmount = 0;
 
@@ -1059,13 +1066,16 @@
                     totalAmount += amount;
 
                     let cellAmount = amountCol && row[amountCol] ? String(row[amountCol]) : '$0';
+                    let cellBirth = birthDateCol && row[birthDateCol] ? formatCellData(row[birthDateCol]) : '-';
 
                     tableRows.push([
                         row[clientColumn] || '-',
                         row[idColumn] || '-',
+                        cellBirth,
                         row[phoneColumn] || '-',
                         row[deviceColumn] || '-',
                         row[storeColumn] || '-',
+                        row[assignedColumn] || '-',
                         cellAmount
                     ]);
                 });
@@ -1103,8 +1113,9 @@
 
                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
                 if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                let birthDateCol = findConfigColumn(activeConfig.columns.birthDate, headers);
 
-                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Tienda", "Estado", "Valor Cuota"];
+                const tableColumn = ["Cliente", "Cédula", "F. Nac.", "Celular", "Equipo", "Tienda", "Asignado", "Estado", "Cuota"];
                 const tableRows = [];
                 let totalAmount = 0;
 
@@ -1114,13 +1125,16 @@
 
                     let cellAmount = amountCol && row[amountCol] ? String(row[amountCol]) : '$0';
                     let cellStatus = statusCol && row[statusCol] ? String(row[statusCol]) : '-';
+                    let cellBirth = birthDateCol && row[birthDateCol] ? formatCellData(row[birthDateCol]) : '-';
 
                     tableRows.push([
                         row[clientColumn] || '-',
                         row[idColumn] || '-',
+                        cellBirth,
                         row[phoneColumn] || '-',
                         row[deviceColumn] || '-',
                         row[storeColumn] || '-',
+                        row[assignedColumn] || '-',
                         cellStatus.substring(0, 40), // Limitar texto por si es muy largo
                         cellAmount
                     ]);
@@ -1144,7 +1158,7 @@
                     headStyles: { fillColor: [79, 70, 229] }, // Color Índigo
                     styles: { fontSize: 8 },
                     columnStyles: {
-                        5: { cellWidth: 45 } // Darle espacio a la columna de estado
+                        7: { cellWidth: 40 } // Darle espacio a la columna de estado
                     }
                 });
 
