@@ -81,7 +81,7 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v6.3.1 (F. Nacimiento en Exports)";
+        const APP_VERSION = "v6.3.2 (Mora 11-14 días agregada)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -208,7 +208,8 @@
                 const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
                 const diffTime = today - due;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                return diffDays === 5 || diffDays === 6;
+                // 🚨 SE AGREGARON LOS DÍAS 11, 12 y 13 (Alertas naranjas previas a Mora Crítica 14)
+                return diffDays === 5 || diffDays === 6 || (diffDays >= 11 && diffDays <= 13);
             };
 
             const findColumnName = useCallback((keyword1, keyword2, headersList) => {
@@ -353,7 +354,7 @@
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            // --- LÓGICA DE MORA CRÍTICA EXACTA (7 DÍAS DESPUÉS DEL VENCIMIENTO) ---
+            // --- LÓGICA DE MORA CRÍTICA EXACTA (7 DÍAS DESPUÉS DEL VENCIMIENTO Y 14 DÍAS FPD15) ---
             const getRowCriticalStatus = useCallback((row, headersList) => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
@@ -374,15 +375,15 @@
                 const diffTime = today.getTime() - dueDate.getTime();
                 const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-                // 🚨 Solo si han pasado EXACTAMENTE 7 días desde el vencimiento
-                if (diffDaysFromDue === 7) {
+                // 🚨 SE AGREGÓ LOS 14 DÍAS: Exactamente 7 días (FPD7) o 14 días (FPD15)
+                if (diffDaysFromDue === 7 || diffDaysFromDue === 14) {
                     const obsVal = String(row[statusCol] || '').trim();
                     return isObsUnpaid(obsVal);
                 }
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            // --- LÓGICA DE ALERTAS (5-6 DÍAS DESPUÉS DEL VENCIMIENTO DE CUOTA) ---
+            // --- LÓGICA DE ALERTAS (5-6 o 11-13 DÍAS DESPUÉS DEL VENCIMIENTO DE CUOTA) ---
             const checkSpecificQuotaAlert = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
@@ -1081,7 +1082,7 @@
                 });
 
                 doc.setFontSize(16);
-                doc.text(`Reporte de Mora Crítica (7 Días Exactos) - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.text(`Reporte de Mora Crítica (7 y 14 Días) - ${portfolio.toUpperCase()}`, 14, 15);
                 doc.setFontSize(11);
                 doc.text(`Fecha de Corte: ${new Date().toLocaleDateString()} | Total Clientes en Riesgo: ${exportRows.length}`, 14, 22);
                 
@@ -1534,7 +1535,7 @@
                                 <div className="p-3 bg-white shadow-sm rounded-full text-red-600 border border-red-100"><Icons.AlertTriangle className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
                                     <h2 className="text-red-900 font-bold text-lg tracking-tight">{criticalStats.total} Clientes en Mora Crítica</h2>
-                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 días de mora. Prioridad máxima de gestión hoy.</p>
+                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 o 14 días de mora. Prioridad máxima de gestión hoy.</p>
                                 </div>
                              </div>
                              <div className="flex gap-2">
@@ -1557,7 +1558,7 @@
                                 <div className="p-3 bg-white shadow-sm rounded-full text-orange-600 border border-orange-100"><Icons.BellRing className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
                                     <h2 className="text-orange-900 font-bold text-lg tracking-tight">{alertStats.total} Clientes en Mora Reciente</h2>
-                                    <p className="text-sm text-orange-700 opacity-90 mt-0.5">Vencidos hace 5-6 días sin gestión registrada.</p>
+                                    <p className="text-sm text-orange-700 opacity-90 mt-0.5">Vencidos hace 5-6 u 11-13 días sin gestión registrada.</p>
                                 </div>
                              </div>
                              <button onClick={() => { setShowOnlyAlerts(!showOnlyAlerts); setShowOnlyEarly(false); setShowOnlyCritical(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyAlerts ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700 hover:shadow-md' : 'bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300'}`}>
@@ -1595,8 +1596,8 @@
                             }
                         </div>
 
-                        {/* Modificado a xl:grid-cols-4 o 3 dinámicamente para que las tarjetas se acomoden perfectas */}
-                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-${activeConfig.quotas.length === 4 ? '4' : '3'} gap-4`}>
+                        {/* Modificado a xl:grid-cols-3 para que las 6 tarjetas formen dos filas perfectas */}
+                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`}>
                             {activeConfig.quotas.map(quotaId => (
                                 <StatCard key={quotaId} title={QUOTA_LABELS[quotaId].label} quotaId={quotaId} stats={observationStats[quotaId]} fpdInfo={fpdStats[quotaId]} />
                             ))}
@@ -1649,7 +1650,7 @@
                                             <td key="action-cell" className="px-4 py-2 text-center whitespace-nowrap border-l border-slate-100 bg-slate-50/50">
                                                 {(() => {
                                                     const activeQuotaForButton = fpdQuotaFilter || breakdownFilter?.quota;
-                                                    const isContinuityAction = CONTINUITY_QUOTAS.includes(activeQuotaForButton);
+                                                    const isContinuityAction = ['fpd10', 'fpd11', 'fpd12', 'cont_m2'].includes(activeQuotaForButton);
                                                     
                                                     if (isContinuityAction) {
                                                         const currentCom = commentsColName ? String(row[commentsColName] || '').toLowerCase() : '';
