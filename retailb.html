@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Soluciones Efectivas CTG </title>
+    <title>Gestión Soluciones Efectivas CTG - VERSIÓN FINAL</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React & ReactDOM (Production) -->
@@ -22,7 +22,9 @@
             background-color: #f1f5f9;
         }
 
-        /* CONFIGURACIÓN ESTRICTA CARTA PARA PDF */
+        /* =========================================================
+           BLOQUE DE SEGURIDAD: CONFIGURACIÓN ESTRICTA CARTA
+           ========================================================= */
         .letter-size {
             width: 8.5in !important;
             height: 11in !important;
@@ -47,6 +49,7 @@
         .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #2C4C8C; border-radius: 10px; border: 2px solid #f8fafc; }
         
+        /* Animación de carga para el botón/tabla */
         .animate-spin-slow { animation: spin 2s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
@@ -182,13 +185,27 @@
                 html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
             };
 
-            // NUEVO: Generador de PDF de Antifraude
+            // Generador de PDF de Antifraude
             const handleGeneratePDFAntifraude = () => {
                 setIsGenerating(true);
                 const element = document.getElementById('pdf-content-antifraude');
                 const opt = {
                     margin: 0,
                     filename: `Antifraude_PayJoy_${formData.nombreCliente || 'Cliente'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
+            };
+
+            // NUEVO: Generador de PDF Vitrina (Comodato)
+            const handleGeneratePDFVitrina = () => {
+                setIsGenerating(true);
+                const element = document.getElementById('pdf-content-vitrina');
+                const opt = {
+                    margin: 0,
+                    filename: `Comodato_Vitrina_${formData.nombreCliente || 'Aliado'}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
                     jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -317,23 +334,26 @@
                                 <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[#67B74D] text-white rounded-xl font-black text-xs shadow-lg hover:bg-[#559e3d] transition-all uppercase tracking-widest">
                                     <Icon name="Calculator" size={16} /> Precios
                                 </button>
-                                {/* BOTÓN PDF AUTORIZACIÓN (Se deshabilita si faltan datos) */}
+                                {/* BOTÓN PDF AUTORIZACIÓN */}
                                 <button onClick={handleGeneratePDF} disabled={isGenerating || !isAutorizacionReady} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating || !isAutorizacionReady ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#2C4C8C] hover:bg-black'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
-                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} PDF Autorización
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} Autorización
                                 </button>
-                                {/* BOTÓN PDF ANTIFRAUDE (Siempre activo para descargar en blanco o llena) */}
+                                {/* BOTÓN PDF ANTIFRAUDE */}
                                 <button onClick={handleGeneratePDFAntifraude} disabled={isGenerating} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
-                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="ShieldCheck" size={16} />} PDF Antifraude
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="ShieldCheck" size={16} />} Antifraude
+                                </button>
+                                {/* BOTÓN PDF VITRINA */}
+                                <button onClick={handleGeneratePDFVitrina} disabled={isGenerating || !isAutorizacionReady} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating || !isAutorizacionReady ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#67B74D] hover:bg-[#559e3d]'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Building2" size={16} />} Vitrina
                                 </button>
                             </div>
                         </div>
                         <div className="bg-emerald-50/40 p-5 rounded-[25px] border border-emerald-100 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Nombre Completo</label><input type="text" placeholder="Ej: Juan Pérez" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.nombreCliente} onChange={(e) => setFormData({...formData, nombreCliente: e.target.value})} /></div>
-                                <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Cédula</label><input type="text" placeholder="No. Documento" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.cedulaCliente} onChange={(e) => setFormData({...formData, cedulaCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Cédula / NIT</label><input type="text" placeholder="No. Documento" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.cedulaCliente} onChange={(e) => setFormData({...formData, cedulaCliente: e.target.value})} /></div>
                                 <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 italic text-emerald-700">Expedida en:</label><input type="text" placeholder="Ciudad" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.expedicionCedula} onChange={(e) => setFormData({...formData, expedicionCedula: e.target.value})} /></div>
                             </div>
-                            {/* NUEVOS CAMPOS PARA ANTIFRAUDE */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-emerald-100 pt-4">
                                 <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Dirección de Domicilio</label><input type="text" placeholder="Ej: Calle 1 # 2-3" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.direccionCliente} onChange={(e) => setFormData({...formData, direccionCliente: e.target.value})} /></div>
                                 <div><label className="block text-[10px] font-black text-[#2C4C8C] uppercase mb-1 tracking-widest">Ciudad de Domicilio</label><input type="text" placeholder="Ej: Cartagena" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-[#67B74D]/10 focus:border-[#67B74D] text-sm" value={formData.ciudadCliente} onChange={(e) => setFormData({...formData, ciudadCliente: e.target.value})} /></div>
@@ -506,13 +526,13 @@
                     )}
 
                     {/* ============================== */}
-                    {/* MENSAJE DE ESPERA AUTORIZACIÓN */}
+                    {/* MENSAJE DE ESPERA DOCUMENTOS   */}
                     {/* ============================== */}
                     {!isAutorizacionReady && (
                         <div className="w-full max-w-4xl bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-gray-300 text-center mb-8 flex flex-col items-center justify-center print:hidden">
                             <Icon name="ShieldCheck" size={48} className="text-gray-300 mb-4" />
-                            <h3 className="text-lg font-black text-gray-500 uppercase tracking-widest">Autorización Oculta</h3>
-                            <p className="text-sm font-bold text-gray-400 mt-2 max-w-md">Complete Nombre, Cédula y Expedición en el formulario superior para visualizar la Carta de Autorización.</p>
+                            <h3 className="text-lg font-black text-gray-500 uppercase tracking-widest">Documentos Ocultos</h3>
+                            <p className="text-sm font-bold text-gray-400 mt-2 max-w-md">Complete Nombre, Cédula y Expedición en el formulario superior para visualizar y descargar los contratos y autorizaciones.</p>
                         </div>
                     )}
 
@@ -552,7 +572,7 @@
                                 <p>Cordial saludo,</p>
                                 <p>
                                     Yo, <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#2C4C8C] uppercase italic tracking-tighter">{formData.nombreCliente || "_________________________________________"}</span>, 
-                                    con C.C. No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1">{formData.cedulaCliente || "_________________"}</span> expedida en 
+                                    con C.C./NIT No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1">{formData.cedulaCliente || "_________________"}</span> expedida en 
                                     <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#67B74D] italic tracking-tight"> {formData.expedicionCedula || "_______________"}</span>, 
                                     actuando en mi calidad de aliado comercial de la sociedad jurídica <span className="font-black uppercase text-[#2C4C8C] tracking-tighter italic">{companyInfo.name}</span>, 
                                     autorizo de manera voluntaria, expresa e irrevocable a <span className="font-black uppercase">PAYJOY COLOMBIA S.A.S.</span> para que la totalidad de los recursos económicos generados sean consignados en la siguiente cuenta corporativa oficial:
@@ -583,7 +603,7 @@
                                     <div className="w-1/2">
                                         <div className="w-full border-b-4 border-[#2C4C8C] mb-3"></div>
                                         <p className="font-black text-[#2C4C8C] uppercase text-[10pt] tracking-tighter leading-none italic">{formData.nombreCliente || "Firma del Aliado"}</p>
-                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C. No. {formData.cedulaCliente || "__________________"}</p>
+                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C./NIT No. {formData.cedulaCliente || "__________________"}</p>
                                     </div>
                                     <div className="w-22 h-28 border-2 border-slate-100 rounded-[20px] flex flex-col items-center justify-end text-[6.5pt] text-slate-300 p-3 font-black bg-slate-50 italic border-dotted">
                                         <div className="w-full border-t border-slate-200 pt-1 text-center uppercase tracking-widest">Huella</div>
@@ -608,72 +628,139 @@
                     {/* ============================== */}
                     {/* CARTA 2: ANTIFRAUDE PAYJOY     */}
                     {/* ============================== */}
-                    <div id="pdf-content-antifraude" className="letter-size shadow-2xl border-t-[10px] border-blue-600 bg-white mb-8">
-                        <div className="flex justify-between items-start mb-8">
-                            <div>
-                                <h2 className="text-xl font-black text-gray-900 tracking-tighter">CARTA ANTIFRAUDE</h2>
-                                <p className="mt-2 text-xs font-bold text-gray-800 leading-tight">SEÑORES<br/>PAYJOY COLOMBIA S.A.S<br/>CIUDAD</p>
+                    {isAutorizacionReady && (
+                        <div id="pdf-content-antifraude" className="letter-size shadow-2xl border-t-[10px] border-blue-600 bg-white mb-8">
+                            <div className="flex justify-between items-start mb-8">
+                                <div>
+                                    <h2 className="text-xl font-black text-gray-900 tracking-tighter">CARTA ANTIFRAUDE</h2>
+                                    <p className="mt-2 text-xs font-bold text-gray-800 leading-tight">SEÑORES<br />PAYJOY COLOMBIA S.A.S<br />CIUDAD</p>
+                                </div>
+                                <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/PayJoy_Logo.jpg?raw=true" alt="PayJoy Logo" className="h-12 w-auto object-contain" />
                             </div>
-                            <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/PayJoy_Logo.jpg?raw=true" alt="PayJoy Logo" className="h-12 w-auto object-contain" />
-                        </div>
 
-                        <div className="text-justify text-[9pt] leading-relaxed space-y-4 font-sans flex-1">
-                            <p>
-                                YO, <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.nombreCliente || "_________________________________________"}</span>, DE <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.expedicionCedula || "_______________"}</span>, IDENTIFICADO CON CEDULA DE CIUDADANIA # <span className="font-black border-b border-gray-400 px-2">{formData.cedulaCliente || "_________________"}</span> Y CON DOMICILIO EN (DIRECCION EXАСТА) <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.direccionCliente || "_________________________________"}</span> DE LA CIUDAD DE <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.ciudadCliente || "_______________"}</span> Y CON NUMERO CELULAR <span className="font-black border-b border-gray-400 px-2">{formData.telefonoCliente || "_______________"}</span> ENTIENDO QUE SOY EL ÚNICO RESPONSABLE DE LA COMPRA DEL EQUIPO TERMINAL MÓVIL Y LO ESTOY ADQUIRIENDO BAJO MI ÚNICA VOLUNTAD, RESPONSABILIDAD Y CONSENTIMIENTO.
-                            </p>
-                            <p>
-                                ENTIENDO QUE CONTRACTUALMENTE NO PUEDO VENDER EL CELULAR QUE PAYJOY ME ESTÁ FINANCIANDO HASTA QUE COMPLETE EL TOTAL DE LAS CUOTAS A PAGAR. ENTIENDO Y ACEPTO QUE LA CONDICIONES DEL CRÉDITO EXIGEN QUE A MI NUEVO CELULAR FINANCIADO POR PAYJOY SE LE INSTALE UNA APLICACIÓN DE SEGURIDAD QUE PERMITE INHABILITAR EL CELULAR EN CASO DE NO PAGO. QUE UNA VEZ PAGADAS TODAS MIS CUOTAS EL CELULAR QUEDARA LIBRE Y SOLO AHI, PODRE DISPONER DE ÉL, UNA VEZ LA APLICACIÓN DE SEGURIDAD HAYA SIDO DESINSTALADA.
-                            </p>
-                            <p>
-                                ENTIENDO QUE CUALQUIER INTENTO DE MANIPULAR ESTA APLICACIÓN, ES PROHIBIDO CONTRACTUALMENTE Y PODRÍA SER CONSIDERADO UN DELITO. ENTIENDO QUE ESTE DELITO ESTÁ TIPIFICADO EN CÓDIGO PENAL COMO "VIOLACION AL SISTEMA INFORMÁTICO" POR EL CUAL TENDRÉ QUE ACEPTAR LAS CONSECUENCIAS PENALES Y RESPONDER ANTE LA FISCALÍA POR ESTOS ACTOS DELICTIVOS.
-                            </p>
-                            <p>
-                                DOY CONSTANCIA QUE NO HE SIDO CONTACTADO POR UN TERCERO, NI ESTOY ACTUANDO COMO INTERMEDIARIO POR UN TERCERO, PARA TRAMITAR ESTE CRÉDITO Y SOY CONSCIENTE Y RESPONSABLE DE QUE LAS CONSECUENCIAS DE INCURRIR EN ESTE ACTO ESTÁN CONSIDERADAS COMO "CONCIERTO PARA DELINQUIR" TIPIFICADO EN EL CÓDIGO PENAL COLOMBIANO ARTÍCULO 340 Y QUE CUANDO VARIAS PERSONAS SE CONCIERTEN CON EL FIN DE COMETER DELITOS, CADA UNA DE ELLAS PODRÍA SER PENADA, POR ESA SOLA CONDUCTA, CON PRISIÓN DE CUARENTA Y OCHO (48) A CIENTO OCHO (108) MESES.
-                            </p>
-                            <p>
-                                CONSECUENTEMENTE COMETIENDO TAMBIÉN EL DELITO DE "ESTAFA"; ARTÍCULO 248 DEL CÓDIGO PENAL, PARA LOS QUE, CON ÁNIMO DE LUCRO, UTILIZAN EL ENGAÑO PARA PRODUCIR ERROR EN OTRO (PAYJOY COLOMBIA S.A.S.) INDUCIÉNDOLO A REALIZAR UN ACTO EN DISPOSICIÓN EN PERJUICIO PROPIO O AJENO. LA PENA PREVISTA PARA EL DELITO DE ESTAFA OSCILA ENTRE SEIS (6) MESES Y TREINTA Y SEIS MESES (36) DE PRISIÓN.
-                            </p>
-                        </div>
+                            <div className="text-justify text-[9pt] leading-relaxed space-y-4 font-sans flex-1">
+                                <p>
+                                    YO, <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.nombreCliente || "_________________________________________"}</span>, 
+                                    DE <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.expedicionCedula || "_______________"}</span>, 
+                                    IDENTIFICADO CON CEDULA DE CIUDADANIA # <span className="font-black border-b border-gray-400 px-2">{formData.cedulaCliente || "_________________"}</span> 
+                                    Y CON DOMICILIO EN (DIRECCION EXАСТА) <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.direccionCliente || "_________________________________"}</span> 
+                                    DE LA CIUDAD DE <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.ciudadCliente || "_______________"}</span> 
+                                    Y CON NUMERO CELULAR <span className="font-black border-b border-gray-400 px-2">{formData.telefonoCliente || "_______________"}</span> 
+                                    ENTIENDO QUE SOY EL ÚNICO RESPONSABLE DE LA COMPRA DEL EQUIPO TERMINAL MÓVIL Y LO ESTOY ADQUIRIENDO BAJO MI ÚNICA VOLUNTAD, RESPONSABILIDAD Y CONSENTIMIENTO.
+                                </p>
+                                <p>
+                                    ENTIENDO QUE CONTRACTUALMENTE NO PUEDO VENDER EL CELULAR QUE PAYJOY ME ESTÁ FINANCIANDO HASTA QUE COMPLETE EL TOTAL DE LAS CUOTAS A PAGAR. ENTIENDO Y ACEPTO QUE LA CONDICIONES DEL CRÉDITO EXIGEN QUE A MI NUEVO CELULAR FINANCIADO POR PAYJOY SE LE INSTALE UNA APLICACIÓN DE SEGURIDAD QUE PERMITE INHABILITAR EL CELULAR EN CASO DE NO PAGO. QUE UNA VEZ PAGADAS TODAS MIS CUOTAS EL CELULAR QUEDARA LIBRE Y SOLO AHI, PODRE DISPONER DE ÉL, UNA VEZ LA APLICACIÓN DE SEGURIDAD HAYA SIDO DESINSTALADA.
+                                </p>
+                                <p>
+                                    ENTIENDO QUE CUALQUIER INTENTO DE MANIPULAR ESTA APLICACIÓN, ES PROHIBIDO CONTRACTUALMENTE Y PODRÍA SER CONSIDERADO UN DELITO. ENTIENDO QUE ESTE DELITO ESTÁ TIPIFICADO EN CÓDIGO PENAL COMO "VIOLACION AL SISTEMA INFORMÁTICO" POR EL CUAL TENDRÉ QUE ACEPTAR LAS CONSECUENCIAS PENALES Y RESPONDER ANTE LA FISCALÍA POR ESTOS ACTOS DELICTIVOS.
+                                </p>
+                                <p>
+                                    DOY CONSTANCIA QUE NO HE SIDO CONTACTADO POR UN TERCERO, NI ESTOY ACTUANDO COMO INTERMEDIARIO POR UN TERCERO, PARA TRAMITAR ESTE CRÉDITO Y SOY CONSCIENTE Y RESPONSABLE DE QUE LAS CONSECUENCIAS DE INCURRIR EN ESTE ACTO ESTÁN CONSIDERADAS COMO "CONCIERTO PARA DELINQUIR" TIPIFICADO EN EL CÓDIGO PENAL COLOMBIANO ARTÍCULO 340 Y QUE CUANDO VARIAS PERSONAS SE CONCIERTEN CON EL FIN DE COMETER DELITOS, CADA UNA DE ELLAS PODRÍA SER PENADA, POR ESA SOLA CONDUCTA, CON PRISIÓN DE CUARENTA Y OCHO (48) A CIENTO OCHO (108) MESES.
+                                </p>
+                                <p>
+                                    CONSECUENTEMENTE COMETIENDO TAMBIÉN EL DELITO DE "ESTAFA"; ARTÍCULO 248 DEL CÓDIGO PENAL, PARA LOS QUE, CON ÁNIMO DE LUCRO, UTILIZAN EL ENGAÑO PARA PRODUCIR ERROR EN OTRO (PAYJOY COLOMBIA S.A.S.) INDUCIÉNDOLO A REALIZAR UN ACTO EN DISPOSICIÓN EN PERJUICIO PROPIO O AJENO. LA PENA PREVISTA PARA EL DELITO DE ESTAFA OSCILA ENTRE SEIS (6) MESES Y TREINTA Y SEIS MESES (36) DE PRISIÓN.
+                                </p>
+                            </div>
 
-                        <div className="mt-6 pt-4 text-[9pt] font-sans">
-                            <p className="mb-5 font-bold">ATENTAMENTE,</p>
-                            <div className="flex justify-between items-start">
-                                <div className="w-2/3 space-y-4">
-                                    <div>
-                                        <span className="font-bold inline-block w-20">NOMBRE:</span> <span className="border-b border-gray-400 inline-block w-[80%] uppercase">{formData.nombreCliente}</span>
+                            <div className="mt-6 pt-4 text-[9pt] font-sans">
+                                <p className="mb-5 font-bold">ATENTAMENTE,</p>
+                                <div className="flex justify-between items-start">
+                                    <div className="w-2/3 space-y-4">
+                                        <div>
+                                            <span className="font-bold inline-block w-20">NOMBRE:</span> <span className="border-b border-gray-400 inline-block w-[80%] uppercase">{formData.nombreCliente}</span>
+                                        </div>
+                                        <div>
+                                            <span className="font-bold inline-block w-20">CÉDULA:</span> <span className="border-b border-gray-400 inline-block w-[80%]">{formData.cedulaCliente}</span>
+                                        </div>
+                                        <div>
+                                            <span className="font-bold inline-block w-20">DIRECCIÓN:</span> <span className="border-b border-gray-400 inline-block w-[80%] uppercase">{formData.direccionCliente}</span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <span className="font-bold inline-block w-20">CÉDULA:</span> <span className="border-b border-gray-400 inline-block w-[80%]">{formData.cedulaCliente}</span>
-                                    </div>
-                                    <div>
-                                        <span className="font-bold inline-block w-20">DIRECCIÓN:</span> <span className="border-b border-gray-400 inline-block w-[80%] uppercase">{formData.direccionCliente}</span>
+                                    <div className="w-24 h-28 border-2 border-gray-300 flex flex-col items-center justify-end text-[7.5pt] text-gray-500 p-2 font-bold shrink-0">
+                                        <div className="w-full border-t border-gray-300 pt-1 text-center uppercase tracking-wider">Índice Derecho</div>
                                     </div>
                                 </div>
-                                <div className="w-24 h-28 border-2 border-gray-300 flex flex-col items-center justify-end text-[7.5pt] text-gray-500 p-2 font-bold shrink-0">
-                                    <div className="w-full border-t border-gray-300 pt-1 text-center uppercase tracking-wider">Índice Derecho</div>
+                            </div>
+
+                            <div className="mt-8 font-sans shrink-0">
+                                <h3 className="font-bold text-[9pt] mb-2 uppercase tracking-widest bg-gray-100 p-1.5 text-center border border-gray-400">Referencias</h3>
+                                <table className="w-full border-collapse border border-gray-400 text-[8pt]">
+                                    <thead>
+                                        <tr className="bg-gray-50">
+                                            <th className="border border-gray-400 p-2 text-left w-1/3">Nombre</th>
+                                            <th className="border border-gray-400 p-2 text-left w-1/3">Dirección</th>
+                                            <th className="border border-gray-400 p-2 text-left w-1/6">Teléfono</th>
+                                            <th className="border border-gray-400 p-2 text-left w-1/6">Parentesco</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                        <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                        <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ============================== */}
+                    {/* CARTA 3: CONTRATO DE COMODATO VITRINA */}
+                    {/* ============================== */}
+                    {isAutorizacionReady && (
+                        <div id="pdf-content-vitrina" className="letter-size shadow-2xl border-t-[10px] border-[#67B74D] bg-white mb-8">
+                            <header className="flex items-center justify-between border-b-2 border-slate-100 pb-3 mb-6 w-full">
+                                <img src={companyInfo.logoUrl} alt="Logo" className="h-24 w-auto object-contain" />
+                                <div className="text-right font-sans shrink-0">
+                                    <h1 className="text-xl font-black text-[#2C4C8C] uppercase italic leading-none tracking-tighter">{companyInfo.name}</h1>
+                                    <p className="text-sm font-bold text-gray-700 tracking-widest uppercase mt-1">NIT: {companyInfo.nit}</p>
+                                </div>
+                            </header>
+
+                            <h2 className="text-lg font-black text-center text-[#2C4C8C] uppercase tracking-tighter mb-6">CONTRATO DE COMODATO DE EQUIPO DE EXHIBICIÓN Y PUNTO DE EXPERIENCIA</h2>
+
+                            <div className="text-justify text-[9pt] leading-relaxed space-y-4 font-sans flex-1">
+                                <p>
+                                    <strong>ENTRE LOS SUSCRITOS: SOLUCIONES EFECTIVAS CTG SAS</strong>, identificada con NIT 901831921-2, representada legalmente por YOR MARIBEL RODRIGUEZ GOMEZ, identificada con C.C. 30.878.719, en adelante denominada el <strong>COMODANTE</strong>.
+                                </p>
+                                <p>
+                                    <strong>Y:</strong> <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.nombreCliente || "_________________________________________"}</span>, identificada con C.C./NIT <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.cedulaCliente || "_________________"}</span> expedida en <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.expedicionCedula || "_______________"}</span>, en representación del establecimiento de comercio, en adelante denominada el <strong>COMODATARIO</strong>.
+                                </p>
+
+                                <p className="font-bold mt-4">CLÁUSULAS:</p>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li><strong>OBJETO Y ALCANCE NACIONAL:</strong> El COMODANTE entrega al COMODATARIO, a título de préstamo de uso gratuito, una Vitrina Premium (Punto de Experiencia) para ser instalada en su establecimiento comercial, con el fin de promover los servicios financieros de PayJoy.</li>
+                                    <li><strong>VALOR DEL BIEN:</strong> Para efectos de seguros y responsabilidades legales, las partes valoran la vitrina en la suma de 1.270.000 COP más IVA.</li>
+                                    <li><strong>PRODUCTIVIDAD MÍNIMA REQUERIDA:</strong> El COMODATARIO se compromete a mantener un ritmo de ventas mínimo de siete (7) equipos mensuales financiados a través de la plataforma. El incumplimiento de esta meta de ventas por dos meses consecutivos facultará al COMODANTE para retirar la vitrina de manera inmediata.</li>
+                                    <li><strong>INDICADORES DE CALIDAD DE CARTERA:</strong> La permanencia del equipo está sujeta a la calidad del recaudo. El COMODATARIO debe cumplir estrictamente con los siguientes límites:
+                                        <ul className="list-decimal pl-5 mt-1">
+                                            <li>FPD 3 (Mora en el primer pago a 3 días) menor al 20%.</li>
+                                            <li>FPD 7 menor al 7%.</li>
+                                            <li>FPD 15 menor al 7%.</li>
+                                            <li>Cartera General menor al 20%.</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>RESPONSABILIDAD INTEGRAL:</strong> El COMODATARIO asume la responsabilidad del 100% sobre el cuidado, custodia y vigilancia de la vitrina y de todos los teléfonos móviles o dispositivos exhibidos en ella. El COMODANTE no responderá por hurtos, daños o vandalismo dentro del establecimiento aliado.</li>
+                                    <li><strong>SUPERVISIÓN TECNOLÓGICA:</strong> El COMODATARIO acepta el monitoreo mediante GPS y geolocalización (vía CityTroops), así como la auditoría mediante evidencia fotográfica en tiempo real.</li>
+                                </ul>
+                            </div>
+
+                            <div className="mt-8 pt-4 border-t border-slate-50">
+                                <div className="flex justify-between items-end font-sans mb-4">
+                                    <div className="w-1/2">
+                                        <div className="w-full border-b-4 border-[#2C4C8C] mb-3"></div>
+                                        <p className="font-black text-[#2C4C8C] uppercase text-[10pt] tracking-tighter leading-none italic">{formData.nombreCliente || "Firma del COMODATARIO"}</p>
+                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C./NIT No. {formData.cedulaCliente || "__________________"}</p>
+                                    </div>
+                                    <div className="w-1/2 ml-4 text-right">
+                                        <div className="w-full border-b-4 border-[#67B74D] mb-3"></div>
+                                        <p className="font-black text-[#67B74D] uppercase text-[10pt] tracking-tighter leading-none italic">YOR MARIBEL RODRIGUEZ GOMEZ</p>
+                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C. 30.878.719</p>
+                                        <p className="text-[8pt] font-bold text-gray-400 uppercase tracking-widest mt-1">Representante Legal COMODANTE</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div className="mt-8 font-sans shrink-0">
-                            <h3 className="font-bold text-[9pt] mb-2 uppercase tracking-widest bg-gray-100 p-1.5 text-center border border-gray-400">Referencias</h3>
-                            <table className="w-full border-collapse border border-gray-400 text-[8pt]">
-                                <thead>
-                                    <tr className="bg-gray-50">
-                                        <th className="border border-gray-400 p-2 text-left w-1/3">Nombre</th>
-                                        <th className="border border-gray-400 p-2 text-left w-1/3">Dirección</th>
-                                        <th className="border border-gray-400 p-2 text-left w-1/6">Teléfono</th>
-                                        <th className="border border-gray-400 p-2 text-left w-1/6">Parentesco</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
-                                    <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
-                                    <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                    )}
 
                 </div>
             );
