@@ -81,7 +81,7 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v6.3.2 (Mora 11-14 días agregada)";
+        const APP_VERSION = "v6.4.0 (Cuotas Alocredit Agregadas)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -92,19 +92,21 @@
             fpd10: { id: 'primera', label: 'Continuidad (10 Sem.)', weeksAgo: 10 },
             fpd11: { id: 'primera', label: 'Continuidad (11 Sem.)', weeksAgo: 11 },
             fpd12: { id: 'primera', label: 'Continuidad (12 Sem.)', weeksAgo: 12 },
-            cont_m2: { id: 'primera', label: 'Continuidad (Mes)', isMonthlyLag: 2 } // Nuevo: Desfase de 2 meses (Ej: Abril mide Febrero)
+            cont_m2: { id: 'primera', label: 'Continuidad (Mes)', isMonthlyLag: 2 },
+            alo_q2: { id: 'atrasadas', label: 'Cuota 2 (4 Sem.)', weeksAgo: 4 }, // Cuota catorcenal 2
+            alo_q3: { id: 'atrasadas', label: 'Cuota 3 (6 Sem.)', weeksAgo: 6 }, // Cuota catorcenal 3
+            alo_q4: { id: 'atrasadas', label: 'Cuota 4 (8 Sem.)', weeksAgo: 8 }  // Cuota catorcenal 4
         };
 
-        // Agrupación de métricas que se comportan como "Continuidad" (Miden la columna comentarios por "completado")
         const CONTINUITY_QUOTAS = ['fpd10', 'fpd11', 'fpd12', 'cont_m2'];
+        const ALO_QUOTAS = ['alo_q2', 'alo_q3', 'alo_q4'];
 
         // CONFIGURACIÓN DE CARTERAS
         const PORTFOLIO_CONFIG = {
             alocredit: {
                 name: "ALOCREDIT",
                 theme: "indigo",
-                // En Alocredit reemplazamos las semanas 10/11/12 por la métrica de Mes Completo (-2 meses)
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'cont_m2'], 
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'cont_m2'], 
                 columns: {
                     seller: ['vendedor', 'asesor'],
                     assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
@@ -119,13 +121,13 @@
                     email: ['email', 'correo', 'mail'],
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], // NUEVA COLUMNA
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
             },
             payjoy: {
                 name: "PAYJOY",
                 theme: "blue",
-                // En Payjoy mantenemos la evaluación por semanas
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: {
                     seller: ['vendedor', 'asesor', 'ejecutivo'],
@@ -200,6 +202,7 @@
                 return dateObj;
             };
 
+            // Para los contadores de arriba (Estrictos)
             const checkDateAlert = (dateVal) => {
                 const dateObj = parseDate(dateVal);
                 if (!dateObj) return false;
@@ -208,7 +211,18 @@
                 const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
                 const diffTime = today - due;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                // 🚨 SE AGREGARON LOS DÍAS 11, 12 y 13 (Alertas naranjas previas a Mora Crítica 14)
+                return diffDays === 5 || diffDays === 6;
+            };
+
+            // Para los colores de la tabla (Visual)
+            const checkVisualDateAlert = (dateVal) => {
+                const dateObj = parseDate(dateVal);
+                if (!dateObj) return false;
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                const diffTime = today - due;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
                 return diffDays === 5 || diffDays === 6 || (diffDays >= 11 && diffDays <= 13);
             };
 
@@ -271,7 +285,6 @@
                 const now = new Date();
                 const quotaDef = QUOTA_LABELS[quotaKey];
 
-                // NUEVO: Lógica para medir meses completos (Desfase en meses)
                 if (quotaDef && quotaDef.isMonthlyLag !== undefined) {
                     const targetMonth = now.getMonth() - quotaDef.isMonthlyLag;
                     const start = new Date(now.getFullYear(), targetMonth, 1);
@@ -279,7 +292,6 @@
                     return { start, end };
                 }
 
-                // LÓGICA ANTERIOR: Semanas Móviles
                 const weeksAgo = quotaDef ? quotaDef.weeksAgo : (typeof quotaKey === 'number' ? quotaKey : 3);
                 
                 const currentDay = now.getDay(); 
@@ -299,13 +311,9 @@
 
             const isObsUnpaid = (val) => {
                 const v = String(val || '').toLowerCase().trim();
-                // 1. Si es explícitamente negativo, es Mora
                 if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago')) return true; 
-                // 2. Si es un préstamo (pago con gestion), NO es mora para la empresa
                 if (v.includes('pago con gestion') || v.includes('pago con gestión')) return false; 
-                // 3. Si es un pago normal, NO es mora
                 if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló')) return false;
-                // 4. Todo lo demás (vacío, compromiso, en proceso) es Mora
                 return true; 
             };
 
@@ -319,16 +327,14 @@
                 return 'unpaid'; 
             };
 
-            // Convertir texto de moneda a número
             const parseAmount = (val) => {
                 let s = String(val || '');
                 s = s.replace(/[^0-9.,]/g, '');
-                s = s.replace(/[.,]00$/, ''); // Limpia decimales .00 o ,00
-                s = s.replace(/[.,]/g, '');   // Limpia puntos/comas de miles
+                s = s.replace(/[.,]00$/, '');
+                s = s.replace(/[.,]/g, '');
                 return parseInt(s, 10) || 0;
             };
 
-            // --- LÓGICA DE ALERTA TEMPRANA (12 a 14 DÍAS DE LA VENTA) ---
             const getRowEarlyStatus = useCallback((row, headersList) => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
@@ -354,7 +360,6 @@
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            // --- LÓGICA DE MORA CRÍTICA EXACTA (7 DÍAS DESPUÉS DEL VENCIMIENTO Y 14 DÍAS FPD15) ---
             const getRowCriticalStatus = useCallback((row, headersList) => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
@@ -369,13 +374,39 @@
                 today.setHours(0,0,0,0);
                 
                 const dueDate = new Date(saleDate);
-                dueDate.setDate(dueDate.getDate() + 14); // Vencimiento = Venta + 14 días
+                dueDate.setDate(dueDate.getDate() + 14);
                 dueDate.setHours(0,0,0,0);
 
                 const diffTime = today.getTime() - dueDate.getTime();
                 const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-                // 🚨 SE AGREGÓ LOS 14 DÍAS: Exactamente 7 días (FPD7) o 14 días (FPD15)
+                if (diffDaysFromDue === 7) {
+                    const obsVal = String(row[statusCol] || '').trim();
+                    return isObsUnpaid(obsVal);
+                }
+                return false;
+            }, [activeConfig, findConfigColumn, findColumnName]);
+
+            const getRowVisuallyCritical = useCallback((row, headersList) => {
+                const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
+                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
+                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+                
+                if (!dateCol || !statusCol) return false;
+                
+                const saleDate = parseDate(row[dateCol]);
+                if (!saleDate) return false;
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const dueDate = new Date(saleDate);
+                dueDate.setDate(dueDate.getDate() + 14);
+                dueDate.setHours(0,0,0,0);
+
+                const diffTime = today.getTime() - dueDate.getTime();
+                const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
                 if (diffDaysFromDue === 7 || diffDaysFromDue === 14) {
                     const obsVal = String(row[statusCol] || '').trim();
                     return isObsUnpaid(obsVal);
@@ -383,7 +414,6 @@
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            // --- LÓGICA DE ALERTAS (5-6 o 11-13 DÍAS DESPUÉS DEL VENCIMIENTO DE CUOTA) ---
             const checkSpecificQuotaAlert = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
@@ -403,7 +433,25 @@
                 return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert(row, headersList, qId));
             }, [checkSpecificQuotaAlert]);
 
-            // --- FETCH DATA ---
+            const checkSpecificVisualQuotaAlert = useCallback((row, headersList, quotaId) => {
+                const qName = QUOTA_LABELS[quotaId]?.id; 
+                if (!qName) return false;
+                const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+
+                if (colFecha && colStatus) {
+                    const fechaVal = row[colFecha];
+                    const obsVal = String(row[colStatus] || '').trim();
+                    if (checkVisualDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
+                }
+                return false;
+            }, [activeConfig, findColumnName]);
+
+            const getRowVisuallyAlert = useCallback((row, headersList) => {
+                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificVisualQuotaAlert(row, headersList, qId));
+            }, [checkSpecificVisualQuotaAlert]);
+
             const fetchData = useCallback(async () => {
                 setLoading(true);
                 setError(null);
@@ -450,7 +498,6 @@
                 fetchData(); 
             }, [fetchData]);
 
-            // --- MEMOS DE DATOS ---
             const { sellers, sellerColumn, assignees, assignedColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn, idColumn } = useMemo(() => {
                 const sCol = findConfigColumn(activeConfig.columns.seller, headers);
                 const aCol = findConfigColumn(activeConfig.columns.assigned, headers);
@@ -480,7 +527,6 @@
                 };
             }, [data, headers, activeConfig, findConfigColumn]);
 
-            // --- REPORTE DE GESTORES Y PRÉSTAMOS ---
             const sellerReportData = useMemo(() => {
                 if (!showSellerModal) return [];
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
@@ -542,7 +588,6 @@
                         }
                     }
 
-                    // Contabilizar dinero de los Préstamos
                     if (isPrestamo) {
                         report[personName].prestamos++;
                         const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
@@ -644,7 +689,6 @@
 
             }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn]);
 
-            // --- ESTADISTICAS Y DATA TOP-LEVEL ---
             const dataForStats = useMemo(() => {
                 let result = data;
                 if (selectedSeller && sellerColumn) result = result.filter(row => String(row[sellerColumn]).trim() === selectedSeller);
@@ -654,7 +698,7 @@
                 return result;
             }, [data, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn]);
 
-            // --- RENDERIZADO TABLA PRINCIPAL Y PAGINACIÓN ---
+            // --- RENDERIZADO TABLA PRINCIPAL Y FILTROS ---
             const filteredData = useMemo(() => {
                 let result = dataForStats;
                 
@@ -673,7 +717,27 @@
                             const d = parseDate(row[dateCol]);
                             if (!d || d < range.start || d > range.end) return false;
                             
-                            if (CONTINUITY_QUOTAS.includes(activeFilter)) {
+                            // LÓGICA ALOCREDIT: CUOTAS ATRASADAS (Mora por números)
+                            if (ALO_QUOTAS.includes(activeFilter)) {
+                                let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                                let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
+                                
+                                let lateVal = String(row[lateCol] || '').trim();
+                                let isLate = lateVal !== '' && lateVal !== '0' && lateVal !== '0.0' && !isNaN(Number(lateVal)) && Number(lateVal) > 0;
+                                let isZero = lateVal === '0' || lateVal === '0.0';
+                                let hasComment = commentsCol && String(row[commentsCol] || '').trim() !== '';
+
+                                if (breakdownFilter) {
+                                    if (breakdownFilter.type === 'yaCancelo') return isZero;
+                                    if (breakdownFilter.type === 'conGestion') return isLate && hasComment;
+                                    if (breakdownFilter.type === 'noCancelo') return isLate && !hasComment;
+                                    if (breakdownFilter.type === 'vacio') return !isZero && !isLate;
+                                    return false; 
+                                }
+                                return isLate;
+                            }
+                            // LÓGICA CONTINUIDAD (Completado)
+                            else if (CONTINUITY_QUOTAS.includes(activeFilter)) {
                                 let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                                 const val = String(row[commentsCol] || '').toLowerCase().trim();
                                 
@@ -684,7 +748,9 @@
                                     return false; 
                                 }
                                 return !val.includes('completado'); 
-                            } else {
+                            } 
+                            // LÓGICA FPD NORMAL (Mora en cuota 1)
+                            else {
                                 let quotaName = QUOTA_LABELS[activeFilter].id;
                                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, quotaName, headers);
                                 if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
@@ -740,7 +806,7 @@
                 return stats;
             }, [dataForStats, headers, getRowCriticalStatus]);
 
-            // --- FPD STATS ---
+            // --- FPD STATS (PORCENTAJES DE CADA TARJETA) ---
             const fpdStats = useMemo(() => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                 if (!dateCol) return { found: false };
@@ -760,7 +826,16 @@
                     let unpaid = 0;
                     let upcoming = 0; 
 
-                    if (CONTINUITY_QUOTAS.includes(quotaKey)) {
+                    if (ALO_QUOTAS.includes(quotaKey)) {
+                        let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                        if (lateCol) {
+                            cohortSales.forEach(row => {
+                                let lateVal = String(row[lateCol] || '').trim();
+                                let isLate = lateVal !== '' && lateVal !== '0' && lateVal !== '0.0' && !isNaN(Number(lateVal)) && Number(lateVal) > 0;
+                                if (isLate) unpaid++;
+                            });
+                        }
+                    } else if (CONTINUITY_QUOTAS.includes(quotaKey)) {
                         let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                         if (commentsCol) {
                             cohortSales.forEach(row => {
@@ -804,7 +879,7 @@
                 activeConfig.quotas.forEach(qId => {
                     const s = calculateFPD(qId);
                     statsObj[qId] = s;
-                    if (!CONTINUITY_QUOTAS.includes(qId)) { 
+                    if (!CONTINUITY_QUOTAS.includes(qId) && !ALO_QUOTAS.includes(qId)) { 
                         totalUnpaid += s.unpaid; 
                         totalSales += s.totalSales; 
                     }
@@ -815,7 +890,6 @@
                 return statsObj;
             }, [dataForStats, headers, activeConfig, findColumnName, findConfigColumn, portfolio]);
 
-            // SE CORRIGIÓ: Ahora el cálculo de los botones usa los datos reales de esa cohorte (fecha exacta),
             const observationStats = useMemo(() => {
                 const statsObj = { found: true };
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
@@ -830,7 +904,28 @@
                         return d && d >= range.start && d <= range.end;
                     });
                     
-                    if (CONTINUITY_QUOTAS.includes(quotaKey)) {
+                    if (ALO_QUOTAS.includes(quotaKey)) {
+                        let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                        let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
+                        if (!lateCol) return s;
+                        
+                        cohortSales.forEach(row => {
+                            let lateVal = String(row[lateCol] || '').trim();
+                            let isLate = lateVal !== '' && lateVal !== '0' && lateVal !== '0.0' && !isNaN(Number(lateVal)) && Number(lateVal) > 0;
+                            let isZero = lateVal === '0' || lateVal === '0.0';
+                            let hasComment = commentsCol && String(row[commentsCol] || '').trim() !== '';
+
+                            if (isZero) {
+                                s.yaCancelo++;
+                            } else if (isLate) {
+                                if (hasComment) s.conGestion++;
+                                else s.noCancelo++;
+                            } else {
+                                s.vacio++;
+                            }
+                        });
+                        return s;
+                    } else if (CONTINUITY_QUOTAS.includes(quotaKey)) {
                         let col = findConfigColumn(activeConfig.columns.comments, headers);
                         if (!col) return s;
                         cohortSales.forEach(row => {
@@ -857,7 +952,7 @@
                             } else if (val.includes('no se') || val.includes('no cancelo') || val.includes('no pago')) {
                                 s.noCancelo++;
                             } else if (val.includes('pago con gestion') || val.includes('pago con gestión')) {
-                                s.conGestion++; // Es un préstamo (No sumarlo a Ya Canceló)
+                                s.conGestion++; 
                             } else if (val.includes('pago') || val.includes('cancelo') || val.includes('canceló')) {
                                 s.yaCancelo++;
                             } else if (val.includes('compromiso') || val.includes('gestion') || val.includes('gestión')) {
@@ -880,7 +975,7 @@
             const getColumnStyles = (headerName) => {
                 if (!headerName) return null;
                 const lowerHeader = String(headerName).toLowerCase().trim();
-                if (lowerHeader.includes("primera cuota")) return { head: "bg-blue-100 text-blue-900 border-b-2 border-blue-300", cellBase: "border-l border-r border-blue-100", bgColor: "bg-blue-50/50" };
+                if (lowerHeader.includes("primera cuota") || lowerHeader.includes("atrasadas")) return { head: "bg-blue-100 text-blue-900 border-b-2 border-blue-300", cellBase: "border-l border-r border-blue-100", bgColor: "bg-blue-50/50" };
                 return null;
             };
 
@@ -899,10 +994,10 @@
                 const baseRow = "flex justify-between items-center p-2 rounded cursor-pointer transition-colors hover:ring-1 hover:ring-indigo-300";
                 
                 const isContinuity = CONTINUITY_QUOTAS.includes(quotaId);
-                const headerColor = isContinuity ? "text-violet-700" : "text-slate-700";
-                const headerIconColor = isContinuity ? "text-violet-600" : "text-slate-600";
+                const isAloLate = ALO_QUOTAS.includes(quotaId);
+                const headerColor = isContinuity ? "text-violet-700" : isAloLate ? "text-blue-700" : "text-slate-700";
+                const headerIconColor = isContinuity ? "text-violet-600" : isAloLate ? "text-blue-600" : "text-slate-600";
 
-                // Lógica de Título Dinámico para Meses
                 const isMonthly = QUOTA_LABELS[quotaId].isMonthlyLag !== undefined;
                 let displayTitle = title;
                 if (isMonthly) {
@@ -927,15 +1022,15 @@
                                 <div className="text-[11px] space-y-1 border-t border-black/10 pt-2">
                                     <div className="flex justify-between"><span className="opacity-80">Ventas:</span><span className="font-bold">{fpdInfo.totalSales}</span></div>
                                     <div className={`flex justify-between p-1 -mx-1 rounded ${isFpdActive ? 'bg-white/40 font-bold' : ''}`}>
-                                        <span className="opacity-80">{isContinuity ? 'Pendientes:' : 'Mora Real:'}</span><span className="font-bold underline">{fpdInfo.unpaid}</span>
+                                        <span className="opacity-80">{isContinuity ? 'Pendientes:' : isAloLate ? 'Mora Actual (>0):' : 'Mora Real:'}</span><span className="font-bold underline">{fpdInfo.unpaid}</span>
                                     </div>
-                                    {!isContinuity && (
+                                    {(!isContinuity && !isAloLate) && (
                                         <div className="flex justify-between p-1 -mx-1 rounded text-amber-700 bg-amber-50/50 mt-0.5">
                                             <span className="text-[10px] flex items-center gap-1 opacity-90"><Icons.Clock className="w-3 h-3"/> Por Vencer:</span>
                                             <span className="font-bold">{fpdInfo.upcoming}</span>
                                         </div>
                                     )}
-                                    {!isContinuity && (
+                                    {(!isContinuity && !isAloLate) && (
                                         <div className="flex justify-between text-red-800 font-bold mt-1 bg-white/30 p-1 rounded -mx-1">
                                             <span className="text-[10px] flex items-center gap-1"><Icons.Target className="w-3 h-3"/> Meta {targetPercent}%:</span><span>{recoverNeeded}</span>
                                         </div>
@@ -945,12 +1040,12 @@
                             ) : <span className="text-[10px] opacity-70">Sin ventas en {fpdInfo ? fpdInfo.rangeStr : 'periodo'}</span>}
                         </div>
                         <div className="space-y-1">
-                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'yaCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('yaCancelo') ? 'bg-green-100 ring-2 ring-green-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-green-700 flex gap-1"><Icons.CheckCircle className="w-3 h-3"/> {isContinuity ? 'Completado' : 'Ya Canceló'}</span><span className="font-bold">{stats.yaCancelo}</span></div>
-                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'conGestion'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('conGestion') ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-blue-700 flex gap-1"><Icons.Handshake className="w-3 h-3"/> {isContinuity ? 'En Proceso' : 'Préstamo / Gestión'}</span><span className="font-bold">{stats.conGestion}</span></div>
+                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'yaCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('yaCancelo') ? 'bg-green-100 ring-2 ring-green-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-green-700 flex gap-1"><Icons.CheckCircle className="w-3 h-3"/> {isAloLate ? 'Al Día (0)' : (isContinuity ? 'Completado' : 'Ya Canceló')}</span><span className="font-bold">{stats.yaCancelo}</span></div>
+                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'conGestion'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('conGestion') ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-blue-700 flex gap-1"><Icons.Handshake className="w-3 h-3"/> {isAloLate ? 'Mora + Gestión' : (isContinuity ? 'En Proceso' : 'Préstamo / Gestión')}</span><span className="font-bold">{stats.conGestion}</span></div>
                              {!isContinuity && (
-                                 <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'noCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('noCancelo') ? 'bg-red-100 ring-2 ring-red-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-red-600 flex gap-1"><Icons.XCircle className="w-3 h-3"/> Mora Real</span><span className="font-bold">{stats.noCancelo}</span></div>
+                                 <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'noCancelo'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('noCancelo') ? 'bg-red-100 ring-2 ring-red-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-red-600 flex gap-1"><Icons.XCircle className="w-3 h-3"/> {isAloLate ? 'Mora (Sin Gest.)' : 'Mora Real'}</span><span className="font-bold">{stats.noCancelo}</span></div>
                              )}
-                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'vacio'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('vacio') ? 'bg-slate-200 ring-2 ring-slate-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-slate-500 flex gap-1"><Icons.HelpCircle className="w-3 h-3"/> {isContinuity ? 'Sin Revisar' : 'Sin dato'}</span><span className="font-bold">{stats.vacio}</span></div>
+                             <div onClick={() => { setBreakdownFilter({quota: quotaId, type: 'vacio'}); setFpdQuotaFilter(null); }} className={`${baseRow} ${isActive('vacio') ? 'bg-slate-200 ring-2 ring-slate-500' : 'bg-slate-50 hover:bg-slate-100'}`}><span className="text-xs font-bold text-slate-500 flex gap-1"><Icons.HelpCircle className="w-3 h-3"/> {isContinuity ? 'Sin Revisar' : 'Sin Dato'}</span><span className="font-bold">{stats.vacio}</span></div>
                         </div>
                     </div>
                 );
@@ -958,7 +1053,7 @@
 
             const handleExportPDF = () => {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('landscape'); // Horizontal para que quepan las nuevas columnas
+                const doc = new jsPDF('landscape'); 
                 const tableColumn = ["Gestor / Asignado", "Total", "Pagas", "Préstamos", "$ Prestado", "Gestión", "No Canc.", "Por Vencer", "S/D", "Mora %"];
                 const tableRows = [];
                 
@@ -1406,6 +1501,8 @@
                 });
             }, [headers, activeConfig.columns.comments]);
 
+            const gridColsClass = activeConfig.quotas.length > 6 ? 'xl:grid-cols-4' : 'xl:grid-cols-3';
+
             return (
                 <div className="max-w-7xl mx-auto p-4 space-y-6">
                     {/* ENCABEZADO CON LOGO Y BOTONES ESTILO LANDING */}
@@ -1535,7 +1632,7 @@
                                 <div className="p-3 bg-white shadow-sm rounded-full text-red-600 border border-red-100"><Icons.AlertTriangle className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
                                     <h2 className="text-red-900 font-bold text-lg tracking-tight">{criticalStats.total} Clientes en Mora Crítica</h2>
-                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 o 14 días de mora. Prioridad máxima de gestión hoy.</p>
+                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 días de mora. Prioridad máxima de gestión hoy.</p>
                                 </div>
                              </div>
                              <div className="flex gap-2">
@@ -1558,7 +1655,7 @@
                                 <div className="p-3 bg-white shadow-sm rounded-full text-orange-600 border border-orange-100"><Icons.BellRing className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
                                     <h2 className="text-orange-900 font-bold text-lg tracking-tight">{alertStats.total} Clientes en Mora Reciente</h2>
-                                    <p className="text-sm text-orange-700 opacity-90 mt-0.5">Vencidos hace 5-6 u 11-13 días sin gestión registrada.</p>
+                                    <p className="text-sm text-orange-700 opacity-90 mt-0.5">Vencidos hace 5-6 días sin gestión registrada.</p>
                                 </div>
                              </div>
                              <button onClick={() => { setShowOnlyAlerts(!showOnlyAlerts); setShowOnlyEarly(false); setShowOnlyCritical(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyAlerts ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700 hover:shadow-md' : 'bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300'}`}>
@@ -1596,8 +1693,7 @@
                             }
                         </div>
 
-                        {/* Modificado a xl:grid-cols-3 para que las 6 tarjetas formen dos filas perfectas */}
-                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`}>
+                        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 ${gridColsClass} gap-4`}>
                             {activeConfig.quotas.map(quotaId => (
                                 <StatCard key={quotaId} title={QUOTA_LABELS[quotaId].label} quotaId={quotaId} stats={observationStats[quotaId]} fpdInfo={fpdStats[quotaId]} />
                             ))}
@@ -1624,8 +1720,8 @@
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {paginatedData.length > 0 ? paginatedData.map((row, i) => {
-                                        const isCriticalRow = getRowCriticalStatus(row, headers);
-                                        const isAlertRow = getRowAlertStatus(row, headers);
+                                        const isCriticalRow = getRowVisuallyCritical(row, headers);
+                                        const isAlertRow = getRowVisuallyAlert(row, headers);
                                         const isEarlyRow = getRowEarlyStatus(row, headers);
 
                                         let rowBgClass = 'hover:bg-indigo-50/30';
@@ -1650,7 +1746,7 @@
                                             <td key="action-cell" className="px-4 py-2 text-center whitespace-nowrap border-l border-slate-100 bg-slate-50/50">
                                                 {(() => {
                                                     const activeQuotaForButton = fpdQuotaFilter || breakdownFilter?.quota;
-                                                    const isContinuityAction = ['fpd10', 'fpd11', 'fpd12', 'cont_m2'].includes(activeQuotaForButton);
+                                                    const isContinuityAction = CONTINUITY_QUOTAS.includes(activeQuotaForButton);
                                                     
                                                     if (isContinuityAction) {
                                                         const currentCom = commentsColName ? String(row[commentsColName] || '').toLowerCase() : '';
