@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soluciones Efectivas CTG | Gestión empresarial V2.107</title>
+  <title>Soluciones Efectivas CTG | Gestión empresarial V2.108</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
@@ -13,7 +13,7 @@
     /* --- VARIABLES DE DISEÑO --- */
     :root {
       --primary-gradient: linear-gradient(135deg, #1e3a6d 0%, #2C4C8C 100%);
-      --action-gradient: linear-gradient(135deg, #74c456 0%, #58a33f 100%); /* Nuevo gradiente verde */
+      --action-gradient: linear-gradient(135deg, #74c456 0%, #58a33f 100%);
       --brand-blue: #2C4C8C;
       --brand-green: #67B74D;
       --gets-dark: #1e293b;
@@ -72,7 +72,6 @@
 
     .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; overflow-x: auto; }
     .tab-item { flex: 1; min-width: 120px; padding: 1.1rem 0.5rem; text-align: center; cursor: pointer; color: #94a3b8; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.3s; white-space: nowrap; }
-    /* Pestaña activa ahora resalta con borde verde inferior para armonizar */
     .tab-item.is-active { color: var(--brand-blue); border-bottom-color: var(--brand-green); background: white; }
 
     .section-view { display: none !important; padding: 1.75rem; animation: fadeIn 0.3s ease; }
@@ -89,7 +88,6 @@
     .admin-label { font-size: 0.75rem; font-weight: 900; color: var(--brand-blue); text-transform: uppercase; margin-bottom: 1rem; display: block; letter-spacing: 0.05em; }
     .box-admin { border: 1px solid #f1f5f9; padding: 1.75rem; border-radius: 20px; margin-bottom: 1.5rem; background: #fcfdfe; }
 
-    /* APLICANDO COLORIMETRÍA A LOS TEXTOS, INPUTS Y ETIQUETAS */
     .label { color: var(--brand-blue) !important; font-weight: 800 !important; }
     .input, .select select { color: var(--brand-blue) !important; font-weight: 700 !important; border-color: #e2e8f0; }
     .input::placeholder { color: #94a3b8 !important; opacity: 0.7; font-weight: 500; }
@@ -132,7 +130,6 @@
     .btn-siste { background: var(--color-siste); }
     .btn-vanti { background: var(--color-vanti); }
 
-    /* BOTONES PREMIUM (AHORA EN VERDE CORPORATIVO) */
     .btn-modern { border-radius: 14px; font-weight: 800; transition: all 0.3s; padding: 0.8rem 1.5rem; height: auto; font-size: 0.9rem; border: none; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
     .btn-modern.is-save { background: var(--action-gradient); color: white; box-shadow: 0 10px 20px -5px rgba(103, 183, 77, 0.45); }
     .btn-modern.is-save:hover { transform: translateY(-3px); color: white; filter: brightness(1.05); box-shadow: 0 12px 25px -5px rgba(103, 183, 77, 0.55); }
@@ -168,7 +165,7 @@
 
   <!-- LOGIN -->
   <div id="login-container" class="main-card" style="display: block;">
-    <div class="brand-header"><img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true" alt="Soluciones Efectivas CTG" class="brand-logo"></div>
+    <div class="brand-header"><img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Soluciones Efectivas CTG" class="brand-logo"></div>
     <div id="login-view" style="padding: 1.5rem 2rem 2.5rem 2rem;">
       <div style="text-align: center; margin-bottom: 2.5rem;">
         <div style="color: white; background: var(--brand-green); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 4px 15px rgba(103, 183, 77, 0.4);"><i data-lucide="shield-check" style="width:32px; height:32px; color: white !important;"></i></div>
@@ -179,7 +176,7 @@
       <div class="field mt-4"><label class="label is-small">Contraseña</label><div class="control has-icons-left"><input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" style="border-radius:12px;" onkeypress="if(event.key==='Enter') attemptLogin()"><span class="icon is-small is-left"><i data-lucide="key"></i></span></div></div>
       <button id="btn-login" class="button btn-modern is-save is-fullwidth is-medium mt-6" onclick="attemptLogin()"><i data-lucide="log-in" style="width: 18px; color: white !important;"></i> Ingresar al Portal</button>
     </div>
-    <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.107</div>
+    <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.108</div>
   </div>
 
   <!-- APP PRINCIPAL -->
@@ -187,7 +184,7 @@
     <div id="bg-sync-indicator"><div class="button is-loading is-small is-white" style="height:15px; width:15px; margin-right:5px;"></div> Sincronizando datos...</div>
     
     <div class="brand-header">
-        <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true" alt="Soluciones Efectivas CTG" class="brand-logo header-left-logo">
+        <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Soluciones Efectivas CTG" class="brand-logo header-left-logo">
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;">
             <a href="retailb.html" class="button is-small" style="font-weight:900; background: var(--action-gradient); color: white; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3);">
                 <i data-lucide="external-link" style="width:14px; margin-right:5px;"></i>Retail
@@ -224,7 +221,7 @@
       <div class="field"><label class="label is-small">Tienda / Aliado</label><div class="select is-fullwidth"><select id="sel_cliente" onchange="handleAllyChange()"></select></div></div>
       <div class="field"><label class="label is-small">Entidad Financiera</label><div class="select is-fullwidth"><select id="sel_financiera" onchange="loadPlanes()"></select></div></div>
       <div class="columns is-mobile mb-0"><div class="column"><label class="label is-small">Plan Elegido</label><div class="select is-fullwidth"><select id="sel_plan" onchange="loadNumCuotas()"></select></div></div><div class="column"><label class="label is-small">Cuotas</label><div class="select is-fullwidth"><select id="sel_n_cuotas" onchange="calc()"></select></div></div></div>
-      <div class="field"><label class="label is-small">Precio del Producto ($)</label><input id="in_precio" class="input is-medium" type="text" placeholder="$ 0" oninput="handlePriceInput(this)"></div>
+      <div class="field"><label class="label is-small">Precio Venta (Contado $)</label><input id="in_precio" class="input is-medium" type="text" placeholder="$ 0" oninput="handlePriceInput(this)"></div>
       <div class="res-grid"><div class="res-item"><p>Total Crédito</p><p id="out_consignar">$ 0</p></div><div class="res-item"><p>Cuota (Aprox.)</p><p id="out_cuota">$ 0</p></div></div>
       
       <div class="solicitante-section" style="border-left: 4px solid var(--brand-green); padding: 0.75rem 1.25rem; margin-top: 1.5rem; margin-bottom: 2rem; background: #fafafa; border-radius: 0 16px 16px 0;">
@@ -275,15 +272,16 @@
           <div id="asec-ali" class="admin-sec is-active">
               <div class="box-admin">
                   <span class="admin-label">Nuevo Aliado Comercial</span>
-                  <input id="new_cli_nom" class="input mb-3" placeholder="Nombre Comercial">
-                  <input id="new_cli_pass" class="input mb-3" placeholder="Contraseña">
+                  <input id="new_cli_nom" class="input mb-3" style="font-weight: 600;" placeholder="Nombre Comercial">
+                  <input id="new_cli_pass" class="input mb-3" style="font-weight: 600;" placeholder="Contraseña">
                   <div class="field">
-                      <label class="label is-size-7">Asignar Rol (Copia factores al aliado)</label>
+                      <label class="label is-size-7" style="font-weight: 700;">Asignar Rol (Copia factores al aliado)</label>
                       <div class="select is-fullwidth">
-                          <select id="new_cli_rol"></select>
+                          <select id="new_cli_rol" style="font-weight: 600;"></select>
                       </div>
                   </div>
-                  <button id="btn-admin-ali" class="button btn-modern is-save is-fullwidth mt-4" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value, rol: document.getElementById('new_cli_rol').value}, 'btn-admin-ali')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Aliado</button>
+                  <!-- Modificado: Envía currentUser.nombre_cliente como asesor automáticamente -->
+                  <button id="btn-admin-ali" class="button btn-modern is-save is-fullwidth mt-4" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value, rol: document.getElementById('new_cli_rol').value, asesor: currentUser.nombre_cliente}, 'btn-admin-ali')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Aliado</button>
               </div>
           </div>
           
@@ -291,23 +289,23 @@
           <div id="asec-rol" class="admin-sec">
             <div class="box-admin">
                 <span class="admin-label">Crear Nuevo Rol</span>
-                <input id="new_rol_nom" class="input mb-4" placeholder="Nombre del Rol (Ej: Mayorista)">
+                <input id="new_rol_nom" class="input mb-4" style="font-weight: 600;" placeholder="Nombre del Rol (Ej: Mayorista)">
                 <button id="btn-admin-rol" class="button btn-modern is-save is-fullwidth" onclick="apiCall('crearRol', {nombre: document.getElementById('new_rol_nom').value}, 'btn-admin-rol')"><i data-lucide="plus-circle" style="width: 18px;"></i> Crear Rol</button>
             </div>
             <div class="box-admin">
                 <span class="admin-label">Asignar Factor Predeterminado a Rol</span>
-                <div class="field"><label class="label is-size-7">Rol</label><div class="select is-fullwidth"><select id="rel_rol_id"></select></div></div>
-                <div class="field"><label class="label is-size-7">Entidad</label><div class="select is-fullwidth"><select id="rel_fin_id_rol"></select></div></div>
-                <div class="field mb-4"><label class="label is-size-7">Factor Predefinido</label><input id="rel_fac_val_rol" class="input" type="number" step="0.01" placeholder="0.00"></div>
+                <div class="field"><label class="label is-size-7" style="font-weight: 700;">Rol</label><div class="select is-fullwidth"><select id="rel_rol_id" style="font-weight: 600;"></select></div></div>
+                <div class="field"><label class="label is-size-7" style="font-weight: 700;">Entidad</label><div class="select is-fullwidth"><select id="rel_fin_id_rol" style="font-weight: 600;"></select></div></div>
+                <div class="field mb-4"><label class="label is-size-7" style="font-weight: 700;">Factor Predefinido</label><input id="rel_fac_val_rol" class="input" style="font-weight: 600;" type="number" step="0.01" placeholder="0.00"></div>
                 <button id="btn-admin-rol-vin" class="button btn-modern is-save is-fullwidth" onclick="apiCall('asignarFactorRol', {id_rol: document.getElementById('rel_rol_id').value, id_financiera: document.getElementById('rel_fin_id_rol').value, factor_cliente: document.getElementById('rel_fac_val_rol').value}, 'btn-admin-rol-vin')"><i data-lucide="save" style="width: 18px;"></i> Guardar Factor del Rol</button>
             </div>
           </div>
 
           <!-- Vinculación Personalizada -->
-          <div id="asec-vin" class="admin-sec"><div class="box-admin"><span class="admin-label">Vincular Factor Personalizado a Tienda</span><p class="is-size-7 has-text-grey mb-3 font-medium">Úsalo solo si la tienda no tiene rol o necesita una excepción.</p><div class="field"><label class="label is-size-7">Tienda</label><div class="select is-fullwidth"><select id="rel_cli_id"></select></div></div><div class="field"><label class="label is-size-7">Entidad</label><div class="select is-fullwidth"><select id="rel_fin_id"></select></div></div><div class="field mb-4"><label class="label is-size-7">Factor Aliado</label><input id="rel_fac_val" class="input" type="number" step="0.01" placeholder="0.00"></div><button id="btn-admin-vin" class="button btn-modern is-save is-fullwidth" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value}, 'btn-admin-vin')"><i data-lucide="save" style="width: 18px;"></i> Guardar Vinculación</button></div></div>
+          <div id="asec-vin" class="admin-sec"><div class="box-admin"><span class="admin-label">Vincular Factor Personalizado a Tienda</span><p class="is-size-7 has-text-grey mb-3 font-medium">Úsalo solo si la tienda no tiene rol o necesita una excepción.</p><div class="field"><label class="label is-size-7" style="font-weight: 700;">Tienda</label><div class="select is-fullwidth"><select id="rel_cli_id" style="font-weight: 600;"></select></div></div><div class="field"><label class="label is-size-7" style="font-weight: 700;">Entidad</label><div class="select is-fullwidth"><select id="rel_fin_id" style="font-weight: 600;"></select></div></div><div class="field mb-4"><label class="label is-size-7" style="font-weight: 700;">Factor Aliado</label><input id="rel_fac_val" class="input" style="font-weight: 600;" type="number" step="0.01" placeholder="0.00"></div><button id="btn-admin-vin" class="button btn-modern is-save is-fullwidth" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value}, 'btn-admin-vin')"><i data-lucide="save" style="width: 18px;"></i> Guardar Vinculación</button></div></div>
           
-          <div id="asec-ent" class="admin-sec"><div class="box-admin"><span class="admin-label">Nueva Entidad Financiera</span><input id="new_fin_nom" class="input mb-3" placeholder="Nombre Entidad"><label class="label is-size-7">Factor Base</label><input id="new_fin_fac" class="input mb-4" type="number" step="0.01" placeholder="0.00"><button id="btn-admin-ent" class="button btn-modern is-save is-fullwidth" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value}, 'btn-admin-ent')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Entidad</button></div></div>
-          <div id="asec-pla" class="admin-sec"><div class="box-admin"><span class="admin-label">Planes de Entidades</span><div class="select is-fullwidth mb-3"><select id="plan_fin_id"></select></div><div class="columns is-mobile is-multiline mb-2"><div class="column is-6"><label class="label is-size-7">Frecuencia</label><div class="select is-fullwidth"><select id="plan_tipo"><option value="Mensual">Mensual</option><option value="Quincenal">Quincenal</option><option value="Semanal">Semanal</option></select></div></div><div class="column is-6"><label class="label is-size-7">Máx Cuotas</label><input id="plan_num" class="input" type="number"></div><div class="column is-6"><label class="label is-size-7">% Int</label><input id="plan_int" class="input" type="number" step="0.01"></div><div class="column is-6"><label class="label is-size-7">% Fia</label><input id="plan_fia" class="input" type="number" step="0.01"></div></div><button id="btn-admin-pla" class="button btn-modern is-save is-fullwidth mt-3" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, tipo_cuota: document.getElementById('plan_tipo').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tasa_fianza: document.getElementById('plan_fia').value}, 'btn-admin-pla')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Plan</button></div></div>
+          <div id="asec-ent" class="admin-sec"><div class="box-admin"><span class="admin-label">Nueva Entidad Financiera</span><input id="new_fin_nom" class="input mb-3" style="font-weight: 600;" placeholder="Nombre Entidad"><label class="label is-size-7" style="font-weight: 700;">Factor Base</label><input id="new_fin_fac" class="input mb-4" style="font-weight: 600;" type="number" step="0.01" placeholder="0.00"><button id="btn-admin-ent" class="button btn-modern is-save is-fullwidth" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value}, 'btn-admin-ent')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Entidad</button></div></div>
+          <div id="asec-pla" class="admin-sec"><div class="box-admin"><span class="admin-label">Planes de Entidades</span><div class="select is-fullwidth mb-3"><select id="plan_fin_id" style="font-weight: 600;"></select></div><div class="columns is-mobile is-multiline mb-2"><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">Frecuencia</label><div class="select is-fullwidth"><select id="plan_tipo" style="font-weight: 600;"><option value="Mensual">Mensual</option><option value="Quincenal">Quincenal</option><option value="Semanal">Semanal</option></select></div></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">Máx Cuotas</label><input id="plan_num" class="input" style="font-weight: 600;" type="number"></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">% Int</label><input id="plan_int" class="input" style="font-weight: 600;" type="number" step="0.01"></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">% Fia</label><input id="plan_fia" class="input" style="font-weight: 600;" type="number" step="0.01"></div></div><button id="btn-admin-pla" class="button btn-modern is-save is-fullwidth mt-3" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, tipo_cuota: document.getElementById('plan_tipo').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tasa_fianza: document.getElementById('plan_fia').value}, 'btn-admin-pla')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Plan</button></div></div>
       </div>
     </div>
 
@@ -318,15 +316,27 @@
         <div id="m-rol" class="query-tab-item" onclick="switchQuery('rol')">Roles</div>
         <div id="m-fin" class="query-tab-item" onclick="switchQuery('fin')">Entidades</div>
         <div id="m-his" class="query-tab-item" onclick="switchQuery('his')">Historial</div>
-        <!-- BOTÓN A TABLERO AGREGADO -->
-        <div id="m-tablero" class="query-tab-item" style="color: var(--brand-green); font-weight: 800;" onclick="window.location.href='tablero.html'">
-            <i data-lucide="layout-dashboard" style="width: 14px; margin-right: 4px; vertical-align: middle;"></i>Tablero
-        </div>
       </nav>
       <div class="p-5">
-        <div id="q-cli" class="q-section"><div class="table-container"><table class="table is-fullwidth is-striped is-clickable"><thead><tr><th>Nombre Aliado</th><th>Clave Acceso</th></tr></thead><tbody id="tb-clientes"></tbody></table></div></div>
-        <div id="q-rol" class="q-section" style="display:none;"><div class="table-container"><table class="table is-fullwidth is-striped is-clickable"><thead><tr><th>Nombre del Rol</th><th>Estado</th></tr></thead><tbody id="tb-roles"></tbody></table></div></div>
-        <div id="q-fin" class="q-section" style="display:none;"><div class="table-container"><table class="table is-fullwidth is-striped is-clickable"><thead><tr><th>Entidad Financiera</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras"></tbody></table></div></div>
+        
+        <!-- ALIADOS: Tabla con Filtro de Búsqueda -->
+        <div id="q-cli" class="q-section">
+            <div class="field mb-4">
+                <div class="control has-icons-left">
+                    <input id="search-cli" class="input" type="text" placeholder="🔍 Buscar aliado por nombre..." oninput="renderTables()">
+                    <span class="icon is-left"><i data-lucide="search"></i></span>
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="table is-fullwidth is-striped is-clickable">
+                    <thead><tr><th>Nombre Aliado</th><th>Clave Acceso</th><th>Asesor / KAM</th></tr></thead>
+                    <tbody id="tb-clientes" style="font-weight: 500;"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="q-rol" class="q-section" style="display:none;"><div class="table-container"><table class="table is-fullwidth is-striped is-clickable"><thead><tr><th>Nombre del Rol</th><th>Estado</th></tr></thead><tbody id="tb-roles" style="font-weight: 500;"></tbody></table></div></div>
+        <div id="q-fin" class="q-section" style="display:none;"><div class="table-container"><table class="table is-fullwidth is-striped is-clickable"><thead><tr><th>Entidad Financiera</th><th>Factor Base</th></tr></thead><tbody id="tb-financieras" style="font-weight: 500;"></tbody></table></div></div>
         
         <div id="q-his" class="q-section" style="display:none;">
           <div class="filter-panel-history">
@@ -347,32 +357,32 @@
                         </div>
                     </div>
                 </div>
-                <div class="column is-5 py-1"><label class="label is-size-7">Desde</label><input id="f-desde" class="input input-date-history" type="date" onchange="filterSimulations()"></div>
-                <div class="column is-5 py-1"><label class="label is-size-7">Hasta</label><input id="f-hasta" class="input input-date-history" type="date" onchange="filterSimulations()"></div>
+                <div class="column is-5 py-1"><label class="label is-size-7" style="font-weight: 700;">Desde</label><input id="f-desde" class="input input-date-history" type="date" onchange="filterSimulations()"></div>
+                <div class="column is-5 py-1"><label class="label is-size-7" style="font-weight: 700;">Hasta</label><input id="f-hasta" class="input input-date-history" type="date" onchange="filterSimulations()"></div>
                 <div class="column is-2 py-1 is-flex is-align-items-flex-end"><button class="button is-brand is-fullwidth" style="height:45px; border-radius:10px; background: linear-gradient(135deg, #74c456 0%, #58a33f 100%); color: white; border: none; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3);" onclick="filterSimulations()"><i data-lucide="filter"></i></button></div>
             </div>
           </div>
-          <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th style="color:var(--brand-blue)">Tienda</th><th>Entidad</th><th>CC / Doc</th><th>Nombre Cliente</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th></tr></thead><tbody id="tb-simulaciones"></tbody></table></div>
+          <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th style="color:var(--brand-blue)">Tienda</th><th>Entidad</th><th>CC / Doc</th><th>Nombre Cliente</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th></tr></thead><tbody id="tb-simulaciones" style="font-weight: 500;"></tbody></table></div>
           <div class="kpi-grid">
-            <div class="kpi-card"><div style="background:#eff4fa; color:var(--brand-blue); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="bar-chart-2" style="width:18px;"></i></div><p>Registros</p><p id="total-count">0</p></div>
-            <div class="kpi-card"><div style="background:#eff4fa; color:var(--gets-blue); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="banknote" style="width:18px;"></i></div><p>Colocación</p><p id="total-creditos">$ 0</p></div>
-            <div class="kpi-card"><div style="background:#f1f9ef; color:var(--brand-green); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="trending-up" style="width:18px;"></i></div><p>Utilidad Total</p><p id="total-utilidad">$ 0</p></div>
+            <div class="kpi-card"><div style="background:#eff4fa; color:var(--brand-blue); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="bar-chart-2" style="width:18px;"></i></div><p style="font-size:0.6rem; font-weight:700; color:#64748b; text-transform:uppercase;">Registros</p><p id="total-count">0</p></div>
+            <div class="kpi-card"><div style="background:#eff4fa; color:var(--gets-blue); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="banknote" style="width:18px;"></i></div><p style="font-size:0.6rem; font-weight:700; color:#64748b; text-transform:uppercase;">Colocación</p><p id="total-creditos">$ 0</p></div>
+            <div class="kpi-card"><div style="background:#f1f9ef; color:var(--brand-green); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="trending-up" style="width:18px;"></i></div><p style="font-size:0.6rem; font-weight:700; color:#64748b; text-transform:uppercase;">Utilidad Total</p><p id="total-utilidad">$ 0</p></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.107</div>
+    <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.108</div>
   </div>
 
   <!-- MODAL CONFIRMACIÓN (Z-INDEX SUPERIOR) -->
   <div id="mod-confirm" class="modal"><div class="modal-background" onclick="closeConfirm()"></div><div class="modal-card" style="max-width: 350px;"><header class="modal-card-head has-background-danger"><p class="modal-card-title is-size-6 has-text-white has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Confirmar Acción</p></header><section class="modal-card-body has-text-centered py-5"><div class="mb-4 has-text-danger"><i data-lucide="alert-triangle" style="width:48px; height:48px;"></i></div><p id="confirm-text" class="has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">¿Seguro que desea eliminar este registro?</p></section><footer class="modal-card-foot is-justify-content-center"><button class="button is-light" onclick="closeConfirm()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cancelar</button><button id="btn-confirm-exec" class="button is-danger has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Sí, eliminar</button></footer></div></div>
 
   <!-- MODALES DE EDICIÓN Y ROLES -->
-  <div id="mod-cli" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Aliado</p></header><section class="modal-card-body"><input id="ed-cli-id" type="hidden"><div class="field"><label class="label is-small">Tienda</label><input id="ed-cli-nom" class="input is-small"></div><div class="field"><label class="label is-small">Clave</label><input id="ed-cli-pass" class="input is-small"></div><div class="field mt-3"><label class="label is-small">Rol Asignado</label><div class="select is-small is-fullwidth"><select id="ed-cli-rol" onchange="renderAliadoVinculos(document.getElementById('ed-cli-id').value)"></select></div></div><hr><div id="vinculos-container" class="table-container mt-4"></div></section><footer class="modal-card-foot"><button id="btn-del-ali" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteAliado()">Eliminar Aliado</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-ali" class="button btn-modern is-save" onclick="saveAliado()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar Todo</button></footer></div></div>
+  <div id="mod-cli" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Aliado</p></header><section class="modal-card-body"><input id="ed-cli-id" type="hidden"><div class="field"><label class="label is-small" style="font-weight: 700;">Tienda</label><input id="ed-cli-nom" class="input is-small" style="font-weight: 600;"></div><div class="field"><label class="label is-small" style="font-weight: 700;">Clave</label><input id="ed-cli-pass" class="input is-small" style="font-weight: 600;"></div><div class="field mt-3"><label class="label is-small" style="font-weight: 700;">Rol Asignado</label><div class="select is-small is-fullwidth"><select id="ed-cli-rol" onchange="renderAliadoVinculos(document.getElementById('ed-cli-id').value)" style="font-weight: 600;"></select></div></div><hr><div id="vinculos-container" class="table-container mt-4"></div></section><footer class="modal-card-foot"><button id="btn-del-ali" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteAliado()">Eliminar Aliado</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-ali" class="button btn-modern is-save" onclick="saveAliado()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar Todo</button></footer></div></div>
   
-  <div id="mod-rol" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Rol</p></header><section class="modal-card-body"><input id="ed-rol-id" type="hidden"><div class="field"><label class="label is-small">Nombre del Rol</label><input id="ed-rol-nom" class="input is-small"></div><hr><span class="admin-label">Permisos (Factores Predeterminados)</span><div id="rol-vinculos-container" class="table-container mt-4"></div></section><footer class="modal-card-foot"><button id="btn-del-rol" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteRol()">Eliminar Rol</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-rol" class="button btn-modern is-save" onclick="saveRol()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar Rol</button></footer></div></div>
+  <div id="mod-rol" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Rol</p></header><section class="modal-card-body"><input id="ed-rol-id" type="hidden"><div class="field"><label class="label is-small" style="font-weight: 700;">Nombre del Rol</label><input id="ed-rol-nom" class="input is-small" style="font-weight: 600;"></div><hr><span class="admin-label">Permisos (Factores Predeterminados)</span><div id="rol-vinculos-container" class="table-container mt-4"></div></section><footer class="modal-card-foot"><button id="btn-del-rol" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteRol()">Eliminar Rol</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-rol" class="button btn-modern is-save" onclick="saveRol()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar Rol</button></footer></div></div>
 
-  <div id="mod-fin" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Entidad</p></header><section class="modal-card-body"><input id="ed-fin-id" type="hidden"><div class="field"><label class="label is-small">Entidad</label><input id="ed-fin-nom" class="input is-small"></div><div class="field"><label class="label is-small">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01"></div><hr><span class="admin-label">Planes Asociados</span><div id="planes-container" class="table-container"></div></section><footer class="modal-card-foot"><button id="btn-del-fin" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteFinanciera()">Eliminar Entidad</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-fin" class="button btn-modern is-save" onclick="saveFinanciera()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar</button></footer></div></div>
+  <div id="mod-fin" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Entidad</p></header><section class="modal-card-body"><input id="ed-fin-id" type="hidden"><div class="field"><label class="label is-small" style="font-weight: 700;">Entidad</label><input id="ed-fin-nom" class="input is-small" style="font-weight: 600;"></div><div class="field"><label class="label is-small" style="font-weight: 700;">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01" style="font-weight: 600;"></div><hr><span class="admin-label">Planes Asociados</span><div id="planes-container" class="table-container"></div></section><footer class="modal-card-foot"><button id="btn-del-fin" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteFinanciera()">Eliminar Entidad</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-fin" class="button btn-modern is-save" onclick="saveFinanciera()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar</button></footer></div></div>
 
   <!-- MODAL LISTA DE PRECIOS DISTRIBUIDOR -->
   <div id="mod-precios" class="modal">
@@ -424,12 +434,31 @@
         setTimeout(() => { t.classList.remove('is-active'); setTimeout(() => t.remove(), 600); }, 3500);
     }
 
+    // toNum original (se usa para las tasas de interés)
     const toNum = (v) => { if (v === null || v === undefined || v === "") return 0; if (typeof v === 'number') return v; let clean = v.toString().replace(/[\$\.]/g, '').replace(',', '.').trim(); return parseFloat(clean) || 0; };
     const fmtCop = (v) => Number(v || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
+    // PARSEADOR AVANZADO
+    const parsePrice = (v) => {
+        if (v === null || v === undefined || v === '') return 0;
+        let num = 0;
+        if (typeof v === 'number') {
+            num = v;
+        } else {
+            let clean = v.toString().replace(/[\$\s]/g, '');
+            clean = clean.replace(/\./g, '');
+            clean = clean.replace(/,/g, '.');
+            num = parseFloat(clean) || 0;
+        }
+        if (Math.abs(num) > 0 && Math.abs(num) < 10000) {
+            num = num * 1000;
+        }
+        return Math.round(num / 1000) * 1000;
+    };
+
     function handlePriceInput(input) { let val = input.value.replace(/\D/g, ""); if (val === "") { input.value = ""; calc(); return; } input.value = "$ " + new Intl.NumberFormat('es-CO').format(parseInt(val)); calc(); }
     function setDefaultDates() { const n = new Date(); const format = (d) => { let m = ''+(d.getMonth()+1), day = ''+d.getDate(), y = d.getFullYear(); if (m.length<2) m='0'+m; if (day.length<2) day='0'+day; return [y, m, day].join('-'); }; document.getElementById('f-desde').value = format(new Date(n.getFullYear(), n.getMonth(), 1)); document.getElementById('f-hasta').value = format(n); }
-    function handlePredefinedFilter(val) { const today = new Date(); let start = null, end = new Date(); const format = (d) => d.toISOString().split('T')[0]; switch(val) { case 'semana': let day = today.getDay(), diff = today.getDate() - day + (day === 0 ? -6 : 1); start = new Date(today.setDate(diff)); break; case 'mes': start = new Date(today.getFullYear(), today.getMonth(), 1); break; case 'pasado': start = new Date(today.getFullYear(), today.getMonth() - 1, 1); end = new Date(today.getFullYear(), today.getMonth(), 0); break; case 'anio': start = new Date(today.getFullYear(), 0, 1); break; case 'anio_pasado': start = new Date(today.getFullYear() - 1, 0, 1); end = new Date(today.getFullYear() - 1, 11, 31); break; case 'todo': document.getElementById('f-desde').value = ""; document.getElementById('f-hasta').value = format(end); filterSimulations(); return; } if(start) { document.getElementById('f-desde').value = format(start); document.getElementById('f-hasta').value = format(end); filterSimulations(); } }
+    function handlePredefinedFilter(val) { const today = new Date(); let start = null, end = new Date(); const format = (d) => d.toISOString().split('T')[0]; switch(val) { case 'semana': let day = today.getDay(), diff = today.getDate() - day + (day === 0 ? -6 : 1); start = new Date(today.setDate(diff)); break; case 'mes': start = new Date(today.getFullYear(), today.getMonth(), 1); break; case 'pasado': start = new Date(today.getFullYear(), today.getMonth() - 1, 1); end = new Date(today.getFullYear(), today.getMonth(), 0); break; case 'anio': start = new Date(today.getFullYear(), 0, 1); break; case 'anio_pasado': start = new Date(today.getFullYear() - 1, 0, 1); end = new Date(today.getFullYear() - 1, 11, 31); break; case 'todo': document.getElementById('f-desde').value = ""; document.getElementById('f-hasta').value = ""; filterSimulations(); return; } if(start) { document.getElementById('f-desde').value = format(start); document.getElementById('f-hasta').value = format(end); filterSimulations(); } }
 
     async function refresh() {
       document.getElementById('bg-sync-indicator').style.display = 'flex';
@@ -486,7 +515,6 @@
           document.getElementById('at-ent').style.display = isFullAdmin ? '' : 'none';
           document.getElementById('at-pla').style.display = isFullAdmin ? '' : 'none';
 
-          // Mostrar botón de distribuidor solo a administradores completos
           const btnDist = document.getElementById('btn-distribuidor');
           if (btnDist) btnDist.style.display = isFullAdmin ? 'inline-flex' : 'none';
 
@@ -501,7 +529,19 @@
 
     function renderTables() {
       const draw = (id, h) => { const el = document.getElementById(id); if(el) el.innerHTML = h; };
-      draw('tb-clientes', db.clientes.map(c => `<tr onclick="openAliado('${c.id_cliente}')"><td>${c.nombre_cliente}</td><td><code style="font-family: monospace;">${c.contrasena}</code></td></tr>`).join(''));
+      
+      // FILTRO DE ALIADOS (Buscador)
+      const searchCli = (document.getElementById('search-cli')?.value || '').toLowerCase();
+      const filteredCli = db.clientes.filter(c => String(c.nombre_cliente).toLowerCase().includes(searchCli));
+      
+      draw('tb-clientes', filteredCli.map(c => `
+        <tr onclick="openAliado('${c.id_cliente}')">
+          <td>${c.nombre_cliente}</td>
+          <td><code style="font-family: monospace;">${c.contrasena}</code></td>
+          <td><span class="tag is-light is-info" style="font-size:0.65rem; font-weight:800;">${c.asesor || 'SIN ASESOR'}</span></td>
+        </tr>
+      `).join(''));
+      
       draw('tb-financieras', db.financieras.map(f => `<tr onclick="openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
       draw('tb-roles', db.roles.map(r => `<tr onclick="openRol('${r.id_rol}')"><td>${r.nombre_rol}</td><td><span class="tag is-success is-light" style="font-weight: 700;">${r.estado || 'Activo'}</span></td></tr>`).join(''));
       filterSimulations(); 
@@ -527,10 +567,15 @@
     function sendAssessorWhatsApp(service) { const msg = encodeURIComponent(`Hola, quisiera contactar a un asesor de Soluciones Efectivas CTG para solicitar información sobre el crédito con ${service}.`); window.open(`https://wa.me/?text=${msg}`, '_blank'); }
     
     function sendWhatsApp(data) {
-        const storeName = db.clientes.find(c => String(c.id_cliente).trim() === String(data.id_cliente).trim())?.nombre_cliente || "Tienda Aliada";
+        const clientObj = db.clientes.find(c => String(c.id_cliente).trim() === String(data.id_cliente).trim());
+        const storeName = clientObj?.nombre_cliente || "Tienda Aliada";
+        const asesorName = clientObj?.asesor || "No asignado"; // CAPTURA DEL ASESOR
         const bankName = db.financieras.find(f => String(f.id_financiera).trim() === String(data.id_financiera).trim())?.nombre_financiera || "Entidad Financiera";
         const planObj = db.cuotas.find(c => String(c.id_cuota).trim() === String(data.id_cuota).trim());
-        let message = `*NUEVA SIMULACION - SOLUCIONES EFECTIVAS CTG*\n\n*DATOS DE LA TIENDA*\n*●* Tienda: ${storeName}\n*●* Entidad: ${bankName}\n*●* Plan: ${planObj ? planObj.tipo_cuota : ''} (${data.n_cuotas} cuotas)\n\n*DETALLES FINANCIEROS*\n*●* Total Credito: ${fmtCop(data.valor_a_consignar)}\n*●* Cuota Aprox: ${fmtCop(data.valor_cuota)}\n\n*DATOS DEL CLIENTE*\n*●* Nombre: ${data.nombre}\n*●* Documento: ${data.cc}\n*●* Celular: ${data.celular}\n*●* Correo: ${data.correo}`;
+        
+        // ESTRUCTURA DEL MENSAJE ACTUALIZADO (INCLUYE PRECIO VENTA Y ASESOR)
+        let message = `*NUEVA SIMULACION - SOLUCIONES EFECTIVAS CTG*\n\n*DATOS DE LA TIENDA*\n*●* Tienda: ${storeName}\n*●* Asesor: ${asesorName}\n*●* Entidad: ${bankName}\n*●* Plan: ${planObj ? planObj.tipo_cuota : ''} (${data.n_cuotas} cuotas)\n\n*DETALLES FINANCIEROS*\n*●* Precio Venta: ${fmtCop(data.precio_producto)}\n*●* Total Credito: ${fmtCop(data.valor_a_consignar)}\n*●* Cuota Aprox: ${fmtCop(data.valor_cuota)}\n\n*DATOS DEL CLIENTE*\n*●* Nombre: ${data.nombre}\n*●* Documento: ${data.cc}\n*●* Celular: ${data.celular}\n*●* Correo: ${data.correo}`;
+        
         if(bankName.toLowerCase().includes("brilla")) {
             message += `\n*●* Dirección: ${document.getElementById('in_direccion').value || '-'}\n*●* Artículo: ${document.getElementById('in_articulo').value || '-'}\n\n*REFERENCIAS*\n*●* Ref 1: ${document.getElementById('in_ref1_nom').value || '-'} (${document.getElementById('in_ref1_tel').value || '-'})\n*●* Ref 2: ${document.getElementById('in_ref2_nom').value || '-'} (${document.getElementById('in_ref2_tel').value || '-'})`;
         }
@@ -743,15 +788,19 @@
             let html = '';
             if(data && !data.error && data.length > 0) {
                 data.forEach(item => {
-                    // Cálculo matemático redondeando al mil más cercano
-                    const payjoyComm = Math.round(toNum(item.commDist) / 1000) * 1000;
-                    const alocreditComm = Math.round((toNum(item.receive) * 0.45) / 1000) * 1000;
+                    const cost = parsePrice(item.cost);
+                    const sale = parsePrice(item.sale);
+                    const receive = parsePrice(item.receive);
+                    const commDist = parsePrice(item.commDist);
+                    
+                    const payjoyComm = Math.round(commDist / 1000) * 1000;
+                    const alocreditComm = Math.round((receive * 0.45) / 1000) * 1000;
                     
                     html += `<tr>
                         <td style="color:var(--brand-green); font-weight:800;">${item.brand || '-'}</td>
                         <td>${item.ref || '-'}</td>
-                        <td class="has-text-right">${fmtCop(toNum(item.cost))}</td>
-                        <td class="has-text-right">${fmtCop(toNum(item.sale))}</td>
+                        <td class="has-text-right">${fmtCop(cost)}</td>
+                        <td class="has-text-right">${fmtCop(sale)}</td>
                         <td class="has-text-right" style="color:var(--brand-blue); font-weight:900;">${fmtCop(payjoyComm)}</td>
                         <td class="has-text-right" style="color:#4F46E5; font-weight:900;">${fmtCop(alocreditComm)}</td>
                     </tr>`;
