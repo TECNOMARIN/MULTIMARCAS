@@ -81,7 +81,7 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v6.4.0 (Cuotas Alocredit Agregadas)";
+        const APP_VERSION = "v6.5.2 (Texto Mora 7 días corregido)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -93,15 +93,15 @@
             fpd11: { id: 'primera', label: 'Continuidad (11 Sem.)', weeksAgo: 11 },
             fpd12: { id: 'primera', label: 'Continuidad (12 Sem.)', weeksAgo: 12 },
             cont_m2: { id: 'primera', label: 'Continuidad (Mes)', isMonthlyLag: 2 },
-            alo_q2: { id: 'atrasadas', label: 'Cuota 2 (4 Sem.)', weeksAgo: 4 }, // Cuota catorcenal 2
-            alo_q3: { id: 'atrasadas', label: 'Cuota 3 (6 Sem.)', weeksAgo: 6 }, // Cuota catorcenal 3
-            alo_q4: { id: 'atrasadas', label: 'Cuota 4 (8 Sem.)', weeksAgo: 8 }  // Cuota catorcenal 4
+            alo_q2: { id: 'atrasadas', label: 'Cuota 2 (4 Sem.)', weeksAgo: 4 }, 
+            alo_q3: { id: 'atrasadas', label: 'Cuota 3 (6 Sem.)', weeksAgo: 6 }, 
+            alo_q4: { id: 'atrasadas', label: 'Cuota 4 (8 Sem.)', weeksAgo: 8 }  
         };
 
         const CONTINUITY_QUOTAS = ['fpd10', 'fpd11', 'fpd12', 'cont_m2'];
         const ALO_QUOTAS = ['alo_q2', 'alo_q3', 'alo_q4'];
 
-        // CONFIGURACIÓN DE CARTERAS
+        // CONFIGURACIÓN DE CARTERAS (AHORA SON 4)
         const PORTFOLIO_CONFIG = {
             alocredit: {
                 name: "ALOCREDIT",
@@ -121,13 +121,56 @@
                     email: ['email', 'correo', 'mail'],
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
-                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], // NUEVA COLUMNA
+                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
+                }
+            },
+            krediya: {
+                name: "KREDIYA",
+                theme: "emerald", // Color verde para identificar Krediya
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'cont_m2'], 
+                columns: {
+                    seller: ['vendedor', 'asesor'],
+                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
+                    device: ['modelo - equipo', 'equipo', 'modelo'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
+                    date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'],
+                    quotaDate: 'cuota',
+                    paymentStatus: ['pagos'], 
+                    comments: ['comentarios', 'observaciones', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'],
+                    email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
+                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
             },
             payjoy: {
                 name: "PAYJOY",
                 theme: "blue",
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
+                columns: {
+                    seller: ['vendedor', 'asesor', 'ejecutivo'],
+                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
+                    device: ['equipo', 'modelo', 'celular'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
+                    date: ['fecha venta', 'fecha desembolso', 'fecha'],
+                    quotaDate: 'cuota',
+                    paymentStatus: ['pagos'], 
+                    comments: ['comentarios', 'notas', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'],
+                    email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
+                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
+                }
+            },
+            credismart: {
+                name: "CREDISMART",
+                theme: "rose", // Color rojo/rosa para identificar Credismart
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: {
                     seller: ['vendedor', 'asesor', 'ejecutivo'],
@@ -264,15 +307,14 @@
                 const clean = cleanPhoneNumber(phone);
                 if (!clean) return '#';
                 
-                const isPayjoy = portfolio === 'payjoy';
-                const companyName = isPayjoy ? 'Payjoy' : 'Alocredit';
+                const companyName = portfolio.toUpperCase();
                 
                 let name = "Cliente";
                 if (clientName && typeof clientName === 'string' && clientName.trim().length > 1) name = clientName.trim(); 
                 let deviceRef = "equipo";
                 if (deviceName && typeof deviceName === 'string' && deviceName.trim().length > 1) deviceRef = `equipo ${deviceName.trim()}`;
 
-                let paymentChannels = isPayjoy 
+                let paymentChannels = (portfolio === 'payjoy' || portfolio === 'credismart')
                     ? "🏦 Bancolombia: Convenio 85786\n🟡 Efecty: Convenio 112090" 
                     : "🏦 Bancolombia: Convenio 92380\n🟡 Efecty: Convenio 112978";
 
@@ -698,7 +740,6 @@
                 return result;
             }, [data, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn]);
 
-            // --- RENDERIZADO TABLA PRINCIPAL Y FILTROS ---
             const filteredData = useMemo(() => {
                 let result = dataForStats;
                 
@@ -717,7 +758,6 @@
                             const d = parseDate(row[dateCol]);
                             if (!d || d < range.start || d > range.end) return false;
                             
-                            // LÓGICA ALOCREDIT: CUOTAS ATRASADAS (Mora por números)
                             if (ALO_QUOTAS.includes(activeFilter)) {
                                 let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
                                 let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
@@ -736,7 +776,6 @@
                                 }
                                 return isLate;
                             }
-                            // LÓGICA CONTINUIDAD (Completado)
                             else if (CONTINUITY_QUOTAS.includes(activeFilter)) {
                                 let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                                 const val = String(row[commentsCol] || '').toLowerCase().trim();
@@ -749,7 +788,6 @@
                                 }
                                 return !val.includes('completado'); 
                             } 
-                            // LÓGICA FPD NORMAL (Mora en cuota 1)
                             else {
                                 let quotaName = QUOTA_LABELS[activeFilter].id;
                                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, quotaName, headers);
@@ -806,7 +844,6 @@
                 return stats;
             }, [dataForStats, headers, getRowCriticalStatus]);
 
-            // --- FPD STATS (PORCENTAJES DE CADA TARJETA) ---
             const fpdStats = useMemo(() => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                 if (!dateCol) return { found: false };
@@ -1177,7 +1214,7 @@
                 });
 
                 doc.setFontSize(16);
-                doc.text(`Reporte de Mora Crítica (7 y 14 Días) - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.text(`Reporte de Mora Crítica (7 Días Exactos) - ${portfolio.toUpperCase()}`, 14, 15);
                 doc.setFontSize(11);
                 doc.text(`Fecha de Corte: ${new Date().toLocaleDateString()} | Total Clientes en Riesgo: ${exportRows.length}`, 14, 22);
                 
@@ -1298,7 +1335,6 @@
                     let updatedRow = { ...row };
                     let updatesPayload = [];
                     
-                    // FALLBACKS para Código Google Apps Script Viejo
                     let fallbackComment = "";
                     let fallbackCol = "";
                     let fallbackAppend = false;
@@ -1319,12 +1355,10 @@
                         updatedRow[commentsCol] = oldVal ? `[${dateStr}] Completado | ${oldVal}` : `[${dateStr}] Completado`;
 
                     } else {
-                        // Es PAGO o PAGO_GESTION
                         const isGestion = actionType === 'PAGO_GESTION';
                         const valStatus = isGestion ? "PAGO CON GESTION" : "PAGO";
                         const valComment = isGestion ? `Pago registrado con Gestión (Préstamo: $${amount || 0})` : "Pago registrado";
 
-                        // 1. Actualizar la columna de PAGOS (Status) - ESTE SERÁ EL FALLBACK PRINCIPAL
                         if (paymentCol) {
                             updatesPayload.push({ column: paymentCol, value: valStatus, append: false, cleanWrite: true });
                             updatedRow[paymentCol] = valStatus;
@@ -1335,7 +1369,6 @@
                             fallbackClean = true;
                         }
 
-                        // 2. Actualizar la columna de COMENTARIOS (Historial visible)
                         if (commentsCol) {
                             updatesPayload.push({ column: commentsCol, value: valComment, append: true, cleanWrite: false });
                             
@@ -1344,7 +1377,6 @@
                             updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
                         }
 
-                        // 3. Actualizar el VALOR CUOTA (Solo si es PAGO_GESTION)
                         if (isGestion) {
                             const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
                             if (valCuotaCol && amount !== undefined && amount !== '') {
@@ -1358,23 +1390,19 @@
                         throw new Error("No hay columnas destino válidas para actualizar.");
                     }
 
-                    // ENVIAR TODAS LAS ACTUALIZACIONES EN UN SOLO VIAJE AL SERVIDOR
                     const payload = { 
                         type: portfolio, 
                         id: idVal, 
                         phone: phone || '', 
-                        // Variables de retrocompatibilidad (por si el script viejo corre)
                         comment: fallbackComment,
                         column: fallbackCol,
                         append: fallbackAppend,
                         cleanWrite: fallbackClean,
-                        // Nuevo paquete de actualización masiva
                         updates: updatesPayload 
                     };
                     
                     await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
 
-                    // Actualizar tabla en pantalla
                     const newData = data.map(r => {
                          const matchId = idVal && idColumn ? r[idColumn] === idVal : false;
                          const matchPhone = phone && phoneColumn ? String(r[phoneColumn]).replace(/\D/g, '') === String(phone).replace(/\D/g, '') : false;
@@ -1422,10 +1450,10 @@
                         type: portfolio, 
                         id: idVal, 
                         phone: phone || '', 
-                        comment: newVal, // Backwards compatible
-                        column: colName, // Backwards compatible
-                        append: false,   // Backwards compatible
-                        cleanWrite: true,// Backwards compatible
+                        comment: newVal, 
+                        column: colName, 
+                        append: false,   
+                        cleanWrite: true,
                         updates: [{ column: colName, value: newVal, append: false, cleanWrite: true }] 
                     };
                     await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
@@ -1459,10 +1487,10 @@
                     type: portfolio, 
                     id: idVal, 
                     phone: phone || '', 
-                    comment: editModal.currentValue, // Backwards compatible
-                    column: editModal.colName,       // Backwards compatible
-                    append: true,                    // Backwards compatible
-                    cleanWrite: false,               // Backwards compatible
+                    comment: editModal.currentValue, 
+                    column: editModal.colName,       
+                    append: true,                    
+                    cleanWrite: false,               
                     updates: [{ column: editModal.colName, value: editModal.currentValue, append: true, cleanWrite: false }] 
                 };
 
@@ -1537,6 +1565,8 @@
                                 >
                                     <option value="payjoy">PAYJOY</option>
                                     <option value="alocredit">ALOCREDIT</option>
+                                    <option value="krediya">KREDIYA</option>
+                                    <option value="credismart">CREDISMART</option>
                                 </select>
                                 <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-indigo-600">
                                     <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
