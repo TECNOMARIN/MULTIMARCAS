@@ -81,7 +81,7 @@
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v6.5.2 (Texto Mora 7 días corregido)";
+        const APP_VERSION = "v6.7.0 (Escala de Mora 5-Niveles)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -208,9 +208,11 @@
             const [selectedDevice, setSelectedDevice] = useState('');
             const [selectedStore, setSelectedStore] = useState(''); 
             
-            const [showOnlyAlerts, setShowOnlyAlerts] = useState(false);
+            const [showOnlyAlerts7, setShowOnlyAlerts7] = useState(false);
+            const [showOnlyAlerts15, setShowOnlyAlerts15] = useState(false);
             const [showOnlyEarly, setShowOnlyEarly] = useState(false); 
-            const [showOnlyCritical, setShowOnlyCritical] = useState(false); 
+            const [showOnlyCritical7, setShowOnlyCritical7] = useState(false); 
+            const [showOnlyCritical15, setShowOnlyCritical15] = useState(false); 
             
             // Filtros interactivos
             const [fpdQuotaFilter, setFpdQuotaFilter] = useState(null); 
@@ -246,7 +248,7 @@
             };
 
             // Para los contadores de arriba (Estrictos)
-            const checkDateAlert = (dateVal) => {
+            const checkDateAlert7 = (dateVal) => {
                 const dateObj = parseDate(dateVal);
                 if (!dateObj) return false;
                 const now = new Date();
@@ -257,8 +259,7 @@
                 return diffDays === 5 || diffDays === 6;
             };
 
-            // Para los colores de la tabla (Visual)
-            const checkVisualDateAlert = (dateVal) => {
+            const checkDateAlert15 = (dateVal) => {
                 const dateObj = parseDate(dateVal);
                 if (!dateObj) return false;
                 const now = new Date();
@@ -266,7 +267,7 @@
                 const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
                 const diffTime = today - due;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                return diffDays === 5 || diffDays === 6 || (diffDays >= 11 && diffDays <= 13);
+                return diffDays === 11 || diffDays === 12;
             };
 
             const findColumnName = useCallback((keyword1, keyword2, headersList) => {
@@ -402,7 +403,7 @@
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            const getRowCriticalStatus = useCallback((row, headersList) => {
+            const getRowCriticalStatus7 = useCallback((row, headersList) => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
                 if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
@@ -429,7 +430,7 @@
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            const getRowVisuallyCritical = useCallback((row, headersList) => {
+            const getRowCriticalStatus15 = useCallback((row, headersList) => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
                 if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
@@ -449,14 +450,14 @@
                 const diffTime = today.getTime() - dueDate.getTime();
                 const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-                if (diffDaysFromDue === 7 || diffDaysFromDue === 14) {
+                if (diffDaysFromDue === 13 || diffDaysFromDue === 14) {
                     const obsVal = String(row[statusCol] || '').trim();
                     return isObsUnpaid(obsVal);
                 }
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            const checkSpecificQuotaAlert = useCallback((row, headersList, quotaId) => {
+            const checkSpecificQuotaAlert7 = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
                 const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
@@ -466,16 +467,16 @@
                 if (colFecha && colStatus) {
                     const fechaVal = row[colFecha];
                     const obsVal = String(row[colStatus] || '').trim();
-                    if (checkDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
+                    if (checkDateAlert7(fechaVal) && isObsUnpaid(obsVal)) return true;
                 }
                 return false;
             }, [activeConfig, findColumnName]);
 
-            const getRowAlertStatus = useCallback((row, headersList) => {
-                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert(row, headersList, qId));
-            }, [checkSpecificQuotaAlert]);
+            const getRowAlertStatus7 = useCallback((row, headersList) => {
+                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert7(row, headersList, qId));
+            }, [checkSpecificQuotaAlert7]);
 
-            const checkSpecificVisualQuotaAlert = useCallback((row, headersList, quotaId) => {
+            const checkSpecificQuotaAlert15 = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
                 const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
@@ -485,14 +486,14 @@
                 if (colFecha && colStatus) {
                     const fechaVal = row[colFecha];
                     const obsVal = String(row[colStatus] || '').trim();
-                    if (checkVisualDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
+                    if (checkDateAlert15(fechaVal) && isObsUnpaid(obsVal)) return true;
                 }
                 return false;
             }, [activeConfig, findColumnName]);
 
-            const getRowVisuallyAlert = useCallback((row, headersList) => {
-                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificVisualQuotaAlert(row, headersList, qId));
-            }, [checkSpecificVisualQuotaAlert]);
+            const getRowAlertStatus15 = useCallback((row, headersList) => {
+                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert15(row, headersList, qId));
+            }, [checkSpecificQuotaAlert15]);
 
             const fetchData = useCallback(async () => {
                 setLoading(true);
@@ -503,9 +504,11 @@
                 setSelectedStore(''); 
                 setFpdQuotaFilter(null);
                 setBreakdownFilter(null);
-                setShowOnlyAlerts(false);
+                setShowOnlyAlerts7(false);
+                setShowOnlyAlerts15(false);
                 setShowOnlyEarly(false);
-                setShowOnlyCritical(false);
+                setShowOnlyCritical7(false);
+                setShowOnlyCritical15(false);
 
                 try {
                     const separator = API_URL.includes('?') ? '&' : '?';
@@ -745,9 +748,11 @@
                 
                 if (searchTerm) result = result.filter(row => headers.some(header => String(row[header]).toLowerCase().includes(searchTerm.toLowerCase())));
                 
-                if (showOnlyAlerts) result = result.filter(row => getRowAlertStatus(row, headers));
+                if (showOnlyAlerts7) result = result.filter(row => getRowAlertStatus7(row, headers));
+                if (showOnlyAlerts15) result = result.filter(row => getRowAlertStatus15(row, headers));
                 if (showOnlyEarly) result = result.filter(row => getRowEarlyStatus(row, headers));
-                if (showOnlyCritical) result = result.filter(row => getRowCriticalStatus(row, headers));
+                if (showOnlyCritical7) result = result.filter(row => getRowCriticalStatus7(row, headers));
+                if (showOnlyCritical15) result = result.filter(row => getRowCriticalStatus15(row, headers));
 
                 if (fpdQuotaFilter || breakdownFilter) {
                     const activeFilter = fpdQuotaFilter || breakdownFilter?.quota;
@@ -813,11 +818,11 @@
                     }
                 }
                 return result;
-            }, [dataForStats, headers, searchTerm, showOnlyAlerts, showOnlyEarly, showOnlyCritical, fpdQuotaFilter, breakdownFilter, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus, getRowCriticalStatus]);
+            }, [dataForStats, headers, searchTerm, showOnlyAlerts7, showOnlyAlerts15, showOnlyEarly, showOnlyCritical7, showOnlyCritical15, fpdQuotaFilter, breakdownFilter, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus7, getRowAlertStatus15, getRowCriticalStatus7, getRowCriticalStatus15]);
 
             useEffect(() => {
                 setCurrentPage(1);
-            }, [filteredData.length, searchTerm, showOnlyAlerts, showOnlyEarly, showOnlyCritical, fpdQuotaFilter, breakdownFilter]);
+            }, [filteredData.length, searchTerm, showOnlyAlerts7, showOnlyAlerts15, showOnlyEarly, showOnlyCritical7, showOnlyCritical15, fpdQuotaFilter, breakdownFilter]);
 
             const paginatedData = useMemo(() => {
                 const startIndex = (currentPage - 1) * itemsPerPage;
@@ -826,11 +831,17 @@
 
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-            const alertStats = useMemo(() => {
+            const alertStats7 = useMemo(() => {
                 let stats = { total: 0 };
-                dataForStats.forEach(row => { if (getRowAlertStatus(row, headers)) stats.total++; });
+                dataForStats.forEach(row => { if (getRowAlertStatus7(row, headers)) stats.total++; });
                 return stats;
-            }, [dataForStats, headers, getRowAlertStatus]);
+            }, [dataForStats, headers, getRowAlertStatus7]);
+
+            const alertStats15 = useMemo(() => {
+                let stats = { total: 0 };
+                dataForStats.forEach(row => { if (getRowAlertStatus15(row, headers)) stats.total++; });
+                return stats;
+            }, [dataForStats, headers, getRowAlertStatus15]);
 
             const earlyStats = useMemo(() => {
                 let stats = { total: 0 };
@@ -838,11 +849,17 @@
                 return stats;
             }, [dataForStats, headers, getRowEarlyStatus]);
 
-            const criticalStats = useMemo(() => {
+            const criticalStats7 = useMemo(() => {
                 let stats = { total: 0 };
-                dataForStats.forEach(row => { if (getRowCriticalStatus(row, headers)) stats.total++; });
+                dataForStats.forEach(row => { if (getRowCriticalStatus7(row, headers)) stats.total++; });
                 return stats;
-            }, [dataForStats, headers, getRowCriticalStatus]);
+            }, [dataForStats, headers, getRowCriticalStatus7]);
+
+            const criticalStats15 = useMemo(() => {
+                let stats = { total: 0 };
+                dataForStats.forEach(row => { if (getRowCriticalStatus15(row, headers)) stats.total++; });
+                return stats;
+            }, [dataForStats, headers, getRowCriticalStatus15]);
 
             const fpdStats = useMemo(() => {
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
@@ -1178,7 +1195,7 @@
                 doc.save(`${fileNamePrefix}_${detailSeller}_${portfolio}.pdf`);
             };
 
-            const handleExportCriticalPDF = () => {
+            const handleExportCritical7PDF = () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape');
                 
@@ -1192,7 +1209,7 @@
                 const tableRows = [];
                 let totalAmount = 0;
 
-                const exportRows = dataForStats.filter(row => getRowCriticalStatus(row, headers));
+                const exportRows = dataForStats.filter(row => getRowCriticalStatus7(row, headers));
 
                 exportRows.forEach(row => {
                     let amount = amountCol ? parseAmount(row[amountCol]) : 0;
@@ -1214,7 +1231,7 @@
                 });
 
                 doc.setFontSize(16);
-                doc.text(`Reporte de Mora Crítica (7 Días Exactos) - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.text(`Reporte de Mora Crítica (Exactamente 7 Días) - ${portfolio.toUpperCase()}`, 14, 15);
                 doc.setFontSize(11);
                 doc.text(`Fecha de Corte: ${new Date().toLocaleDateString()} | Total Clientes en Riesgo: ${exportRows.length}`, 14, 22);
                 
@@ -1232,7 +1249,64 @@
                     styles: { fontSize: 9 }
                 });
 
-                doc.save(`Mora_Critica_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
+                doc.save(`Mora_Critica_7Dias_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
+            };
+
+            const handleExportCritical15PDF = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+                
+                let amountCol = headers.find(h => {
+                    const l = h.toLowerCase();
+                    return l.includes('valor cuota') || l.includes('monto') || l.includes('valor de la cuota') || l === 'cuota';
+                });
+                let birthDateCol = findConfigColumn(activeConfig.columns.birthDate, headers);
+
+                const tableColumn = ["Cliente", "Cédula", "F. Nac.", "Celular", "Equipo", "Tienda", "Asignado", "Cuota"];
+                const tableRows = [];
+                let totalAmount = 0;
+
+                const exportRows = dataForStats.filter(row => getRowCriticalStatus15(row, headers));
+
+                exportRows.forEach(row => {
+                    let amount = amountCol ? parseAmount(row[amountCol]) : 0;
+                    totalAmount += amount;
+
+                    let cellAmount = amountCol && row[amountCol] ? String(row[amountCol]) : '$0';
+                    let cellBirth = birthDateCol && row[birthDateCol] ? formatCellData(row[birthDateCol]) : '-';
+
+                    tableRows.push([
+                        row[clientColumn] || '-',
+                        row[idColumn] || '-',
+                        cellBirth,
+                        row[phoneColumn] || '-',
+                        row[deviceColumn] || '-',
+                        row[storeColumn] || '-',
+                        row[assignedColumn] || '-',
+                        cellAmount
+                    ]);
+                });
+
+                doc.setFontSize(16);
+                doc.text(`Reporte de Riesgo FPD15 (13 y 14 Días) - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.setFontSize(11);
+                doc.text(`Fecha de Corte: ${new Date().toLocaleDateString()} | Total Clientes en Riesgo: ${exportRows.length}`, 14, 22);
+                
+                const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+                doc.setFont(undefined, 'bold');
+                doc.text(`Suma Total de Cuotas en Riesgo: ${formatter.format(totalAmount)}`, 14, 28);
+                doc.setFont(undefined, 'normal');
+
+                doc.autoTable({
+                    head: [tableColumn],
+                    body: tableRows,
+                    startY: 33,
+                    theme: 'grid',
+                    headStyles: { fillColor: [225, 29, 72] }, // Rose intenso
+                    styles: { fontSize: 9 }
+                });
+
+                doc.save(`Mora_RiesgoFPD15_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
             const handleExportFilteredPDF = () => {
@@ -1654,42 +1728,81 @@
                         </div>
                     </div>
 
-                    {/* ALERTAS */}
-                    {criticalStats.total > 0 && (
-                        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
-                             <div className="absolute top-0 left-0 w-1 h-full bg-red-600"></div>
+                    {/* ALERTAS ESCALONADAS */}
+                    {criticalStats15.total > 0 && (
+                        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-1 h-full bg-rose-600"></div>
                              <div className="flex gap-4 items-center">
-                                <div className="p-3 bg-white shadow-sm rounded-full text-red-600 border border-red-100"><Icons.AlertTriangle className="w-6 h-6 animate-pulse-slow"/></div>
+                                <div className="p-3 bg-white shadow-sm rounded-full text-rose-600 border border-rose-100"><Icons.AlertTriangle className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
-                                    <h2 className="text-red-900 font-bold text-lg tracking-tight">{criticalStats.total} Clientes en Mora Crítica</h2>
-                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 días de mora. Prioridad máxima de gestión hoy.</p>
+                                    <h2 className="text-rose-900 font-bold text-lg tracking-tight">{criticalStats15.total} Clientes en Riesgo FPD15</h2>
+                                    <p className="text-sm text-rose-700 opacity-90 mt-0.5">Exactamente 13 o 14 días de mora. ¡Última oportunidad de gestión!</p>
                                 </div>
                              </div>
                              <div className="flex gap-2">
-                                 {showOnlyCritical && (
-                                     <button onClick={handleExportCriticalPDF} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-700 rounded-full hover:bg-red-50 transition-all shadow-sm font-bold text-sm">
+                                 {showOnlyCritical15 && (
+                                     <button onClick={handleExportCritical15PDF} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-rose-200 text-rose-700 rounded-full hover:bg-rose-50 transition-all shadow-sm font-bold text-sm">
                                          <Icons.Download className="w-4 h-4"/> Exportar PDF
                                      </button>
                                  )}
-                                 <button onClick={() => { setShowOnlyCritical(!showOnlyCritical); setShowOnlyAlerts(false); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyCritical ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 hover:shadow-md' : 'bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300'}`}>
-                                    {showOnlyCritical ? 'Quitar Filtro Crítico' : 'Gestionar Urgentes'}
+                                 <button onClick={() => { setShowOnlyCritical15(!showOnlyCritical15); setShowOnlyCritical7(false); setShowOnlyAlerts15(false); setShowOnlyAlerts7(false); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyCritical15 ? 'bg-rose-600 text-white border-rose-600 hover:bg-rose-700 hover:shadow-md' : 'bg-white text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300'}`}>
+                                    {showOnlyCritical15 ? 'Quitar Filtro FPD15' : 'Gestionar FPD15'}
                                  </button>
                              </div>
                         </div>
                     )}
 
-                    {alertStats.total > 0 && (
+                    {alertStats15.total > 0 && (
                         <div className="bg-orange-50 border border-orange-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
                              <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
                              <div className="flex gap-4 items-center">
                                 <div className="p-3 bg-white shadow-sm rounded-full text-orange-600 border border-orange-100"><Icons.BellRing className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
-                                    <h2 className="text-orange-900 font-bold text-lg tracking-tight">{alertStats.total} Clientes en Mora Reciente</h2>
-                                    <p className="text-sm text-orange-700 opacity-90 mt-0.5">Vencidos hace 5-6 días sin gestión registrada.</p>
+                                    <h2 className="text-orange-900 font-bold text-lg tracking-tight">{alertStats15.total} Clientes en Pre-Riesgo FPD15</h2>
+                                    <p className="text-sm text-orange-700 opacity-90 mt-0.5">Vencidos hace 11 o 12 días sin gestión registrada.</p>
                                 </div>
                              </div>
-                             <button onClick={() => { setShowOnlyAlerts(!showOnlyAlerts); setShowOnlyEarly(false); setShowOnlyCritical(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyAlerts ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700 hover:shadow-md' : 'bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300'}`}>
-                                {showOnlyAlerts ? 'Quitar Filtro de Alertas' : 'Gestionar Alertas'}
+                             <button onClick={() => { setShowOnlyAlerts15(!showOnlyAlerts15); setShowOnlyCritical15(false); setShowOnlyCritical7(false); setShowOnlyAlerts7(false); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyAlerts15 ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-700 hover:shadow-md' : 'bg-white text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300'}`}>
+                                {showOnlyAlerts15 ? 'Quitar Filtro Pre-FPD15' : 'Gestionar Pre-FPD15'}
+                             </button>
+                        </div>
+                    )}
+
+                    {criticalStats7.total > 0 && (
+                        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-1 h-full bg-red-600"></div>
+                             <div className="flex gap-4 items-center">
+                                <div className="p-3 bg-white shadow-sm rounded-full text-red-600 border border-red-100"><Icons.AlertTriangle className="w-6 h-6 animate-pulse-slow"/></div>
+                                <div>
+                                    <h2 className="text-red-900 font-bold text-lg tracking-tight">{criticalStats7.total} Clientes en Mora Crítica</h2>
+                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 días de mora. Prioridad máxima de gestión hoy.</p>
+                                </div>
+                             </div>
+                             <div className="flex gap-2">
+                                 {showOnlyCritical7 && (
+                                     <button onClick={handleExportCritical7PDF} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-700 rounded-full hover:bg-red-50 transition-all shadow-sm font-bold text-sm">
+                                         <Icons.Download className="w-4 h-4"/> Exportar PDF
+                                     </button>
+                                 )}
+                                 <button onClick={() => { setShowOnlyCritical7(!showOnlyCritical7); setShowOnlyCritical15(false); setShowOnlyAlerts15(false); setShowOnlyAlerts7(false); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyCritical7 ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 hover:shadow-md' : 'bg-white text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300'}`}>
+                                    {showOnlyCritical7 ? 'Quitar Filtro Crítico' : 'Gestionar Urgentes'}
+                                 </button>
+                             </div>
+                        </div>
+                    )}
+
+                    {alertStats7.total > 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm relative overflow-hidden">
+                             <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500"></div>
+                             <div className="flex gap-4 items-center">
+                                <div className="p-3 bg-white shadow-sm rounded-full text-yellow-600 border border-yellow-100"><Icons.BellRing className="w-6 h-6 animate-pulse-slow"/></div>
+                                <div>
+                                    <h2 className="text-yellow-900 font-bold text-lg tracking-tight">{alertStats7.total} Clientes en Mora Reciente</h2>
+                                    <p className="text-sm text-yellow-700 opacity-90 mt-0.5">Vencidos hace 5 o 6 días sin gestión registrada.</p>
+                                </div>
+                             </div>
+                             <button onClick={() => { setShowOnlyAlerts7(!showOnlyAlerts7); setShowOnlyCritical15(false); setShowOnlyCritical7(false); setShowOnlyAlerts15(false); setShowOnlyEarly(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyAlerts7 ? 'bg-yellow-500 text-white border-yellow-600 hover:bg-yellow-600 hover:shadow-md' : 'bg-white text-yellow-600 border-yellow-200 hover:bg-yellow-50 hover:border-yellow-300'}`}>
+                                {showOnlyAlerts7 ? 'Quitar Filtro de Alertas' : 'Gestionar Alertas'}
                              </button>
                         </div>
                     )}
@@ -1704,7 +1817,7 @@
                                     <p className="text-sm text-amber-700 opacity-90 mt-0.5">Ventas de hace 12 a 14 días. ¡Contactar antes del vencimiento!</p>
                                 </div>
                              </div>
-                             <button onClick={() => { setShowOnlyEarly(!showOnlyEarly); setShowOnlyAlerts(false); setShowOnlyCritical(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyEarly ? 'bg-amber-600 text-white border-amber-600 hover:bg-amber-700 hover:shadow-md' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50 hover:border-amber-300'}`}>
+                             <button onClick={() => { setShowOnlyEarly(!showOnlyEarly); setShowOnlyAlerts7(false); setShowOnlyAlerts15(false); setShowOnlyCritical7(false); setShowOnlyCritical15(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyEarly ? 'bg-amber-600 text-white border-amber-600 hover:bg-amber-700 hover:shadow-md' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50 hover:border-amber-300'}`}>
                                 {showOnlyEarly ? 'Quitar Filtro Temprano' : 'Gestión Preventiva'}
                              </button>
                         </div>
@@ -1717,7 +1830,7 @@
                                 Análisis de Cohortes
                             </h3>
                             { (fpdQuotaFilter || breakdownFilter) && 
-                                <button onClick={() => { setFpdQuotaFilter(null); setBreakdownFilter(null); setShowOnlyAlerts(false); setShowOnlyEarly(false); setShowOnlyCritical(false); }} className="text-xs bg-slate-800 text-white px-4 py-2 rounded-full flex gap-1.5 items-center hover:bg-slate-700 transition-all shadow-md hover:shadow-lg">
+                                <button onClick={() => { setFpdQuotaFilter(null); setBreakdownFilter(null); setShowOnlyAlerts7(false); setShowOnlyAlerts15(false); setShowOnlyEarly(false); setShowOnlyCritical7(false); setShowOnlyCritical15(false); }} className="text-xs bg-slate-800 text-white px-4 py-2 rounded-full flex gap-1.5 items-center hover:bg-slate-700 transition-all shadow-md hover:shadow-lg">
                                     <Icons.X className="w-3.5 h-3.5"/> Limpiar Filtros
                                 </button>
                             }
@@ -1750,22 +1863,32 @@
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {paginatedData.length > 0 ? paginatedData.map((row, i) => {
-                                        const isCriticalRow = getRowVisuallyCritical(row, headers);
-                                        const isAlertRow = getRowVisuallyAlert(row, headers);
+                                        const isCritical7Row = getRowCriticalStatus7(row, headers);
+                                        const isCritical15Row = getRowCriticalStatus15(row, headers);
+                                        const isAlert15Row = getRowAlertStatus15(row, headers);
+                                        const isAlert7Row = getRowAlertStatus7(row, headers);
                                         const isEarlyRow = getRowEarlyStatus(row, headers);
 
                                         let rowBgClass = 'hover:bg-indigo-50/30';
                                         let rowBorderClass = '';
                                         let rowTextClass = '';
 
-                                        if (isCriticalRow) {
+                                        if (isCritical15Row) {
+                                            rowBgClass = 'bg-rose-200 hover:bg-rose-300';
+                                            rowBorderClass = 'border-l-[6px] border-rose-700'; 
+                                            rowTextClass = 'text-rose-950 font-black';
+                                        } else if (isAlert15Row) {
+                                            rowBgClass = 'bg-orange-100 hover:bg-orange-200';
+                                            rowBorderClass = 'border-l-[4px] border-orange-500'; 
+                                            rowTextClass = 'text-orange-950 font-bold';
+                                        } else if (isCritical7Row) {
                                             rowBgClass = 'bg-red-200 hover:bg-red-300';
                                             rowBorderClass = 'border-l-[6px] border-red-700'; 
                                             rowTextClass = 'text-red-950 font-black';
-                                        } else if (isAlertRow) {
-                                            rowBgClass = 'bg-orange-100 hover:bg-orange-200';
-                                            rowBorderClass = 'border-l-[4px] border-orange-500';
-                                            rowTextClass = 'text-orange-950 font-bold';
+                                        } else if (isAlert7Row) {
+                                            rowBgClass = 'bg-yellow-100 hover:bg-yellow-200';
+                                            rowBorderClass = 'border-l-[4px] border-yellow-500';
+                                            rowTextClass = 'text-yellow-950 font-bold';
                                         } else if (isEarlyRow) {
                                             rowBgClass = 'bg-amber-50/40 hover:bg-amber-100/50';
                                             rowBorderClass = 'border-l-2 border-amber-400';
@@ -1846,7 +1969,7 @@
                                                         <td key={j} className={`px-4 py-3 whitespace-nowrap ${j===0 ? rowBorderClass : ''}`}>
                                                             <div className="flex items-center gap-3">
                                                                 <span 
-                                                                    className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${isCriticalRow ? 'text-red-950 hover:text-red-700' : 'text-slate-600 hover:text-indigo-600'}`} 
+                                                                    className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${(isCritical7Row || isCritical15Row) ? 'text-red-950 hover:text-red-700' : 'text-slate-600 hover:text-indigo-600'}`} 
                                                                     title={`Clic para editar ${h}`} 
                                                                     onClick={() => openCleanEdit(row, h)}
                                                                 >
@@ -1868,9 +1991,9 @@
                                                     if (isCommentsCol) {
                                                          tdContent = (
                                                             <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs group relative ${style?.bgColor} ${j===0 ? rowBorderClass : ''} ${rowTextClass}`}>
-                                                                {isCriticalRow && <Icons.AlertTriangle className="w-4 h-4 inline mr-1.5 text-red-700 animate-pulse"/>}
-                                                                {!isCriticalRow && isAlertRow && <Icons.AlertCircle className="w-4 h-4 inline mr-1.5 text-orange-600"/>}
-                                                                {!isCriticalRow && !isAlertRow && isEarlyRow && <Icons.Clock className="w-3.5 h-3.5 inline mr-1.5 text-amber-500"/>}
+                                                                {(isCritical7Row || isCritical15Row) && <Icons.AlertTriangle className="w-4 h-4 inline mr-1.5 text-red-700 animate-pulse"/>}
+                                                                {!(isCritical7Row || isCritical15Row) && (isAlert7Row || isAlert15Row) && <Icons.AlertCircle className="w-4 h-4 inline mr-1.5 text-orange-600"/>}
+                                                                {!(isCritical7Row || isCritical15Row) && !(isAlert7Row || isAlert15Row) && isEarlyRow && <Icons.Clock className="w-3.5 h-3.5 inline mr-1.5 text-amber-500"/>}
                                                                 
                                                                 <span className={`inline-block max-w-[200px] truncate`} title={val}>{val}</span>
                                                                 
