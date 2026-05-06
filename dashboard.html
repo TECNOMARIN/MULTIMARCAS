@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Gestion</title>
+    <title>Visión Global - Multimarcas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -61,8 +62,7 @@
             Clock: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>,
             Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>,
             Globe: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></IconBase>,
-            Calendar: (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconBase>,
-            Filter: (p) => <IconBase {...p}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconBase>
+            Calendar: (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconBase>
         };
 
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
@@ -82,8 +82,9 @@
             const [customStartDate, setCustomStartDate] = useState('');
             const [customEndDate, setCustomEndDate] = useState('');
             
-            // AGREGAR ESTA NUEVA LÍNEA AQUÍ PARA CONTROLAR EL MODAL
             const [showTopRepsModal, setShowTopRepsModal] = useState(false);
+            const [showLoansByRepModal, setShowLoansByRepModal] = useState(false);
+            const [selectedLoanRep, setSelectedLoanRep] = useState('');
 
             const parseDate = (dateVal) => {
                 if (!dateVal) return null;
@@ -253,51 +254,68 @@
                     }
                 });
 
-                // NUEVA LÍNEA: Crear el arreglo ordenado de todos los responsables
                 let allReps = Object.keys(repCount)
                     .map(k => ({ name: k, count: repCount[k] }))
                     .sort((a, b) => b.count - a.count);
 
                 // KPIs de CARTERA (Basados en filteredLoansData)
                 let totalCaja = 0;
+                let loansRepCount = {};
                 filteredLoansData.forEach(r => {
                     totalCaja += r._amountNum;
+                    let rep = r._assigned;
+                    loansRepCount[rep] = (loansRepCount[rep] || 0) + r._amountNum;
                 });
+
+                let allLoansReps = Object.keys(loansRepCount)
+                    .map(k => ({ name: k, amount: loansRepCount[k] }))
+                    .sort((a, b) => b.amount - a.amount);
                 
-                // DEVOLVER EL NUEVO ARREGLO `allReps`
-                return { sales, brands, totalCaja, topRep, allReps };
+                return { sales, brands, totalCaja, topRep, allReps, allLoansReps };
             }, [filteredSalesData, filteredLoansData]);
 
-            const handleExportGlobalCSV = () => {
-                if(filteredLoansData.length === 0) return alert("No hay préstamos para exportar en este periodo.");
+            // LISTA DE ASESORES CON PRÉSTAMOS PARA EL FILTRO
+            const uniqueLoanReps = useMemo(() => {
+                const reps = new Set(filteredLoansData.map(r => r._assigned));
+                return Array.from(reps).sort();
+            }, [filteredLoansData]);
+
+            // DATOS FILTRADOS POR RESPONSABLE PARA LA TABLA
+            const displayedLoansData = useMemo(() => {
+                if (!selectedLoanRep) return filteredLoansData;
+                return filteredLoansData.filter(r => r._assigned === selectedLoanRep);
+            }, [filteredLoansData, selectedLoanRep]);
+
+            const handleExportGlobalXLSX = () => {
+                const loans = displayedLoansData;
+                if(loans.length === 0) return alert("No hay préstamos para exportar en este periodo.");
                 
-                let csvContent = "Responsable,Financiera,Cedula,Nombre Cliente,Fecha Credito,Fecha Gestion,Valor Cuota Prestada\n";
-                filteredLoansData.forEach(row => {
-                    const salesDateStr = row._salesDate ? row._salesDate.toLocaleDateString('es-ES') : '';
-                    const paymentDateStr = row._paymentDate ? row._paymentDate.toLocaleDateString('es-ES') : '';
-                    csvContent += `"${row._assigned}","${row._brand}","${row._id}","${row._client}","${salesDateStr}","${paymentDateStr}","${row._amountNum}"\n`;
-                });
+                const exportData = loans.map(row => ({
+                    "Responsable / Asignado": row._assigned,
+                    "Financiera": row._brand,
+                    "Cédula": row._id,
+                    "Nombre Cliente": row._client,
+                    "Fecha Venta": row._salesDate ? row._salesDate.toLocaleDateString('es-ES') : '',
+                    "Fecha Pago / Gestión": row._paymentDate ? row._paymentDate.toLocaleDateString('es-ES') : '',
+                    "Valor Prestado": row._amountNum
+                }));
                 
-                const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' }); 
-                const link = document.createElement("a");
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", `Caja_Consolidada_${new Date().toISOString().slice(0,10)}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                const worksheet = window.XLSX.utils.json_to_sheet(exportData);
+                const workbook = window.XLSX.utils.book_new();
+                window.XLSX.utils.book_append_sheet(workbook, worksheet, "Prestamos");
+                window.XLSX.writeFile(workbook, `Caja_Consolidada_${new Date().toISOString().slice(0,10)}.xlsx`);
             };
 
             const handleExportGlobalPDF = () => {
-                if(filteredLoansData.length === 0) return alert("No hay préstamos para exportar en este periodo.");
+                const loans = displayedLoansData;
+                if(loans.length === 0) return alert("No hay préstamos para exportar en este periodo.");
 
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape');
                 const tableColumn = ["Responsable / Asignado", "Financiera", "Cédula", "Nombre Cliente", "Fecha Venta", "Fecha Pago", "Valor Prestado"];
                 const tableRows = [];
                 
-                filteredLoansData.forEach(r => {
+                loans.forEach(r => {
                     const salesDateStr = r._salesDate ? r._salesDate.toLocaleDateString('es-ES') : '';
                     const paymentDateStr = r._paymentDate ? r._paymentDate.toLocaleDateString('es-ES') : '';
                     tableRows.push([r._assigned, r._brand, r._id, r._client, salesDateStr, paymentDateStr, new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(r._amountNum)]);
@@ -306,10 +324,12 @@
                 doc.setFontSize(16);
                 doc.text(`Consolidado de Préstamos (Caja) - Multi-Marca`, 14, 15);
                 doc.setFontSize(10);
-                doc.text(`Periodo Generado: ${new Date().toLocaleDateString()} | Total Préstamos: ${filteredLoansData.length}`, 14, 22);
+                doc.text(`Periodo Generado: ${new Date().toLocaleDateString()} | Total Préstamos: ${loans.length}`, 14, 22);
+                
+                let currentTotal = loans.reduce((acc, row) => acc + row._amountNum, 0);
                 
                 doc.setFont(undefined, 'bold');
-                doc.text(`Capital Total Prestado: ${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(globalKpis.totalCaja)}`, 14, 28);
+                doc.text(`Capital Total Prestado en el reporte: ${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(currentTotal)}`, 14, 28);
                 doc.setFont(undefined, 'normal');
                 
                 doc.autoTable({
@@ -344,8 +364,8 @@
                                 <Icons.Globe className="w-8 h-8" />
                             </div>
                             <div>
-                                <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">Dashboard - Gestion</h2>
-                                <p className="text-sm font-medium text-slate-500 mt-1">Consolidado general de ventas y Gestion</p>
+                                <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">Visión Global Multi-Marca</h2>
+                                <p className="text-sm font-medium text-slate-500 mt-1">Consolidado general de ventas y caja de préstamos en tiempo real</p>
                             </div>
                         </div>
                         
@@ -417,10 +437,15 @@
                                     </div>
                                 </div>
 
-                                <div className="bg-emerald-50 p-6 rounded-3xl shadow-sm border border-emerald-200 flex flex-col justify-center transition-transform hover:-translate-y-1 hover:shadow-md">
+                                <div 
+                                    className="bg-emerald-50 p-6 rounded-3xl shadow-sm border border-emerald-200 flex flex-col justify-center transition-transform hover:-translate-y-1 hover:shadow-md cursor-pointer group"
+                                    onClick={() => setShowLoansByRepModal(true)}
+                                    title="Ver capital prestado por asesor"
+                                >
                                     <div className="flex justify-between items-start">
                                         <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2 flex items-center gap-1.5"><Icons.DollarSign className="w-4 h-4"/> Capital Prestado (Caja)</p>
-                                        <span className="text-[9px] bg-emerald-100 text-emerald-600 px-2 py-1 rounded-md font-bold">Filtro: Fecha Pago</span>
+                                        <span className="text-[9px] bg-emerald-100 text-emerald-600 px-2 py-1 rounded-md font-bold group-hover:hidden">Filtro: Fecha Pago</span>
+                                        <span className="p-1.5 bg-emerald-200/50 text-emerald-600 rounded-lg hidden group-hover:block transition-opacity"><Icons.Search className="w-3.5 h-3.5"/></span>
                                     </div>
                                     <div className="flex items-end gap-3 mt-1">
                                         <span className="text-3xl lg:text-4xl font-black text-emerald-900 truncate" title={new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(globalKpis.totalCaja)}>
@@ -429,7 +454,6 @@
                                     </div>
                                 </div>
 
-                                {/* TARJETA ACTUALIZADA PARA HACERLA CLICKEABLE */}
                                 <div 
                                     className="bg-amber-50 p-6 rounded-3xl shadow-sm border border-amber-200 flex flex-col justify-center transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer group"
                                     onClick={() => setShowTopRepsModal(true)}
@@ -449,12 +473,29 @@
                             {/* Reporte de Caja / Préstamos */}
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                 <div className="bg-slate-50 px-6 py-5 border-b border-slate-200 flex justify-between items-center flex-wrap gap-4">
-                                    <h3 className="font-black text-slate-800 flex items-center gap-2 text-xl">
-                                        <Icons.FileText className="w-6 h-6 text-indigo-500" /> Reporte de Préstamos (Caja Activa)
-                                    </h3>
+                                    <div className="flex items-center gap-4 flex-wrap">
+                                        <h3 className="font-black text-slate-800 flex items-center gap-2 text-xl">
+                                            <Icons.FileText className="w-6 h-6 text-indigo-500" /> Reporte de Préstamos (Caja Activa)
+                                        </h3>
+                                        <div className="flex items-center bg-white rounded-lg p-1 border border-slate-200 shadow-sm">
+                                            <div className="relative">
+                                                <Icons.Filter className="w-4 h-4 text-indigo-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                                <select 
+                                                    value={selectedLoanRep} 
+                                                    onChange={(e) => setSelectedLoanRep(e.target.value)}
+                                                    className="appearance-none bg-transparent pl-9 pr-8 py-1.5 text-xs font-bold text-slate-700 outline-none cursor-pointer min-w-[150px]"
+                                                >
+                                                    <option value="">Todos los Asesores</option>
+                                                    {uniqueLoanReps.map(rep => (
+                                                        <option key={rep} value={rep}>{rep}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div className="flex gap-3">
-                                        <button onClick={handleExportGlobalCSV} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl hover:bg-emerald-600 hover:text-white transition-colors font-bold text-sm shadow-sm hover:shadow">
-                                            <Icons.Download className="w-4 h-4"/> CSV Excel
+                                        <button onClick={handleExportGlobalXLSX} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl hover:bg-emerald-600 hover:text-white transition-colors font-bold text-sm shadow-sm hover:shadow">
+                                            <Icons.Download className="w-4 h-4"/> Excel (XLSX)
                                         </button>
                                         <button onClick={handleExportGlobalPDF} className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 text-white border border-slate-700 rounded-xl hover:bg-indigo-600 hover:border-indigo-500 transition-colors font-bold text-sm shadow-sm hover:shadow">
                                             <Icons.Download className="w-4 h-4"/> Descargar PDF
@@ -469,13 +510,13 @@
                                                 <th className="px-6 py-5 font-black">Financiera</th>
                                                 <th className="px-6 py-5 font-black">Cédula</th>
                                                 <th className="px-6 py-5 font-black">Nombre del Cliente</th>
-                                                <th className="px-6 py-5 font-black text-slate-400">Fecha Crédito</th>
+                                                <th className="px-6 py-5 font-black text-slate-400">Fecha Venta</th>
                                                 <th className="px-6 py-5 font-black text-indigo-600">Fecha Gestión</th>
                                                 <th className="px-6 py-5 font-black text-emerald-600 text-right">Valor Prestado</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {filteredLoansData.length > 0 ? filteredLoansData.map((row, idx) => (
+                                            {displayedLoansData.length > 0 ? displayedLoansData.map((row, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-50 transition-colors">
                                                     <td className="px-6 py-4 font-bold text-slate-800 bg-slate-50/50">{row._assigned}</td>
                                                     <td className="px-6 py-4">
@@ -512,6 +553,54 @@
                                 </div>
                             </div>
                             
+                        </div>
+                    )}
+
+                    {/* NUEVO MODAL: PRESTAMOS POR ASESOR (CAJA) */}
+                    {showLoansByRepModal && (
+                        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden border border-slate-200">
+                                <div className="p-5 border-b border-slate-100 bg-emerald-50 flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-emerald-100 text-emerald-600 rounded-xl shadow-sm"><Icons.DollarSign className="w-5 h-5"/></div>
+                                        <div>
+                                            <h3 className="font-black text-slate-800 text-lg leading-tight">Caja por Asesor</h3>
+                                            <p className="text-[10px] text-emerald-700 font-bold">Capital prestado en el filtro actual</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShowLoansByRepModal(false)} className="p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition-colors">
+                                        <Icons.X className="w-5 h-5"/>
+                                    </button>
+                                </div>
+                                <div className="flex-1 overflow-auto p-0 custom-scrollbar">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="text-[10px] text-slate-400 uppercase tracking-widest bg-white sticky top-0 shadow-sm border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-6 py-4 font-black w-16 text-center">#</th>
+                                                <th className="px-6 py-4 font-black">Asesor / Responsable</th>
+                                                <th className="px-6 py-4 font-black text-right">Capital Prestado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {globalKpis.allLoansReps.length > 0 ? globalKpis.allLoansReps.map((rep, idx) => (
+                                                <tr key={idx} className="hover:bg-emerald-50/30 transition-colors">
+                                                    <td className="px-6 py-4 font-bold text-slate-400 text-center">{idx + 1}</td>
+                                                    <td className="px-6 py-4 font-bold text-slate-700">{rep.name}</td>
+                                                    <td className="px-6 py-4 font-black text-emerald-600 text-right text-base">
+                                                        {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(rep.amount)}
+                                                    </td>
+                                                </tr>
+                                            )) : (
+                                                <tr><td colSpan="3" className="px-6 py-8 text-center text-slate-400">No hay caja registrada en este periodo.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                                    <span>Total Asesores con préstamos: <strong>{globalKpis.allLoansReps.length}</strong></span>
+                                    <button onClick={() => setShowLoansByRepModal(false)} className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition-colors shadow-sm">Cerrar</button>
+                                </div>
+                            </div>
                         </div>
                     )}
 
