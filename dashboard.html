@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -62,17 +61,18 @@
             Clock: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>,
             Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>,
             Globe: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></IconBase>,
-            Calendar: (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconBase>
+            Calendar: (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconBase>,
+            Filter: (p) => <IconBase {...p}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></IconBase>
         };
 
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
         const ALL_BRANDS = ['payjoy', 'alocredit', 'krediya', 'credismart'];
 
         const PORTFOLIO_CONFIG = {
-            alocredit: { columns: { assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], seller: ['vendedor', 'asesor'], client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'], paymentStatus: ['pagos'], id: ['cedula', 'documento', 'cc', 'nit', 'id'] } },
-            krediya: { columns: { assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], seller: ['vendedor', 'asesor'], client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'], paymentStatus: ['pagos'], id: ['cedula', 'documento', 'cc', 'nit', 'id'] } },
-            payjoy: { columns: { assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], seller: ['vendedor', 'asesor', 'ejecutivo'], client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], date: ['fecha venta', 'fecha desembolso', 'fecha'], paymentStatus: ['pagos'], id: ['cedula', 'documento', 'cc', 'nit', 'id'] } },
-            credismart: { columns: { assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], seller: ['vendedor', 'asesor', 'ejecutivo'], client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], date: ['fecha venta', 'fecha desembolso', 'fecha'], paymentStatus: ['pagos'], id: ['cedula', 'documento', 'cc', 'nit', 'id'] } }
+            alocredit: { columns: { assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], seller: ['vendedor', 'asesor'], client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'], paymentStatus: ['pagos'], comments: ['comentarios', 'observaciones', 'gestion'], id: ['cedula', 'documento', 'cc', 'nit', 'id'] } },
+            krediya: { columns: { assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], seller: ['vendedor', 'asesor'], client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'], paymentStatus: ['pagos'], comments: ['comentarios', 'observaciones', 'gestion'], id: ['cedula', 'documento', 'cc', 'nit', 'id'] } },
+            payjoy: { columns: { assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], seller: ['vendedor', 'asesor', 'ejecutivo'], client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], date: ['fecha venta', 'fecha desembolso', 'fecha'], paymentStatus: ['pagos'], comments: ['comentarios', 'notas', 'gestion'], id: ['cedula', 'documento', 'cc', 'nit', 'id'] } },
+            credismart: { columns: { assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], seller: ['vendedor', 'asesor', 'ejecutivo'], client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], date: ['fecha venta', 'fecha desembolso', 'fecha'], paymentStatus: ['pagos'], comments: ['comentarios', 'notas', 'gestion'], id: ['cedula', 'documento', 'cc', 'nit', 'id'] } }
         };
 
         function Dashboard() {
@@ -81,6 +81,9 @@
             const [globalDateFilter, setGlobalDateFilter] = useState('thisMonth');
             const [customStartDate, setCustomStartDate] = useState('');
             const [customEndDate, setCustomEndDate] = useState('');
+            
+            // AGREGAR ESTA NUEVA LÍNEA AQUÍ PARA CONTROLAR EL MODAL
+            const [showTopRepsModal, setShowTopRepsModal] = useState(false);
 
             const parseDate = (dateVal) => {
                 if (!dateVal) return null;
@@ -134,6 +137,7 @@
                             const clientCol = findConfigColumn(bConfig.columns.client, keys);
                             const idCol = findConfigColumn(bConfig.columns.id, keys);
                             const amountCol = keys.find(h => String(h).toLowerCase().includes('valor cuota') || String(h).toLowerCase() === 'cuota');
+                            const commentsCol = findConfigColumn(bConfig.columns.comments, keys);
                             
                             let statusCol = findColumnName(bConfig.columns.paymentStatus, 'primera', keys) || findColumnName(bConfig.columns.paymentStatus, '', keys);
                             let rawStatus = statusCol ? String(row[statusCol]).toLowerCase().trim() : '';
@@ -142,9 +146,23 @@
                             let rawDate = dateCol ? row[dateCol] : null;
                             let parsedDate = parseDate(rawDate);
 
+                            // Extraer fecha de pago de la columna comentarios usando Regex \[DD/MM\]
+                            let paymentDate = null;
+                            if (commentsCol && row[commentsCol]) {
+                                const rawComments = String(row[commentsCol]);
+                                const match = rawComments.match(/\[(\d{1,2})\/(\d{1,2})\]/);
+                                if (match) {
+                                    const day = parseInt(match[1], 10);
+                                    const month = parseInt(match[2], 10) - 1; // Meses en JS son 0-11
+                                    const year = parsedDate ? parsedDate.getFullYear() : new Date().getFullYear();
+                                    paymentDate = new Date(year, month, day);
+                                }
+                            }
+
                             return {
                                 _brand: b.toUpperCase(),
-                                _date: parsedDate,
+                                _salesDate: parsedDate, // Para filtrar ventas
+                                _paymentDate: paymentDate || parsedDate, // Para filtrar cartera (Fallback a fecha de venta si no hay regex)
                                 _assigned: assignedCol && row[assignedCol] ? String(row[assignedCol]).trim().toUpperCase() : 'SIN ASIGNAR',
                                 _client: clientCol && row[clientCol] ? String(row[clientCol]).trim() : '-',
                                 _id: idCol && row[idCol] ? String(row[idCol]).trim() : '-',
@@ -196,25 +214,34 @@
                 return { start: new Date(2000, 0, 1), end: new Date(2100, 0, 1) }; // All
             }, [globalDateFilter, customStartDate, customEndDate]);
 
-            const filteredGlobalData = useMemo(() => {
+            // Datos Filtrados Exclusivamente por Fecha de Venta (Para KPIs de Ventas)
+            const filteredSalesData = useMemo(() => {
                 if(!globalData.length) return [];
                 const range = getGlobalDateRange();
                 return globalData.filter(row => {
-                    if(!row._date) return false;
-                    return row._date >= range.start && row._date <= range.end;
+                    if(!row._salesDate) return false;
+                    return row._salesDate >= range.start && row._salesDate <= range.end;
+                });
+            }, [globalData, getGlobalDateRange]);
+
+            // Datos Filtrados Exclusivamente por Fecha de Pago/Gestión (Para KPIs de Cartera/Caja)
+            const filteredLoansData = useMemo(() => {
+                if(!globalData.length) return [];
+                const range = getGlobalDateRange();
+                return globalData.filter(row => {
+                    if(!row._paymentDate || !row._isLoan) return false;
+                    return row._paymentDate >= range.start && row._paymentDate <= range.end;
                 });
             }, [globalData, getGlobalDateRange]);
 
             const globalKpis = useMemo(() => {
-                let sales = filteredGlobalData.length;
+                // KPIs de VENTAS (Basados en filteredSalesData)
+                let sales = filteredSalesData.length;
                 let brands = { PAYJOY: 0, ALOCREDIT: 0, KREDIYA: 0, CREDISMART: 0 };
-                let totalCaja = 0;
                 let repCount = {};
                 
-                filteredGlobalData.forEach(r => {
+                filteredSalesData.forEach(r => {
                     brands[r._brand] = (brands[r._brand] || 0) + 1;
-                    if(r._isLoan) totalCaja += r._amountNum;
-                    
                     let rep = r._assigned;
                     repCount[rep] = (repCount[rep] || 0) + 1;
                 });
@@ -225,18 +252,30 @@
                         topRep = { name: k, count: repCount[k] };
                     }
                 });
+
+                // NUEVA LÍNEA: Crear el arreglo ordenado de todos los responsables
+                let allReps = Object.keys(repCount)
+                    .map(k => ({ name: k, count: repCount[k] }))
+                    .sort((a, b) => b.count - a.count);
+
+                // KPIs de CARTERA (Basados en filteredLoansData)
+                let totalCaja = 0;
+                filteredLoansData.forEach(r => {
+                    totalCaja += r._amountNum;
+                });
                 
-                return { sales, brands, totalCaja, topRep };
-            }, [filteredGlobalData]);
+                // DEVOLVER EL NUEVO ARREGLO `allReps`
+                return { sales, brands, totalCaja, topRep, allReps };
+            }, [filteredSalesData, filteredLoansData]);
 
             const handleExportGlobalCSV = () => {
-                const loans = filteredGlobalData.filter(r => r._isLoan);
-                if(loans.length === 0) return alert("No hay préstamos para exportar en este periodo.");
+                if(filteredLoansData.length === 0) return alert("No hay préstamos para exportar en este periodo.");
                 
-                let csvContent = "Responsable,Financiera,Cedula,Nombre Cliente,Fecha Credito,Valor Cuota Prestada\n";
-                loans.forEach(row => {
-                    const dateStr = row._date ? row._date.toLocaleDateString('es-ES') : '';
-                    csvContent += `"${row._assigned}","${row._brand}","${row._id}","${row._client}","${dateStr}","${row._amountNum}"\n`;
+                let csvContent = "Responsable,Financiera,Cedula,Nombre Cliente,Fecha Credito,Fecha Gestion,Valor Cuota Prestada\n";
+                filteredLoansData.forEach(row => {
+                    const salesDateStr = row._salesDate ? row._salesDate.toLocaleDateString('es-ES') : '';
+                    const paymentDateStr = row._paymentDate ? row._paymentDate.toLocaleDateString('es-ES') : '';
+                    csvContent += `"${row._assigned}","${row._brand}","${row._id}","${row._client}","${salesDateStr}","${paymentDateStr}","${row._amountNum}"\n`;
                 });
                 
                 const blob = new Blob(["\uFEFF"+csvContent], { type: 'text/csv;charset=utf-8;' }); 
@@ -251,23 +290,23 @@
             };
 
             const handleExportGlobalPDF = () => {
-                const loans = filteredGlobalData.filter(r => r._isLoan);
-                if(loans.length === 0) return alert("No hay préstamos para exportar en este periodo.");
+                if(filteredLoansData.length === 0) return alert("No hay préstamos para exportar en este periodo.");
 
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape');
-                const tableColumn = ["Responsable / Asignado", "Financiera", "Cédula", "Nombre del Cliente", "Fecha Crédito", "Valor Prestado"];
+                const tableColumn = ["Responsable / Asignado", "Financiera", "Cédula", "Nombre Cliente", "Fecha Venta", "Fecha Pago", "Valor Prestado"];
                 const tableRows = [];
                 
-                loans.forEach(r => {
-                    const dateStr = r._date ? r._date.toLocaleDateString('es-ES') : '';
-                    tableRows.push([r._assigned, r._brand, r._id, r._client, dateStr, new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(r._amountNum)]);
+                filteredLoansData.forEach(r => {
+                    const salesDateStr = r._salesDate ? r._salesDate.toLocaleDateString('es-ES') : '';
+                    const paymentDateStr = r._paymentDate ? r._paymentDate.toLocaleDateString('es-ES') : '';
+                    tableRows.push([r._assigned, r._brand, r._id, r._client, salesDateStr, paymentDateStr, new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(r._amountNum)]);
                 });
                 
                 doc.setFontSize(16);
                 doc.text(`Consolidado de Préstamos (Caja) - Multi-Marca`, 14, 15);
                 doc.setFontSize(10);
-                doc.text(`Periodo Generado: ${new Date().toLocaleDateString()} | Total Préstamos: ${loans.length}`, 14, 22);
+                doc.text(`Periodo Generado: ${new Date().toLocaleDateString()} | Total Préstamos: ${filteredLoansData.length}`, 14, 22);
                 
                 doc.setFont(undefined, 'bold');
                 doc.text(`Capital Total Prestado: ${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(globalKpis.totalCaja)}`, 14, 28);
@@ -355,10 +394,13 @@
                             {/* KPIs Globales */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center transition-transform hover:-translate-y-1 hover:shadow-md">
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Ventas Totales</p>
+                                    <div className="flex justify-between items-start">
+                                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Ventas Totales</p>
+                                        <span className="text-[9px] bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-bold">Filtro: Fecha Venta</span>
+                                    </div>
                                     <div className="flex items-end gap-3">
                                         <span className="text-5xl font-black text-slate-800">{globalKpis.sales}</span>
-                                        <span className="text-sm font-bold text-slate-500 mb-1.5">equipos vendidos</span>
+                                        <span className="text-sm font-bold text-slate-500 mb-1.5">equipos</span>
                                     </div>
                                 </div>
                                 
@@ -376,18 +418,28 @@
                                 </div>
 
                                 <div className="bg-emerald-50 p-6 rounded-3xl shadow-sm border border-emerald-200 flex flex-col justify-center transition-transform hover:-translate-y-1 hover:shadow-md">
-                                    <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2 flex items-center gap-1.5"><Icons.DollarSign className="w-4 h-4"/> Capital Prestado (Caja)</p>
+                                    <div className="flex justify-between items-start">
+                                        <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2 flex items-center gap-1.5"><Icons.DollarSign className="w-4 h-4"/> Capital Prestado (Caja)</p>
+                                        <span className="text-[9px] bg-emerald-100 text-emerald-600 px-2 py-1 rounded-md font-bold">Filtro: Fecha Pago</span>
+                                    </div>
                                     <div className="flex items-end gap-3 mt-1">
                                         <span className="text-3xl lg:text-4xl font-black text-emerald-900 truncate" title={new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(globalKpis.totalCaja)}>
                                             {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(globalKpis.totalCaja)}
                                         </span>
                                     </div>
-                                    <p className="text-xs font-bold text-emerald-700 mt-2 opacity-80 bg-emerald-100/50 py-1 px-2 rounded-lg self-start">Asignado a Préstamos/Gestión</p>
                                 </div>
 
-                                <div className="bg-amber-50 p-6 rounded-3xl shadow-sm border border-amber-200 flex flex-col justify-center transition-transform hover:-translate-y-1 hover:shadow-md">
-                                    <p className="text-xs font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-1.5"><Icons.Target className="w-4 h-4"/> Top Responsable</p>
-                                    <div className="flex flex-col justify-center h-full">
+                                {/* TARJETA ACTUALIZADA PARA HACERLA CLICKEABLE */}
+                                <div 
+                                    className="bg-amber-50 p-6 rounded-3xl shadow-sm border border-amber-200 flex flex-col justify-center transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer group"
+                                    onClick={() => setShowTopRepsModal(true)}
+                                    title="Ver ranking completo de asesores"
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <p className="text-xs font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-1.5"><Icons.Target className="w-4 h-4"/> Top Responsable</p>
+                                        <span className="p-1.5 bg-amber-200/50 text-amber-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"><Icons.Search className="w-3.5 h-3.5"/></span>
+                                    </div>
+                                    <div className="flex flex-col justify-center h-full mt-2">
                                         <span className="text-2xl font-black text-amber-900 truncate" title={globalKpis.topRep.name}>{globalKpis.topRep.name}</span>
                                         <span className="text-sm font-bold text-amber-700 mt-1 bg-amber-100/50 py-1 px-2 rounded-lg self-start">{globalKpis.topRep.count} ventas aportadas</span>
                                     </div>
@@ -417,12 +469,13 @@
                                                 <th className="px-6 py-5 font-black">Financiera</th>
                                                 <th className="px-6 py-5 font-black">Cédula</th>
                                                 <th className="px-6 py-5 font-black">Nombre del Cliente</th>
-                                                <th className="px-6 py-5 font-black">Fecha Crédito</th>
-                                                <th className="px-6 py-5 font-black text-emerald-600 text-right">Valor de la Cuota</th>
+                                                <th className="px-6 py-5 font-black text-slate-400">Fecha Crédito</th>
+                                                <th className="px-6 py-5 font-black text-indigo-600">Fecha Gestión</th>
+                                                <th className="px-6 py-5 font-black text-emerald-600 text-right">Valor Prestado</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {filteredGlobalData.filter(r => r._isLoan).length > 0 ? filteredGlobalData.filter(r => r._isLoan).map((row, idx) => (
+                                            {filteredLoansData.length > 0 ? filteredLoansData.map((row, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-50 transition-colors">
                                                     <td className="px-6 py-4 font-bold text-slate-800 bg-slate-50/50">{row._assigned}</td>
                                                     <td className="px-6 py-4">
@@ -436,17 +489,18 @@
                                                     </td>
                                                     <td className="px-6 py-4 font-mono text-xs text-slate-500 font-medium">{row._id}</td>
                                                     <td className="px-6 py-4 font-bold text-slate-700">{row._client}</td>
-                                                    <td className="px-6 py-4 text-slate-500 font-medium text-sm">{row._date ? row._date.toLocaleDateString('es-ES') : '-'}</td>
+                                                    <td className="px-6 py-4 text-slate-400 font-medium text-sm">{row._salesDate ? row._salesDate.toLocaleDateString('es-ES') : '-'}</td>
+                                                    <td className="px-6 py-4 text-indigo-600 font-bold text-sm bg-indigo-50/30">{row._paymentDate ? row._paymentDate.toLocaleDateString('es-ES') : '-'}</td>
                                                     <td className="px-6 py-4 text-right font-black text-emerald-700 text-base">
                                                         {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(row._amountNum)}
                                                     </td>
                                                 </tr>
                                             )) : (
-                                                <tr><td colSpan="6" className="px-6 py-16 text-center text-slate-400">
+                                                <tr><td colSpan="7" className="px-6 py-16 text-center text-slate-400">
                                                     <div className="flex flex-col items-center gap-3">
                                                         <Icons.CheckCircle className="w-12 h-12 text-slate-300" />
                                                         <p className="font-bold text-lg text-slate-500">Todo en orden</p>
-                                                        <p className="text-sm">No se encontraron préstamos o pagos con gestión en las 4 financieras para este periodo.</p>
+                                                        <p className="text-sm">No se encontraron préstamos o pagos con gestión en las 4 financieras para el periodo seleccionado.</p>
                                                     </div>
                                                 </td></tr>
                                             )}
@@ -454,10 +508,56 @@
                                     </table>
                                 </div>
                                 <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 text-xs text-slate-500 font-medium">
-                                    * Nota: La tabla filtra automáticamente y muestra <strong>únicamente</strong> a los clientes cuyo estado actual indique un <strong>Préstamo (Pago con Gestión)</strong>.
+                                    * Nota: La tabla filtra automáticamente y muestra <strong>únicamente</strong> a los clientes cuyo estado actual indique un <strong>Préstamo (Pago con Gestión)</strong>. La fecha de gestión se extrae del formato <strong>[DD/MM]</strong> en los comentarios.
                                 </div>
                             </div>
                             
+                        </div>
+                    )}
+
+                    {/* NUEVO MODAL: RANKING DE ASESORES */}
+                    {showTopRepsModal && (
+                        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden border border-slate-200">
+                                <div className="p-5 border-b border-slate-100 bg-amber-50 flex justify-between items-center">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-amber-100 text-amber-600 rounded-xl shadow-sm"><Icons.Target className="w-5 h-5"/></div>
+                                        <div>
+                                            <h3 className="font-black text-slate-800 text-lg leading-tight">Ranking de Asesores</h3>
+                                            <p className="text-[10px] text-amber-700 font-bold">Según las ventas del filtro actual</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShowTopRepsModal(false)} className="p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition-colors">
+                                        <Icons.X className="w-5 h-5"/>
+                                    </button>
+                                </div>
+                                <div className="flex-1 overflow-auto p-0 custom-scrollbar">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="text-[10px] text-slate-400 uppercase tracking-widest bg-white sticky top-0 shadow-sm border-b border-slate-100">
+                                            <tr>
+                                                <th className="px-6 py-4 font-black w-16 text-center">#</th>
+                                                <th className="px-6 py-4 font-black">Asesor / Responsable</th>
+                                                <th className="px-6 py-4 font-black text-right">Equipos Vendidos</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {globalKpis.allReps.length > 0 ? globalKpis.allReps.map((rep, idx) => (
+                                                <tr key={idx} className="hover:bg-amber-50/30 transition-colors">
+                                                    <td className="px-6 py-4 font-bold text-slate-400 text-center">{idx + 1}</td>
+                                                    <td className="px-6 py-4 font-bold text-slate-700">{rep.name}</td>
+                                                    <td className="px-6 py-4 font-black text-amber-600 text-right text-base">{rep.count}</td>
+                                                </tr>
+                                            )) : (
+                                                <tr><td colSpan="3" className="px-6 py-8 text-center text-slate-400">No hay ventas registradas.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                                    <span>Total Vendedores activos: <strong>{globalKpis.allReps.length}</strong></span>
+                                    <button onClick={() => setShowTopRepsModal(false)} className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition-colors shadow-sm">Cerrar</button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
