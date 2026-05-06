@@ -76,12 +76,14 @@
             ArrowLeft: (p) => <IconBase {...p}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></IconBase>,
             ArrowRight: (p) => <IconBase {...p}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 19"/></IconBase>,
             Clock: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></IconBase>,
-            Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>
+            Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>,
+            Globe: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></IconBase>,
+            Calendar: (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconBase>
         };
 
         // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        const APP_VERSION = "v6.7.0 (Escala de Mora 5-Niveles)";
+        const APP_VERSION = "v7.0.0 (Gestión de Cartera - 4 Marcas)";
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -101,91 +103,57 @@
         const CONTINUITY_QUOTAS = ['fpd10', 'fpd11', 'fpd12', 'cont_m2'];
         const ALO_QUOTAS = ['alo_q2', 'alo_q3', 'alo_q4'];
 
-        // CONFIGURACIÓN DE CARTERAS (AHORA SON 4)
+        // CONFIGURACIÓN DE CARTERAS (4 MARCAS)
         const PORTFOLIO_CONFIG = {
             alocredit: {
-                name: "ALOCREDIT",
-                theme: "indigo",
+                name: "ALOCREDIT", theme: "indigo",
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'cont_m2'], 
                 columns: {
-                    seller: ['vendedor', 'asesor'],
-                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
-                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
-                    device: ['modelo - equipo', 'equipo', 'modelo'],
-                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
-                    date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'],
-                    quotaDate: 'cuota',
-                    paymentStatus: ['pagos'], 
-                    comments: ['comentarios', 'observaciones', 'gestion'],
-                    id: ['cedula', 'documento', 'cc', 'nit', 'id'],
-                    email: ['email', 'correo', 'mail'],
-                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
-                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
+                    seller: ['vendedor', 'asesor'], assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], device: ['modelo - equipo', 'equipo', 'modelo'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'],
+                    quotaDate: 'cuota', paymentStatus: ['pagos'], comments: ['comentarios', 'observaciones', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'], email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
             },
             krediya: {
-                name: "KREDIYA",
-                theme: "emerald", // Color verde para identificar Krediya
+                name: "KREDIYA", theme: "emerald",
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'cont_m2'], 
                 columns: {
-                    seller: ['vendedor', 'asesor'],
-                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
-                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
-                    device: ['modelo - equipo', 'equipo', 'modelo'],
-                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
-                    date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'],
-                    quotaDate: 'cuota',
-                    paymentStatus: ['pagos'], 
-                    comments: ['comentarios', 'observaciones', 'gestion'],
-                    id: ['cedula', 'documento', 'cc', 'nit', 'id'],
-                    email: ['email', 'correo', 'mail'],
-                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
-                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
+                    seller: ['vendedor', 'asesor'], assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], device: ['modelo - equipo', 'equipo', 'modelo'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'],
+                    quotaDate: 'cuota', paymentStatus: ['pagos'], comments: ['comentarios', 'observaciones', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'], email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
             },
             payjoy: {
-                name: "PAYJOY",
-                theme: "blue",
+                name: "PAYJOY", theme: "blue",
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: {
-                    seller: ['vendedor', 'asesor', 'ejecutivo'],
-                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
-                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
-                    device: ['equipo', 'modelo', 'celular'],
-                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
-                    date: ['fecha venta', 'fecha desembolso', 'fecha'],
-                    quotaDate: 'cuota',
-                    paymentStatus: ['pagos'], 
-                    comments: ['comentarios', 'notas', 'gestion'],
-                    id: ['cedula', 'documento', 'cc', 'nit', 'id'],
-                    email: ['email', 'correo', 'mail'],
-                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    seller: ['vendedor', 'asesor', 'ejecutivo'], assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], device: ['equipo', 'modelo', 'celular'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], date: ['fecha venta', 'fecha desembolso', 'fecha'],
+                    quotaDate: 'cuota', paymentStatus: ['pagos'], comments: ['comentarios', 'notas', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'], email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
             },
             credismart: {
-                name: "CREDISMART",
-                theme: "rose", // Color rojo/rosa para identificar Credismart
+                name: "CREDISMART", theme: "rose",
                 quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: {
-                    seller: ['vendedor', 'asesor', 'ejecutivo'],
-                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
-                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
-                    device: ['equipo', 'modelo', 'celular'],
-                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], 
-                    date: ['fecha venta', 'fecha desembolso', 'fecha'],
-                    quotaDate: 'cuota',
-                    paymentStatus: ['pagos'], 
-                    comments: ['comentarios', 'notas', 'gestion'],
-                    id: ['cedula', 'documento', 'cc', 'nit', 'id'],
-                    email: ['email', 'correo', 'mail'],
-                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'],
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    seller: ['vendedor', 'asesor', 'ejecutivo'], assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], device: ['equipo', 'modelo', 'celular'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], date: ['fecha venta', 'fecha desembolso', 'fecha'],
+                    quotaDate: 'cuota', paymentStatus: ['pagos'], comments: ['comentarios', 'notas', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'], email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota']
                 }
             }
@@ -201,30 +169,29 @@
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState(null);
             
-            // Filtros
+            // Filtros Tablero Principal
             const [searchTerm, setSearchTerm] = useState('');
             const [selectedSeller, setSelectedSeller] = useState('');
             const [selectedAssigned, setSelectedAssigned] = useState('');
             const [selectedDevice, setSelectedDevice] = useState('');
             const [selectedStore, setSelectedStore] = useState(''); 
             
+            // Filtros de Alertas (Escala 5 Niveles)
             const [showOnlyAlerts7, setShowOnlyAlerts7] = useState(false);
             const [showOnlyAlerts15, setShowOnlyAlerts15] = useState(false);
             const [showOnlyEarly, setShowOnlyEarly] = useState(false); 
             const [showOnlyCritical7, setShowOnlyCritical7] = useState(false); 
             const [showOnlyCritical15, setShowOnlyCritical15] = useState(false); 
             
-            // Filtros interactivos
             const [fpdQuotaFilter, setFpdQuotaFilter] = useState(null); 
             const [breakdownFilter, setBreakdownFilter] = useState(null);
 
-            // Reporte Vendedores / Asignados
             const [showSellerModal, setShowSellerModal] = useState(false);
             const [reportFilter, setReportFilter] = useState('fpd7');
             const [detailSeller, setDetailSeller] = useState(null); 
-            const [detailFilter, setDetailFilter] = useState('all'); // 'all' | 'loans'
+            const [detailFilter, setDetailFilter] = useState('all'); 
 
-            // Edición
+            // Modal Edición
             const [editModal, setEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
             const [cleanEditModal, setCleanEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
             const [confirmModal, setConfirmModal] = useState({ show: false, row: null, actionType: null, message: '', amount: '' });
@@ -247,7 +214,6 @@
                 return dateObj;
             };
 
-            // Para los contadores de arriba (Estrictos)
             const checkDateAlert7 = (dateVal) => {
                 const dateObj = parseDate(dateVal);
                 if (!dateObj) return false;
@@ -268,6 +234,17 @@
                 const diffTime = today - due;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
                 return diffDays === 11 || diffDays === 12;
+            };
+
+            const checkVisualDateAlert = (dateVal) => {
+                const dateObj = parseDate(dateVal);
+                if (!dateObj) return false;
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+                const diffTime = today - due;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                return diffDays === 5 || diffDays === 6 || diffDays === 11 || diffDays === 12;
             };
 
             const findColumnName = useCallback((keyword1, keyword2, headersList) => {
@@ -457,6 +434,33 @@
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
+            const getRowVisuallyCritical = useCallback((row, headersList) => {
+                const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
+                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
+                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+                
+                if (!dateCol || !statusCol) return false;
+                
+                const saleDate = parseDate(row[dateCol]);
+                if (!saleDate) return false;
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const dueDate = new Date(saleDate);
+                dueDate.setDate(dueDate.getDate() + 14);
+                dueDate.setHours(0,0,0,0);
+
+                const diffTime = today.getTime() - dueDate.getTime();
+                const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDaysFromDue === 7 || diffDaysFromDue === 13 || diffDaysFromDue === 14) {
+                    const obsVal = String(row[statusCol] || '').trim();
+                    return isObsUnpaid(obsVal);
+                }
+                return false;
+            }, [activeConfig, findConfigColumn, findColumnName]);
+
             const checkSpecificQuotaAlert7 = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
@@ -495,6 +499,27 @@
                 return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert15(row, headersList, qId));
             }, [checkSpecificQuotaAlert15]);
 
+            const checkSpecificVisualQuotaAlert = useCallback((row, headersList, quotaId) => {
+                const qName = QUOTA_LABELS[quotaId]?.id; 
+                if (!qName) return false;
+                const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+
+                if (colFecha && colStatus) {
+                    const fechaVal = row[colFecha];
+                    const obsVal = String(row[colStatus] || '').trim();
+                    if (checkVisualDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
+                }
+                return false;
+            }, [activeConfig, findColumnName]);
+
+            const getRowVisuallyAlert = useCallback((row, headersList) => {
+                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificVisualQuotaAlert(row, headersList, qId));
+            }, [checkSpecificVisualQuotaAlert]);
+
+
+            // --- FETCH PARA TABLERO INDIVIDUAL ---
             const fetchData = useCallback(async () => {
                 setLoading(true);
                 setError(null);
@@ -571,6 +596,16 @@
                     phoneColumn: pCol, clientColumn: cCol, idColumn: idCol
                 };
             }, [data, headers, activeConfig, findConfigColumn]);
+
+            // Reorganizar encabezados para que "Asignado" sea siempre la primera columna
+            const displayHeaders = useMemo(() => {
+                if (!headers || headers.length === 0) return [];
+                let arr = [...headers];
+                if (assignedColumn && arr.includes(assignedColumn)) {
+                    arr = [assignedColumn, ...arr.filter(h => h !== assignedColumn)];
+                }
+                return arr;
+            }, [headers, assignedColumn]);
 
             const sellerReportData = useMemo(() => {
                 if (!showSellerModal) return [];
@@ -1029,7 +1064,16 @@
             const getColumnStyles = (headerName) => {
                 if (!headerName) return null;
                 const lowerHeader = String(headerName).toLowerCase().trim();
-                if (lowerHeader.includes("primera cuota") || lowerHeader.includes("atrasadas")) return { head: "bg-blue-100 text-blue-900 border-b-2 border-blue-300", cellBase: "border-l border-r border-blue-100", bgColor: "bg-blue-50/50" };
+                
+                // Color para columna Asignado/Responsable
+                if (headerName === assignedColumn) {
+                    return { head: "bg-blue-100/70 text-blue-900 border-b-2 border-blue-200", cellBase: "", bgColor: "bg-blue-50/60 font-black text-blue-800 shadow-sm" };
+                }
+                
+                // Color para columnas de Cuotas
+                if (lowerHeader.includes("primera cuota") || lowerHeader.includes("atrasadas")) {
+                    return { head: "bg-blue-100 text-blue-900 border-b-2 border-blue-300", cellBase: "border-l border-r border-blue-100", bgColor: "bg-blue-50/50" };
+                }
                 return null;
             };
 
@@ -1067,7 +1111,7 @@
                              <Icons.FileText className={`w-4 h-4 ${headerIconColor}`} />
                              <h3 className={`text-sm font-bold uppercase tracking-wide ${headerColor}`}>{displayTitle}</h3>
                         </div>
-                        <div onClick={() => { if(hasSales) { setFpdQuotaFilter(isFpdActive ? null : quotaId); setBreakdownFilter(null); setShowOnlyAlerts(false); setShowOnlyEarly(false); setShowOnlyCritical(false); }}} className={`mb-3 p-3 rounded-xl ${fpdColor} shadow-sm transition-all ${hasSales ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''} ${isFpdActive ? 'ring-2 ring-indigo-500' : ''}`}>
+                        <div onClick={() => { if(hasSales) { setFpdQuotaFilter(isFpdActive ? null : quotaId); setBreakdownFilter(null); setShowOnlyAlerts7(false); setShowOnlyAlerts15(false); setShowOnlyEarly(false); setShowOnlyCritical7(false); setShowOnlyCritical15(false); }}} className={`mb-3 p-3 rounded-xl ${fpdColor} shadow-sm transition-all ${hasSales ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md' : ''} ${isFpdActive ? 'ring-2 ring-indigo-500' : ''}`}>
                             <div className="flex justify-between mb-2">
                                 <span className="text-[10px] font-bold uppercase opacity-80 flex items-center gap-1">{isFpdActive && <Icons.Filter className="w-3 h-3 animate-pulse"/>} {isMonthly ? 'Mes Completo' : `Semanas -${QUOTA_LABELS[quotaId].weeksAgo}`}</span>
                                 <span className="text-xl font-bold">{hasSales ? `${fpdPercent}%` : 'N/A'}</span>
@@ -1186,7 +1230,7 @@
                             if (val === 'Mora') data.cell.styles.textColor = [220, 38, 38]; 
                             else if (val === 'Pagó') data.cell.styles.textColor = [22, 163, 74]; 
                             else if (val === 'Gestión') data.cell.styles.textColor = [37, 99, 235]; 
-                            else if (val === 'Gestión($)') data.cell.styles.textColor = [124, 58, 237]; // Morado
+                            else if (val === 'Gestión($)') data.cell.styles.textColor = [124, 58, 237]; 
                             else if (val === 'Por Vencer') data.cell.styles.textColor = [217, 119, 6]; 
                         }
                     }
@@ -1372,7 +1416,6 @@
                 doc.save(`Filtro_Personalizado_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
-            // --- ACCIONES RÁPIDAS Y EDICIÓN ---
             const triggerQuickAction = (row, actionType) => {
                 let msg = "";
                 let defaultAmount = "";
@@ -1611,16 +1654,16 @@
                     <div className="bg-white rounded-3xl shadow-sm p-6 border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-5">
                             <button 
-                                onClick={() => window.location.href = 'index.html'} 
+                                onClick={() => window.location.reload()} 
                                 className="p-2.5 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm hover:shadow border border-slate-200" 
-                                title="Regresar al Inicio"
+                                title="Recargar App"
                             >
                                 <Icons.ArrowLeft className="w-5 h-5" />
                             </button>
                             <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true" alt="Logo Multimarcas" className="h-16 object-contain drop-shadow-sm" />
                             <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
                             <div>
-                                <h1 className="text-2xl font-black text-slate-900 tracking-tight">Dashboard de Gestión</h1>
+                                <h1 className="text-2xl font-black text-slate-900 tracking-tight">Tablero de Cartera</h1>
                                 <div className="flex items-center gap-2 mt-1">
                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm ${loading || isSaving ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
                                         <span className={`w-2 h-2 rounded-full ${loading || isSaving ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></span>
@@ -1646,6 +1689,10 @@
                                     <svg className="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                                 </div>
                             </div>
+
+                            <button onClick={() => window.location.href = 'dashboard.html'} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-bold text-sm tracking-wide border border-amber-600">
+                                <Icons.Globe className="w-4 h-4"/> Visión Global
+                            </button>
                             
                             <button onClick={() => setShowSellerModal(true)} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-bold text-sm tracking-wide">
                                 <Icons.BarChart4 className="w-4 h-4"/> Reporte Analítico
@@ -1848,12 +1895,12 @@
                             <table className="w-full text-left text-sm text-slate-600">
                                 <thead className="bg-slate-50/80 text-xs uppercase tracking-wider font-bold text-slate-500 border-b border-slate-200">
                                     <tr>
-                                        {headers.map((h, i) => {
+                                        {displayHeaders.map((h, i) => {
                                             const style = getColumnStyles(h);
                                             const isPhoneCol = activeConfig.columns.phone && activeConfig.columns.phone.some(p => h.toLowerCase().includes(p));
                                             return (
                                                 <React.Fragment key={i}>
-                                                    <th className={`px-4 py-4 whitespace-nowrap ${style?.head} ${isPhoneCol ? 'min-w-[140px]' : ''}`}>{h}</th>
+                                                    <th className={`px-4 py-4 whitespace-nowrap ${style?.head || ''} ${isPhoneCol ? 'min-w-[140px]' : ''}`}>{h}</th>
                                                     {h === commentsColName && <th className="px-4 py-4 text-center whitespace-nowrap bg-indigo-50/50 text-indigo-800 border-l border-indigo-100">Acción Rápida</th>}
                                                 </React.Fragment>
                                             );
@@ -1865,8 +1912,8 @@
                                     {paginatedData.length > 0 ? paginatedData.map((row, i) => {
                                         const isCritical7Row = getRowCriticalStatus7(row, headers);
                                         const isCritical15Row = getRowCriticalStatus15(row, headers);
-                                        const isAlert15Row = getRowAlertStatus15(row, headers);
-                                        const isAlert7Row = getRowAlertStatus7(row, headers);
+                                        const isAlert15Row = getRowVisuallyAlert(row, headers) && (getRowAlertStatus15(row, headers) || checkSpecificVisualQuotaAlert(row, headers, 'fpd15')); 
+                                        const isAlert7Row = getRowVisuallyAlert(row, headers) && (getRowAlertStatus7(row, headers) || checkSpecificVisualQuotaAlert(row, headers, 'fpd7') || checkSpecificVisualQuotaAlert(row, headers, 'fpd3'));
                                         const isEarlyRow = getRowEarlyStatus(row, headers);
 
                                         let rowBgClass = 'hover:bg-indigo-50/30';
@@ -1877,7 +1924,7 @@
                                             rowBgClass = 'bg-rose-200 hover:bg-rose-300';
                                             rowBorderClass = 'border-l-[6px] border-rose-700'; 
                                             rowTextClass = 'text-rose-950 font-black';
-                                        } else if (isAlert15Row) {
+                                        } else if (isAlert15Row && !isCritical15Row && !isCritical7Row) {
                                             rowBgClass = 'bg-orange-100 hover:bg-orange-200';
                                             rowBorderClass = 'border-l-[4px] border-orange-500'; 
                                             rowTextClass = 'text-orange-950 font-bold';
@@ -1885,7 +1932,7 @@
                                             rowBgClass = 'bg-red-200 hover:bg-red-300';
                                             rowBorderClass = 'border-l-[6px] border-red-700'; 
                                             rowTextClass = 'text-red-950 font-black';
-                                        } else if (isAlert7Row) {
+                                        } else if (isAlert7Row && !isCritical7Row && !isCritical15Row) {
                                             rowBgClass = 'bg-yellow-100 hover:bg-yellow-200';
                                             rowBorderClass = 'border-l-[4px] border-yellow-500';
                                             rowTextClass = 'text-yellow-950 font-bold';
@@ -1951,7 +1998,7 @@
 
                                         return (
                                         <tr key={i} className={`transition-colors ${rowBgClass}`}>
-                                            {headers.map((h, j) => {
+                                            {displayHeaders.map((h, j) => {
                                                 const val = formatCellData(row[h]);
                                                 const style = getColumnStyles(h);
                                                 
@@ -1966,15 +2013,15 @@
                                                     const clean = isPhoneCol && val ? cleanPhoneNumber(val) : null;
                                                     
                                                     tdContent = (
-                                                        <td key={j} className={`px-4 py-3 whitespace-nowrap ${j===0 ? rowBorderClass : ''}`}>
+                                                        <td key={j} className={`px-4 py-3 whitespace-nowrap ${j===0 ? rowBorderClass : ''} ${style?.bgColor || ''}`}>
                                                             <div className="flex items-center gap-3">
                                                                 <span 
-                                                                    className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${(isCritical7Row || isCritical15Row) ? 'text-red-950 hover:text-red-700' : 'text-slate-600 hover:text-indigo-600'}`} 
+                                                                    className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${(isCritical7Row || isCritical15Row) ? 'text-red-950 hover:text-red-700' : h === assignedColumn ? 'text-blue-800' : 'text-slate-600 hover:text-indigo-600'}`} 
                                                                     title={`Clic para editar ${h}`} 
                                                                     onClick={() => openCleanEdit(row, h)}
                                                                 >
                                                                     {val || <span className="text-slate-300 italic font-normal">Vacío</span>}
-                                                                    <Icons.Edit2 className="w-3 h-3 opacity-0 group-hover:opacity-100 text-indigo-500" />
+                                                                    <Icons.Edit2 className={`w-3 h-3 opacity-0 group-hover:opacity-100 ${h===assignedColumn ? 'text-blue-500' : 'text-indigo-500'}`} />
                                                                 </span>
                                                                 {isPhoneCol && clean && (
                                                                     <div className="flex gap-1.5 ml-2">
@@ -1990,7 +2037,7 @@
 
                                                     if (isCommentsCol) {
                                                          tdContent = (
-                                                            <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs group relative ${style?.bgColor} ${j===0 ? rowBorderClass : ''} ${rowTextClass}`}>
+                                                            <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs group relative ${style?.bgColor || ''} ${j===0 ? rowBorderClass : ''} ${rowTextClass}`}>
                                                                 {(isCritical7Row || isCritical15Row) && <Icons.AlertTriangle className="w-4 h-4 inline mr-1.5 text-red-700 animate-pulse"/>}
                                                                 {!(isCritical7Row || isCritical15Row) && (isAlert7Row || isAlert15Row) && <Icons.AlertCircle className="w-4 h-4 inline mr-1.5 text-orange-600"/>}
                                                                 {!(isCritical7Row || isCritical15Row) && !(isAlert7Row || isAlert15Row) && isEarlyRow && <Icons.Clock className="w-3.5 h-3.5 inline mr-1.5 text-amber-500"/>}
@@ -2008,7 +2055,7 @@
                                                          )
                                                     } else {
                                                         tdContent = (
-                                                            <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs ${style?.bgColor} ${j===0 ? rowBorderClass : ''} ${rowTextClass}`}>
+                                                            <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs ${style?.bgColor || ''} ${j===0 ? rowBorderClass : ''} ${rowTextClass}`}>
                                                                 {val}
                                                             </td>
                                                         )
@@ -2028,7 +2075,7 @@
                                             {!commentsColName && actionCell}
                                         </tr>
                                     )}) : (
-                                        <tr><td colSpan={headers.length + 1} className="px-6 py-24 text-center text-slate-400">
+                                        <tr><td colSpan={displayHeaders.length + 1} className="px-6 py-24 text-center text-slate-400">
                                             <div className="flex flex-col items-center gap-4">
                                                 <div className="p-5 bg-slate-50 rounded-full border border-slate-100"><Icons.Search className="w-10 h-10 text-slate-300"/></div>
                                                 <p className="font-medium text-slate-500">No se encontraron resultados en esta página.</p>
