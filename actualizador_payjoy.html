@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sincronizador Payjoy - Multimarcas</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Librería para leer archivos Excel en el navegador -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #e0f2fe; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #60a5fa; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef } = React;
+
+        const Icons = {
+            UploadCloud: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>,
+            Database: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
+            CheckCircle: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            RefreshCw: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>,
+            ArrowLeft: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+            Calculator: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+        };
+
+        // ASEGÚRATE DE PEGAR AQUÍ TU URL DEL WEB APP DE GOOGLE APPS SCRIPT
+        const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
+        
+        // Conversor de Fechas de Excel o formato Texto a Objeto Date
+        function parseDateString(dateStr) {
+            if (!dateStr) return null;
+            if (typeof dateStr === 'number') {
+                // Serial de Excel a Fecha JS (Excel inicia en 30/12/1899)
+                const date = new Date(1899, 11, 30);
+                date.setDate(date.getDate() + dateStr);
+                return date;
+            }
+            const parts = String(dateStr).split('/');
+            if (parts.length === 3) {
+                // Asumimos DD/MM/YYYY basado en los datos de Colombia
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(dateStr);
+        }
+
+        function SyncPayjoy() {
+            const [step, setStep] = useState(1);
+            const [processedData, setProcessedData] = useState([]);
+            const [payloadData, setPayloadData] = useState([]);
+            
+            const [isSyncing, setIsSyncing] = useState(false);
+            const fileInputRef = useRef(null);
+
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const data = evt.target.result;
+                        const workbook = window.XLSX.read(data, { type: 'binary' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const json = window.XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                        if (json.length === 0) throw new Error("El archivo Excel está vacío.");
+
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+
+                        const displayList = [];
+                        const payloadList = [];
+
+                        // 🔍 BÚSQUEDA INTELIGENTE DE COLUMNAS (Ignora espacios y saltos de línea ocultos de Excel)
+                        const findValue = (rowObj, keyword) => {
+                            const cleanKeyword = keyword.toLowerCase().replace(/[^a-z0-9]/g, '');
+                            const foundKey = Object.keys(rowObj).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanKeyword));
+                            return foundKey ? rowObj[foundKey] : undefined;
+                        };
+
+                        // 🧠 APLICANDO LA LÓGICA MATEMÁTICA
+                        json.forEach(row => {
+                            const codDispositivo = findValue(row, 'codigodeldispositivo') || findValue(row, 'codigodispositivo') || '';
+                            if (!codDispositivo) return; // Ignoramos filas sin código
+
+                            const totalCuotas = parseInt(findValue(row, 'totaldecuotas')) || 0;
+                            const faltantes = parseInt(findValue(row, 'cuotasfaltantes')) || 0;
+                            
+                            // 1. Cálculo de Cuotas Pagadas
+                            const pagadas = Math.max(0, totalCuotas - faltantes);
+
+                            // 2. Cálculo de Cuotas Atrasadas (Regla de 14 días)
+                            const fechaVentaRaw = findValue(row, 'fechadeventa');
+                            const fVenta = parseDateString(fechaVentaRaw);
+                            
+                            // Formatear la fecha para que se vea legible (DD/MM/YYYY)
+                            let fechaVentaFormateada = fechaVentaRaw;
+                            if (fVenta && !isNaN(fVenta.getTime())) {
+                                const d = String(fVenta.getDate()).padStart(2, '0');
+                                const m = String(fVenta.getMonth() + 1).padStart(2, '0');
+                                const y = fVenta.getFullYear();
+                                fechaVentaFormateada = `${d}/${m}/${y}`;
+                            }
+
+                            let exigibles = 0;
+                            let atrasadas = 0;
+
+                            if (fVenta && !isNaN(fVenta.getTime())) {
+                                fVenta.setHours(0,0,0,0);
+                                const diffTime = today.getTime() - fVenta.getTime();
+                                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                                // ¿Cuántos ciclos de 14 días han pasado?
+                                exigibles = Math.floor(diffDays / 14);
+                                if (exigibles < 0) exigibles = 0;
+
+                                // Atrasadas = Exigibles - Pagadas
+                                atrasadas = exigibles - pagadas;
+                                if (atrasadas < 0) atrasadas = 0;
+                            }
+
+                            // Creamos la fila que se enviará a Google Sheets
+                            // Le inyectamos nuestras nuevas columnas y la fecha corregida
+                            let newRow = { ...row };
+                            newRow['CODIGO_VENTA'] = codDispositivo; // Aseguramos la llave
+                            newRow['FECHA DE VENTA'] = fechaVentaFormateada; // Evita mandar el número crudo de Excel
+                            newRow['cuotas pagas'] = pagadas;        
+                            newRow['Cuotas Atrasadass'] = atrasadas; 
+                            
+                            payloadList.push(newRow);
+                            
+                            // Creamos el registro solo para mostrar visualmente
+                            displayList.push({
+                                codigo: codDispositivo,
+                                cliente: findValue(row, 'vendedor') || '-', 
+                                fecha: fechaVentaFormateada, // Ahora mostrará la fecha legible
+                                total: totalCuotas,
+                                faltantes: faltantes,
+                                pagadas: pagadas,
+                                exigibles: exigibles,
+                                atrasadas: atrasadas
+                            });
+                        });
+
+                        if (payloadList.length === 0) throw new Error("No se detectó la columna 'CODIGO DEL DISPOSITIVO' en el Excel.");
+
+                        // 🔥 NUEVO ORDEN PARA AUDITORÍA: Mostramos primero los que tienen más pagos y luego más atrasos
+                        displayList.sort((a, b) => {
+                            if (b.pagadas !== a.pagadas) {
+                                return b.pagadas - a.pagadas; // Los que más han pagado van primero
+                            }
+                            return b.atrasadas - a.atrasadas; // Si tienen los mismos pagos, desempatamos por atrasos
+                        });
+
+                        setProcessedData(displayList);
+                        setPayloadData(payloadList);
+                        setStep(2);
+                    } catch (err) {
+                        alert("Error al leer el archivo: " + err.message);
+                    }
+                };
+                reader.readAsBinaryString(file);
+            };
+
+            const executeSync = async () => {
+                setIsSyncing(true);
+
+                const payload = {
+                    action: "bulk", 
+                    type: "payjoy", // Le decimos al backend que va para CARTERA PAYJOY GENERAL
+                    data: payloadData
+                };
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', 
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    setStep(3);
+                } catch (error) {
+                    alert("Error en la conexión con el servidor: " + error.message);
+                } finally {
+                    setIsSyncing(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 flex flex-col items-center">
+                    
+                    {/* ENCABEZADO */}
+                    <div className="w-full max-w-5xl flex justify-between items-center mb-8">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-white border border-slate-200 text-slate-600 rounded-full hover:bg-slate-100 transition-all shadow-sm" title="Volver al Tablero">
+                                <Icons.ArrowLeft className="w-5 h-5"/>
+                            </button>
+                            <div>
+                                <h1 className="text-2xl font-black tracking-tight text-blue-900 flex items-center gap-2">
+                                    <Icons.Database className="w-6 h-6 text-blue-600"/> Sincronizador <span className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm ml-2">PAYJOY</span>
+                                </h1>
+                                <p className="text-sm text-slate-500 font-medium mt-1">Cálculo automático de Cuotas (14 días)</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                            <div className={`h-2 w-12 rounded-full transition-colors duration-300 ${step >= 1 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
+                            <div className={`h-2 w-12 rounded-full transition-colors duration-300 ${step >= 2 ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
+                            <div className={`h-2 w-12 rounded-full transition-colors duration-300 ${step >= 3 ? 'bg-emerald-500' : 'bg-slate-200'}`}></div>
+                        </div>
+                    </div>
+
+                    <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden relative min-h-[500px] flex flex-col">
+                        
+                        {/* PASO 1: SUBIR ARCHIVO */}
+                        {step === 1 && (
+                            <div className="p-10 flex flex-col items-center justify-center flex-1 animate-in fade-in zoom-in duration-300">
+                                <h2 className="text-xl font-bold mb-2 text-blue-950">Sube el reporte de Cartera de Payjoy</h2>
+                                <p className="text-sm text-slate-500 mb-8 text-center max-w-lg">
+                                    El sistema leerá el archivo, ejecutará las matemáticas de las <strong>cuotas pagas</strong> y <strong>Cuotas Atrasadass</strong> (calculando 14 días desde la venta) y actualizará tu base de datos cruzando por <strong>Código del Dispositivo</strong>.
+                                </p>
+
+                                <div 
+                                    className="w-full max-w-md border-4 border-dashed border-blue-100 bg-blue-50/50 rounded-3xl p-10 flex flex-col items-center justify-center text-center hover:bg-blue-50 hover:border-blue-400 transition-all cursor-pointer group"
+                                    onClick={() => fileInputRef.current.click()}
+                                >
+                                    <div className="p-5 bg-white text-blue-600 rounded-full mb-4 group-hover:scale-110 transition-transform shadow-sm border border-blue-100">
+                                        <Icons.UploadCloud className="w-10 h-10"/>
+                                    </div>
+                                    <p className="font-black text-blue-900 text-lg mb-1">Haz clic para subir el Excel</p>
+                                    <p className="text-xs text-blue-400 font-bold uppercase tracking-widest">Formatos: .xlsx, .csv</p>
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        accept=".xlsx, .xls, .csv" 
+                                        className="hidden" 
+                                        onChange={handleFileUpload} 
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* PASO 2: PREVISUALIZACIÓN DE MATEMÁTICAS */}
+                        {step === 2 && (
+                            <div className="flex flex-col h-[75vh] animate-in slide-in-from-right duration-300">
+                                <div className="p-6 border-b border-blue-100 bg-blue-50 flex justify-between items-center shrink-0">
+                                    <div>
+                                        <h2 className="text-xl font-black text-blue-900 flex items-center gap-2">
+                                            <Icons.Calculator className="w-5 h-5"/> Fórmulas Aplicadas Exitosamente
+                                        </h2>
+                                        <p className="text-sm text-blue-700 font-medium mt-1">Revisa una muestra de los cálculos automáticos antes de subir los datos.</p>
+                                    </div>
+                                    <div className="bg-white px-4 py-2 rounded-xl border border-blue-200 shadow-sm font-black text-sm text-blue-600 flex items-center gap-2">
+                                        <Icons.Database className="w-4 h-4"/> {processedData.length} Contratos Listos
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
+                                    <table className="w-full text-left text-sm border-collapse rounded-xl overflow-hidden shadow-sm">
+                                        <thead className="bg-slate-800 text-white text-[11px] uppercase tracking-widest sticky top-0">
+                                            <tr>
+                                                <th className="p-4 font-bold">Código Dispositivo</th>
+                                                <th className="p-4 font-bold">Fecha Venta</th>
+                                                <th className="p-4 text-center">T. Cuotas</th>
+                                                <th className="p-4 text-center font-bold text-emerald-300">= Pagadas</th>
+                                                <th className="p-4 text-center font-bold text-blue-300">Exigibles (14d)</th>
+                                                <th className="p-4 text-center font-black text-rose-400">= Atrasadas</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 border border-slate-200">
+                                            {processedData.slice(0, 100).map((row, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-50">
+                                                    <td className="p-4 font-mono text-slate-700 font-bold bg-slate-50/50">{row.codigo}</td>
+                                                    <td className="p-4 text-slate-500">{row.fecha}</td>
+                                                    <td className="p-4 text-center text-slate-500">{row.total} <span className="text-[10px]">(-{row.faltantes})</span></td>
+                                                    <td className="p-4 text-center font-black text-emerald-600 bg-emerald-50/30">{row.pagadas}</td>
+                                                    <td className="p-4 text-center font-medium text-blue-600">{row.exigibles}</td>
+                                                    <td className="p-4 text-center font-black text-rose-600 bg-rose-50/30">{row.atrasadas}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {processedData.length > 100 && (
+                                        <p className="text-center text-xs text-slate-400 mt-4 italic">Ordenados para auditoría: mostrando los que tienen pagos y atrasos primero. Se sincronizarán las {processedData.length} filas.</p>
+                                    )}
+                                </div>
+
+                                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between shrink-0">
+                                    <button onClick={() => setStep(1)} className="px-6 py-3 font-bold text-slate-500 hover:bg-slate-200 hover:text-slate-700 rounded-xl transition-colors">Volver y cambiar archivo</button>
+                                    <button 
+                                        onClick={executeSync}
+                                        disabled={isSyncing}
+                                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-wait"
+                                    >
+                                        {isSyncing ? <><Icons.RefreshCw className="w-5 h-5 animate-spin"/> Procesando...</> : 'Confirmar y Actualizar BD'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* PASO 3: ÉXITO */}
+                        {step === 3 && (
+                            <div className="p-16 flex flex-col items-center justify-center flex-1 text-center animate-in zoom-in duration-500">
+                                <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-emerald-50">
+                                    <Icons.CheckCircle className="w-12 h-12"/>
+                                </div>
+                                <h2 className="text-3xl font-black text-slate-800 mb-2">¡Cálculo y Sincronización Exitosa!</h2>
+                                <p className="text-lg text-slate-500 mb-8 max-w-md">Tu hoja "CARTERA PAYJOY GENERAL" ha sido actualizada con los últimos datos y los cálculos matemáticos de las cuotas.</p>
+                                
+                                <div className="flex gap-4">
+                                    <button onClick={() => { setStep(1); setProcessedData([]); setPayloadData([]); }} className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Subir Nuevo Archivo</button>
+                                    <button onClick={() => window.location.href = 'tablero.html'} className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition-colors">Ir al Tablero Principal</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SyncPayjoy />);
+    </script>
+</body>
+</html>
