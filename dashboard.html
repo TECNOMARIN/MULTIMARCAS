@@ -352,6 +352,84 @@
                 doc.save(`Caja_Consolidada_MultiMarca_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
+            const handleExportLoansRepXLSX = () => {
+                if (!globalKpis.allLoansReps.length) return alert("No hay datos para exportar.");
+                const exportData = globalKpis.allLoansReps.map((rep, idx) => ({
+                    "#": idx + 1,
+                    "Asesor / Responsable": rep.name,
+                    "Capital Prestado": rep.amount
+                }));
+                const worksheet = window.XLSX.utils.json_to_sheet(exportData);
+                const workbook = window.XLSX.utils.book_new();
+                window.XLSX.utils.book_append_sheet(workbook, worksheet, "Caja_Por_Asesor");
+                window.XLSX.writeFile(workbook, `Caja_Por_Asesor_${new Date().toISOString().slice(0,10)}.xlsx`);
+            };
+
+            const handleExportLoansRepPDF = () => {
+                if (!globalKpis.allLoansReps.length) return alert("No hay datos para exportar.");
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('portrait');
+                const tableColumn = ["#", "Asesor / Responsable", "Capital Prestado"];
+                const tableRows = globalKpis.allLoansReps.map((rep, idx) => [
+                    idx + 1,
+                    rep.name,
+                    new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(rep.amount)
+                ]);
+
+                doc.setFontSize(16);
+                doc.text(`Reporte de Caja por Asesor - Multi-Marca`, 14, 15);
+                doc.setFontSize(10);
+                doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 22);
+
+                doc.autoTable({
+                    head: [tableColumn],
+                    body: tableRows,
+                    startY: 28,
+                    theme: 'grid',
+                    headStyles: { fillColor: [16, 185, 129] } // emerald-500
+                });
+                doc.save(`Caja_Por_Asesor_${new Date().toISOString().slice(0,10)}.pdf`);
+            };
+
+            const handleExportTopRepsXLSX = () => {
+                if (!globalKpis.allReps.length) return alert("No hay datos para exportar.");
+                const exportData = globalKpis.allReps.map((rep, idx) => ({
+                    "#": idx + 1,
+                    "Asesor / Responsable": rep.name,
+                    "Equipos Vendidos": rep.count
+                }));
+                const worksheet = window.XLSX.utils.json_to_sheet(exportData);
+                const workbook = window.XLSX.utils.book_new();
+                window.XLSX.utils.book_append_sheet(workbook, worksheet, "Ranking_Asesores");
+                window.XLSX.writeFile(workbook, `Ranking_Asesores_${new Date().toISOString().slice(0,10)}.xlsx`);
+            };
+
+            const handleExportTopRepsPDF = () => {
+                if (!globalKpis.allReps.length) return alert("No hay datos para exportar.");
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('portrait');
+                const tableColumn = ["#", "Asesor / Responsable", "Equipos Vendidos"];
+                const tableRows = globalKpis.allReps.map((rep, idx) => [
+                    idx + 1,
+                    rep.name,
+                    rep.count
+                ]);
+
+                doc.setFontSize(16);
+                doc.text(`Ranking de Asesores (Ventas) - Multi-Marca`, 14, 15);
+                doc.setFontSize(10);
+                doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 22);
+
+                doc.autoTable({
+                    head: [tableColumn],
+                    body: tableRows,
+                    startY: 28,
+                    theme: 'grid',
+                    headStyles: { fillColor: [245, 158, 11] } // amber-500
+                });
+                doc.save(`Ranking_Asesores_${new Date().toISOString().slice(0,10)}.pdf`);
+            };
+
             return (
                 <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
                     {/* Header del Dashboard Global */}
@@ -596,9 +674,13 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
-                                    <span>Total Asesores con préstamos: <strong>{globalKpis.allLoansReps.length}</strong></span>
-                                    <button onClick={() => setShowLoansByRepModal(false)} className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition-colors shadow-sm">Cerrar</button>
+                                <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 flex-wrap gap-3">
+                                    <span>Total Asesores: <strong>{globalKpis.allLoansReps.length}</strong></span>
+                                    <div className="flex gap-2">
+                                        <button onClick={handleExportLoansRepXLSX} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-600 hover:text-white transition-colors font-bold shadow-sm"><Icons.Download className="w-4 h-4"/> Excel</button>
+                                        <button onClick={handleExportLoansRepPDF} className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-lg hover:bg-emerald-600 hover:border-emerald-500 transition-colors font-bold shadow-sm"><Icons.Download className="w-4 h-4"/> PDF</button>
+                                        <button onClick={() => setShowLoansByRepModal(false)} className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold transition-colors shadow-sm ml-2">Cerrar</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -642,9 +724,13 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
-                                    <span>Total Vendedores activos: <strong>{globalKpis.allReps.length}</strong></span>
-                                    <button onClick={() => setShowTopRepsModal(false)} className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition-colors shadow-sm">Cerrar</button>
+                                <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500 flex-wrap gap-3">
+                                    <span>Total Vendedores: <strong>{globalKpis.allReps.length}</strong></span>
+                                    <div className="flex gap-2">
+                                        <button onClick={handleExportTopRepsXLSX} className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg hover:bg-amber-600 hover:text-white transition-colors font-bold shadow-sm"><Icons.Download className="w-4 h-4"/> Excel</button>
+                                        <button onClick={handleExportTopRepsPDF} className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white border border-slate-700 rounded-lg hover:bg-amber-600 hover:border-amber-500 transition-colors font-bold shadow-sm"><Icons.Download className="w-4 h-4"/> PDF</button>
+                                        <button onClick={() => setShowTopRepsModal(false)} className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold transition-colors shadow-sm ml-2">Cerrar</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
