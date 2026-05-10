@@ -635,15 +635,93 @@
                 };
             }, [data, headers, activeConfig, findConfigColumn]);
 
-            // Reorganizar encabezados para que "Asignado" sea siempre la primera columna
+            // Determinar columna de Comentarios antes para poder inyectar justo a su lado
+            const commentsColName = useMemo(() => {
+                if (!activeConfig || !activeConfig.columns) return null;
+                return headers.find(h => {
+                    const lowerH = h.toLowerCase();
+                    return activeConfig.columns.comments && (
+                        (typeof activeConfig.columns.comments === 'string' && lowerH.includes(activeConfig.columns.comments)) ||
+                        (Array.isArray(activeConfig.columns.comments) && activeConfig.columns.comments.some(n => lowerH.includes(n)))
+                    );
+                });
+            }, [headers, activeConfig]);
+
+            // Reorganizar encabezados dinámicamente según solicitud
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
+                
+                // --- NUEVO: OCULTAR COLUMNAS INDESEADAS ---
+                arr = arr.filter(h => {
+                    const lowerH = String(h).toLowerCase().trim();
+                    if (lowerH === 'empresa') return false; // Ocultar Empresa siempre
+                    // Ocultar Responsable si es redundante (si no es la columna principal que ya elegimos como Asignado)
+                    if (lowerH === 'responsable' && h !== assignedColumn) return false; 
+                    return true;
+                });
+                // -------------------------------------------
+
+                // 1. Asignado de primero
                 if (assignedColumn && arr.includes(assignedColumn)) {
                     arr = [assignedColumn, ...arr.filter(h => h !== assignedColumn)];
                 }
+
+                // 2. Extraer dinámicamente columnas solicitadas
+                const paidCol = arr.find(h => {
+                    const l = String(h).toLowerCase().trim();
+                    return l === 'cuotas pagas' || l === 'cuotas pagadas' || l === 'pagadas';
+                });
+                const lateCol = arr.find(h => {
+                    const l = String(h).toLowerCase().trim();
+                    return l === 'cuotas atrasadas' || l === 'atrasadas' || l === 'cuotas_atrasadas' || l === 'cuotas atrasadass';
+                });
+                const firstQuotaCol = arr.find(h => {
+                    const l = String(h).toLowerCase().trim();
+                    return l === 'primera cuota' || l === 'primera' || l === 'cuota 1' || l === '1era cuota';
+                });
+                const companyCol = arr.find(h => String(h).toLowerCase().trim() === 'empresa');
+
+                // Extraer Fecha de Nacimiento para reubicarla
+                const birthDateCol = findConfigColumn(activeConfig?.columns?.birthDate, headers);
+
+                // 3. Quitar temporalmente las columnas que vamos a reubicar
+                const colsToMove = [paidCol, lateCol, firstQuotaCol, birthDateCol].filter(Boolean);
+                arr = arr.filter(h => !colsToMove.includes(h));
+
+                // 4. Insertar Fecha de Nacimiento (donde antes iba Primera Cuota: antes de Comentarios)
+                if (birthDateCol) {
+                    if (commentsColName && arr.includes(commentsColName)) {
+                        const commentsIdx = arr.indexOf(commentsColName);
+                        arr.splice(commentsIdx, 0, birthDateCol);
+                    } else if (phoneColumn && arr.includes(phoneColumn)) {
+                        const phoneIdx = arr.indexOf(phoneColumn);
+                        arr.splice(phoneIdx + 1, 0, birthDateCol);
+                    } else {
+                        arr.push(birthDateCol);
+                    }
+                }
+
+                // 5. Insertar Primera Cuota, Pagadas y Atrasadas (después de Comentarios para que salgan tras Acción Rápida)
+                if (firstQuotaCol || paidCol || lateCol) {
+                    const colsToInsert = [];
+                    if (firstQuotaCol) colsToInsert.push(firstQuotaCol);
+                    if (paidCol) colsToInsert.push(paidCol);
+                    if (lateCol) colsToInsert.push(lateCol);
+
+                    if (commentsColName && arr.includes(commentsColName)) {
+                        const commentsIdx = arr.indexOf(commentsColName);
+                        arr.splice(commentsIdx + 1, 0, ...colsToInsert); 
+                    } else if (companyCol && arr.includes(companyCol)) {
+                        const companyIdx = arr.indexOf(companyCol);
+                        arr.splice(companyIdx, 0, ...colsToInsert);
+                    } else {
+                        arr.push(...colsToInsert); // Si no hay referencias, poner al final
+                    }
+                }
+                
                 return arr;
-            }, [headers, assignedColumn]);
+            }, [headers, assignedColumn, commentsColName, phoneColumn, activeConfig]);
 
             const sellerReportData = useMemo(() => {
                 if (!showSellerModal || !activeConfig) return [];
@@ -1154,7 +1232,15 @@
                     return { head: "bg-blue-100/70 text-blue-900 border-b-2 border-blue-200", cellBase: "", bgColor: "bg-blue-50/60 font-black text-blue-800 shadow-sm" };
                 }
                 
-                // Color para columnas de Cuotas
+                // Color para nuevas columnas de Cuotas calculadas (Pagadas / Atrasadas)
+                if (lowerHeader === 'cuotas pagas' || lowerHeader === 'cuotas pagadas' || lowerHeader === 'pagadas') {
+                    return { head: "bg-emerald-100 text-emerald-900 border-b-2 border-emerald-300 text-center", cellBase: "", bgColor: "bg-emerald-50 text-center font-black text-emerald-700 text-sm" };
+                }
+                if (lowerHeader === 'cuotas atrasadas' || lowerHeader === 'atrasadas' || lowerHeader === 'cuotas_atrasadas' || lowerHeader === 'cuotas atrasadass') {
+                    return { head: "bg-rose-100 text-rose-900 border-b-2 border-rose-300 text-center", cellBase: "", bgColor: "bg-rose-50 text-center font-black text-rose-700 text-sm" };
+                }
+
+                // Color estándar para otras columnas de Cuotas
                 if (lowerHeader.includes("primera cuota") || lowerHeader.includes("atrasadas")) {
                     return { head: "bg-blue-100 text-blue-900 border-b-2 border-blue-300", cellBase: "border-l border-r border-blue-100", bgColor: "bg-blue-50/50" };
                 }
@@ -1720,17 +1806,6 @@
                 }
             };
 
-            const commentsColName = useMemo(() => {
-                if (!activeConfig || !activeConfig.columns) return null;
-                return headers.find(h => {
-                    const lowerH = h.toLowerCase();
-                    return activeConfig.columns.comments && (
-                        (typeof activeConfig.columns.comments === 'string' && lowerH.includes(activeConfig.columns.comments)) ||
-                        (Array.isArray(activeConfig.columns.comments) && activeConfig.columns.comments.some(n => lowerH.includes(n)))
-                    );
-                });
-            }, [headers, activeConfig]);
-
             const gridColsClass = activeConfig && activeConfig.quotas && activeConfig.quotas.length > 6 ? 'xl:grid-cols-4' : 'xl:grid-cols-3';
 
             if (!activeConfig || !activeConfig.quotas) {
@@ -2174,7 +2249,7 @@
                                                     
                                                     tdContent = (
                                                         <td key={j} className={`px-4 py-3 whitespace-nowrap ${j===0 ? rowBorderClass : ''} ${style?.bgColor || ''}`}>
-                                                            <div className="flex items-center gap-3">
+                                                            <div className="flex items-center justify-between gap-3">
                                                                 <span 
                                                                     className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${(isCritical7Row || isCritical15Row) ? 'text-red-950 hover:text-red-700' : h === assignedColumn ? 'text-blue-800' : 'text-slate-600 hover:text-indigo-600'}`} 
                                                                     title={`Clic para editar ${h}`} 
@@ -2317,7 +2392,7 @@
                                     <button 
                                         onClick={handleSaveComment}
                                         disabled={isSaving || !editModal.currentValue.trim()}
-                                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center gap-2"
+                                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover-translate-y-0 flex items-center gap-2"
                                     >
                                         {isSaving ? <><Icons.RefreshCw className="w-4 h-4 animate-spin"/> Guardando...</> : 'Guardar y Sincronizar'}
                                     </button>
