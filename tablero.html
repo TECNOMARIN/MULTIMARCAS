@@ -83,81 +83,8 @@
             UploadCloud: (p) => <IconBase {...p}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></IconBase>
         };
 
+        // --- CONFIGURACIÓN ---
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-
-        // --- CONFIGURACIÓN BLINDADA PARA TODAS LAS MARCAS ---
-        const PORTFOLIO_CONFIG = {
-            alocredit: {
-                name: "ALOCREDIT", theme: "indigo",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'cont_m2'], 
-                columns: { 
-                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], 
-                    seller: ['vendedor', 'asesor'], 
-                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
-                    date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha de contrato', 'fecha'], 
-                    paymentStatus: ['pagos'], 
-                    comments: ['comentarios', 'observaciones', 'gestion'], 
-                    id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
-                    email: ['email', 'correo', 'mail'], 
-                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota'] 
-                } 
-            },
-            krediya: { 
-                name: "KREDIYA", theme: "emerald",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'cont_m2'], 
-                columns: { 
-                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], 
-                    seller: ['vendedor', 'asesor'], 
-                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
-                    date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'], 
-                    paymentStatus: ['pagos'], 
-                    comments: ['comentarios', 'observaciones', 'gestion'], 
-                    id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
-                    email: ['email', 'correo', 'mail'], 
-                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota'] 
-                } 
-            },
-            payjoy: { 
-                name: "PAYJOY", theme: "blue",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
-                columns: { 
-                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], 
-                    seller: ['vendedor', 'asesor', 'ejecutivo'], 
-                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
-                    date: ['fecha venta', 'fecha desembolso', 'fecha'], 
-                    paymentStatus: ['pagos'], 
-                    comments: ['comentarios', 'notas', 'gestion'], 
-                    id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
-                    email: ['email', 'correo', 'mail'], 
-                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota'] 
-                } 
-            },
-            credismart: { 
-                name: "CREDISMART", theme: "rose",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
-                columns: { 
-                    assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], 
-                    seller: ['vendedor', 'asesor', 'ejecutivo'], 
-                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], 
-                    date: ['fecha venta', 'fecha desembolso', 'fecha'], 
-                    paymentStatus: ['pagos'], 
-                    comments: ['comentarios', 'notas', 'gestion'], 
-                    id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
-                    email: ['email', 'correo', 'mail'], 
-                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
-                    store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota'] 
-                } 
-            }
-        };
 
         // ETIQUETAS DE CUOTAS
         const QUOTA_LABELS = {
@@ -177,6 +104,62 @@
         const CONTINUITY_QUOTAS = ['fpd10', 'fpd11', 'fpd12', 'cont_m2'];
         const ALO_QUOTAS = ['alo_q2', 'alo_q3', 'alo_q4'];
 
+        // CONFIGURACIÓN DE CARTERAS (4 MARCAS)
+        const PORTFOLIO_CONFIG = {
+            alocredit: {
+                name: "ALOCREDIT", theme: "indigo",
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'cont_m2'], 
+                columns: {
+                    seller: ['vendedor', 'asesor'], assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], device: ['modelo - equipo', 'equipo', 'modelo'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'],
+                    quotaDate: 'cuota', paymentStatus: ['pagos'], comments: ['comentarios', 'observaciones', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'], email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador']
+                }
+            },
+            krediya: {
+                name: "KREDIYA", theme: "emerald",
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'cont_m2'], 
+                columns: {
+                    seller: ['vendedor', 'asesor'], assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], device: ['modelo - equipo', 'equipo', 'modelo'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], date: ['fecha venta', 'fecha desembolso', 'fecha creacion', 'fecha'],
+                    quotaDate: 'cuota', paymentStatus: ['pagos'], comments: ['comentarios', 'observaciones', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'], email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador']
+                }
+            },
+            payjoy: {
+                name: "PAYJOY", theme: "blue",
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
+                columns: {
+                    seller: ['vendedor', 'asesor', 'ejecutivo'], assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], device: ['equipo', 'modelo', 'celular'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], date: ['fecha venta', 'fecha desembolso', 'fecha'],
+                    quotaDate: 'cuota', paymentStatus: ['pagos'], comments: ['comentarios', 'notas', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'], email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador']
+                }
+            },
+            credismart: {
+                name: "CREDISMART", theme: "rose",
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
+                columns: {
+                    seller: ['vendedor', 'asesor', 'ejecutivo'], assigned: ['asignado', 'responsable', 'gestor', 'cobrador'],
+                    client: ['cliente', 'nombre', 'nombres', 'nombre cliente'], device: ['equipo', 'modelo', 'celular'],
+                    phone: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf'], date: ['fecha venta', 'fecha desembolso', 'fecha'],
+                    quotaDate: 'cuota', paymentStatus: ['pagos'], comments: ['comentarios', 'notas', 'gestion'],
+                    id: ['cedula', 'documento', 'cc', 'nit', 'id'], email: ['email', 'correo', 'mail'],
+                    birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'],
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador']
+                }
+            }
+        };
+
         // --- COMPONENTE PRINCIPAL ---
         function App() {
             const [portfolio, setPortfolio] = useState('payjoy');
@@ -194,7 +177,7 @@
             const [selectedDevice, setSelectedDevice] = useState('');
             const [selectedStore, setSelectedStore] = useState(''); 
             
-            // Filtros de Alertas
+            // Filtros de Alertas (Escala 5 Niveles)
             const [showOnlyAlerts7, setShowOnlyAlerts7] = useState(false);
             const [showOnlyAlerts15, setShowOnlyAlerts15] = useState(false);
             const [showOnlyEarly, setShowOnlyEarly] = useState(false); 
@@ -374,9 +357,9 @@
             };
 
             const getRowEarlyStatus = useCallback((row, headersList) => {
-                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
-                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList);
-                if (!statusCol) statusCol = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
+                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
+                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
                 
                 if (!dateCol || !statusCol) return false;
                 
@@ -399,9 +382,9 @@
             }, [activeConfig, findConfigColumn, findColumnName]);
 
             const getRowCriticalStatus7 = useCallback((row, headersList) => {
-                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
-                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList);
-                if (!statusCol) statusCol = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
+                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
+                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
                 
                 if (!dateCol || !statusCol) return false;
                 
@@ -426,9 +409,9 @@
             }, [activeConfig, findConfigColumn, findColumnName]);
 
             const getRowCriticalStatus15 = useCallback((row, headersList) => {
-                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
-                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList);
-                if (!statusCol) statusCol = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
+                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
+                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
                 
                 if (!dateCol || !statusCol) return false;
                 
@@ -453,9 +436,9 @@
             }, [activeConfig, findConfigColumn, findColumnName]);
 
             const getRowVisuallyCritical = useCallback((row, headersList) => {
-                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
-                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList);
-                if (!statusCol) statusCol = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dateCol = findConfigColumn(activeConfig.columns.date, headersList);
+                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headersList);
+                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
                 
                 if (!dateCol || !statusCol) return false;
                 
@@ -482,9 +465,9 @@
             const checkSpecificQuotaAlert7 = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
-                const colFecha = findColumnName(qName, activeConfig?.columns?.quotaDate, headersList);
-                let colStatus = findColumnName(activeConfig?.columns?.paymentStatus, qName, headersList);
-                if (!colStatus) colStatus = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
 
                 if (colFecha && colStatus) {
                     const fechaVal = row[colFecha];
@@ -495,21 +478,15 @@
             }, [activeConfig, findColumnName]);
 
             const getRowAlertStatus7 = useCallback((row, headersList) => {
-                if (!activeConfig || !activeConfig.quotas) return false;
-                return activeConfig.quotas.some(qId => {
-                    if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        return checkSpecificQuotaAlert7(row, headersList, qId);
-                    }
-                    return false;
-                });
-            }, [activeConfig, checkSpecificQuotaAlert7]);
+                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert7(row, headersList, qId));
+            }, [checkSpecificQuotaAlert7]);
 
             const checkSpecificQuotaAlert15 = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
-                const colFecha = findColumnName(qName, activeConfig?.columns?.quotaDate, headersList);
-                let colStatus = findColumnName(activeConfig?.columns?.paymentStatus, qName, headersList);
-                if (!colStatus) colStatus = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
 
                 if (colFecha && colStatus) {
                     const fechaVal = row[colFecha];
@@ -520,21 +497,15 @@
             }, [activeConfig, findColumnName]);
 
             const getRowAlertStatus15 = useCallback((row, headersList) => {
-                if (!activeConfig || !activeConfig.quotas) return false;
-                return activeConfig.quotas.some(qId => {
-                    if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        return checkSpecificQuotaAlert15(row, headersList, qId);
-                    }
-                    return false;
-                });
-            }, [activeConfig, checkSpecificQuotaAlert15]);
+                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificQuotaAlert15(row, headersList, qId));
+            }, [checkSpecificQuotaAlert15]);
 
             const checkSpecificVisualQuotaAlert = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
                 if (!qName) return false;
-                const colFecha = findColumnName(qName, activeConfig?.columns?.quotaDate, headersList);
-                let colStatus = findColumnName(activeConfig?.columns?.paymentStatus, qName, headersList);
-                if (!colStatus) colStatus = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
 
                 if (colFecha && colStatus) {
                     const fechaVal = row[colFecha];
@@ -545,14 +516,8 @@
             }, [activeConfig, findColumnName]);
 
             const getRowVisuallyAlert = useCallback((row, headersList) => {
-                if (!activeConfig || !activeConfig.quotas) return false;
-                return activeConfig.quotas.some(qId => {
-                    if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        return checkSpecificVisualQuotaAlert(row, headersList, qId);
-                    }
-                    return false;
-                });
-            }, [activeConfig, checkSpecificVisualQuotaAlert]);
+                return ['fpd3', 'fpd7', 'fpd15'].some(qId => checkSpecificVisualQuotaAlert(row, headersList, qId));
+            }, [checkSpecificVisualQuotaAlert]);
 
 
             // --- FETCH PARA TABLERO INDIVIDUAL ---
@@ -605,8 +570,6 @@
             }, [fetchData]);
 
             const { sellers, sellerColumn, assignees, assignedColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn, idColumn } = useMemo(() => {
-                if (!activeConfig || !activeConfig.columns) return { sellers: [], assignees: [], devices: [], stores: [] };
-                
                 const sCol = findConfigColumn(activeConfig.columns.seller, headers);
                 const aCol = findConfigColumn(activeConfig.columns.assigned, headers);
                 const dCol = findConfigColumn(activeConfig.columns.device, headers);
@@ -647,27 +610,24 @@
                 });
             }, [headers, activeConfig]);
 
-            // Reorganizar encabezados dinámicamente según solicitud
+            // Reorganizar encabezados dinámicamente: Oculta innecesarios y agrupa métricas cerca de Acción Rápida
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
                 
-                // --- NUEVO: OCULTAR COLUMNAS INDESEADAS ---
+                // Ocultar columnas redundantes
                 arr = arr.filter(h => {
                     const lowerH = String(h).toLowerCase().trim();
-                    if (lowerH === 'empresa') return false; // Ocultar Empresa siempre
-                    // Ocultar Responsable si es redundante (si no es la columna principal que ya elegimos como Asignado)
+                    if (lowerH === 'empresa') return false; 
                     if (lowerH === 'responsable' && h !== assignedColumn) return false; 
                     return true;
                 });
-                // -------------------------------------------
 
-                // 1. Asignado de primero
+                // Asignado de primero
                 if (assignedColumn && arr.includes(assignedColumn)) {
                     arr = [assignedColumn, ...arr.filter(h => h !== assignedColumn)];
                 }
 
-                // 2. Extraer dinámicamente columnas solicitadas
                 const paidCol = arr.find(h => {
                     const l = String(h).toLowerCase().trim();
                     return l === 'cuotas pagas' || l === 'cuotas pagadas' || l === 'pagadas';
@@ -682,14 +642,12 @@
                 });
                 const companyCol = arr.find(h => String(h).toLowerCase().trim() === 'empresa');
 
-                // Extraer Fecha de Nacimiento para reubicarla
                 const birthDateCol = findConfigColumn(activeConfig?.columns?.birthDate, headers);
 
-                // 3. Quitar temporalmente las columnas que vamos a reubicar
                 const colsToMove = [paidCol, lateCol, firstQuotaCol, birthDateCol].filter(Boolean);
                 arr = arr.filter(h => !colsToMove.includes(h));
 
-                // 4. Insertar Fecha de Nacimiento (donde antes iba Primera Cuota: antes de Comentarios)
+                // Insertar Fecha de Nacimiento
                 if (birthDateCol) {
                     if (commentsColName && arr.includes(commentsColName)) {
                         const commentsIdx = arr.indexOf(commentsColName);
@@ -702,7 +660,7 @@
                     }
                 }
 
-                // 5. Insertar Primera Cuota, Pagadas y Atrasadas (después de Comentarios para que salgan tras Acción Rápida)
+                // Insertar Primera Cuota, Pagadas y Atrasadas
                 if (firstQuotaCol || paidCol || lateCol) {
                     const colsToInsert = [];
                     if (firstQuotaCol) colsToInsert.push(firstQuotaCol);
@@ -716,15 +674,15 @@
                         const companyIdx = arr.indexOf(companyCol);
                         arr.splice(companyIdx, 0, ...colsToInsert);
                     } else {
-                        arr.push(...colsToInsert); // Si no hay referencias, poner al final
+                        arr.push(...colsToInsert); 
                     }
                 }
                 
                 return arr;
-            }, [headers, assignedColumn, commentsColName, phoneColumn, activeConfig]);
+            }, [headers, assignedColumn, commentsColName, phoneColumn, activeConfig, findConfigColumn]);
 
             const sellerReportData = useMemo(() => {
-                if (!showSellerModal || !activeConfig) return [];
+                if (!showSellerModal) return [];
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                 if (!dateCol) return [];
 
@@ -801,7 +759,7 @@
             }, [showSellerModal, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn]);
 
             const sellerDetailData = useMemo(() => {
-                if (!detailSeller || !activeConfig) return [];
+                if (!detailSeller) return [];
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                 
                 const idCol = findConfigColumn(activeConfig.columns.id, headers);
@@ -895,7 +853,7 @@
             }, [data, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn]);
 
             const filteredData = useMemo(() => {
-                let result = dataForStats;
+                let result = [...dataForStats]; // Creamos una copia para poder ordenar sin alterar la fuente original
                 
                 if (searchTerm) result = result.filter(row => headers.some(header => String(row[header]).toLowerCase().includes(searchTerm.toLowerCase())));
                 
@@ -907,7 +865,7 @@
 
                 if (fpdQuotaFilter || breakdownFilter) {
                     const activeFilter = fpdQuotaFilter || breakdownFilter?.quota;
-                    const dateCol = findConfigColumn(activeConfig?.columns?.date, headers);
+                    const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                     if (dateCol) {
                         const range = getCohortRange(activeFilter);
                         result = result.filter(row => {
@@ -968,6 +926,23 @@
                         });
                     }
                 }
+                
+                // ORDENAR POR FECHA (Más reciente a más antigua)
+                const dateCol = findConfigColumn(activeConfig?.columns?.date, headers);
+                if (dateCol) {
+                    result.sort((a, b) => {
+                        const dateA = parseDate(a[dateCol]);
+                        const dateB = parseDate(b[dateCol]);
+                        
+                        if (!dateA && !dateB) return 0;
+                        if (!dateA) return 1; // Mandar clientes sin fecha al final de la lista
+                        if (!dateB) return -1;
+                        
+                        // Orden descendente (La fecha mayor/más nueva va primero)
+                        return dateB.getTime() - dateA.getTime();
+                    });
+                }
+
                 return result;
             }, [dataForStats, headers, searchTerm, showOnlyAlerts7, showOnlyAlerts15, showOnlyEarly, showOnlyCritical7, showOnlyCritical15, fpdQuotaFilter, breakdownFilter, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus7, getRowAlertStatus15, getRowCriticalStatus7, getRowCriticalStatus15]);
 
@@ -982,7 +957,6 @@
 
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-            // --- KPI ALOCREDIT: CUMPLIMIENTO RECAUDO (MARZO - HOY) ---
             const alocreditKPI = useMemo(() => {
                 if (portfolio !== 'alocredit' || !headers.length || !activeConfig) return null;
 
@@ -1054,8 +1028,6 @@
             }, [dataForStats, headers, getRowCriticalStatus15]);
 
             const fpdStats = useMemo(() => {
-                if (!activeConfig || !activeConfig.quotas) return { found: false };
-                
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
                 if (!dateCol) return { found: false };
                 const formatDateShort = (d) => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
@@ -1140,11 +1112,8 @@
 
             const observationStats = useMemo(() => {
                 const statsObj = { found: true };
-                
-                if (!activeConfig || !activeConfig.quotas) return statsObj;
-                
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
-
+                
                 const calc = (quotaKey) => {
                     let s = { conGestion: 0, noCancelo: 0, yaCancelo: 0, vacio: 0 };
                     if (!dateCol) return s;
@@ -2392,7 +2361,7 @@
                                     <button 
                                         onClick={handleSaveComment}
                                         disabled={isSaving || !editModal.currentValue.trim()}
-                                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover-translate-y-0 flex items-center gap-2"
+                                        className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-sm rounded-full hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center gap-2"
                                     >
                                         {isSaving ? <><Icons.RefreshCw className="w-4 h-4 animate-spin"/> Guardando...</> : 'Guardar y Sincronizar'}
                                     </button>
@@ -2401,7 +2370,7 @@
                         </div>
                     )}
 
-                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS) --- */}
+                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS/ASIGNADO) --- */}
                     {cleanEditModal.show && (
                         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                              <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
