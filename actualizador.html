@@ -37,6 +37,7 @@
             X: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         };
 
+        // RECUERDA ASEGURARTE DE QUE TU API_URL ESTÉ CORRECTO AQUÍ:
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
         
         // --- NUEVAS COLUMNAS: Exactamente las de CARTERA ALOCREDIT GENERAL ---
@@ -78,7 +79,7 @@
                         setExcelHeaders(headers);
                         setFileData(json);
                         
-                        // Auto-mapeo inteligente para cruzar las columnas de la consola con la Cartera Directa
+                        // 🧠 Auto-mapeo inteligente para cruzar la Consola de Alocredit con la Cartera Directa
                         let initialMap = {};
                         headers.forEach(h => {
                             const upperH = h.toUpperCase().trim();
@@ -88,16 +89,21 @@
                             if (exactMatch) {
                                 initialMap[h] = exactMatch;
                             } else {
-                                // 2. Búsqueda inteligente (Traductor Consola -> Cartera)
-                                if (upperH === 'CC' || upperH.includes('CEDULA')) initialMap[h] = 'CEDULA';
+                                // 2. Traductor Consola -> Cartera
+                                if (upperH === 'CC' || upperH === 'CÉDULA' || upperH === 'CEDULA') initialMap[h] = 'CEDULA';
                                 else if (upperH === 'CUOTAS PAGADAS') initialMap[h] = 'cuotas pagas';
                                 else if (upperH === 'CUOTAS ATRASADAS') initialMap[h] = 'Cuotas Atrasadas';
+                                else if (upperH === 'CUOTAS TOTALES' || upperH === 'PLAZO') initialMap[h] = 'PLAZO';
                                 else if (upperH === 'NOMBRE DEL CLIENTE' || upperH === 'NOMBRES') initialMap[h] = 'NOMBRE CLIENTE';
                                 else if (upperH === 'CELULAR DEL CLIENTE' || upperH === 'TELEFONO') initialMap[h] = 'CELULAR';
                                 else if (upperH === 'FECHA DE CONTRATO' || upperH === 'FECHA VENTA') initialMap[h] = 'FECHA';
                                 else if (upperH === 'NÚMERO DE CONTRATO' || upperH === 'NUMERO DE CONTRATO') initialMap[h] = 'ID APLICACION';
                                 else if (upperH === 'MODELO' || upperH === 'REFERENCIA') initialMap[h] = 'EQUIPO';
                                 else if (upperH === 'EMAIL') initialMap[h] = 'CORREO';
+                                else if (upperH === 'VENDEDOR' || upperH === 'ASESOR') initialMap[h] = 'RESPONSABLE';
+                                else if (upperH === 'VALOR TOTAL' || upperH === 'PRECIO TOTAL') initialMap[h] = 'VALOR VENTA';
+                                else if (upperH === 'VALOR CUOTA INICIAL') initialMap[h] = 'CUOTA INICIAL';
+                                else if (upperH === 'VALOR CUOTA') initialMap[h] = 'VALOR CUOTA';
                                 else if (upperH === 'VALOR CREDITO' || upperH === 'MONTO CREDITO') initialMap[h] = 'SALDO A FINACIAR';
                                 else if (upperH === 'TIENDA' || upperH === 'SUCURSAL') initialMap[h] = 'TIENDA';
                             }
@@ -124,12 +130,17 @@
                         if (targetName && targetName !== "IGNORAR") {
                             let val = row[excelHeader];
                             
-                            // 🛡️ SANITIZACIÓN ROBUSTA: Obligamos a que las cuotas y la cédula sean números puros
-                            if (targetName === "CEDULA") {
-                                val = String(val).replace(/\D/g, ''); // Arranca cualquier letra o espacio
-                            } else if (targetName === "cuotas pagas" || targetName === "Cuotas Atrasadas") {
-                                // Si está en blanco o tiene basura, lo vuelve 0
-                                val = parseInt(String(val).replace(/\D/g, '')) || 0; 
+                            // 🛡️ SANITIZACIÓN ROBUSTA FINANCIERA Y TEXTUAL
+                            if (targetName === "CEDULA" || targetName === "CELULAR") {
+                                val = String(val).replace(/\D/g, ''); // Arranca letras o espacios
+                            } else if (targetName === "cuotas pagas" || targetName === "Cuotas Atrasadas" || targetName === "PLAZO") {
+                                val = parseInt(String(val).replace(/\D/g, '')) || 0; // Obliga a ser un entero puro
+                            } else if (targetName === "VALOR VENTA" || targetName === "CUOTA INICIAL" || targetName === "SALDO A FINACIAR" || targetName === "VALOR CUOTA") {
+                                // Limpia valores como "$400,000.00" y los deja como 400000 para que el backend pueda sumar/restar
+                                val = Number(String(val).replace(/[^0-9.-]+/g,"")) || 0;
+                            } else if (targetName === "FECHA") {
+                                // Asegurarnos de que no viaje vacío si es undefined
+                                val = val || "";
                             }
                             
                             newRow[targetName] = val;
@@ -140,10 +151,21 @@
             }, [fileData, mapping]);
 
             const executeSync = async () => {
-                if (!Object.values(mapping).includes("CEDULA")) {
-                    alert("¡ADVERTENCIA! Debes mapear tu columna de identificación a 'CEDULA' para que el sistema encuentre al cliente.");
+                // Validación estricta
+                const mappedCols = Object.values(mapping);
+                if (!mappedCols.includes("CEDULA")) {
+                    alert("¡ADVERTENCIA! Debes mapear tu columna de identificación a 'CEDULA'.");
                     setShowMappingModal(true);
                     return;
+                }
+                
+                // Si es Alocredit, el sistema va a requerir la plata para el cálculo automático
+                if (brand === 'alocredit') {
+                    if (!mappedCols.includes("VALOR VENTA") || !mappedCols.includes("CUOTA INICIAL")) {
+                        alert("¡OJO! Para automatizar comisiones en Ventas Alocredit, asegúrate de mapear 'VALOR VENTA' (Valor Total) y 'CUOTA INICIAL'.");
+                        setShowMappingModal(true);
+                        return;
+                    }
                 }
 
                 setIsSyncing(true);
@@ -151,7 +173,7 @@
 
                 const payload = {
                     action: "bulk", 
-                    type: brand, // 'alocredit' (El backend sabrá que debe inyectar en la hoja GENERAL)
+                    type: brand, // 'alocredit' (El backend sabrá inyectar en ambas hojas)
                     data: sanitizedPayloadData
                 };
 
@@ -183,7 +205,7 @@
                                 <h1 className="text-2xl font-black tracking-tight text-indigo-900 flex items-center gap-2">
                                     <Icons.Database className="w-6 h-6 text-indigo-600"/> Sincronizador <span className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-sm ml-2 uppercase">{brand}</span>
                                 </h1>
-                                <p className="text-sm text-slate-500 font-medium mt-1">Sincronización Directa a Cartera General (Sin hojas intermedias)</p>
+                                <p className="text-sm text-slate-500 font-medium mt-1">Motor con Auto-Contabilidad Integrado</p>
                             </div>
                         </div>
                         
@@ -210,8 +232,8 @@
                         {/* PASO 1: SUBIR ARCHIVO */}
                         {step === 1 && (
                             <div className="p-10 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300 h-full py-20">
-                                <h2 className="text-xl font-bold mb-2 text-indigo-950">Sube el reporte de la consola</h2>
-                                <p className="text-sm text-slate-500 mb-8 text-center max-w-lg">El sistema inyectará los datos leídos <strong>directamente</strong> a tu hoja CARTERA {brand.toUpperCase()} GENERAL cruzando por el número de Cédula.</p>
+                                <h2 className="text-xl font-bold mb-2 text-indigo-950">Sube el reporte de la consola de Alocredit</h2>
+                                <p className="text-sm text-slate-500 mb-8 text-center max-w-lg">El sistema limpiará automáticamente el formato de dinero para que las comisiones se calculen perfecto.</p>
 
                                 <div 
                                     className="w-full max-w-md border-4 border-dashed border-indigo-100 bg-indigo-50/50 rounded-3xl p-10 flex flex-col items-center justify-center text-center hover:bg-indigo-50 hover:border-indigo-400 transition-all cursor-pointer group"
@@ -239,12 +261,12 @@
                                 <div className="p-6 border-b border-indigo-100 bg-indigo-50 flex justify-between items-center shrink-0">
                                     <div>
                                         <h2 className="text-xl font-black text-indigo-900 flex items-center gap-2">
-                                            <Icons.CheckCircle className="w-5 h-5"/> Archivo Mapeado a Cartera General
+                                            <Icons.CheckCircle className="w-5 h-5"/> Datos Extraídos y Limpios
                                         </h2>
-                                        <p className="text-sm text-indigo-700 font-medium mt-1">Revisa que las cédulas y las cuotas se vean correctamente limpias (números).</p>
+                                        <p className="text-sm text-indigo-700 font-medium mt-1">Verifica que las cédulas, los valores de venta (dinero) y las cuotas sean números puros.</p>
                                     </div>
                                     <div className="bg-white px-4 py-2 rounded-xl border border-indigo-200 shadow-sm font-black text-sm text-indigo-600 flex items-center gap-2">
-                                        <Icons.Database className="w-4 h-4"/> {sanitizedPayloadData.length} Filas Listas
+                                        <Icons.Database className="w-4 h-4"/> {sanitizedPayloadData.length} Registros Listos
                                     </div>
                                 </div>
 
@@ -257,6 +279,8 @@
                                                 <th className="p-4 font-bold">Nombre del Cliente</th>
                                                 <th className="p-4 text-center font-bold text-emerald-300">Cuotas Pagas</th>
                                                 <th className="p-4 text-center font-black text-rose-400">Cuotas Atrasadas</th>
+                                                <th className="p-4 text-right font-bold text-blue-300">Valor Venta (Limpio)</th>
+                                                <th className="p-4 text-right font-bold text-indigo-300">Cuota Inicial (Limpia)</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 border border-slate-200">
@@ -266,6 +290,8 @@
                                                     <td className="p-4 text-slate-600 font-bold">{row['NOMBRE CLIENTE'] || '-'}</td>
                                                     <td className="p-4 text-center font-black text-emerald-600 bg-emerald-50/30 text-base">{row['cuotas pagas'] ?? '-'}</td>
                                                     <td className="p-4 text-center font-black text-rose-600 bg-rose-50/30 text-base">{row['Cuotas Atrasadas'] ?? '-'}</td>
+                                                    <td className="p-4 text-right font-bold text-blue-600">{row['VALOR VENTA'] ? row['VALOR VENTA'].toLocaleString('es-CO') : '-'}</td>
+                                                    <td className="p-4 text-right font-bold text-indigo-600">{row['CUOTA INICIAL'] ? row['CUOTA INICIAL'].toLocaleString('es-CO') : '-'}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -288,7 +314,7 @@
                                         disabled={isSyncing}
                                         className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-wait"
                                     >
-                                        {isSyncing ? <><Icons.RefreshCw className="w-5 h-5 animate-spin"/> Escribiendo en Cartera...</> : 'Inyectar Datos a Cartera'}
+                                        {isSyncing ? <><Icons.RefreshCw className="w-5 h-5 animate-spin"/> Inyectando y Calculando...</> : 'Procesar Sincronización Automática'}
                                     </button>
                                 </div>
                             </div>
@@ -300,14 +326,10 @@
                                 <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-emerald-50">
                                     <Icons.CheckCircle className="w-12 h-12"/>
                                 </div>
-                                <h2 className="text-3xl font-black text-slate-800 mb-2">¡Sincronización Completada!</h2>
-                                <p className="text-lg text-slate-500 mb-4 max-w-md">Tu hoja "CARTERA {brand.toUpperCase()} GENERAL" ha sido actualizada directamente.</p>
+                                <h2 className="text-3xl font-black text-slate-800 mb-2">¡Misión Cumplida!</h2>
+                                <p className="text-lg text-slate-500 mb-4 max-w-md">El motor backend ya recibió los datos, actualizó la cartera y registró cualquier venta nueva (con cálculos) en <code>VENTAS ALOCREDIT</code>.</p>
                                 
-                                <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl text-sm font-medium text-indigo-900 mb-8 max-w-lg">
-                                    <strong>Nota:</strong> Ya no necesitas usar la hoja vieja "actualizar cartera" ni fórmulas BUSCARV. Todo está centralizado.
-                                </div>
-
-                                <div className="flex gap-4">
+                                <div className="flex gap-4 mt-4">
                                     <button onClick={() => { setStep(1); setFileData([]); setMapping({}); }} className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Subir Nuevo Archivo</button>
                                     <button onClick={() => window.location.href = 'tablero.html'} className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 transition-colors">Volver al Tablero</button>
                                 </div>
@@ -323,7 +345,7 @@
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl shadow-sm"><Icons.Settings className="w-5 h-5"/></div>
                                         <div>
-                                            <h3 className="font-black text-slate-800 text-lg leading-tight">Revisión de Mapeo a Cartera</h3>
+                                            <h3 className="font-black text-slate-800 text-lg leading-tight">Revisión de Mapeo al Súper Motor</h3>
                                         </div>
                                     </div>
                                     <button onClick={() => setShowMappingModal(false)} className="p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700 rounded-full transition-colors">
@@ -332,12 +354,17 @@
                                 </div>
                                 
                                 <div className="flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
+                                    <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl mb-6 text-sm text-indigo-800 font-medium flex gap-3 shadow-sm">
+                                        <Icons.Shield className="w-6 h-6 flex-shrink-0 text-indigo-600"/>
+                                        <p>Verifica que <strong>Valor Venta</strong> y <strong>Cuota Inicial</strong> estén bien mapeados para que el sistema de comisiones automático funcione perfecto.</p>
+                                    </div>
+
                                     <table className="w-full text-left text-sm border-collapse rounded-xl overflow-hidden shadow-sm">
                                         <thead className="bg-slate-800 text-white">
                                             <tr>
                                                 <th className="p-4 font-bold">Columna en tu Archivo (Consola)</th>
                                                 <th className="p-4 text-center"><Icons.ArrowRight className="w-4 h-4 mx-auto opacity-50"/></th>
-                                                <th className="p-4 font-bold">Destino en CARTERA GENERAL</th>
+                                                <th className="p-4 font-bold">Variable para el Backend</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 border border-slate-200">
