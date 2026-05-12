@@ -647,19 +647,20 @@
                 });
             }, [headers, activeConfig]);
 
-            // Reorganizar encabezados dinámicamente: Oculta innecesarios y agrupa métricas cerca de Acción Rápida
+            // Reorganizar encabezados dinámicamente según solicitud
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
                 
-                // --- OCULTAR COLUMNAS INDESEADAS ---
+                // --- NUEVO: OCULTAR COLUMNAS INDESEADAS ---
                 arr = arr.filter(h => {
                     const lowerH = String(h).toLowerCase().trim();
                     if (lowerH === 'empresa') return false; // Ocultar Empresa siempre
-                    // Ocultar Responsable si es redundante
+                    // Ocultar Responsable si es redundante (si no es la columna principal que ya elegimos como Asignado)
                     if (lowerH === 'responsable' && h !== assignedColumn) return false; 
                     return true;
                 });
+                // -------------------------------------------
 
                 // 1. Asignado de primero
                 if (assignedColumn && arr.includes(assignedColumn)) {
@@ -681,13 +682,14 @@
                 });
                 const companyCol = arr.find(h => String(h).toLowerCase().trim() === 'empresa');
 
+                // Extraer Fecha de Nacimiento para reubicarla
                 const birthDateCol = findConfigColumn(activeConfig?.columns?.birthDate, headers);
 
                 // 3. Quitar temporalmente las columnas que vamos a reubicar
                 const colsToMove = [paidCol, lateCol, firstQuotaCol, birthDateCol].filter(Boolean);
                 arr = arr.filter(h => !colsToMove.includes(h));
 
-                // 4. Insertar Fecha de Nacimiento (antes de Comentarios)
+                // 4. Insertar Fecha de Nacimiento (donde antes iba Primera Cuota: antes de Comentarios)
                 if (birthDateCol) {
                     if (commentsColName && arr.includes(commentsColName)) {
                         const commentsIdx = arr.indexOf(commentsColName);
@@ -714,12 +716,12 @@
                         const companyIdx = arr.indexOf(companyCol);
                         arr.splice(companyIdx, 0, ...colsToInsert);
                     } else {
-                        arr.push(...colsToInsert); 
+                        arr.push(...colsToInsert); // Si no hay referencias, poner al final
                     }
                 }
                 
                 return arr;
-            }, [headers, assignedColumn, commentsColName, phoneColumn, activeConfig, findConfigColumn]);
+            }, [headers, assignedColumn, commentsColName, phoneColumn, activeConfig]);
 
             const sellerReportData = useMemo(() => {
                 if (!showSellerModal || !activeConfig) return [];
@@ -2415,7 +2417,7 @@
                         </div>
                     )}
 
-                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS/ASIGNADO) --- */}
+                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS) --- */}
                     {cleanEditModal.show && (
                         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                              <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
