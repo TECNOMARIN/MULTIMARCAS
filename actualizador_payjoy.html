@@ -18,6 +18,7 @@
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #e0f2fe; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #60a5fa; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
     </style>
 </head>
 <body>
@@ -35,7 +36,7 @@
             Calculator: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
         };
 
-        // ASEGÚRATE DE PEGAR AQUÍ TU URL DEL WEB APP DE GOOGLE APPS SCRIPT
+        // ⚠️ PEGA AQUÍ TU URL DEL WEB APP DE GOOGLE APPS SCRIPT
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
         
         // Conversor de Fechas de Excel o formato Texto a Objeto Date
@@ -138,7 +139,7 @@
                             newRow['CODIGO_VENTA'] = codDispositivo; // Aseguramos la llave
                             newRow['FECHA DE VENTA'] = fechaVentaFormateada; // Evita mandar el número crudo de Excel
                             newRow['cuotas pagas'] = pagadas;        
-                            newRow['Cuotas Atrasadass'] = atrasadas; 
+                            newRow['Cuotas Atrasadas'] = atrasadas; // Corregido: sin la 's' extra
                             
                             payloadList.push(newRow);
                             
@@ -146,7 +147,7 @@
                             displayList.push({
                                 codigo: codDispositivo,
                                 cliente: findValue(row, 'vendedor') || '-', 
-                                fecha: fechaVentaFormateada, // Ahora mostrará la fecha legible
+                                fecha: fechaVentaFormateada, 
                                 total: totalCuotas,
                                 faltantes: faltantes,
                                 pagadas: pagadas,
@@ -185,6 +186,7 @@
                 };
 
                 try {
+                    // El modo 'no-cors' es seguro para POST a Google Apps Script (enviar y olvidar)
                     const response = await fetch(API_URL, {
                         method: 'POST',
                         mode: 'no-cors', 
@@ -231,7 +233,7 @@
                             <div className="p-10 flex flex-col items-center justify-center flex-1 animate-in fade-in zoom-in duration-300">
                                 <h2 className="text-xl font-bold mb-2 text-blue-950">Sube el reporte de Cartera de Payjoy</h2>
                                 <p className="text-sm text-slate-500 mb-8 text-center max-w-lg">
-                                    El sistema leerá el archivo, ejecutará las matemáticas de las <strong>cuotas pagas</strong> y <strong>Cuotas Atrasadass</strong> (calculando 14 días desde la venta) y actualizará tu base de datos cruzando por <strong>Código del Dispositivo</strong>.
+                                    El sistema leerá el archivo, ejecutará las matemáticas de las <strong>cuotas pagas</strong> y <strong>cuotas atrasadas</strong> (calculando 14 días desde la venta) y actualizará tu base de datos cruzando por <strong>Código del Dispositivo</strong>.
                                 </p>
 
                                 <div 
