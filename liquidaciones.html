@@ -45,7 +45,7 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
 
         function LiquidacionesApp() {
-            const [brand, setBrand] = useState('todas'); // Se cambió a TODAS por defecto
+            const [brand, setBrand] = useState('todas'); 
             const [data, setData] = useState([]);
             const [loading, setLoading] = useState(false);
             
@@ -102,18 +102,40 @@
                                     return upper.includes('FECHA') && !upper.includes('NACI');
                                 });
 
+                                // Agrupador de "A Consignar"
+                                let aConsignarTotal = 0;
+                                Object.keys(row).forEach(k => {
+                                    const u = k.toUpperCase().trim();
+                                    // Se suma cualquier columna de consignación aliada, ignorando la que dice "MONTO" (que es el crédito total)
+                                    if (
+                                        (u.includes('CONSIGNAR') && !u.includes('MONTO')) || 
+                                        u.includes('PIPE') || 
+                                        u.includes('RICARDO') || 
+                                        u.includes('EJECUTIVOS') || 
+                                        u.includes('JUAN CAMILO') ||
+                                        u.includes('PROMOTORA')
+                                    ) {
+                                        aConsignarTotal += parseAmount(row[k]);
+                                    }
+                                });
+
+                                // Extractor del Valor Financiado
+                                let financed = parseAmount(findVal(['SALDO A FINANCIAR', 'SALDO A FINACIAR', 'VALOR CREDITO', 'MONTO TOTAL A CONSIGNAR', 'MONTO FINANCIADO', 'A FINANCIAR']));
+                                if (financed === 0) {
+                                    // Fallback para financieras que solo usen "Venta" en formatos viejos
+                                    financed = parseAmount(findVal(['PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL']));
+                                }
+
                                 return {
                                     _brandName: b.toUpperCase(),
                                     _date: dateKey ? row[dateKey] : undefined,
                                     _client: findVal(['NOMBRE COMPLETO', 'NOMBRE DEL CLIENTE', 'NOMBRE CLIENTE', 'NOMBRES', 'CLIENTE']),
                                     _device: findVal(['REFERENCIA EQUIPO', 'REFERENCIA', 'MODELO', 'EQUIPO']),
                                     _assigned: findVal(['RESPONSABLE', 'ASIGNADO']),
-                                    _saleAmount: parseAmount(findVal(['PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL'])),
-                                    _retailB: parseAmount(findVal(['RETAIL B', 'PROMOTORA', 'COMISION RETAIL'])),
-                                    _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112'])),
-                                    _pipe: parseAmount(findVal(['PIPE Y CHAMORRO', 'PIPE'])),
-                                    _ricardo: parseAmount(findVal(['RICARDO MARIN', 'RICARDO'])),
-                                    _executives: parseAmount(findVal(['EJECUTIVOS', 'JUAN CAMILO']))
+                                    _financedAmount: financed,
+                                    _cartera: parseAmount(findVal(['CARTERA', 'COSTO CARTERA', 'FEE CARTERA'])),
+                                    _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112', 'UTILIDAD ADMIN'])),
+                                    _aConsignar: aConsignarTotal
                                 };
                             });
                         }
@@ -176,16 +198,14 @@
             }, [data]);
 
             const totals = useMemo(() => {
-                let tSales = 0, tAdmin = 0, tPipe = 0, tRic = 0, tRetail = 0, tExec = 0;
+                let tFinanced = 0, tCartera = 0, tAdmin = 0, tConsignar = 0;
                 filteredData.forEach(r => {
-                    tSales += r._saleAmount;
+                    tFinanced += r._financedAmount;
+                    tCartera += r._cartera;
                     tAdmin += r._admin112;
-                    tPipe += r._pipe;
-                    tRic += r._ricardo;
-                    tRetail += r._retailB;
-                    tExec += r._executives;
+                    tConsignar += r._aConsignar;
                 });
-                return { tSales, tAdmin, tPipe, tRic, tRetail, tExec, count: filteredData.length };
+                return { tFinanced, tCartera, tAdmin, tConsignar, count: filteredData.length };
             }, [filteredData]);
 
             const handleExportPDF = () => {
@@ -193,8 +213,8 @@
                 const doc = new jsPDF('landscape');
                 
                 const tableColumn = brand === 'todas' 
-                    ? ["Financiera", "Fecha", "Cliente", "Responsable", "Referencia", "Venta Total", "Retail / Prom.", "Admin 112", "Pipe", "Ricardo", "Ejecutivos"]
-                    : ["Fecha", "Cliente", "Responsable", "Referencia", "Venta Total", "Retail / Promotora", "Admin 112", "Pipe", "Ricardo", "Ejecutivos"];
+                    ? ["Financiera", "Fecha", "Cliente", "Responsable", "Referencia", "V. Financiado", "Cartera", "Admin 112", "A Consignar"]
+                    : ["Fecha", "Cliente", "Responsable", "Referencia", "V. Financiado", "Cartera", "Admin 112", "A Consignar"];
                 
                 const tableRows = [];
 
@@ -205,12 +225,10 @@
                         String(row._client || '').substring(0, 20),
                         String(row._assigned || ''),
                         String(row._device || '').substring(0, 20),
-                        formatMoney(row._saleAmount),
-                        formatMoney(row._retailB),
+                        formatMoney(row._financedAmount),
+                        formatMoney(row._cartera),
                         formatMoney(row._admin112),
-                        formatMoney(row._pipe),
-                        formatMoney(row._ricardo),
-                        formatMoney(row._executives)
+                        formatMoney(row._aConsignar)
                     ];
                     if (brand === 'todas') rowData.unshift(row._brandName);
                     tableRows.push(rowData);
@@ -219,13 +237,24 @@
                 doc.setFontSize(16);
                 const titleStr = brand === 'todas' ? 'TODAS LAS FINANCIERAS' : brand.toUpperCase();
                 doc.text(`Liquidación de Comisiones - ${titleStr}`, 14, 15);
+                
+                // --- NUEVO: OBTENER Y FORMATEAR FECHAS EXACTAS ---
+                const { start, end } = getDateRange();
+                let dateRangeStr = "";
+                if (dateFilter === 'all') {
+                    dateRangeStr = "Todo el Histórico";
+                } else {
+                    dateRangeStr = `${start.toLocaleDateString('es-ES')} al ${end.toLocaleDateString('es-ES')}`;
+                }
+
                 doc.setFontSize(10);
                 const pName = selectedPartner || "TODOS";
-                doc.text(`Aliado / Responsable: ${pName} | Total Créditos: ${totals.count}`, 14, 22);
+                // Imprimimos el Periodo directamente en la cabecera del PDF
+                doc.text(`Aliado / Responsable: ${pName}  |  Periodo: ${dateRangeStr}  |  Total Créditos: ${totals.count}`, 14, 22);
 
                 const footRow = brand === 'todas'
-                    ? [["", "", "", "", "TOTALES:", formatMoney(totals.tSales), formatMoney(totals.tRetail), formatMoney(totals.tAdmin), formatMoney(totals.tPipe), formatMoney(totals.tRic), formatMoney(totals.tExec)]]
-                    : [["", "", "", "TOTALES:", formatMoney(totals.tSales), formatMoney(totals.tRetail), formatMoney(totals.tAdmin), formatMoney(totals.tPipe), formatMoney(totals.tRic), formatMoney(totals.tExec)]];
+                    ? [["", "", "", "", "TOTALES:", formatMoney(totals.tFinanced), formatMoney(totals.tCartera), formatMoney(totals.tAdmin), formatMoney(totals.tConsignar)]]
+                    : [["", "", "", "TOTALES:", formatMoney(totals.tFinanced), formatMoney(totals.tCartera), formatMoney(totals.tAdmin), formatMoney(totals.tConsignar)]];
 
                 doc.autoTable({
                     head: [tableColumn],
@@ -249,12 +278,10 @@
                     obj["Cliente"] = row._client || '';
                     obj["Responsable"] = row._assigned || '';
                     obj["Referencia"] = row._device || '';
-                    obj["Venta Total"] = row._saleAmount;
-                    obj["Retail / Promotora"] = row._retailB;
+                    obj["Valor Financiado"] = row._financedAmount;
+                    obj["Cartera"] = row._cartera;
                     obj["Admin 112"] = row._admin112;
-                    obj["Pipe / Chamorro"] = row._pipe;
-                    obj["Ricardo"] = row._ricardo;
-                    obj["Ejecutivos"] = row._executives;
+                    obj["A Consignar"] = row._aConsignar;
                     return obj;
                 });
                 
@@ -335,28 +362,23 @@
                     ) : (
                         <>
                             {/* Tarjetas de Resumen (Cuentas Claras) */}
-                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div className="bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-700 text-white flex flex-col justify-center">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Ventas</p>
-                                    <p className="text-2xl font-black">{formatMoney(totals.tSales)}</p>
-                                    <p className="text-xs text-slate-400 mt-1">{totals.count} equipos vendidos</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Valor Financiado</p>
+                                    <p className="text-2xl font-black">{formatMoney(totals.tFinanced)}</p>
+                                    <p className="text-xs text-slate-400 mt-1">{totals.count} equipos liquidados</p>
                                 </div>
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Retail B / Promotora</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tRetail)}</p>
+                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-blue-500">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Costo Cartera</p>
+                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tCartera)}</p>
                                 </div>
                                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-indigo-500">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Admin 112</p>
                                     <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tAdmin)}</p>
                                 </div>
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-blue-500">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pipe y Chamorro</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tPipe)}</p>
-                                </div>
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-orange-500">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ricardo / Ejecutivos</p>
-                                    <p className="text-xl font-black text-slate-800">R: {formatMoney(totals.tRic)}</p>
-                                    <p className="text-sm font-bold text-slate-500 border-t border-slate-100 pt-1 mt-1">E: {formatMoney(totals.tExec)}</p>
+                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">A Consignar (Aliados)</p>
+                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tConsignar)}</p>
                                 </div>
                             </div>
 
@@ -383,12 +405,10 @@
                                                 <th className="px-4 py-3 font-black">Fecha</th>
                                                 <th className="px-4 py-3 font-black">Asignado</th>
                                                 <th className="px-4 py-3 font-black">Cliente</th>
-                                                <th className="px-4 py-3 font-black">Venta</th>
-                                                <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50">Retail / Prom.</th>
+                                                <th className="px-4 py-3 font-black">V. Financiado</th>
+                                                <th className="px-4 py-3 font-black text-blue-600 bg-blue-50/50">Cartera</th>
                                                 <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50">Admin 112</th>
-                                                <th className="px-4 py-3 font-black text-blue-600 bg-blue-50/50">Pipe</th>
-                                                <th className="px-4 py-3 font-black text-orange-600 bg-orange-50/50">Ricardo</th>
-                                                <th className="px-4 py-3 font-black text-slate-600 bg-slate-50/50">Ejecutivos</th>
+                                                <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50">A Consignar</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
@@ -410,26 +430,20 @@
                                                     </td>
                                                     <td className="px-4 py-3 font-bold text-slate-700 text-xs truncate max-w-[120px]">{row._assigned || '-'}</td>
                                                     <td className="px-4 py-3 font-medium text-slate-600 text-xs truncate max-w-[150px]">{row._client || '-'}</td>
-                                                    <td className="px-4 py-3 font-bold text-slate-800 text-xs">{formatMoney(row._saleAmount)}</td>
+                                                    <td className="px-4 py-3 font-bold text-slate-800 text-xs">{formatMoney(row._financedAmount)}</td>
                                                     
-                                                    <td className="px-4 py-3 font-bold text-emerald-700 bg-emerald-50/30 text-xs">
-                                                        {formatMoney(row._retailB)}
+                                                    <td className="px-4 py-3 font-bold text-blue-700 bg-blue-50/30 text-xs">
+                                                        {formatMoney(row._cartera)}
                                                     </td>
                                                     <td className="px-4 py-3 font-bold text-indigo-700 bg-indigo-50/30 text-xs">
                                                         {formatMoney(row._admin112)}
                                                     </td>
-                                                    <td className="px-4 py-3 font-bold text-blue-700 bg-blue-50/30 text-xs">
-                                                        {formatMoney(row._pipe)}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-bold text-orange-700 bg-orange-50/30 text-xs">
-                                                        {formatMoney(row._ricardo)}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-bold text-slate-700 bg-slate-50/30 text-xs">
-                                                        {formatMoney(row._executives)}
+                                                    <td className="px-4 py-3 font-bold text-emerald-700 bg-emerald-50/30 text-xs">
+                                                        {formatMoney(row._aConsignar)}
                                                     </td>
                                                 </tr>
                                             )) : (
-                                                <tr><td colSpan={brand === 'todas' ? "10" : "9"} className="px-6 py-10 text-center text-slate-400">No hay ventas registradas para este filtro.</td></tr>
+                                                <tr><td colSpan={brand === 'todas' ? "8" : "7"} className="px-6 py-10 text-center text-slate-400">No hay ventas registradas para este filtro.</td></tr>
                                             )}
                                         </tbody>
                                     </table>
