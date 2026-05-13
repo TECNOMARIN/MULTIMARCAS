@@ -25,7 +25,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useCallback } = React;
 
         const IconBase = ({ children, className, ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
@@ -45,16 +45,15 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
 
         function LiquidacionesApp() {
-            const [brand, setBrand] = useState('payjoy');
+            const [brand, setBrand] = useState('todas'); // Se cambió a TODAS por defecto
             const [data, setData] = useState([]);
-            const [headers, setHeaders] = useState([]);
             const [loading, setLoading] = useState(false);
             
             // Filtros
             const [dateFilter, setDateFilter] = useState('thisWeek');
             const [customStartDate, setCustomStartDate] = useState('');
             const [customEndDate, setCustomEndDate] = useState('');
-            const [selectedPartner, setSelectedPartner] = useState(''); // Aliado/Responsable
+            const [selectedPartner, setSelectedPartner] = useState('');
 
             const formatMoney = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val || 0);
             
@@ -68,7 +67,10 @@
             };
 
             const parseAmount = (val) => {
-                let s = String(val || '').replace(/[^0-9.,-]/g, '').replace(/[.,]00$/, '').replace(/[.,]/g, '');
+                let s = String(val || '').trim();
+                s = s.replace(/[^0-9.,-]/g, '');
+                s = s.replace(/[.,]00$/, '');
+                s = s.replace(/[.,]/g, '');
                 return parseInt(s, 10) || 0;
             };
 
@@ -76,23 +78,56 @@
                 setLoading(true);
                 try {
                     const separator = API_URL.includes('?') ? '&' : '?';
-                    // Llamamos al endpoint de "ventas_" para que traiga la liquidación
-                    const res = await fetch(`${API_URL}${separator}type=ventas_${brand}&t=${new Date().getTime()}`);
-                    if (!res.ok) throw new Error("Error en el servidor.");
+                    const brandsToFetch = brand === 'todas' ? ['payjoy', 'alocredit', 'krediya', 'credismart'] : [brand];
                     
-                    const text = await res.text();
-                    let jsonData = JSON.parse(text);
-                    if (!Array.isArray(jsonData) || jsonData.length === 0) {
-                        setData([]); setHeaders([]);
-                        return;
-                    }
+                    let combinedData = [];
+
+                    const fetchPromises = brandsToFetch.map(async (b) => {
+                        const res = await fetch(`${API_URL}${separator}type=ventas_${b}&t=${new Date().getTime()}`);
+                        if (!res.ok) return [];
+                        const text = await res.text();
+                        let jsonData = [];
+                        try { jsonData = JSON.parse(text); } catch (e) { return []; }
+                        
+                        if (Array.isArray(jsonData) && jsonData.length > 0) {
+                            return jsonData.map(row => {
+                                // Buscador avanzado de columnas dinámicas
+                                const findVal = (keywords) => {
+                                    let k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().trim() === kw));
+                                    if(!k) k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().includes(kw)));
+                                    return k ? row[k] : undefined;
+                                };
+                                const dateKey = Object.keys(row).find(k => {
+                                    const upper = String(k).toUpperCase();
+                                    return upper.includes('FECHA') && !upper.includes('NACI');
+                                });
+
+                                return {
+                                    _brandName: b.toUpperCase(),
+                                    _date: dateKey ? row[dateKey] : undefined,
+                                    _client: findVal(['NOMBRE COMPLETO', 'NOMBRE DEL CLIENTE', 'NOMBRE CLIENTE', 'NOMBRES', 'CLIENTE']),
+                                    _device: findVal(['REFERENCIA EQUIPO', 'REFERENCIA', 'MODELO', 'EQUIPO']),
+                                    _assigned: findVal(['RESPONSABLE', 'ASIGNADO']),
+                                    _saleAmount: parseAmount(findVal(['PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL'])),
+                                    _retailB: parseAmount(findVal(['RETAIL B', 'PROMOTORA', 'COMISION RETAIL'])),
+                                    _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112'])),
+                                    _pipe: parseAmount(findVal(['PIPE Y CHAMORRO', 'PIPE'])),
+                                    _ricardo: parseAmount(findVal(['RICARDO MARIN', 'RICARDO'])),
+                                    _executives: parseAmount(findVal(['EJECUTIVOS', 'JUAN CAMILO']))
+                                };
+                            });
+                        }
+                        return [];
+                    });
+
+                    const results = await Promise.all(fetchPromises);
+                    combinedData = results.flat();
                     
-                    setHeaders(Object.keys(jsonData[0]));
-                    setData(jsonData);
+                    setData(combinedData);
                 } catch (error) {
                     console.error("Fetch Error:", error);
                     alert("No se pudieron cargar los datos de ventas.");
-                    setData([]); setHeaders([]);
+                    setData([]);
                 } finally {
                     setLoading(false);
                 }
@@ -102,7 +137,6 @@
                 fetchVentasData();
             }, [brand]);
 
-            // Determinar rango de fechas
             const getDateRange = () => {
                 const now = new Date();
                 now.setHours(0,0,0,0);
@@ -119,97 +153,79 @@
                 return { start: new Date(2000, 0, 1), end: new Date(2100, 0, 1) }; 
             };
 
-            // Filtrado de Datos
             const filteredData = useMemo(() => {
                 if (!data.length) return [];
                 const range = getDateRange();
                 
-                // Encontrar la columna de fecha de venta
-                const dateCol = headers.find(h => String(h).toUpperCase().includes('FECHA') && !String(h).toUpperCase().includes('NACI'));
-                const partnerCol = headers.find(h => String(h).toUpperCase().includes('ASIGNADO') || String(h).toUpperCase().includes('RESPONSABLE'));
-
                 return data.filter(row => {
-                    const d = dateCol ? parseDate(row[dateCol]) : null;
+                    const d = parseDate(row._date);
                     if (!d || d < range.start || d > range.end) return false;
-                    if (selectedPartner && partnerCol && String(row[partnerCol]).trim() !== selectedPartner) return false;
+                    if (selectedPartner && String(row._assigned || '').trim().toUpperCase() !== selectedPartner.toUpperCase()) return false;
                     return true;
                 }).sort((a, b) => {
-                    const dA = dateCol ? parseDate(a[dateCol]) : 0;
-                    const dB = dateCol ? parseDate(b[dateCol]) : 0;
+                    const dA = parseDate(a._date) || 0;
+                    const dB = parseDate(b._date) || 0;
                     return dB - dA;
                 });
-            }, [data, dateFilter, customStartDate, customEndDate, selectedPartner, headers]);
+            }, [data, dateFilter, customStartDate, customEndDate, selectedPartner]);
 
-            // Extraer lista única de Aliados/Responsables
             const uniquePartners = useMemo(() => {
-                const partnerCol = headers.find(h => String(h).toUpperCase().includes('ASIGNADO') || String(h).toUpperCase().includes('RESPONSABLE'));
-                if (!partnerCol) return [];
                 const s = new Set();
-                data.forEach(r => { if(r[partnerCol]) s.add(String(r[partnerCol]).trim()); });
+                data.forEach(r => { if(r._assigned) s.add(String(r._assigned).trim().toUpperCase()); });
                 return Array.from(s).sort();
-            }, [data, headers]);
+            }, [data]);
 
-            // Extraer Columnas Financieras para el reporte
-            const financeCols = useMemo(() => {
-                const findCol = (kw) => headers.find(h => String(h).toUpperCase().includes(kw));
-                return {
-                    date: headers.find(h => String(h).toUpperCase().includes('FECHA') && !String(h).toUpperCase().includes('NACI')),
-                    client: findCol('NOMBRE'),
-                    device: findCol('REFERENCIA') || findCol('EQUIPO'),
-                    assigned: findCol('ASIGNADO') || findCol('RESPONSABLE'),
-                    saleAmount: findCol('VENTA') || findCol('PRECIO DE VENTA'),
-                    initial: findCol('CUOTA INICIAL'),
-                    admin112: findCol('ADMIN 112'),
-                    pipe: findCol('PIPE'),
-                    ricardo: findCol('RICARDO'),
-                    retailB: findCol('RETAIL B') || findCol('PROMOTORA'), // Detecta Promotora o Retail B Aliados
-                    executives: findCol('EJECUTIVOS') || findCol('JUAN CAMILO') // Juan Camilo u otros ejecutivos
-                };
-            }, [headers]);
-
-            // Totales
             const totals = useMemo(() => {
                 let tSales = 0, tAdmin = 0, tPipe = 0, tRic = 0, tRetail = 0, tExec = 0;
                 filteredData.forEach(r => {
-                    if (financeCols.saleAmount) tSales += parseAmount(r[financeCols.saleAmount]);
-                    if (financeCols.admin112) tAdmin += parseAmount(r[financeCols.admin112]);
-                    if (financeCols.pipe) tPipe += parseAmount(r[financeCols.pipe]);
-                    if (financeCols.ricardo) tRic += parseAmount(r[financeCols.ricardo]);
-                    if (financeCols.retailB) tRetail += parseAmount(r[financeCols.retailB]);
-                    if (financeCols.executives) tExec += parseAmount(r[financeCols.executives]);
+                    tSales += r._saleAmount;
+                    tAdmin += r._admin112;
+                    tPipe += r._pipe;
+                    tRic += r._ricardo;
+                    tRetail += r._retailB;
+                    tExec += r._executives;
                 });
                 return { tSales, tAdmin, tPipe, tRic, tRetail, tExec, count: filteredData.length };
-            }, [filteredData, financeCols]);
+            }, [filteredData]);
 
-            // Exportar a PDF
             const handleExportPDF = () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape');
                 
-                const tableColumn = ["Fecha", "Cliente", "Responsable", "Referencia", "Venta Total", "Retail / Promotora", "Admin 112", "Pipe", "Ricardo", "Ejecutivos"];
+                const tableColumn = brand === 'todas' 
+                    ? ["Financiera", "Fecha", "Cliente", "Responsable", "Referencia", "Venta Total", "Retail / Prom.", "Admin 112", "Pipe", "Ricardo", "Ejecutivos"]
+                    : ["Fecha", "Cliente", "Responsable", "Referencia", "Venta Total", "Retail / Promotora", "Admin 112", "Pipe", "Ricardo", "Ejecutivos"];
+                
                 const tableRows = [];
 
                 filteredData.forEach(row => {
-                    const dateStr = financeCols.date && row[financeCols.date] ? parseDate(row[financeCols.date]).toLocaleDateString('es-ES') : '';
-                    tableRows.push([
+                    const dateStr = row._date ? parseDate(row._date).toLocaleDateString('es-ES') : '';
+                    const rowData = [
                         dateStr,
-                        String(row[financeCols.client] || '').substring(0, 20),
-                        String(row[financeCols.assigned] || ''),
-                        String(row[financeCols.device] || '').substring(0, 20),
-                        formatMoney(parseAmount(row[financeCols.saleAmount])),
-                        formatMoney(parseAmount(row[financeCols.retailB])),
-                        formatMoney(parseAmount(row[financeCols.admin112])),
-                        formatMoney(parseAmount(row[financeCols.pipe])),
-                        formatMoney(parseAmount(row[financeCols.ricardo])),
-                        formatMoney(parseAmount(row[financeCols.executives]))
-                    ]);
+                        String(row._client || '').substring(0, 20),
+                        String(row._assigned || ''),
+                        String(row._device || '').substring(0, 20),
+                        formatMoney(row._saleAmount),
+                        formatMoney(row._retailB),
+                        formatMoney(row._admin112),
+                        formatMoney(row._pipe),
+                        formatMoney(row._ricardo),
+                        formatMoney(row._executives)
+                    ];
+                    if (brand === 'todas') rowData.unshift(row._brandName);
+                    tableRows.push(rowData);
                 });
 
                 doc.setFontSize(16);
-                doc.text(`Liquidación de Comisiones - ${brand.toUpperCase()}`, 14, 15);
+                const titleStr = brand === 'todas' ? 'TODAS LAS FINANCIERAS' : brand.toUpperCase();
+                doc.text(`Liquidación de Comisiones - ${titleStr}`, 14, 15);
                 doc.setFontSize(10);
                 const pName = selectedPartner || "TODOS";
                 doc.text(`Aliado / Responsable: ${pName} | Total Créditos: ${totals.count}`, 14, 22);
+
+                const footRow = brand === 'todas'
+                    ? [["", "", "", "", "TOTALES:", formatMoney(totals.tSales), formatMoney(totals.tRetail), formatMoney(totals.tAdmin), formatMoney(totals.tPipe), formatMoney(totals.tRic), formatMoney(totals.tExec)]]
+                    : [["", "", "", "TOTALES:", formatMoney(totals.tSales), formatMoney(totals.tRetail), formatMoney(totals.tAdmin), formatMoney(totals.tPipe), formatMoney(totals.tRic), formatMoney(totals.tExec)]];
 
                 doc.autoTable({
                     head: [tableColumn],
@@ -218,28 +234,28 @@
                     theme: 'grid',
                     headStyles: { fillColor: [15, 23, 42] },
                     styles: { fontSize: 8 },
-                    foot: [["", "", "", "TOTALES:", formatMoney(totals.tSales), formatMoney(totals.tRetail), formatMoney(totals.tAdmin), formatMoney(totals.tPipe), formatMoney(totals.tRic), formatMoney(totals.tExec)]],
+                    foot: footRow,
                     footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' }
                 });
 
                 doc.save(`Liquidacion_${brand}_${pName}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
-            // Exportar a Excel
             const handleExportExcel = () => {
                 const exportData = filteredData.map(row => {
-                    return {
-                        "Fecha": financeCols.date && row[financeCols.date] ? parseDate(row[financeCols.date]).toLocaleDateString('es-ES') : '',
-                        "Cliente": row[financeCols.client] || '',
-                        "Responsable": row[financeCols.assigned] || '',
-                        "Referencia": row[financeCols.device] || '',
-                        "Venta Total": parseAmount(row[financeCols.saleAmount]),
-                        "Retail / Promotora": parseAmount(row[financeCols.retailB]),
-                        "Admin 112": parseAmount(row[financeCols.admin112]),
-                        "Pipe / Chamorro": parseAmount(row[financeCols.pipe]),
-                        "Ricardo": parseAmount(row[financeCols.ricardo]),
-                        "Ejecutivos": parseAmount(row[financeCols.executives])
-                    };
+                    const obj = {};
+                    if (brand === 'todas') obj["Financiera"] = row._brandName;
+                    obj["Fecha"] = row._date ? parseDate(row._date).toLocaleDateString('es-ES') : '';
+                    obj["Cliente"] = row._client || '';
+                    obj["Responsable"] = row._assigned || '';
+                    obj["Referencia"] = row._device || '';
+                    obj["Venta Total"] = row._saleAmount;
+                    obj["Retail / Promotora"] = row._retailB;
+                    obj["Admin 112"] = row._admin112;
+                    obj["Pipe / Chamorro"] = row._pipe;
+                    obj["Ricardo"] = row._ricardo;
+                    obj["Ejecutivos"] = row._executives;
+                    return obj;
                 });
                 
                 const worksheet = window.XLSX.utils.json_to_sheet(exportData);
@@ -267,6 +283,7 @@
 
                         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                             <select value={brand} onChange={(e) => setBrand(e.target.value)} className="bg-slate-100 border border-slate-200 text-slate-700 font-bold text-sm py-2.5 px-4 rounded-xl outline-none cursor-pointer hover:bg-slate-200 transition-colors">
+                                <option value="todas">TODAS LAS FINANCIERAS</option>
                                 <option value="payjoy">PAYJOY</option>
                                 <option value="alocredit">ALOCREDIT</option>
                                 <option value="krediya">KREDIYA</option>
@@ -362,6 +379,7 @@
                                     <table className="w-full text-sm text-left">
                                         <thead className="text-[10px] text-slate-500 uppercase tracking-widest bg-white sticky top-0 shadow-sm z-10 border-b border-slate-200">
                                             <tr>
+                                                {brand === 'todas' && <th className="px-4 py-3 font-black">Financiera</th>}
                                                 <th className="px-4 py-3 font-black">Fecha</th>
                                                 <th className="px-4 py-3 font-black">Asignado</th>
                                                 <th className="px-4 py-3 font-black">Cliente</th>
@@ -376,31 +394,42 @@
                                         <tbody className="divide-y divide-slate-100">
                                             {filteredData.length > 0 ? filteredData.map((row, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                                    {brand === 'todas' && (
+                                                        <td className="px-4 py-3 font-bold text-xs">
+                                                            <span className={`inline-block px-2 py-1 rounded text-[9px] tracking-widest border shadow-sm
+                                                                ${row._brandName === 'PAYJOY' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                                                                  row._brandName === 'ALOCREDIT' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 
+                                                                  row._brandName === 'KREDIYA' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                                                                  'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                                                                {row._brandName}
+                                                            </span>
+                                                        </td>
+                                                    )}
                                                     <td className="px-4 py-3 font-medium text-xs text-slate-500">
-                                                        {financeCols.date && row[financeCols.date] ? parseDate(row[financeCols.date]).toLocaleDateString('es-ES') : '-'}
+                                                        {row._date ? parseDate(row._date).toLocaleDateString('es-ES') : '-'}
                                                     </td>
-                                                    <td className="px-4 py-3 font-bold text-slate-700 text-xs truncate max-w-[120px]">{row[financeCols.assigned] || '-'}</td>
-                                                    <td className="px-4 py-3 font-medium text-slate-600 text-xs truncate max-w-[150px]">{row[financeCols.client] || '-'}</td>
-                                                    <td className="px-4 py-3 font-bold text-slate-800 text-xs">{formatMoney(parseAmount(row[financeCols.saleAmount]))}</td>
+                                                    <td className="px-4 py-3 font-bold text-slate-700 text-xs truncate max-w-[120px]">{row._assigned || '-'}</td>
+                                                    <td className="px-4 py-3 font-medium text-slate-600 text-xs truncate max-w-[150px]">{row._client || '-'}</td>
+                                                    <td className="px-4 py-3 font-bold text-slate-800 text-xs">{formatMoney(row._saleAmount)}</td>
                                                     
                                                     <td className="px-4 py-3 font-bold text-emerald-700 bg-emerald-50/30 text-xs">
-                                                        {formatMoney(parseAmount(row[financeCols.retailB]))}
+                                                        {formatMoney(row._retailB)}
                                                     </td>
                                                     <td className="px-4 py-3 font-bold text-indigo-700 bg-indigo-50/30 text-xs">
-                                                        {formatMoney(parseAmount(row[financeCols.admin112]))}
+                                                        {formatMoney(row._admin112)}
                                                     </td>
                                                     <td className="px-4 py-3 font-bold text-blue-700 bg-blue-50/30 text-xs">
-                                                        {formatMoney(parseAmount(row[financeCols.pipe]))}
+                                                        {formatMoney(row._pipe)}
                                                     </td>
                                                     <td className="px-4 py-3 font-bold text-orange-700 bg-orange-50/30 text-xs">
-                                                        {formatMoney(parseAmount(row[financeCols.ricardo]))}
+                                                        {formatMoney(row._ricardo)}
                                                     </td>
                                                     <td className="px-4 py-3 font-bold text-slate-700 bg-slate-50/30 text-xs">
-                                                        {formatMoney(parseAmount(row[financeCols.executives]))}
+                                                        {formatMoney(row._executives)}
                                                     </td>
                                                 </tr>
                                             )) : (
-                                                <tr><td colSpan="9" className="px-6 py-10 text-center text-slate-400">No hay ventas registradas para este filtro.</td></tr>
+                                                <tr><td colSpan={brand === 'todas' ? "10" : "9"} className="px-6 py-10 text-center text-slate-400">No hay ventas registradas para este filtro.</td></tr>
                                             )}
                                         </tbody>
                                     </table>
