@@ -91,12 +91,13 @@
                         
                         if (Array.isArray(jsonData) && jsonData.length > 0) {
                             return jsonData.map(row => {
-                                // Buscador avanzado de columnas dinámicas
+                                // Buscador avanzado de columnas dinámicas (Primero búsqueda exacta, luego parcial)
                                 const findVal = (keywords) => {
                                     let k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().trim() === kw));
                                     if(!k) k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().includes(kw)));
                                     return k ? row[k] : undefined;
                                 };
+                                
                                 const dateKey = Object.keys(row).find(k => {
                                     const upper = String(k).toUpperCase();
                                     return upper.includes('FECHA') && !upper.includes('NACI');
@@ -106,24 +107,38 @@
                                 let aConsignarTotal = 0;
                                 Object.keys(row).forEach(k => {
                                     const u = k.toUpperCase().trim();
-                                    // Se suma cualquier columna de consignación aliada, ignorando la que dice "MONTO" (que es el crédito total)
+                                    // Sumamos todo lo que pertenezca a asesores/aliados y tenga que ver con "consignar" o su nombre
                                     if (
-                                        (u.includes('CONSIGNAR') && !u.includes('MONTO')) || 
+                                        (u.includes('CONSIGNAR') && !u.includes('MONTO') && !u.includes('TOTAL')) || 
                                         u.includes('PIPE') || 
                                         u.includes('RICARDO') || 
                                         u.includes('EJECUTIVOS') || 
-                                        u.includes('JUAN CAMILO') ||
-                                        u.includes('PROMOTORA')
+                                        u.includes('JUAN CAMILO')
                                     ) {
                                         aConsignarTotal += parseAmount(row[k]);
                                     }
                                 });
 
-                                // Extractor del Valor Financiado
-                                let financed = parseAmount(findVal(['SALDO A FINANCIAR', 'SALDO A FINACIAR', 'VALOR CREDITO', 'MONTO TOTAL A CONSIGNAR', 'MONTO FINANCIADO', 'A FINANCIAR']));
-                                if (financed === 0) {
-                                    // Fallback para financieras que solo usen "Venta" en formatos viejos
-                                    financed = parseAmount(findVal(['PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL']));
+                                // --- EXTRACTOR INTELIGENTE DEL VALOR FINANCIADO ---
+                                // 1. Buscamos primero el nombre exacto de la columna en tus diferentes formatos
+                                let financed = parseAmount(findVal([
+                                    'SALDO A FINANCIAR', 
+                                    'SALDO A FINACIAR', 
+                                    'MONTO A FINANCIAR', 
+                                    'MONTO TOTAL A FINANCIAR',
+                                    'MONTO TOTAL A CONSIGNAR', 
+                                    'MONTO A CONSIGNAR', 
+                                    'VALOR CREDITO'
+                                ]));
+
+                                // 2. MATEMÁTICA DE RESPALDO: Si la celda estaba vacía o en 0, lo calculamos manualmente
+                                if (financed === 0 || isNaN(financed)) {
+                                    let totalVenta = parseAmount(findVal(['TOTAL VENTA', 'PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL']));
+                                    let cuotaInicial = parseAmount(findVal(['CUOTA INICIAL', 'VALOR CUOTA INICIAL', 'INICIAL']));
+                                    
+                                    if (totalVenta > 0 && cuotaInicial >= 0) {
+                                        financed = totalVenta - cuotaInicial;
+                                    }
                                 }
 
                                 return {
@@ -131,7 +146,7 @@
                                     _date: dateKey ? row[dateKey] : undefined,
                                     _client: findVal(['NOMBRE COMPLETO', 'NOMBRE DEL CLIENTE', 'NOMBRE CLIENTE', 'NOMBRES', 'CLIENTE']),
                                     _device: findVal(['REFERENCIA EQUIPO', 'REFERENCIA', 'MODELO', 'EQUIPO']),
-                                    _assigned: findVal(['RESPONSABLE', 'ASIGNADO']),
+                                    _assigned: findVal(['RESPONSABLE', 'ASIGNADO', 'VENDEDOR']),
                                     _financedAmount: financed,
                                     _cartera: parseAmount(findVal(['CARTERA', 'COSTO CARTERA', 'FEE CARTERA'])),
                                     _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112', 'UTILIDAD ADMIN'])),
@@ -238,7 +253,6 @@
                 const titleStr = brand === 'todas' ? 'TODAS LAS FINANCIERAS' : brand.toUpperCase();
                 doc.text(`Liquidación de Comisiones - ${titleStr}`, 14, 15);
                 
-                // --- NUEVO: OBTENER Y FORMATEAR FECHAS EXACTAS ---
                 const { start, end } = getDateRange();
                 let dateRangeStr = "";
                 if (dateFilter === 'all') {
@@ -249,7 +263,6 @@
 
                 doc.setFontSize(10);
                 const pName = selectedPartner || "TODOS";
-                // Imprimimos el Periodo directamente en la cabecera del PDF
                 doc.text(`Aliado / Responsable: ${pName}  |  Periodo: ${dateRangeStr}  |  Total Créditos: ${totals.count}`, 14, 22);
 
                 const footRow = brand === 'todas'
