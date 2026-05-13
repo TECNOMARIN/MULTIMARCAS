@@ -5,17 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tablero de Cartera - Multimarcas</title>
     
-    <!-- 1. Estilos (Tailwind CSS) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 2. React y ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-    
-    <!-- 3. Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <!-- 4. Librerías para Reportes (PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     
@@ -42,7 +35,6 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useMemo } = React;
 
-        // --- ICONOS INTEGRADOS (SVG Nativos) ---
         const IconBase = ({ children, className, ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
         );
@@ -100,6 +92,7 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
                     email: ['email', 'correo', 'mail'], 
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
+                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'], // Soporte WhatsApp/Llamadas
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
@@ -118,6 +111,7 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
                     email: ['email', 'correo', 'mail'], 
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
+                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
@@ -136,6 +130,7 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
                     email: ['email', 'correo', 'mail'], 
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
+                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
                 } 
@@ -153,6 +148,7 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
                     email: ['email', 'correo', 'mail'], 
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
+                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
                 } 
@@ -452,82 +448,65 @@
                 return false;
             }, [activeConfig, findConfigColumn, findColumnName]);
 
-            const getRowVisuallyCritical = useCallback((row, headersList) => {
-                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
-                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList);
-                if (!statusCol) statusCol = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
-                
-                if (!dateCol || !statusCol) return false;
-                
-                const saleDate = parseDate(row[dateCol]);
-                if (!saleDate) return false;
-                
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                
-                const dueDate = new Date(saleDate);
-                dueDate.setDate(dueDate.getDate() + 14);
-                dueDate.setHours(0,0,0,0);
+            const getRowVisuallyAlert = useCallback((row, headersList) => {
+                if (!activeConfig || !activeConfig.quotas) return false;
+                return activeConfig.quotas.some(qId => {
+                    if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
+                        const qName = QUOTA_LABELS[qId]?.id; 
+                        if (!qName) return false;
+                        const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                        let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                        if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
 
-                const diffTime = today.getTime() - dueDate.getTime();
-                const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDaysFromDue === 7 || diffDaysFromDue === 13 || diffDaysFromDue === 14) {
-                    const obsVal = String(row[statusCol] || '').trim();
-                    return isObsUnpaid(obsVal);
-                }
-                return false;
-            }, [activeConfig, findConfigColumn, findColumnName]);
-
-            const checkSpecificQuotaAlert7 = useCallback((row, headersList, quotaId) => {
-                const qName = QUOTA_LABELS[quotaId]?.id; 
-                if (!qName) return false;
-                const colFecha = findColumnName(qName, activeConfig?.columns?.quotaDate, headersList);
-                let colStatus = findColumnName(activeConfig?.columns?.paymentStatus, qName, headersList);
-                if (!colStatus) colStatus = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
-
-                if (colFecha && colStatus) {
-                    const fechaVal = row[colFecha];
-                    const obsVal = String(row[colStatus] || '').trim();
-                    if (checkDateAlert7(fechaVal) && isObsUnpaid(obsVal)) return true;
-                }
-                return false;
+                        if (colFecha && colStatus) {
+                            const fechaVal = row[colFecha];
+                            const obsVal = String(row[colStatus] || '').trim();
+                            if (checkVisualDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
+                        }
+                    }
+                    return false;
+                });
             }, [activeConfig, findColumnName]);
 
             const getRowAlertStatus7 = useCallback((row, headersList) => {
                 if (!activeConfig || !activeConfig.quotas) return false;
                 return activeConfig.quotas.some(qId => {
                     if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        return checkSpecificQuotaAlert7(row, headersList, qId);
+                        const qName = QUOTA_LABELS[qId]?.id; 
+                        if (!qName) return false;
+                        const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                        let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                        if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+
+                        if (colFecha && colStatus) {
+                            const fechaVal = row[colFecha];
+                            const obsVal = String(row[colStatus] || '').trim();
+                            if (checkDateAlert7(fechaVal) && isObsUnpaid(obsVal)) return true;
+                        }
                     }
                     return false;
                 });
-            }, [activeConfig, checkSpecificQuotaAlert7]);
-
-            const checkSpecificQuotaAlert15 = useCallback((row, headersList, quotaId) => {
-                const qName = QUOTA_LABELS[quotaId]?.id; 
-                if (!qName) return false;
-                const colFecha = findColumnName(qName, activeConfig?.columns?.quotaDate, headersList);
-                let colStatus = findColumnName(activeConfig?.columns?.paymentStatus, qName, headersList);
-                if (!colStatus) colStatus = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
-
-                if (colFecha && colStatus) {
-                    const fechaVal = row[colFecha];
-                    const obsVal = String(row[colStatus] || '').trim();
-                    if (checkDateAlert15(fechaVal) && isObsUnpaid(obsVal)) return true;
-                }
-                return false;
             }, [activeConfig, findColumnName]);
 
             const getRowAlertStatus15 = useCallback((row, headersList) => {
                 if (!activeConfig || !activeConfig.quotas) return false;
                 return activeConfig.quotas.some(qId => {
                     if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        return checkSpecificQuotaAlert15(row, headersList, qId);
+                        const qName = QUOTA_LABELS[qId]?.id; 
+                        if (!qName) return false;
+                        const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
+                        let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
+                        if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+
+                        if (colFecha && colStatus) {
+                            const fechaVal = row[colFecha];
+                            const obsVal = String(row[colStatus] || '').trim();
+                            if (checkDateAlert15(fechaVal) && isObsUnpaid(obsVal)) return true;
+                        }
                     }
                     return false;
                 });
-            }, [activeConfig, checkSpecificQuotaAlert15]);
+            }, [activeConfig, findColumnName]);
 
             const checkSpecificVisualQuotaAlert = useCallback((row, headersList, quotaId) => {
                 const qName = QUOTA_LABELS[quotaId]?.id; 
@@ -543,16 +522,6 @@
                 }
                 return false;
             }, [activeConfig, findColumnName]);
-
-            const getRowVisuallyAlert = useCallback((row, headersList) => {
-                if (!activeConfig || !activeConfig.quotas) return false;
-                return activeConfig.quotas.some(qId => {
-                    if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        return checkSpecificVisualQuotaAlert(row, headersList, qId);
-                    }
-                    return false;
-                });
-            }, [activeConfig, checkSpecificVisualQuotaAlert]);
 
 
             // --- FETCH PARA TABLERO INDIVIDUAL ---
@@ -647,20 +616,19 @@
                 });
             }, [headers, activeConfig]);
 
-            // Reorganizar encabezados dinámicamente según solicitud
+            // Reorganizar encabezados dinámicamente: Oculta innecesarios y agrupa métricas cerca de Acción Rápida
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
                 
-                // --- NUEVO: OCULTAR COLUMNAS INDESEADAS ---
+                // --- OCULTAR COLUMNAS INDESEADAS ---
                 arr = arr.filter(h => {
                     const lowerH = String(h).toLowerCase().trim();
                     if (lowerH === 'empresa') return false; // Ocultar Empresa siempre
-                    // Ocultar Responsable si es redundante (si no es la columna principal que ya elegimos como Asignado)
+                    // Ocultar Responsable si es redundante
                     if (lowerH === 'responsable' && h !== assignedColumn) return false; 
                     return true;
                 });
-                // -------------------------------------------
 
                 // 1. Asignado de primero
                 if (assignedColumn && arr.includes(assignedColumn)) {
@@ -682,14 +650,13 @@
                 });
                 const companyCol = arr.find(h => String(h).toLowerCase().trim() === 'empresa');
 
-                // Extraer Fecha de Nacimiento para reubicarla
                 const birthDateCol = findConfigColumn(activeConfig?.columns?.birthDate, headers);
 
                 // 3. Quitar temporalmente las columnas que vamos a reubicar
                 const colsToMove = [paidCol, lateCol, firstQuotaCol, birthDateCol].filter(Boolean);
                 arr = arr.filter(h => !colsToMove.includes(h));
 
-                // 4. Insertar Fecha de Nacimiento (donde antes iba Primera Cuota: antes de Comentarios)
+                // 4. Insertar Fecha de Nacimiento (antes de Comentarios)
                 if (birthDateCol) {
                     if (commentsColName && arr.includes(commentsColName)) {
                         const commentsIdx = arr.indexOf(commentsColName);
@@ -716,12 +683,12 @@
                         const companyIdx = arr.indexOf(companyCol);
                         arr.splice(companyIdx, 0, ...colsToInsert);
                     } else {
-                        arr.push(...colsToInsert); // Si no hay referencias, poner al final
+                        arr.push(...colsToInsert); 
                     }
                 }
                 
                 return arr;
-            }, [headers, assignedColumn, commentsColName, phoneColumn, activeConfig]);
+            }, [headers, assignedColumn, commentsColName, phoneColumn, activeConfig, findConfigColumn]);
 
             const sellerReportData = useMemo(() => {
                 if (!showSellerModal || !activeConfig) return [];
@@ -835,7 +802,7 @@
                     if (rowPerson !== detailSeller) return;
 
                     const qName = 'primera';
-                    let statusCol = findColumnName(activeConfig.columns.paymentStatus, qName, headers);
+                    let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
                     if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
                     
                     const rawStatus = statusCol ? String(row[statusCol]).toLowerCase().trim() : '';
@@ -1239,24 +1206,22 @@
                 return statsObj;
             }, [dataForStats, headers, findColumnName, findConfigColumn, activeConfig, portfolio]);
 
+            // --- CORRECCIÓN COLOR COLUMNA "CUOTAS PAGAS" ---
             const getColumnStyles = (headerName) => {
                 if (!headerName) return null;
                 const lowerHeader = String(headerName).toLowerCase().trim();
                 
-                // Color para columna Asignado/Responsable
                 if (headerName === assignedColumn) {
                     return { head: "bg-blue-100/70 text-blue-900 border-b-2 border-blue-200", cellBase: "", bgColor: "bg-blue-50/60 font-black text-blue-800 shadow-sm" };
                 }
                 
-                // Color para nuevas columnas de Cuotas calculadas (Pagadas / Atrasadas)
-                if (lowerHeader === 'cuotas pagas' || lowerHeader === 'cuotas pagadas' || lowerHeader === 'pagadas') {
+                if (lowerHeader.includes('pagas') || lowerHeader.includes('pagadas')) {
                     return { head: "bg-emerald-100 text-emerald-900 border-b-2 border-emerald-300 text-center", cellBase: "", bgColor: "bg-emerald-50 text-center font-black text-emerald-700 text-sm" };
                 }
-                if (lowerHeader === 'cuotas atrasadas' || lowerHeader === 'atrasadas' || lowerHeader === 'cuotas_atrasadas' || lowerHeader === 'cuotas atrasadass') {
+                if (lowerHeader.includes('atrasadas') || lowerHeader.includes('cuotas_atrasadas')) {
                     return { head: "bg-rose-100 text-rose-900 border-b-2 border-rose-300 text-center", cellBase: "", bgColor: "bg-rose-50 text-center font-black text-rose-700 text-sm" };
                 }
 
-                // Color estándar para otras columnas de Cuotas
                 if (lowerHeader.includes("primera cuota") || lowerHeader.includes("atrasadas")) {
                     return { head: "bg-blue-100 text-blue-900 border-b-2 border-blue-300", cellBase: "border-l border-r border-blue-100", bgColor: "bg-blue-50/50" };
                 }
@@ -2417,7 +2382,7 @@
                         </div>
                     )}
 
-                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS) --- */}
+                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS/ASIGNADO) --- */}
                     {cleanEditModal.show && (
                         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                              <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
