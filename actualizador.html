@@ -37,12 +37,12 @@
             X: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         };
 
-        // RECUERDA ASEGURARTE DE QUE TU API_URL ESTÉ CORRECTO AQUÍ:
+        // ⚠️ ASEGÚRATE DE PEGAR AQUÍ TU URL CORRECTA Y ACTUALIZADA
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
         
-        // --- NUEVAS COLUMNAS: Exactamente las de CARTERA ALOCREDIT GENERAL ---
+        // --- COLUMNAS DEL SISTEMA ---
         const TARGET_COLUMNS = [
-            "RESPONSABLE", "TIENDA", "FECHA", "ID APLICACION", "NOMBRE CLIENTE", "CEDULA", 
+            "RESPONSABLE", "VENDEDOR", "TIENDA", "FECHA", "ID APLICACION", "NOMBRE CLIENTE", "CEDULA", 
             "PRIMERA CUOTA", "CELULAR", "COMENTARIOS", "CORREO", "EQUIPO", "IMEI", 
             "VALOR VENTA", "CUOTA INICIAL", "SALDO A FINACIAR", "PLAZO", "VALOR CUOTA", 
             "DEBE QUEDAR PAGA ANTES DE", "PAGOS", "cuotas pagas", "Cuotas Atrasadas"
@@ -70,7 +70,6 @@
                         const workbook = window.XLSX.read(data, { type: 'binary' });
                         const firstSheetName = workbook.SheetNames[0];
                         const worksheet = workbook.Sheets[firstSheetName];
-                        // defval: "" asegura que celdas vacías existan en el JSON
                         const json = window.XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
                         if (json.length === 0) throw new Error("El archivo Excel está vacío.");
@@ -79,7 +78,7 @@
                         setExcelHeaders(headers);
                         setFileData(json);
                         
-                        // 🧠 Auto-mapeo inteligente para cruzar la Consola de Alocredit con la Cartera Directa
+                        // 🧠 Auto-mapeo inteligente 
                         let initialMap = {};
                         headers.forEach(h => {
                             const upperH = h.toUpperCase().trim();
@@ -90,7 +89,7 @@
                                 initialMap[h] = exactMatch;
                             } else {
                                 // 2. Traductor Consola -> Cartera
-                                if (upperH === 'CC' || upperH === 'CÉDULA' || upperH === 'CEDULA') initialMap[h] = 'CEDULA';
+                                if (upperH === 'CC' || upperH === 'CÉDULA' || upperH === 'CEDULA' || upperH === 'DOCUMENTO') initialMap[h] = 'CEDULA';
                                 else if (upperH === 'CUOTAS PAGADAS') initialMap[h] = 'cuotas pagas';
                                 else if (upperH === 'CUOTAS ATRASADAS') initialMap[h] = 'Cuotas Atrasadas';
                                 else if (upperH === 'CUOTAS TOTALES' || upperH === 'PLAZO') initialMap[h] = 'PLAZO';
@@ -100,11 +99,11 @@
                                 else if (upperH === 'NÚMERO DE CONTRATO' || upperH === 'NUMERO DE CONTRATO') initialMap[h] = 'ID APLICACION';
                                 else if (upperH === 'MODELO' || upperH === 'REFERENCIA') initialMap[h] = 'EQUIPO';
                                 else if (upperH === 'EMAIL') initialMap[h] = 'CORREO';
-                                else if (upperH === 'VENDEDOR' || upperH === 'ASESOR') initialMap[h] = 'RESPONSABLE';
+                                else if (upperH === 'VENDEDOR' || upperH === 'ASESOR') initialMap[h] = 'VENDEDOR';
                                 else if (upperH === 'VALOR TOTAL' || upperH === 'PRECIO TOTAL') initialMap[h] = 'VALOR VENTA';
                                 else if (upperH === 'VALOR CUOTA INICIAL') initialMap[h] = 'CUOTA INICIAL';
                                 else if (upperH === 'VALOR CUOTA') initialMap[h] = 'VALOR CUOTA';
-                                else if (upperH === 'VALOR CREDITO' || upperH === 'MONTO CREDITO') initialMap[h] = 'SALDO A FINACIAR';
+                                else if (upperH === 'VALOR CREDITO' || upperH === 'MONTO CREDITO') initialMap[h] = 'SALDO A FINACIAR'; 
                                 else if (upperH === 'TIENDA' || upperH === 'SUCURSAL') initialMap[h] = 'TIENDA';
                             }
                         });
@@ -121,7 +120,7 @@
                 setMapping(prev => ({ ...prev, [excelHeader]: targetCol }));
             };
 
-            // Creamos el Payload sanitizado en vivo para poder previsualizarlo
+            // Creamos el Payload sanitizado
             const sanitizedPayloadData = useMemo(() => {
                 return fileData.map(row => {
                     let newRow = {};
@@ -132,14 +131,13 @@
                             
                             // 🛡️ SANITIZACIÓN ROBUSTA FINANCIERA Y TEXTUAL
                             if (targetName === "CEDULA" || targetName === "CELULAR") {
-                                val = String(val).replace(/\D/g, ''); // Arranca letras o espacios
+                                val = String(val).replace(/\D/g, ''); 
                             } else if (targetName === "cuotas pagas" || targetName === "Cuotas Atrasadas" || targetName === "PLAZO") {
-                                val = parseInt(String(val).replace(/\D/g, '')) || 0; // Obliga a ser un entero puro
+                                val = parseInt(String(val).replace(/\D/g, '')) || 0; 
                             } else if (targetName === "VALOR VENTA" || targetName === "CUOTA INICIAL" || targetName === "SALDO A FINACIAR" || targetName === "VALOR CUOTA") {
-                                // Limpia valores como "$400,000.00" y los deja como 400000 para que el backend pueda sumar/restar
+                                // Limpia valores como "$400,000.00" y los deja listos para matemáticas
                                 val = Number(String(val).replace(/[^0-9.-]+/g,"")) || 0;
                             } else if (targetName === "FECHA") {
-                                // Asegurarnos de que no viaje vacío si es undefined
                                 val = val || "";
                             }
                             
@@ -159,10 +157,9 @@
                     return;
                 }
                 
-                // Si es Alocredit, el sistema va a requerir la plata para el cálculo automático
                 if (brand === 'alocredit') {
-                    if (!mappedCols.includes("VALOR VENTA") || !mappedCols.includes("CUOTA INICIAL")) {
-                        alert("¡OJO! Para automatizar comisiones en Ventas Alocredit, asegúrate de mapear 'VALOR VENTA' (Valor Total) y 'CUOTA INICIAL'.");
+                    if (!mappedCols.includes("SALDO A FINACIAR") || !mappedCols.includes("CUOTA INICIAL")) {
+                        alert("¡OJO! Para automatizar comisiones en Ventas Alocredit, asegúrate de mapear 'VALOR CREDITO' (como Saldo a Financiar) y 'CUOTA INICIAL'.");
                         setShowMappingModal(true);
                         return;
                     }
@@ -173,12 +170,12 @@
 
                 const payload = {
                     action: "bulk", 
-                    type: brand, // 'alocredit' (El backend sabrá inyectar en ambas hojas)
+                    type: brand, 
                     data: sanitizedPayloadData
                 };
 
                 try {
-                    await fetch(API_URL, {
+                    const response = await fetch(API_URL, {
                         method: 'POST',
                         mode: 'no-cors', 
                         headers: { 'Content-Type': 'text/plain' },
@@ -276,21 +273,21 @@
                                         <thead className="bg-slate-800 text-white text-[11px] uppercase tracking-widest sticky top-0">
                                             <tr>
                                                 <th className="p-4 font-bold">Cédula</th>
-                                                <th className="p-4 font-bold">Nombre del Cliente</th>
+                                                <th className="p-4 font-bold">Vendedor</th>
                                                 <th className="p-4 text-center font-bold text-emerald-300">Cuotas Pagas</th>
-                                                <th className="p-4 text-center font-black text-rose-400">Cuotas Atrasadas</th>
-                                                <th className="p-4 text-right font-bold text-blue-300">Valor Venta (Limpio)</th>
-                                                <th className="p-4 text-right font-bold text-indigo-300">Cuota Inicial (Limpia)</th>
+                                                <th className="p-4 text-center font-black text-rose-400">Atrasadas</th>
+                                                <th className="p-4 text-right font-bold text-blue-300">Saldo Financiar<br/><span className="text-[9px] font-normal">(Monto a Consignar)</span></th>
+                                                <th className="p-4 text-right font-bold text-indigo-300">Cuota Inicial</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 border border-slate-200">
                                             {sanitizedPayloadData.slice(0, 100).map((row, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-50">
                                                     <td className="p-4 font-mono text-slate-700 font-bold bg-slate-50/50">{row['CEDULA'] || row['CC'] || '-'}</td>
-                                                    <td className="p-4 text-slate-600 font-bold">{row['NOMBRE CLIENTE'] || '-'}</td>
+                                                    <td className="p-4 text-slate-600 font-bold">{row['VENDEDOR'] || '-'}</td>
                                                     <td className="p-4 text-center font-black text-emerald-600 bg-emerald-50/30 text-base">{row['cuotas pagas'] ?? '-'}</td>
                                                     <td className="p-4 text-center font-black text-rose-600 bg-rose-50/30 text-base">{row['Cuotas Atrasadas'] ?? '-'}</td>
-                                                    <td className="p-4 text-right font-bold text-blue-600">{row['VALOR VENTA'] ? row['VALOR VENTA'].toLocaleString('es-CO') : '-'}</td>
+                                                    <td className="p-4 text-right font-bold text-blue-600">{row['SALDO A FINACIAR'] ? row['SALDO A FINACIAR'].toLocaleString('es-CO') : '-'}</td>
                                                     <td className="p-4 text-right font-bold text-indigo-600">{row['CUOTA INICIAL'] ? row['CUOTA INICIAL'].toLocaleString('es-CO') : '-'}</td>
                                                 </tr>
                                             ))}
@@ -356,7 +353,7 @@
                                 <div className="flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
                                     <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl mb-6 text-sm text-indigo-800 font-medium flex gap-3 shadow-sm">
                                         <Icons.Shield className="w-6 h-6 flex-shrink-0 text-indigo-600"/>
-                                        <p>Verifica que <strong>Valor Venta</strong> y <strong>Cuota Inicial</strong> estén bien mapeados para que el sistema de comisiones automático funcione perfecto.</p>
+                                        <p>Verifica que <strong>Valor Credito</strong> esté asignado a SALDO A FINANCIAR (que será tu Monto a Consignar).</p>
                                     </div>
 
                                     <table className="w-full text-left text-sm border-collapse rounded-xl overflow-hidden shadow-sm">
