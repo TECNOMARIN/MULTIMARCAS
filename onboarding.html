@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carta Antifraude - Soluciones Efectivas</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f8fafc; }
+        .input-animated { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .input-animated:focus { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.15); border-color: #6366f1; }
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .bg-grid-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+    </style>
+</head>
+<body class="bg-grid-pattern min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        const Icons = {
+            Search: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+            UserCheck: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>,
+            AlertTriangle: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+            CheckCircle: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            RefreshCw: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>,
+            ArrowLeft: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+            MessageCircle: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>,
+            ShieldCheck: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
+            X: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        };
+
+        // ⚠️ PEGA AQUÍ TU URL CORRECTA Y ACTUALIZADA DE GOOGLE APPS SCRIPT
+        const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
+
+        // Componente de Notificación (Toast)
+        const Toast = ({ show, message, type, onClose }) => {
+            if (!show) return null;
+            return (
+                <div className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-2xl shadow-2xl z-[100] flex items-center gap-4 animate-in slide-in-from-bottom-8 fade-in duration-300 border ${type === 'error' ? 'bg-red-600 border-red-500 text-white' : 'bg-slate-800 border-slate-700 text-white'}`}>
+                    {type === 'error' ? <Icons.AlertTriangle className="w-6 h-6 shrink-0"/> : <Icons.CheckCircle className="w-6 h-6 shrink-0 text-emerald-400"/>}
+                    <span className="font-bold text-sm tracking-wide">{message}</span>
+                    <button onClick={onClose} className="ml-2 p-1 hover:bg-white/20 rounded-full transition-colors shrink-0">
+                        <Icons.X className="w-4 h-4"/>
+                    </button>
+                </div>
+            );
+        };
+
+        function OnboardingApp() {
+            // FASE 1: Chequeo de Cédula
+            const [cedula, setCedula] = useState('');
+            const [isChecking, setIsChecking] = useState(false);
+            const [checkResult, setCheckResult] = useState(null); 
+            const [fraudData, setFraudData] = useState({ brand: '', date: '' });
+
+            // FASE 2: Llenado de Formulario
+            const [formData, setFormData] = useState({
+                nombre: '',
+                telefono: '',
+                ref1: '',
+                telRef1: '',
+                ref2: '',
+                telRef2: ''
+            });
+            const [isSaving, setIsSaving] = useState(false);
+            const [saveSuccess, setSaveSuccess] = useState(false);
+
+            // Estado de Notificación
+            const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+
+            const showToast = (message, type = 'error') => {
+                setToast({ show: true, message, type });
+                setTimeout(() => {
+                    setToast(prev => ({ ...prev, show: false }));
+                }, 5000);
+            };
+
+            const handleCheckFraud = async (e) => {
+                e.preventDefault();
+                if (!cedula || cedula.length < 5) {
+                    showToast("Por favor ingresa un número de cédula válido.");
+                    return;
+                }
+
+                setIsChecking(true);
+                setCheckResult(null);
+                setToast({ show: false, message: '', type: '' });
+
+                try {
+                    const payload = {
+                        action: "check_fraud",
+                        cedula: cedula
+                    };
+
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.result === 'fraud') {
+                        setFraudData({ brand: result.brand, date: result.date });
+                        setCheckResult('fraud');
+                    } else if (result.result === 'clean') {
+                        setCheckResult('clean');
+                    } else {
+                        throw new Error("Respuesta inesperada del servidor.");
+                    }
+                } catch (error) {
+                    showToast("Error conectando con la base de datos central: " + error.message);
+                } finally {
+                    setIsChecking(false);
+                }
+            };
+
+            const handleSaveForm = async (e) => {
+                e.preventDefault();
+                
+                const { nombre, telefono, ref1, telRef1, ref2, telRef2 } = formData;
+
+                if (!nombre || !telefono || !ref1 || !telRef1 || !ref2 || !telRef2) {
+                    showToast("Por favor llena TODOS los campos obligatorios, incluyendo las dos referencias.");
+                    return;
+                }
+
+                // Validación 1: Exactamente 10 dígitos
+                const phoneRegex = /^\d{10}$/;
+                if (!phoneRegex.test(telefono) || !phoneRegex.test(telRef1) || !phoneRegex.test(telRef2)) {
+                    showToast("Todos los números de teléfono (Celular, Ref 1 y Ref 2) deben tener exactamente 10 dígitos.");
+                    return;
+                }
+
+                // Validación 2: Que sean distintos
+                if (telefono === telRef1 || telefono === telRef2 || telRef1 === telRef2) {
+                    showToast("¡Los 3 números de teléfono deben ser DISTINTOS! No repitas números.");
+                    return;
+                }
+
+                setIsSaving(true);
+                setToast({ show: false, message: '', type: '' });
+
+                try {
+                    const payload = {
+                        action: "save_onboarding",
+                        data: {
+                            cedula: cedula,
+                            ...formData
+                        }
+                    };
+
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    setSaveSuccess(true);
+                } catch (error) {
+                    showToast("Error al intentar guardar en la matriz: " + error.message);
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+
+            const sendWhatsAppAlert = () => {
+                // Mensaje elegante, sobrio y sin exceso de emojis
+                const message = `✓ *NUEVA SOLICITUD APROBADA*\n\n• *Cliente:* ${formData.nombre}\n• *Cédula:* ${cedula}\n• *Celular:* ${formData.telefono}\n\n*REFERENCIAS VERIFICADAS:*\n1. ${formData.ref1} - ${formData.telRef1}\n2. ${formData.ref2} - ${formData.telRef2}\n\n_Nota: El cliente ha sido analizado en el sistema y es VIABLE para continuar el proceso._`;
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+            };
+
+            const handleReset = () => {
+                setCedula('');
+                setCheckResult(null);
+                setFraudData({ brand: '', date: '' });
+                setFormData({ nombre: '', telefono: '', ref1: '', telRef1: '', ref2: '', telRef2: '' });
+                setSaveSuccess(false);
+                setToast({ show: false, message: '', type: '' });
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col relative overflow-hidden">
+                    {/* TOAST DE NOTIFICACIÓN */}
+                    <Toast 
+                        show={toast.show} 
+                        message={toast.message} 
+                        type={toast.type} 
+                        onClose={() => setToast(prev => ({ ...prev, show: false }))} 
+                    />
+
+                    {/* Efectos de Iluminación de Fondo */}
+                    <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-500/20 rounded-full mix-blend-multiply filter blur-[100px] pointer-events-none"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-indigo-500/10 rounded-full mix-blend-multiply filter blur-[120px] pointer-events-none"></div>
+
+                    {/* ENCABEZADO INSTITUCIONAL */}
+                    <header className="glass-panel border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-50 transition-all">
+                        <div className="flex items-center gap-6">
+                            <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-white border border-slate-200 text-slate-500 rounded-full hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm hover:shadow">
+                                <Icons.ArrowLeft className="w-5 h-5"/>
+                            </button>
+                            
+                            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-12 md:h-14 object-contain drop-shadow-md" />
+                            
+                            <div className="h-8 w-px bg-slate-300 hidden md:block"></div>
+                            
+                            <div className="hidden md:block">
+                                <h1 className="text-2xl font-black text-slate-800 leading-tight tracking-tight">
+                                    Carta Antifraude
+                                </h1>
+                                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-0.5">Seguridad y Onboarding Corporativo</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                            <span className="bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-700 border border-indigo-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm">
+                                <Icons.ShieldCheck className="w-4 h-4 text-indigo-600" /> Filtro Activo
+                            </span>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-8 flex flex-col justify-center relative z-10">
+                        
+                        {/* PANTALLA DE ÉXITO */}
+                        {saveSuccess ? (
+                            <div className="bg-white rounded-3xl p-12 shadow-2xl border border-emerald-100 flex flex-col items-center text-center animate-in zoom-in duration-500 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-50/50 via-white to-white pointer-events-none"></div>
+                                
+                                <div className="relative z-10 w-28 h-28 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white mb-8 shadow-xl shadow-emerald-500/30 ring-8 ring-emerald-50">
+                                    <Icons.CheckCircle className="w-14 h-14"/>
+                                </div>
+                                <h2 className="relative z-10 text-4xl font-black text-slate-800 tracking-tight mb-4">¡Cliente Viable Aprobado!</h2>
+                                <p className="relative z-10 text-slate-500 mb-10 max-w-lg text-lg font-medium">La información ha sido encriptada y guardada de forma segura en la matriz de ONBOARDING.</p>
+                                
+                                <div className="relative z-10 flex flex-col sm:flex-row gap-4 w-full justify-center">
+                                    <button onClick={sendWhatsAppAlert} className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 flex items-center justify-center gap-3">
+                                        <Icons.MessageCircle className="w-6 h-6"/> Notificar por WhatsApp
+                                    </button>
+                                    <button onClick={handleReset} className="px-8 py-4 bg-slate-800 text-white rounded-2xl font-black hover:bg-slate-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 border border-slate-700">
+                                        Registrar Nuevo Cliente
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden ring-1 ring-black/5">
+                                
+                                {/* FASE 1: BUSCADOR DE CÉDULA */}
+                                <div className="p-8 md:p-12 border-b border-slate-100 bg-white">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 text-indigo-700 rounded-xl shadow-inner border border-indigo-200/50">
+                                            <Icons.Search className="w-6 h-6"/>
+                                        </div>
+                                        <div>
+                                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">Análisis de Viabilidad</h2>
+                                        </div>
+                                    </div>
+                                    <p className="text-base text-slate-500 mb-8 font-medium ml-1">Ingresa el documento de identidad para validar si el cliente es apto para continuar el proceso.</p>
+                                    
+                                    <form onSubmit={handleCheckFraud} className="flex flex-col sm:flex-row gap-4">
+                                        <div className="relative flex-1 group">
+                                            <input 
+                                                type="text" 
+                                                value={cedula}
+                                                onChange={(e) => setCedula(e.target.value.replace(/\D/g, ''))} 
+                                                disabled={isChecking || checkResult === 'clean'}
+                                                className="w-full bg-slate-50 border-2 border-slate-200 p-5 pl-16 rounded-2xl text-2xl font-black text-slate-800 tracking-widest outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 shadow-inner group-hover:border-indigo-300 placeholder:font-medium placeholder:text-slate-300"
+                                                placeholder="C.C. 1047432101"
+                                                autoFocus
+                                            />
+                                            <Icons.Search className="w-7 h-7 text-indigo-400 absolute left-5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-indigo-600" />
+                                        </div>
+                                        <button 
+                                            type="submit" 
+                                            disabled={isChecking || checkResult === 'clean' || !cedula}
+                                            className="px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:from-blue-700 hover:to-indigo-700 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 disabled:shadow-none flex items-center justify-center gap-3 text-lg"
+                                        >
+                                            {isChecking ? <><Icons.RefreshCw className="w-6 h-6 animate-spin"/> Escaneando...</> : 'Validar Cédula'}
+                                        </button>
+                                        
+                                        {checkResult === 'clean' && (
+                                            <button type="button" onClick={handleReset} className="px-6 py-5 text-slate-500 hover:bg-slate-100 hover:text-indigo-600 border-2 border-transparent hover:border-slate-200 rounded-2xl font-black transition-all">
+                                                Modificar
+                                            </button>
+                                        )}
+                                    </form>
+                                </div>
+
+                                {/* RESULTADO FRAUDE */}
+                                {checkResult === 'fraud' && (
+                                    <div className="p-8 md:p-12 bg-rose-50 border-t border-rose-100 animate-in slide-in-from-bottom-4 duration-300 relative overflow-hidden rounded-b-[2rem]">
+                                        <div className="flex flex-col items-center text-center relative z-10">
+                                            <div className="p-5 bg-white rounded-full text-rose-500 mb-6 shadow-sm border border-rose-100 ring-4 ring-rose-50">
+                                                <Icons.AlertTriangle className="w-12 h-12"/>
+                                            </div>
+                                            <h3 className="text-3xl font-black text-rose-900 tracking-tight mb-4 drop-shadow-sm">¡ALERTA ANTIFRAUDE!</h3>
+                                            <p className="text-rose-800 text-lg mb-8 max-w-2xl font-medium bg-white p-6 rounded-2xl border border-rose-100 shadow-sm leading-relaxed">
+                                                Operación bloqueada. Este cliente ya posee un crédito activo registrado en <strong className="text-rose-900 bg-rose-100 px-3 py-1 rounded-lg uppercase tracking-wider mx-1 shadow-sm">{fraudData.brand}</strong> desde la fecha <strong className="text-rose-900 whitespace-nowrap">{fraudData.date}</strong>.
+                                            </p>
+                                            <button onClick={handleReset} className="px-10 py-4 bg-rose-600 text-white font-black rounded-2xl shadow-md hover:bg-rose-700 hover:-translate-y-0.5 transition-all text-lg">
+                                                Consultar Otro Cliente
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* FASE 2: FORMULARIO ONBOARDING */}
+                                {checkResult === 'clean' && (
+                                    <div className="p-8 md:p-12 bg-slate-50/50 animate-in slide-in-from-bottom-4 duration-500 rounded-b-[2rem]">
+                                        
+                                        {/* BANNER CLIENTE VIABLE */}
+                                        <div className="flex items-center gap-5 mb-10 p-6 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl text-white shadow-lg shadow-emerald-500/20 transform hover:scale-[1.01] transition-transform">
+                                            <div className="p-4 bg-white/20 backdrop-blur-sm rounded-full shadow-inner border border-white/20">
+                                                <Icons.UserCheck className="w-8 h-8 text-white"/>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-2xl font-black tracking-tight drop-shadow-sm">¡Cliente Viable!</h3>
+                                                <p className="text-emerald-50 mt-1 font-medium text-base opacity-90">Aprobado por el sistema. Procede a capturar los datos de contacto y referencias.</p>
+                                            </div>
+                                        </div>
+
+                                        <form onSubmit={handleSaveForm}>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                                                
+                                                {/* Datos Personales (ARRIBA - Ocupa las dos columnas) */}
+                                                <div className="space-y-6 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm md:col-span-2">
+                                                    <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                                        <h4 className="font-black text-slate-700 uppercase tracking-widest text-xs">Datos Personales</h4>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Nombre Completo <span className="text-rose-500">*</span></label>
+                                                            <input required type="text" value={formData.nombre} onChange={e=>setFormData({...formData, nombre: e.target.value.toUpperCase()})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: JUAN PEREZ"/>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Celular Personal <span className="text-rose-500">*</span></label>
+                                                            <input required type="text" maxLength={10} value={formData.telefono} onChange={e=>setFormData({...formData, telefono: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 300 123 4567"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Referencia 1 (ABAJO IZQUIERDA) */}
+                                                <div className="space-y-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                                    <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-2 relative z-10">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+                                                        <h4 className="font-black text-slate-700 uppercase tracking-widest text-xs">Referencia 1</h4>
+                                                    </div>
+                                                    <div className="relative z-10">
+                                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Nombre y Apellido <span className="text-rose-500">*</span></label>
+                                                        <input required type="text" value={formData.ref1} onChange={e=>setFormData({...formData, ref1: e.target.value.toUpperCase()})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: MARIA GOMEZ"/>
+                                                    </div>
+                                                    <div className="relative z-10">
+                                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Teléfono Activo <span className="text-rose-500">*</span></label>
+                                                        <input required type="text" maxLength={10} value={formData.telRef1} onChange={e=>setFormData({...formData, telRef1: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 310 987 6543"/>
+                                                    </div>
+                                                </div>
+
+                                                {/* Referencia 2 (ABAJO DERECHA) */}
+                                                <div className="space-y-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                                                    <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-2 relative z-10">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                                                        <h4 className="font-black text-slate-700 uppercase tracking-widest text-xs">Referencia 2 (Obligatoria)</h4>
+                                                    </div>
+                                                    <div className="relative z-10">
+                                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Nombre Completo <span className="text-rose-500">*</span></label>
+                                                        <input required type="text" value={formData.ref2} onChange={e=>setFormData({...formData, ref2: e.target.value.toUpperCase()})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Familiar o Contacto Cercano"/>
+                                                    </div>
+                                                    <div className="relative z-10">
+                                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Teléfono Confirmado <span className="text-rose-500">*</span></label>
+                                                        <input required type="text" maxLength={10} value={formData.telRef2} onChange={e=>setFormData({...formData, telRef2: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 320 456 7890"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col-reverse sm:flex-row justify-end gap-4 pt-6 border-t border-slate-200">
+                                                <button type="button" onClick={handleReset} className="px-8 py-4 text-slate-500 font-black rounded-2xl hover:bg-slate-200 transition-colors">Cancelar</button>
+                                                <button 
+                                                    type="submit" 
+                                                    disabled={isSaving}
+                                                    className="px-10 py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-indigo-600 hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg"
+                                                >
+                                                    {isSaving ? <><Icons.RefreshCw className="w-5 h-5 animate-spin"/> Procesando...</> : 'Guardar y Aprobar'}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<OnboardingApp />);
+    </script>
+</body>
+</html>
