@@ -61,8 +61,10 @@
             const [fraudData, setFraudData] = useState({ brand: '', date: '' });
 
             // FASE 2: Llenado de Formulario
+            const [financiera, setFinanciera] = useState('PAYJOY');
             const [formData, setFormData] = useState({
                 nombre: '',
+                fechaNac: '', 
                 telefono: '',
                 ref1: '',
                 telRef1: '',
@@ -111,6 +113,19 @@
                         setCheckResult('fraud');
                     } else if (result.result === 'clean') {
                         setCheckResult('clean');
+                        
+                        if (result.existingData) {
+                            setFormData({
+                                nombre: result.existingData.nombre || '',
+                                fechaNac: result.existingData.fechaNac || '',
+                                telefono: result.existingData.telefono || '',
+                                ref1: result.existingData.ref1 || '',
+                                telRef1: result.existingData.telRef1 || '',
+                                ref2: result.existingData.ref2 || '',
+                                telRef2: result.existingData.telRef2 || ''
+                            });
+                            showToast("Este cliente ya estaba registrado. Hemos cargado sus datos para que los actualices.", "success");
+                        }
                     } else {
                         throw new Error("Respuesta inesperada del servidor.");
                     }
@@ -124,10 +139,15 @@
             const handleSaveForm = async (e) => {
                 e.preventDefault();
                 
-                const { nombre, telefono, ref1, telRef1, ref2, telRef2 } = formData;
+                const { nombre, fechaNac, telefono, ref1, telRef1, ref2, telRef2 } = formData;
 
                 if (!nombre || !telefono || !ref1 || !telRef1 || !ref2 || !telRef2) {
                     showToast("Por favor llena TODOS los campos obligatorios, incluyendo las dos referencias.");
+                    return;
+                }
+
+                if (financiera === 'PAYJOY' && !fechaNac) {
+                    showToast("La Fecha de Nacimiento es OBLIGATORIA para solicitudes de Payjoy.");
                     return;
                 }
 
@@ -172,8 +192,11 @@
             };
 
             const sendWhatsAppAlert = () => {
-                // Mensaje elegante, sobrio y sin exceso de emojis
-                const message = `✓ *NUEVA SOLICITUD APROBADA*\n\n• *Cliente:* ${formData.nombre}\n• *Cédula:* ${cedula}\n• *Celular:* ${formData.telefono}\n\n*REFERENCIAS VERIFICADAS:*\n1. ${formData.ref1} - ${formData.telRef1}\n2. ${formData.ref2} - ${formData.telRef2}\n\n_Nota: El cliente ha sido analizado en el sistema y es VIABLE para continuar el proceso._`;
+                let message = `✓ *NUEVA SOLICITUD APROBADA*\n\n• *Financiera:* ${financiera}\n• *Cliente:* ${formData.nombre}\n• *Cédula:* ${cedula}\n`;
+                if (financiera === 'PAYJOY') {
+                    message += `• *F. Nacimiento:* ${formData.fechaNac}\n`;
+                }
+                message += `• *Celular:* ${formData.telefono}\n\n*REFERENCIAS VERIFICADAS:*\n1. ${formData.ref1} - ${formData.telRef1}\n2. ${formData.ref2} - ${formData.telRef2}\n\n_Nota: El cliente ha sido analizado en el sistema y es VIABLE para continuar el proceso._`;
                 window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
             };
 
@@ -181,7 +204,8 @@
                 setCedula('');
                 setCheckResult(null);
                 setFraudData({ brand: '', date: '' });
-                setFormData({ nombre: '', telefono: '', ref1: '', telRef1: '', ref2: '', telRef2: '' });
+                setFinanciera('PAYJOY');
+                setFormData({ nombre: '', fechaNac: '', telefono: '', ref1: '', telRef1: '', ref2: '', telRef2: '' });
                 setSaveSuccess(false);
                 setToast({ show: false, message: '', type: '' });
             };
@@ -203,7 +227,7 @@
                     {/* ENCABEZADO INSTITUCIONAL */}
                     <header className="glass-panel border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-50 transition-all">
                         <div className="flex items-center gap-6">
-                            <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-white border border-slate-200 text-slate-500 rounded-full hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm hover:shadow">
+                            <button onClick={() => window.location.href = 'index.html'} className="p-3 bg-white border border-slate-200 text-slate-500 rounded-full hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm hover:shadow">
                                 <Icons.ArrowLeft className="w-5 h-5"/>
                             </button>
                             
@@ -261,7 +285,7 @@
                                             <h2 className="text-3xl font-black text-slate-800 tracking-tight">Análisis de Viabilidad</h2>
                                         </div>
                                     </div>
-                                    <p className="text-base text-slate-500 mb-8 font-medium ml-1">Ingresa el documento de identidad para validar si el cliente es apto para continuar el proceso.</p>
+                                    <p className="text-base text-slate-500 mb-8 font-medium ml-1">Ingresa el documento de identidad para analizar la viabilidad de la solicitud.</p>
                                     
                                     <form onSubmit={handleCheckFraud} className="flex flex-col sm:flex-row gap-4">
                                         <div className="relative flex-1 group">
@@ -281,7 +305,7 @@
                                             disabled={isChecking || checkResult === 'clean' || !cedula}
                                             className="px-10 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:from-blue-700 hover:to-indigo-700 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:hover:translate-y-0 disabled:shadow-none flex items-center justify-center gap-3 text-lg"
                                         >
-                                            {isChecking ? <><Icons.RefreshCw className="w-6 h-6 animate-spin"/> Escaneando...</> : 'Validar Cédula'}
+                                            {isChecking ? <><Icons.RefreshCw className="w-6 h-6 animate-spin"/> Analizando...</> : 'Validar Cédula'}
                                         </button>
                                         
                                         {checkResult === 'clean' && (
@@ -294,17 +318,17 @@
 
                                 {/* RESULTADO FRAUDE */}
                                 {checkResult === 'fraud' && (
-                                    <div className="p-8 md:p-12 bg-rose-50 border-t border-rose-100 animate-in slide-in-from-bottom-4 duration-300 relative overflow-hidden rounded-b-[2rem]">
+                                    <div className="p-8 md:p-12 bg-rose-50 border-t border-rose-200 animate-in slide-in-from-bottom-4 duration-300 relative overflow-hidden rounded-b-[2rem]">
                                         <div className="flex flex-col items-center text-center relative z-10">
                                             <div className="p-5 bg-white rounded-full text-rose-500 mb-6 shadow-sm border border-rose-100 ring-4 ring-rose-50">
                                                 <Icons.AlertTriangle className="w-12 h-12"/>
                                             </div>
-                                            <h3 className="text-3xl font-black text-rose-900 tracking-tight mb-4 drop-shadow-sm">¡ALERTA ANTIFRAUDE!</h3>
+                                            <h3 className="text-3xl font-black text-rose-900 tracking-tight mb-4 drop-shadow-sm">Operación Detenida</h3>
                                             <p className="text-rose-800 text-lg mb-8 max-w-2xl font-medium bg-white p-6 rounded-2xl border border-rose-100 shadow-sm leading-relaxed">
-                                                Operación bloqueada. Este cliente ya posee un crédito activo registrado en <strong className="text-rose-900 bg-rose-100 px-3 py-1 rounded-lg uppercase tracking-wider mx-1 shadow-sm">{fraudData.brand}</strong> desde la fecha <strong className="text-rose-900 whitespace-nowrap">{fraudData.date}</strong>.
+                                                No es posible continuar. El cliente ya posee un crédito activo registrado en la financiera <strong className="text-rose-900 bg-rose-100 px-3 py-1 rounded-lg uppercase tracking-wider mx-1 shadow-sm">{fraudData.brand}</strong> desde la fecha <strong className="text-rose-900 whitespace-nowrap">{fraudData.date}</strong>.
                                             </p>
-                                            <button onClick={handleReset} className="px-10 py-4 bg-rose-600 text-white font-black rounded-2xl shadow-md hover:bg-rose-700 hover:-translate-y-0.5 transition-all text-lg">
-                                                Consultar Otro Cliente
+                                            <button onClick={handleReset} className="px-10 py-4 bg-white text-rose-700 font-bold rounded-2xl shadow-sm border border-rose-200 hover:bg-rose-100 transition-all text-lg hover:-translate-y-0.5">
+                                                Consultar Otro Documento
                                             </button>
                                         </div>
                                     </div>
@@ -332,17 +356,32 @@
                                                 <div className="space-y-6 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm md:col-span-2">
                                                     <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-2">
                                                         <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                                                        <h4 className="font-black text-slate-700 uppercase tracking-widest text-xs">Datos Personales</h4>
+                                                        <h4 className="font-black text-slate-700 uppercase tracking-widest text-xs">Datos de la Solicitud</h4>
                                                     </div>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className={`grid grid-cols-1 md:grid-cols-${financiera === 'PAYJOY' ? '4' : '3'} gap-6`}>
+                                                        <div>
+                                                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Financiera <span className="text-blue-500">*</span></label>
+                                                            <select value={financiera} onChange={e=>setFinanciera(e.target.value)} className="w-full p-4 bg-blue-50/50 border border-blue-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 text-blue-900 font-black input-animated cursor-pointer text-sm shadow-sm">
+                                                                <option value="PAYJOY">PAYJOY</option>
+                                                                <option value="ALOCREDIT">ALOCREDIT</option>
+                                                                <option value="KREDIYA">KREDIYA</option>
+                                                                <option value="CREDISMART">CREDISMART</option>
+                                                            </select>
+                                                        </div>
                                                         <div>
                                                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Nombre Completo <span className="text-rose-500">*</span></label>
                                                             <input required type="text" value={formData.nombre} onChange={e=>setFormData({...formData, nombre: e.target.value.toUpperCase()})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: JUAN PEREZ"/>
                                                         </div>
                                                         <div>
                                                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Celular Personal <span className="text-rose-500">*</span></label>
-                                                            <input required type="text" maxLength={10} value={formData.telefono} onChange={e=>setFormData({...formData, telefono: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 300 123 4567"/>
+                                                            <input required type="text" maxLength={10} value={formData.telefono} onChange={e=>setFormData({...formData, telefono: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 3001234567"/>
                                                         </div>
+                                                        {financiera === 'PAYJOY' && (
+                                                            <div>
+                                                                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Fecha de Nacimiento <span className="text-rose-500">*</span></label>
+                                                                <input required type="date" value={formData.fechaNac} onChange={e=>setFormData({...formData, fechaNac: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -358,7 +397,7 @@
                                                     </div>
                                                     <div className="relative z-10">
                                                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Teléfono Activo <span className="text-rose-500">*</span></label>
-                                                        <input required type="text" maxLength={10} value={formData.telRef1} onChange={e=>setFormData({...formData, telRef1: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 310 987 6543"/>
+                                                        <input required type="text" maxLength={10} value={formData.telRef1} onChange={e=>setFormData({...formData, telRef1: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 3109876543"/>
                                                     </div>
                                                 </div>
 
@@ -366,7 +405,7 @@
                                                 <div className="space-y-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
                                                     <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-2 relative z-10">
                                                         <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
-                                                        <h4 className="font-black text-slate-700 uppercase tracking-widest text-xs">Referencia 2 (Obligatoria)</h4>
+                                                        <h4 className="font-black text-slate-700 uppercase tracking-widest text-xs">Referencia 2</h4>
                                                     </div>
                                                     <div className="relative z-10">
                                                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Nombre Completo <span className="text-rose-500">*</span></label>
@@ -374,7 +413,7 @@
                                                     </div>
                                                     <div className="relative z-10">
                                                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 ml-1">Teléfono Confirmado <span className="text-rose-500">*</span></label>
-                                                        <input required type="text" maxLength={10} value={formData.telRef2} onChange={e=>setFormData({...formData, telRef2: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 320 456 7890"/>
+                                                        <input required type="text" maxLength={10} value={formData.telRef2} onChange={e=>setFormData({...formData, telRef2: e.target.value.replace(/\D/g,'')})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white text-slate-800 font-bold input-animated placeholder:font-medium placeholder:text-slate-300 text-sm" placeholder="Ej: 3204567890"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -386,7 +425,7 @@
                                                     disabled={isSaving}
                                                     className="px-10 py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl shadow-slate-900/20 hover:bg-indigo-600 hover:shadow-indigo-500/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg"
                                                 >
-                                                    {isSaving ? <><Icons.RefreshCw className="w-5 h-5 animate-spin"/> Procesando...</> : 'Guardar y Aprobar'}
+                                                    {isSaving ? <><Icons.RefreshCw className="w-5 h-5 animate-spin"/> Procesando...</> : 'Guardar Solicitud'}
                                                 </button>
                                             </div>
                                         </form>
