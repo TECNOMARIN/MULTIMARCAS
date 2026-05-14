@@ -90,10 +90,10 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
                     email: ['email', 'correo', 'mail'], 
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
-                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'], // Soporte WhatsApp/Llamadas
+                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             },
             krediya: { 
@@ -112,7 +112,7 @@
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             },
             payjoy: { 
@@ -130,7 +130,7 @@
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             },
             credismart: { 
@@ -148,7 +148,7 @@
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             }
         };
@@ -205,7 +205,7 @@
 
             // Modal Edición
             const [editModal, setEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
-            const [cleanEditModal, setCleanEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
+            const [cleanEditModal, setCleanEditModal] = useState({ show: false, row: null, colName: null, currentValue: '', isDate: false });
             const [confirmModal, setConfirmModal] = useState({ show: false, row: null, actionType: null, message: '', amount: '' });
             const [isSaving, setIsSaving] = useState(false);
 
@@ -226,39 +226,6 @@
                 return dateObj;
             };
 
-            const checkDateAlert7 = (dateVal) => {
-                const dateObj = parseDate(dateVal);
-                if (!dateObj) return false;
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                const diffTime = today - due;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                return diffDays === 5 || diffDays === 6;
-            };
-
-            const checkDateAlert15 = (dateVal) => {
-                const dateObj = parseDate(dateVal);
-                if (!dateObj) return false;
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                const diffTime = today - due;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                return diffDays === 11 || diffDays === 12;
-            };
-
-            const checkVisualDateAlert = (dateVal) => {
-                const dateObj = parseDate(dateVal);
-                if (!dateObj) return false;
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const due = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-                const diffTime = today - due;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                return diffDays === 5 || diffDays === 6 || diffDays === 11 || diffDays === 12;
-            };
-
             const findColumnName = useCallback((keyword1, keyword2, headersList) => {
                 if (!headersList) return null;
                 return headersList.find(h => {
@@ -275,6 +242,32 @@
                 }
                 return null;
             }, []);
+
+            // 🧠 NÚCLEO INTELIGENTE DE FECHAS (Soporte exclusivo Credismart y Estricto Payjoy)
+            const getDueDate = useCallback((row, headersList) => {
+                // 1. SOLO PARA CREDISMART: Permitimos fecha manual en 'Primera Cuota'
+                if (portfolio === 'credismart') {
+                    const firstQuotaCol = findConfigColumn(['primera cuota', '1era cuota', 'fecha pago'], headersList);
+                    if (firstQuotaCol && row[firstQuotaCol]) {
+                        const parsed = parseDate(row[firstQuotaCol]);
+                        if (parsed && !isNaN(parsed.getTime())) {
+                            return parsed;
+                        }
+                    }
+                }
+                
+                // 2. PARA PAYJOY (y fallback general): Estricto Fecha Venta + 14 Días
+                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
+                if (dateCol && row[dateCol]) {
+                    const saleDate = parseDate(row[dateCol]);
+                    if (saleDate && !isNaN(saleDate.getTime())) {
+                        const dueDate = new Date(saleDate);
+                        dueDate.setDate(dueDate.getDate() + 14);
+                        return dueDate;
+                    }
+                }
+                return null;
+            }, [activeConfig, findConfigColumn, portfolio]);
 
             const formatCellData = (value) => {
                 if (typeof value !== 'string') {
@@ -367,160 +360,83 @@
                 return parseInt(s, 10) || 0;
             };
 
+            // --- ESTADOS DE ALERTA UNIFICADOS (Basados en getDueDate) ---
+            
             const getRowEarlyStatus = useCallback((row, headersList) => {
-                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
-                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList);
-                if (!statusCol) statusCol = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList) || findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dueDate = getDueDate(row, headersList);
+                if (!dueDate || !statusCol) return false;
                 
-                if (!dateCol || !statusCol) return false;
-                
-                const saleDate = parseDate(row[dateCol]);
-                if (!saleDate) return false;
-                
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                const sDate = new Date(saleDate);
-                sDate.setHours(0,0,0,0);
+                const today = new Date(); today.setHours(0,0,0,0);
+                const dDate = new Date(dueDate); dDate.setHours(0,0,0,0);
+                const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
 
-                const diffTime = today.getTime() - sDate.getTime();
-                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDays >= 12 && diffDays <= 14) {
-                    const obsVal = String(row[statusCol] || '').trim();
-                    return isObsUnpaid(obsVal);
+                // Prevención Temprana: Faltan de 0 a 2 días para el pago
+                if (diffDaysFromDue >= -2 && diffDaysFromDue <= 0) {
+                    return isObsUnpaid(String(row[statusCol] || '').trim());
                 }
                 return false;
-            }, [activeConfig, findConfigColumn, findColumnName]);
-
-            const getRowCriticalStatus7 = useCallback((row, headersList) => {
-                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
-                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList);
-                if (!statusCol) statusCol = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
-                
-                if (!dateCol || !statusCol) return false;
-                
-                const saleDate = parseDate(row[dateCol]);
-                if (!saleDate) return false;
-                
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                
-                const dueDate = new Date(saleDate);
-                dueDate.setDate(dueDate.getDate() + 14);
-                dueDate.setHours(0,0,0,0);
-
-                const diffTime = today.getTime() - dueDate.getTime();
-                const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDaysFromDue === 7) {
-                    const obsVal = String(row[statusCol] || '').trim();
-                    return isObsUnpaid(obsVal);
-                }
-                return false;
-            }, [activeConfig, findConfigColumn, findColumnName]);
-
-            const getRowCriticalStatus15 = useCallback((row, headersList) => {
-                const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
-                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList);
-                if (!statusCol) statusCol = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
-                
-                if (!dateCol || !statusCol) return false;
-                
-                const saleDate = parseDate(row[dateCol]);
-                if (!saleDate) return false;
-                
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                
-                const dueDate = new Date(saleDate);
-                dueDate.setDate(dueDate.getDate() + 14);
-                dueDate.setHours(0,0,0,0);
-
-                const diffTime = today.getTime() - dueDate.getTime();
-                const diffDaysFromDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-                if (diffDaysFromDue === 13 || diffDaysFromDue === 14) {
-                    const obsVal = String(row[statusCol] || '').trim();
-                    return isObsUnpaid(obsVal);
-                }
-                return false;
-            }, [activeConfig, findConfigColumn, findColumnName]);
-
-            const getRowVisuallyAlert = useCallback((row, headersList) => {
-                if (!activeConfig || !activeConfig.quotas) return false;
-                return activeConfig.quotas.some(qId => {
-                    if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        const qName = QUOTA_LABELS[qId]?.id; 
-                        if (!qName) return false;
-                        const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
-                        let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
-                        if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
-
-                        if (colFecha && colStatus) {
-                            const fechaVal = row[colFecha];
-                            const obsVal = String(row[colStatus] || '').trim();
-                            if (checkVisualDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
-                        }
-                    }
-                    return false;
-                });
-            }, [activeConfig, findColumnName]);
+            }, [activeConfig, findColumnName, getDueDate]);
 
             const getRowAlertStatus7 = useCallback((row, headersList) => {
-                if (!activeConfig || !activeConfig.quotas) return false;
-                return activeConfig.quotas.some(qId => {
-                    if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        const qName = QUOTA_LABELS[qId]?.id; 
-                        if (!qName) return false;
-                        const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
-                        let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
-                        if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
+                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList) || findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dueDate = getDueDate(row, headersList);
+                if (!dueDate || !statusCol) return false;
+                
+                const today = new Date(); today.setHours(0,0,0,0);
+                const dDate = new Date(dueDate); dDate.setHours(0,0,0,0);
+                const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
 
-                        if (colFecha && colStatus) {
-                            const fechaVal = row[colFecha];
-                            const obsVal = String(row[colStatus] || '').trim();
-                            if (checkDateAlert7(fechaVal) && isObsUnpaid(obsVal)) return true;
-                        }
-                    }
-                    return false;
-                });
-            }, [activeConfig, findColumnName]);
-
-            const getRowAlertStatus15 = useCallback((row, headersList) => {
-                if (!activeConfig || !activeConfig.quotas) return false;
-                return activeConfig.quotas.some(qId => {
-                    if(['fpd3', 'fpd7', 'fpd15'].includes(qId)) {
-                        const qName = QUOTA_LABELS[qId]?.id; 
-                        if (!qName) return false;
-                        const colFecha = findColumnName(qName, activeConfig.columns.quotaDate, headersList);
-                        let colStatus = findColumnName(activeConfig.columns.paymentStatus, qName, headersList);
-                        if (!colStatus) colStatus = findColumnName(activeConfig.columns.paymentStatus, '', headersList);
-
-                        if (colFecha && colStatus) {
-                            const fechaVal = row[colFecha];
-                            const obsVal = String(row[colStatus] || '').trim();
-                            if (checkDateAlert15(fechaVal) && isObsUnpaid(obsVal)) return true;
-                        }
-                    }
-                    return false;
-                });
-            }, [activeConfig, findColumnName]);
-
-            const checkSpecificVisualQuotaAlert = useCallback((row, headersList, quotaId) => {
-                const qName = QUOTA_LABELS[quotaId]?.id; 
-                if (!qName) return false;
-                const colFecha = findColumnName(qName, activeConfig?.columns?.quotaDate, headersList);
-                let colStatus = findColumnName(activeConfig?.columns?.paymentStatus, qName, headersList);
-                if (!colStatus) colStatus = findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
-
-                if (colFecha && colStatus) {
-                    const fechaVal = row[colFecha];
-                    const obsVal = String(row[colStatus] || '').trim();
-                    if (checkVisualDateAlert(fechaVal) && isObsUnpaid(obsVal)) return true;
+                if (diffDaysFromDue === 5 || diffDaysFromDue === 6) {
+                    return isObsUnpaid(String(row[statusCol] || '').trim());
                 }
                 return false;
-            }, [activeConfig, findColumnName]);
+            }, [activeConfig, findColumnName, getDueDate]);
 
+            const getRowCriticalStatus7 = useCallback((row, headersList) => {
+                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList) || findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dueDate = getDueDate(row, headersList);
+                if (!dueDate || !statusCol) return false;
+                
+                const today = new Date(); today.setHours(0,0,0,0);
+                const dDate = new Date(dueDate); dDate.setHours(0,0,0,0);
+                const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
+
+                if (diffDaysFromDue === 7) {
+                    return isObsUnpaid(String(row[statusCol] || '').trim());
+                }
+                return false;
+            }, [activeConfig, findColumnName, getDueDate]);
+
+            const getRowAlertStatus15 = useCallback((row, headersList) => {
+                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList) || findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dueDate = getDueDate(row, headersList);
+                if (!dueDate || !statusCol) return false;
+                
+                const today = new Date(); today.setHours(0,0,0,0);
+                const dDate = new Date(dueDate); dDate.setHours(0,0,0,0);
+                const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
+
+                if (diffDaysFromDue === 11 || diffDaysFromDue === 12) {
+                    return isObsUnpaid(String(row[statusCol] || '').trim());
+                }
+                return false;
+            }, [activeConfig, findColumnName, getDueDate]);
+
+            const getRowCriticalStatus15 = useCallback((row, headersList) => {
+                let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList) || findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
+                const dueDate = getDueDate(row, headersList);
+                if (!dueDate || !statusCol) return false;
+                
+                const today = new Date(); today.setHours(0,0,0,0);
+                const dDate = new Date(dueDate); dDate.setHours(0,0,0,0);
+                const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
+
+                if (diffDaysFromDue === 13 || diffDaysFromDue === 14) {
+                    return isObsUnpaid(String(row[statusCol] || '').trim());
+                }
+                return false;
+            }, [activeConfig, findColumnName, getDueDate]);
 
             // --- FETCH PARA TABLERO INDIVIDUAL ---
             const fetchData = useCallback(async () => {
@@ -602,7 +518,6 @@
                 };
             }, [data, headers, activeConfig, findConfigColumn]);
 
-            // Determinar columna de Comentarios antes para poder inyectar justo a su lado
             const commentsColName = useMemo(() => {
                 if (!activeConfig || !activeConfig.columns) return null;
                 return headers.find(h => {
@@ -614,26 +529,21 @@
                 });
             }, [headers, activeConfig]);
 
-            // Reorganizar encabezados dinámicamente: Oculta innecesarios y agrupa métricas cerca de Acción Rápida
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
                 
-                // --- OCULTAR COLUMNAS INDESEADAS ---
                 arr = arr.filter(h => {
                     const lowerH = String(h).toLowerCase().trim();
-                    if (lowerH === 'empresa') return false; // Ocultar Empresa siempre
-                    // Ocultar Responsable si es redundante
+                    if (lowerH === 'empresa') return false; 
                     if (lowerH === 'responsable' && h !== assignedColumn) return false; 
                     return true;
                 });
 
-                // 1. Asignado de primero
                 if (assignedColumn && arr.includes(assignedColumn)) {
                     arr = [assignedColumn, ...arr.filter(h => h !== assignedColumn)];
                 }
 
-                // 2. Extraer dinámicamente columnas solicitadas
                 const paidCol = arr.find(h => {
                     const l = String(h).toLowerCase().trim();
                     return l === 'cuotas pagas' || l === 'cuotas pagadas' || l === 'pagadas';
@@ -644,17 +554,14 @@
                 });
                 const firstQuotaCol = arr.find(h => {
                     const l = String(h).toLowerCase().trim();
-                    return l === 'primera cuota' || l === 'primera' || l === 'cuota 1' || l === '1era cuota';
+                    return l === 'primera cuota' || l === 'primera' || l === 'cuota 1' || l === 'fecha pago';
                 });
                 const companyCol = arr.find(h => String(h).toLowerCase().trim() === 'empresa');
-
                 const birthDateCol = findConfigColumn(activeConfig?.columns?.birthDate, headers);
 
-                // 3. Quitar temporalmente las columnas que vamos a reubicar
                 const colsToMove = [paidCol, lateCol, firstQuotaCol, birthDateCol].filter(Boolean);
                 arr = arr.filter(h => !colsToMove.includes(h));
 
-                // 4. Insertar Fecha de Nacimiento (antes de Comentarios)
                 if (birthDateCol) {
                     if (commentsColName && arr.includes(commentsColName)) {
                         const commentsIdx = arr.indexOf(commentsColName);
@@ -667,7 +574,6 @@
                     }
                 }
 
-                // 5. Insertar Primera Cuota, Pagadas y Atrasadas (después de Comentarios para que salgan tras Acción Rápida)
                 if (firstQuotaCol || paidCol || lateCol) {
                     const colsToInsert = [];
                     if (firstQuotaCol) colsToInsert.push(firstQuotaCol);
@@ -718,22 +624,18 @@
                     }
                     report[personName].total++;
                     
-                    const qName = 'primera';
-                    let statusCol = findColumnName(activeConfig.columns.paymentStatus, qName, headers);
-                    if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                    let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
                     
                     const rawStatus = statusCol ? String(row[statusCol]).toLowerCase().trim() : '';
                     const isPrestamo = rawStatus.includes('pago con gestion') || rawStatus.includes('pago con gestión');
-                    
                     const status = getStatus(rawStatus);
 
-                    const dueDate = new Date(d);
-                    dueDate.setDate(d.getDate() + 14);
+                    const dueDate = getDueDate(row, headers);
+                    const dueDateCheck = dueDate ? new Date(dueDate) : new Date(0);
+                    dueDateCheck.setHours(0,0,0,0);
                     
                     const today = new Date();
                     today.setHours(0,0,0,0);
-                    const dueDateCheck = new Date(dueDate);
-                    dueDateCheck.setHours(0,0,0,0);
 
                     if (status === 'clean') {
                         report[personName].pagas++;
@@ -763,7 +665,7 @@
                     const index = r.total > 0 ? (numerator / r.total) * 100 : 0;
                     return { ...r, index: index.toFixed(1) };
                 }).sort((a, b) => b.index - a.index);
-            }, [showSellerModal, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn]);
+            }, [showSellerModal, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn, getDueDate]);
 
             const sellerDetailData = useMemo(() => {
                 if (!detailSeller || !activeConfig) return [];
@@ -799,21 +701,18 @@
                     const rowPerson = String(row[reportCol] || 'Sin Asignar').trim().toUpperCase();
                     if (rowPerson !== detailSeller) return;
 
-                    const qName = 'primera';
-                    let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
-                    if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                    let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
                     
                     const rawStatus = statusCol ? String(row[statusCol]).toLowerCase().trim() : '';
                     let status = getStatus(rawStatus);
                     const isPrestamo = rawStatus.includes('pago con gestion') || rawStatus.includes('pago con gestión');
 
-                    const dueDate = new Date(d);
-                    dueDate.setDate(d.getDate() + 14);
-                    const dueDateStr = dueDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const dueDate = getDueDate(row, headers);
+                    const dueDateStr = dueDate ? dueDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
 
                     const today = new Date();
                     today.setHours(0,0,0,0);
-                    const dueDateCheck = new Date(dueDate);
+                    const dueDateCheck = dueDate ? new Date(dueDate) : new Date(0);
                     dueDateCheck.setHours(0,0,0,0);
 
                     if ((status === 'unpaid' || status === 'empty') && dueDateCheck >= today) {
@@ -848,7 +747,7 @@
                     return weight[b.status] - weight[a.status];
                 });
 
-            }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn]);
+            }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn, getDueDate]);
 
             const dataForStats = useMemo(() => {
                 let result = data;
@@ -911,9 +810,7 @@
                             } 
                             else {
                                 let quotaName = QUOTA_LABELS[activeFilter].id;
-                                let statusCol = findColumnName(activeConfig.columns.paymentStatus, quotaName, headers);
-                                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                                
+                                let statusCol = findColumnName(activeConfig.columns.paymentStatus, quotaName, headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
                                 const val = String(row[statusCol] || '').toLowerCase().trim();
 
                                 if (breakdownFilter) {
@@ -942,7 +839,7 @@
                         const dateB = parseDate(b[dateCol]);
                         
                         if (!dateA && !dateB) return 0;
-                        if (!dateA) return 1; // Clientes sin fecha al final
+                        if (!dateA) return 1; 
                         if (!dateB) return -1;
                         
                         return dateB.getTime() - dateA.getTime();
@@ -950,7 +847,7 @@
                 }
 
                 return result;
-            }, [dataForStats, headers, searchTerm, showOnlyAlerts7, showOnlyAlerts15, showOnlyEarly, showOnlyCritical7, showOnlyCritical15, fpdQuotaFilter, breakdownFilter, activeConfig, findColumnName, findConfigColumn, portfolio, getRowEarlyStatus, getRowAlertStatus7, getRowAlertStatus15, getRowCriticalStatus7, getRowCriticalStatus15]);
+            }, [dataForStats, headers, searchTerm, showOnlyAlerts7, showOnlyAlerts15, showOnlyEarly, showOnlyCritical7, showOnlyCritical15, fpdQuotaFilter, breakdownFilter, activeConfig, findColumnName, findConfigColumn, getRowEarlyStatus, getRowAlertStatus7, getRowAlertStatus15, getRowCriticalStatus7, getRowCriticalStatus15]);
 
             useEffect(() => {
                 setCurrentPage(1);
@@ -1080,17 +977,15 @@
                             cohortSales.forEach(row => {
                                 if (!isObsUnpaid(row[statusCol])) return;
 
-                                const saleDate = parseDate(row[dateCol]);
-                                if (!saleDate) return;
+                                const dueDate = getDueDate(row, headers);
+                                if (!dueDate) return;
 
-                                const dueDate = new Date(saleDate);
-                                dueDate.setDate(saleDate.getDate() + 14); 
-                                
                                 const today = new Date();
                                 today.setHours(0,0,0,0);
-                                dueDate.setHours(0,0,0,0);
+                                const dDate = new Date(dueDate);
+                                dDate.setHours(0,0,0,0);
 
-                                if (dueDate < today) {
+                                if (dDate < today) {
                                     unpaid++;
                                 } else {
                                     upcoming++; 
@@ -1117,7 +1012,7 @@
                 statsObj.generalFPD = totalSales > 0 ? ((totalUnpaid / totalSales) * 100).toFixed(1) : 0;
                 statsObj.totalSalesAll = totalSales;
                 return statsObj;
-            }, [dataForStats, headers, activeConfig, findColumnName, findConfigColumn, portfolio]);
+            }, [dataForStats, headers, activeConfig, findColumnName, findConfigColumn, portfolio, getDueDate]);
 
             const observationStats = useMemo(() => {
                 const statsObj = { found: true };
@@ -1535,7 +1430,7 @@
                         row[deviceColumn] || '-',
                         row[storeColumn] || '-',
                         row[assignedColumn] || '-',
-                        cellStatus.substring(0, 40), // Limitar texto por si es muy largo
+                        cellStatus.substring(0, 40), 
                         cellAmount
                     ]);
                 });
@@ -1555,10 +1450,10 @@
                     body: tableRows,
                     startY: 33,
                     theme: 'grid',
-                    headStyles: { fillColor: [79, 70, 229] }, // Color Índigo
+                    headStyles: { fillColor: [79, 70, 229] }, 
                     styles: { fontSize: 8 },
                     columnStyles: {
-                        7: { cellWidth: 40 } // Darle espacio a la columna de estado
+                        7: { cellWidth: 40 } 
                     }
                 });
 
@@ -1688,17 +1583,37 @@
             };
 
             const openCleanEdit = (row, colName) => {
-                setCleanEditModal({ show: true, row, colName, currentValue: row[colName] || '' });
+                let val = row[colName] || '';
+                const lowerCol = colName.toLowerCase();
+                
+                // Determinar si es un campo de fecha (Nacimiento o Primera Cuota)
+                const isDate = lowerCol.includes('fecha') || lowerCol.includes('nacimiento') || lowerCol.includes('primera') || lowerCol.includes('cuota 1');
+                
+                if (isDate && val) {
+                    const d = parseDate(val);
+                    if (d && !isNaN(d.getTime())) {
+                        const yyyy = d.getFullYear();
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        val = `${yyyy}-${mm}-${dd}`;
+                    } else {
+                        val = ''; // Limpiamos si es una fecha inválida
+                    }
+                }
+                
+                setCleanEditModal({ show: true, row, colName, currentValue: val, isDate });
             };
 
             const saveCleanEdit = async () => {
-                const { row, colName, currentValue } = cleanEditModal;
-                const oldVal = row[colName] || '';
-                const newVal = currentValue.trim();
+                const { row, colName, currentValue, isDate } = cleanEditModal;
+                let newVal = currentValue.trim();
                 
-                if (newVal === oldVal) {
-                    setCleanEditModal({ show: false, row: null, colName: null, currentValue: '' });
-                    return;
+                if (isDate && newVal) {
+                    // Convertir YYYY-MM-DD a DD/MM/YYYY para Excel
+                    const parts = newVal.split('-');
+                    if (parts.length === 3) {
+                        newVal = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
                 }
 
                 const phone = phoneColumn ? row[phoneColumn] : '';
@@ -1706,7 +1621,7 @@
 
                 if (!idVal && !phone) {
                     setError("El cliente no tiene Cédula ni Identificador para ser encontrado.");
-                    setCleanEditModal({ show: false, row: null, colName: null, currentValue: '' });
+                    setCleanEditModal({ show: false, row: null, colName: null, currentValue: '', isDate: false });
                     return;
                 }
 
@@ -1738,7 +1653,7 @@
                     setError("Error al actualizar dato: " + e.message);
                 } finally {
                     setIsSaving(false);
-                    setCleanEditModal({ show: false, row: null, colName: null, currentValue: '' });
+                    setCleanEditModal({ show: false, row: null, colName: null, currentValue: '', isDate: false });
                 }
             };
 
@@ -1842,7 +1757,6 @@
                             </button>
                             
                             <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-full border border-slate-200 ml-2">
-                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN ALOCREDIT */}
                                 {portfolio === 'alocredit' && (
                                     <button 
                                         onClick={() => window.location.href = 'actualizador.html'} 
@@ -1853,7 +1767,6 @@
                                     </button>
                                 )}
 
-                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN PAYJOY */}
                                 {portfolio === 'payjoy' && (
                                     <button 
                                         onClick={() => window.location.href = 'actualizador_payjoy.html'} 
@@ -1997,7 +1910,7 @@
                                 <div className="p-3 bg-white shadow-sm rounded-full text-rose-600 border border-rose-100"><Icons.AlertTriangle className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
                                     <h2 className="text-rose-900 font-bold text-lg tracking-tight">{criticalStats15.total} Clientes en Riesgo FPD15</h2>
-                                    <p className="text-sm text-rose-700 opacity-90 mt-0.5">Exactamente 13 o 14 días de mora. ¡Última oportunidad de gestión!</p>
+                                    <p className="text-sm text-rose-700 opacity-90 mt-0.5">Mora igual a 13 o 14 días. ¡Última oportunidad de gestión!</p>
                                 </div>
                              </div>
                              <div className="flex gap-2">
@@ -2036,7 +1949,7 @@
                                 <div className="p-3 bg-white shadow-sm rounded-full text-red-600 border border-red-100"><Icons.AlertTriangle className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
                                     <h2 className="text-red-900 font-bold text-lg tracking-tight">{criticalStats7.total} Clientes en Mora Crítica</h2>
-                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Exactamente 7 días de mora. Prioridad máxima de gestión hoy.</p>
+                                    <p className="text-sm text-red-700 opacity-90 mt-0.5">Mora igual a 7 días. Prioridad máxima de gestión hoy.</p>
                                 </div>
                              </div>
                              <div className="flex gap-2">
@@ -2075,7 +1988,7 @@
                                 <div className="p-3 bg-white shadow-sm rounded-full text-amber-600 border border-amber-100"><Icons.Clock className="w-6 h-6 animate-pulse-slow"/></div>
                                 <div>
                                     <h2 className="text-amber-900 font-bold text-lg tracking-tight">{earlyStats.total} Clientes en Gestión Temprana</h2>
-                                    <p className="text-sm text-amber-700 opacity-90 mt-0.5">Ventas de hace 12 a 14 días. ¡Contactar antes del vencimiento!</p>
+                                    <p className="text-sm text-amber-700 opacity-90 mt-0.5">Faltan de 0 a 2 días para el vencimiento. ¡Contactar!</p>
                                 </div>
                              </div>
                              <button onClick={() => { setShowOnlyEarly(!showOnlyEarly); setShowOnlyAlerts7(false); setShowOnlyAlerts15(false); setShowOnlyCritical7(false); setShowOnlyCritical15(false); }} className={`px-6 py-2.5 rounded-full text-sm font-bold border transition-all shadow-sm ${showOnlyEarly ? 'bg-amber-600 text-white border-amber-600 hover:bg-amber-700 hover:shadow-md' : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50 hover:border-amber-300'}`}>
@@ -2126,8 +2039,8 @@
                                     {paginatedData.length > 0 ? paginatedData.map((row, i) => {
                                         const isCritical7Row = getRowCriticalStatus7(row, headers);
                                         const isCritical15Row = getRowCriticalStatus15(row, headers);
-                                        const isAlert15Row = getRowVisuallyAlert(row, headers) && (getRowAlertStatus15(row, headers) || checkSpecificVisualQuotaAlert(row, headers, 'fpd15')); 
-                                        const isAlert7Row = getRowVisuallyAlert(row, headers) && (getRowAlertStatus7(row, headers) || checkSpecificVisualQuotaAlert(row, headers, 'fpd7') || checkSpecificVisualQuotaAlert(row, headers, 'fpd3'));
+                                        const isAlert15Row = getRowAlertStatus15(row, headers); 
+                                        const isAlert7Row = getRowAlertStatus7(row, headers);
                                         const isEarlyRow = getRowEarlyStatus(row, headers);
 
                                         let rowBgClass = 'hover:bg-indigo-50/30';
@@ -2138,7 +2051,7 @@
                                             rowBgClass = 'bg-rose-200 hover:bg-rose-300';
                                             rowBorderClass = 'border-l-[6px] border-rose-700'; 
                                             rowTextClass = 'text-rose-950 font-black';
-                                        } else if (isAlert15Row && !isCritical15Row && !isCritical7Row) {
+                                        } else if (isAlert15Row) {
                                             rowBgClass = 'bg-orange-100 hover:bg-orange-200';
                                             rowBorderClass = 'border-l-[4px] border-orange-500'; 
                                             rowTextClass = 'text-orange-950 font-bold';
@@ -2146,7 +2059,7 @@
                                             rowBgClass = 'bg-red-200 hover:bg-red-300';
                                             rowBorderClass = 'border-l-[6px] border-red-700'; 
                                             rowTextClass = 'text-red-950 font-black';
-                                        } else if (isAlert7Row && !isCritical7Row && !isCritical15Row) {
+                                        } else if (isAlert7Row) {
                                             rowBgClass = 'bg-yellow-100 hover:bg-yellow-200';
                                             rowBorderClass = 'border-l-[4px] border-yellow-500';
                                             rowTextClass = 'text-yellow-950 font-bold';
@@ -2380,7 +2293,7 @@
                         </div>
                     )}
 
-                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS) --- */}
+                    {/* --- MODAL EDICIÓN LIMPIA (TELÉFONO/REFERENCIAS/FECHAS) --- */}
                     {cleanEditModal.show && (
                         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                              <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
@@ -2397,11 +2310,11 @@
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2 px-1">Nuevo Valor</label>
                                         <input 
-                                            type="text"
+                                            type={cleanEditModal.isDate ? "date" : "text"}
                                             value={cleanEditModal.currentValue}
                                             onChange={(e) => setCleanEditModal({ ...cleanEditModal, currentValue: e.target.value })}
                                             className="w-full p-4 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none text-sm transition-all bg-slate-50 focus:bg-white"
-                                            placeholder="Escribe aquí..."
+                                            placeholder={cleanEditModal.isDate ? "" : "Escribe aquí..."}
                                             autoFocus
                                         />
                                     </div>
@@ -2531,13 +2444,10 @@
                                                     <td className="px-6 py-3.5 font-bold text-slate-700">{row.name}</td>
                                                     <td className="px-4 py-3.5 text-center font-bold text-slate-800">{row.total}</td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-xs">{row.pagas}</span></td>
-                                                    
-                                                    {/* NUEVAS COLUMNAS DE PRÉSTAMO (CAJA) */}
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-bold text-xs">{row.prestamos}</span></td>
                                                     <td className="px-4 py-3.5 text-right font-bold text-slate-700">
                                                         {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(row.prestamosDinero)}
                                                     </td>
-
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-bold text-xs">{row.gestion}</span></td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg font-bold text-xs">{row.noCancelo}</span></td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg font-bold text-xs">{row.porVencer}</span></td>
