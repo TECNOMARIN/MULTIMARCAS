@@ -90,7 +90,7 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
                     email: ['email', 'correo', 'mail'], 
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
-                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
+                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'], // Soporte WhatsApp/Llamadas
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
@@ -438,7 +438,7 @@
                 return false;
             }, [activeConfig, findColumnName, getDueDate]);
 
-            // --- FETCH PARA TABLERO INDIVIDUAL ---
+            // --- FETCH PARA TABLERO INDIVIDUAL (CON CRUCE DE VENTAS EN VIVO) ---
             const fetchData = useCallback(async () => {
                 setLoading(true);
                 setError(null);
@@ -456,23 +456,79 @@
 
                 try {
                     const separator = API_URL.includes('?') ? '&' : '?';
-                    const cacheBusterUrl = `${API_URL}${separator}type=${portfolio}&t=${new Date().getTime()}`;
-                    const response = await fetch(cacheBusterUrl, { method: "GET", redirect: "follow" });
                     
-                    if (!response.ok) throw new Error(`Error servidor: ${response.status}`);
+                    // 🚀 DUAL FETCH: Traemos Cartera y Ventas al mismo tiempo
+                    const carteraUrl = `${API_URL}${separator}type=${portfolio}&t=${new Date().getTime()}`;
+                    const ventasUrl = `${API_URL}${separator}type=ventas_${portfolio}&t=${new Date().getTime()}`;
+
+                    const [carteraRes, ventasRes] = await Promise.all([
+                        fetch(carteraUrl, { method: "GET", redirect: "follow" }),
+                        fetch(ventasUrl, { method: "GET", redirect: "follow" })
+                    ]);
                     
-                    const text = await response.text();
-                    let jsonData;
-                    try { jsonData = JSON.parse(text); } catch (e) { throw new Error('Respuesta no válida del servidor.'); }
+                    if (!carteraRes.ok) throw new Error(`Error servidor Cartera: ${carteraRes.status}`);
                     
-                    if (!Array.isArray(jsonData) || jsonData.length === 0) {
-                         if (jsonData && jsonData.result === 'error') throw new Error(jsonData.error);
+                    const carteraText = await carteraRes.text();
+                    let carteraData;
+                    try { carteraData = JSON.parse(carteraText); } catch (e) { throw new Error('Respuesta no válida de Cartera.'); }
+                    
+                    if (!Array.isArray(carteraData) || carteraData.length === 0) {
+                         if (carteraData && carteraData.result === 'error') throw new Error(carteraData.error);
                          throw new Error('La hoja está vacía.');
                     }
 
-                    const keys = Object.keys(jsonData[0]);
-                    setHeaders(keys);
-                    setData(jsonData);
+                    // 🧠 Procesar Ventas para el cruce (silencioso si falla)
+                    let ventasData = [];
+                    if (ventasRes.ok) {
+                        try { 
+                            const ventasText = await ventasRes.text();
+                            ventasData = JSON.parse(ventasText); 
+                        } catch(e) {}
+                    }
+
+                    const cKeys = Object.keys(carteraData[0]);
+                    
+                    // 👑 EL QUE MANDA ES VENTAS: Imponer el "Asignado" de Ventas sobre Cartera
+                    if (Array.isArray(ventasData) && ventasData.length > 0) {
+                        const vKeys = Object.keys(ventasData[0]);
+                        
+                        // Identificar columnas clave en Ventas
+                        const vCedulaCol = findConfigColumn(activeConfig?.columns?.id, vKeys) || vKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
+                        const vAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, vKeys) || findConfigColumn(activeConfig?.columns?.seller, vKeys);
+                        
+                        if (vCedulaCol && vAsignadoCol) {
+                            // Crear diccionario rápido de Ventas { "123456": "JUAN PEREZ" }
+                            const mapaVentas = {};
+                            ventasData.forEach(vRow => {
+                                const cedLimpia = String(vRow[vCedulaCol] || '').replace(/\D/g, '');
+                                const asigVal = String(vRow[vAsignadoCol] || '').trim();
+                                if (cedLimpia && asigVal) {
+                                    mapaVentas[cedLimpia] = asigVal;
+                                }
+                            });
+
+                            // Identificar columnas clave en Cartera
+                            const cCedulaCol = findConfigColumn(activeConfig?.columns?.id, cKeys) || cKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
+                            const cAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, cKeys);
+                            const cResponsableCol = cKeys.find(k => String(k).toUpperCase().trim() === "RESPONSABLE");
+
+                            // Sobrescribir datos en Cartera si existen en Ventas
+                            if (cCedulaCol) {
+                                carteraData = carteraData.map(cRow => {
+                                    const cedC = String(cRow[cCedulaCol] || '').replace(/\D/g, '');
+                                    if (cedC && mapaVentas[cedC]) {
+                                        const trueAsignado = mapaVentas[cedC];
+                                        if (cAsignadoCol) cRow[cAsignadoCol] = trueAsignado;
+                                        if (cResponsableCol) cRow[cResponsableCol] = trueAsignado;
+                                    }
+                                    return cRow;
+                                });
+                            }
+                        }
+                    }
+
+                    setHeaders(cKeys);
+                    setData(carteraData);
                 } catch (err) {
                     console.error(err);
                     setError(String(err.message || 'Error desconocido.'));
@@ -481,7 +537,7 @@
                 } finally {
                     setLoading(false);
                 }
-            }, [portfolio]); 
+            }, [portfolio, activeConfig, findConfigColumn]); 
 
             useEffect(() => { 
                 fetchData(); 
@@ -1450,7 +1506,7 @@
                     body: tableRows,
                     startY: 33,
                     theme: 'grid',
-                    headStyles: { fillColor: [79, 70, 229] }, 
+                    headStyles: { fillColor: [79, 70, 229] }, // Color Índigo
                     styles: { fontSize: 8 },
                     columnStyles: {
                         7: { cellWidth: 40 } 
@@ -1757,6 +1813,7 @@
                             </button>
                             
                             <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-full border border-slate-200 ml-2">
+                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN ALOCREDIT */}
                                 {portfolio === 'alocredit' && (
                                     <button 
                                         onClick={() => window.location.href = 'actualizador.html'} 
@@ -1767,6 +1824,7 @@
                                     </button>
                                 )}
 
+                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN PAYJOY */}
                                 {portfolio === 'payjoy' && (
                                     <button 
                                         onClick={() => window.location.href = 'actualizador_payjoy.html'} 
@@ -2444,10 +2502,13 @@
                                                     <td className="px-6 py-3.5 font-bold text-slate-700">{row.name}</td>
                                                     <td className="px-4 py-3.5 text-center font-bold text-slate-800">{row.total}</td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-xs">{row.pagas}</span></td>
+                                                    
+                                                    {/* NUEVAS COLUMNAS DE PRÉSTAMO (CAJA) */}
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-bold text-xs">{row.prestamos}</span></td>
                                                     <td className="px-4 py-3.5 text-right font-bold text-slate-700">
                                                         {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(row.prestamosDinero)}
                                                     </td>
+
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-bold text-xs">{row.gestion}</span></td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg font-bold text-xs">{row.noCancelo}</span></td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg font-bold text-xs">{row.porVencer}</span></td>
