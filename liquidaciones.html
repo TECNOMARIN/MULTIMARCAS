@@ -45,7 +45,7 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
 
         function LiquidacionesApp() {
-            const [brand, setBrand] = useState('todas'); 
+            const [brand, setBrand] = useState('credismart'); 
             const [data, setData] = useState([]);
             const [loading, setLoading] = useState(false);
             
@@ -120,7 +120,6 @@
                                 });
 
                                 // --- EXTRACTOR INTELIGENTE DEL VALOR FINANCIADO ---
-                                // 1. Buscamos primero el nombre exacto de la columna en tus diferentes formatos
                                 let financed = parseAmount(findVal([
                                     'SALDO A FINANCIAR', 
                                     'SALDO A FINACIAR', 
@@ -131,7 +130,6 @@
                                     'VALOR CREDITO'
                                 ]));
 
-                                // 2. MATEMÁTICA DE RESPALDO: Si la celda estaba vacía o en 0, lo calculamos manualmente
                                 if (financed === 0 || isNaN(financed)) {
                                     let totalVenta = parseAmount(findVal(['TOTAL VENTA', 'PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL']));
                                     let cuotaInicial = parseAmount(findVal(['CUOTA INICIAL', 'VALOR CUOTA INICIAL', 'INICIAL']));
@@ -148,6 +146,7 @@
                                     _device: findVal(['REFERENCIA EQUIPO', 'REFERENCIA', 'MODELO', 'EQUIPO']),
                                     _assigned: findVal(['RESPONSABLE', 'ASIGNADO', 'VENDEDOR']),
                                     _financedAmount: financed,
+                                    _remanente: parseAmount(findVal(['EXCEDENTE DE INICIAL', 'REMANENTE DE INICIAL', 'REMANENTE'])),
                                     _cartera: parseAmount(findVal(['CARTERA', 'COSTO CARTERA', 'FEE CARTERA'])),
                                     _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112', 'UTILIDAD ADMIN'])),
                                     _aConsignar: aConsignarTotal
@@ -213,14 +212,15 @@
             }, [data]);
 
             const totals = useMemo(() => {
-                let tFinanced = 0, tCartera = 0, tAdmin = 0, tConsignar = 0;
+                let tFinanced = 0, tCartera = 0, tAdmin = 0, tConsignar = 0, tRemanente = 0;
                 filteredData.forEach(r => {
                     tFinanced += r._financedAmount;
+                    tRemanente += r._remanente;
                     tCartera += r._cartera;
                     tAdmin += r._admin112;
                     tConsignar += r._aConsignar;
                 });
-                return { tFinanced, tCartera, tAdmin, tConsignar, count: filteredData.length };
+                return { tFinanced, tRemanente, tCartera, tAdmin, tConsignar, count: filteredData.length };
             }, [filteredData]);
 
             const handleExportPDF = () => {
@@ -228,8 +228,8 @@
                 const doc = new jsPDF('landscape');
                 
                 const tableColumn = brand === 'todas' 
-                    ? ["Financiera", "Fecha", "Cliente", "Responsable", "Referencia", "V. Financiado", "Cartera", "Admin 112", "A Consignar"]
-                    : ["Fecha", "Cliente", "Responsable", "Referencia", "V. Financiado", "Cartera", "Admin 112", "A Consignar"];
+                    ? ["Financiera", "Fecha", "Cliente", "Responsable", "Referencia", "V. Financiado", "Remanente", "Cartera", "Admin 112", "A Consignar"]
+                    : ["Fecha", "Cliente", "Responsable", "Referencia", "V. Financiado", "Remanente", "Cartera", "Admin 112", "A Consignar"];
                 
                 const tableRows = [];
 
@@ -241,6 +241,7 @@
                         String(row._assigned || ''),
                         String(row._device || '').substring(0, 20),
                         formatMoney(row._financedAmount),
+                        formatMoney(row._remanente),
                         formatMoney(row._cartera),
                         formatMoney(row._admin112),
                         formatMoney(row._aConsignar)
@@ -266,8 +267,8 @@
                 doc.text(`Aliado / Responsable: ${pName}  |  Periodo: ${dateRangeStr}  |  Total Créditos: ${totals.count}`, 14, 22);
 
                 const footRow = brand === 'todas'
-                    ? [["", "", "", "", "TOTALES:", formatMoney(totals.tFinanced), formatMoney(totals.tCartera), formatMoney(totals.tAdmin), formatMoney(totals.tConsignar)]]
-                    : [["", "", "", "TOTALES:", formatMoney(totals.tFinanced), formatMoney(totals.tCartera), formatMoney(totals.tAdmin), formatMoney(totals.tConsignar)]];
+                    ? [["", "", "", "", "TOTALES:", formatMoney(totals.tFinanced), formatMoney(totals.tRemanente), formatMoney(totals.tCartera), formatMoney(totals.tAdmin), formatMoney(totals.tConsignar)]]
+                    : [["", "", "", "TOTALES:", formatMoney(totals.tFinanced), formatMoney(totals.tRemanente), formatMoney(totals.tCartera), formatMoney(totals.tAdmin), formatMoney(totals.tConsignar)]];
 
                 doc.autoTable({
                     head: [tableColumn],
@@ -292,6 +293,7 @@
                     obj["Responsable"] = row._assigned || '';
                     obj["Referencia"] = row._device || '';
                     obj["Valor Financiado"] = row._financedAmount;
+                    obj["Remanente"] = row._remanente;
                     obj["Cartera"] = row._cartera;
                     obj["Admin 112"] = row._admin112;
                     obj["A Consignar"] = row._aConsignar;
@@ -309,7 +311,7 @@
                     {/* Header */}
                     <div className="bg-white px-6 py-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                         <div className="flex items-center gap-5">
-                            <button onClick={() => window.location.href = 'dashboard.html'} className="p-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm border border-slate-200" title="Volver al Dashboard">
+                            <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm border border-slate-200" title="Volver al Dashboard">
                                 <Icons.ArrowLeft className="w-5 h-5"/>
                             </button>
                             <div className="p-3 bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl shadow-md hidden sm:block">
@@ -375,11 +377,15 @@
                     ) : (
                         <>
                             {/* Tarjetas de Resumen (Cuentas Claras) */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                                 <div className="bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-700 text-white flex flex-col justify-center">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Valor Financiado</p>
                                     <p className="text-2xl font-black">{formatMoney(totals.tFinanced)}</p>
                                     <p className="text-xs text-slate-400 mt-1">{totals.count} equipos liquidados</p>
+                                </div>
+                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-purple-500">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Remanente</p>
+                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tRemanente)}</p>
                                 </div>
                                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-blue-500">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Costo Cartera</p>
@@ -390,7 +396,7 @@
                                     <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tAdmin)}</p>
                                 </div>
                                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">A Consignar (Aliados)</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">A Consignar</p>
                                     <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tConsignar)}</p>
                                 </div>
                             </div>
@@ -419,6 +425,7 @@
                                                 <th className="px-4 py-3 font-black">Asignado</th>
                                                 <th className="px-4 py-3 font-black">Cliente</th>
                                                 <th className="px-4 py-3 font-black">V. Financiado</th>
+                                                <th className="px-4 py-3 font-black text-purple-600 bg-purple-50/50">Remanente</th>
                                                 <th className="px-4 py-3 font-black text-blue-600 bg-blue-50/50">Cartera</th>
                                                 <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50">Admin 112</th>
                                                 <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50">A Consignar</th>
@@ -445,6 +452,9 @@
                                                     <td className="px-4 py-3 font-medium text-slate-600 text-xs truncate max-w-[150px]">{row._client || '-'}</td>
                                                     <td className="px-4 py-3 font-bold text-slate-800 text-xs">{formatMoney(row._financedAmount)}</td>
                                                     
+                                                    <td className="px-4 py-3 font-bold text-purple-700 bg-purple-50/30 text-xs">
+                                                        {formatMoney(row._remanente)}
+                                                    </td>
                                                     <td className="px-4 py-3 font-bold text-blue-700 bg-blue-50/30 text-xs">
                                                         {formatMoney(row._cartera)}
                                                     </td>
@@ -456,7 +466,7 @@
                                                     </td>
                                                 </tr>
                                             )) : (
-                                                <tr><td colSpan={brand === 'todas' ? "8" : "7"} className="px-6 py-10 text-center text-slate-400">No hay ventas registradas para este filtro.</td></tr>
+                                                <tr><td colSpan={brand === 'todas' ? "9" : "8"} className="px-6 py-10 text-center text-slate-400">No hay ventas registradas para este filtro.</td></tr>
                                             )}
                                         </tbody>
                                     </table>
