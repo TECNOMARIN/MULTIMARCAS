@@ -117,7 +117,7 @@
             },
             payjoy: { 
                 name: "PAYJOY", theme: "blue",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'fpd10'], 
                 columns: { 
                     assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], 
                     seller: ['vendedor', 'asesor', 'ejecutivo'], 
@@ -130,6 +130,7 @@
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
+                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             },
@@ -206,7 +207,7 @@
             // Modal Edición
             const [editModal, setEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
             const [cleanEditModal, setCleanEditModal] = useState({ show: false, row: null, colName: null, currentValue: '', isDate: false });
-            const [confirmModal, setConfirmModal] = useState({ show: false, row: null, actionType: null, message: '', amount: '' });
+            const [confirmModal, setConfirmModal] = useState({ show: false, row: null, actionType: null, message: '', amount: '', quotaId: null });
             const [isSaving, setIsSaving] = useState(false);
 
             // Paginación
@@ -245,18 +246,16 @@
 
             // 🧠 NÚCLEO INTELIGENTE DE FECHAS (Soporte exclusivo Credismart y Estricto Payjoy)
             const getDueDate = useCallback((row, headersList) => {
-                // 1. SOLO PARA CREDISMART: Permitimos fecha manual en 'Primera Cuota'
-                if (portfolio === 'credismart') {
-                    const firstQuotaCol = findConfigColumn(['primera cuota', '1era cuota', 'fecha pago'], headersList);
-                    if (firstQuotaCol && row[firstQuotaCol]) {
-                        const parsed = parseDate(row[firstQuotaCol]);
-                        if (parsed && !isNaN(parsed.getTime())) {
-                            return parsed;
-                        }
+                // 1. Intentar con Primera Cuota explícita (Aplica para Krediya, Alocredit, Credismart)
+                const firstQuotaCol = findConfigColumn(['primera cuota', '1era cuota', 'fecha pago'], headersList);
+                if (firstQuotaCol && row[firstQuotaCol]) {
+                    const parsed = parseDate(row[firstQuotaCol]);
+                    if (parsed && !isNaN(parsed.getTime())) {
+                        return parsed;
                     }
                 }
                 
-                // 2. PARA PAYJOY (y fallback general): Estricto Fecha Venta + 14 Días
+                // 2. Fallback general: Fecha Venta + 14 Días (Estándar Payjoy / Genérico)
                 const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
                 if (dateCol && row[dateCol]) {
                     const saleDate = parseDate(row[dateCol]);
@@ -267,7 +266,7 @@
                     }
                 }
                 return null;
-            }, [activeConfig, findConfigColumn, portfolio]);
+            }, [activeConfig, findConfigColumn]);
 
             const formatCellData = (value) => {
                 if (typeof value !== 'string') {
@@ -492,12 +491,10 @@
                     if (Array.isArray(ventasData) && ventasData.length > 0) {
                         const vKeys = Object.keys(ventasData[0]);
                         
-                        // Identificar columnas clave en Ventas
                         const vCedulaCol = findConfigColumn(activeConfig?.columns?.id, vKeys) || vKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
                         const vAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, vKeys) || findConfigColumn(activeConfig?.columns?.seller, vKeys);
                         
                         if (vCedulaCol && vAsignadoCol) {
-                            // Crear diccionario rápido de Ventas { "123456": "JUAN PEREZ" }
                             const mapaVentas = {};
                             ventasData.forEach(vRow => {
                                 const cedLimpia = String(vRow[vCedulaCol] || '').replace(/\D/g, '');
@@ -507,12 +504,10 @@
                                 }
                             });
 
-                            // Identificar columnas clave en Cartera
                             const cCedulaCol = findConfigColumn(activeConfig?.columns?.id, cKeys) || cKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
                             const cAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, cKeys);
                             const cResponsableCol = cKeys.find(k => String(k).toUpperCase().trim() === "RESPONSABLE");
 
-                            // Sobrescribir datos en Cartera si existen en Ventas
                             if (cCedulaCol) {
                                 carteraData = carteraData.map(cRow => {
                                     const cedC = String(cRow[cCedulaCol] || '').replace(/\D/g, '');
@@ -585,10 +580,12 @@
                 });
             }, [headers, activeConfig]);
 
+            // Reorganizar encabezados dinámicamente: Inyectamos "DÍAS MORA"
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
                 
+                // --- OCULTAR COLUMNAS INDESEADAS ---
                 arr = arr.filter(h => {
                     const lowerH = String(h).toLowerCase().trim();
                     if (lowerH === 'empresa') return false; 
@@ -610,7 +607,7 @@
                 });
                 const firstQuotaCol = arr.find(h => {
                     const l = String(h).toLowerCase().trim();
-                    return l === 'primera cuota' || l === 'primera' || l === 'cuota 1' || l === 'fecha pago';
+                    return l === 'primera cuota' || l === 'primera' || l === 'cuota 1' || l === '1era cuota';
                 });
                 const companyCol = arr.find(h => String(h).toLowerCase().trim() === 'empresa');
                 const birthDateCol = findConfigColumn(activeConfig?.columns?.birthDate, headers);
@@ -630,9 +627,14 @@
                     }
                 }
 
+                // INYECCIÓN DE LA COLUMNA "DÍAS MORA"
                 if (firstQuotaCol || paidCol || lateCol) {
                     const colsToInsert = [];
                     if (firstQuotaCol) colsToInsert.push(firstQuotaCol);
+                    
+                    // Columna Virtual de Días Mora
+                    colsToInsert.push('DÍAS MORA');
+                    
                     if (paidCol) colsToInsert.push(paidCol);
                     if (lateCol) colsToInsert.push(lateCol);
 
@@ -1155,7 +1157,7 @@
                 return statsObj;
             }, [dataForStats, headers, findColumnName, findConfigColumn, activeConfig, portfolio]);
 
-            // --- CORRECCIÓN COLOR COLUMNA "CUOTAS PAGAS" ---
+            // --- ESTILOS DE COLUMNAS ---
             const getColumnStyles = (headerName) => {
                 if (!headerName) return null;
                 const lowerHeader = String(headerName).toLowerCase().trim();
@@ -1164,6 +1166,10 @@
                     return { head: "bg-blue-100/70 text-blue-900 border-b-2 border-blue-200", cellBase: "", bgColor: "bg-blue-50/60 font-black text-blue-800 shadow-sm" };
                 }
                 
+                if (headerName === 'DÍAS MORA') {
+                    return { head: "bg-red-100 text-red-900 border-b-2 border-red-300 text-center font-black", cellBase: "border-l border-r border-red-100", bgColor: "bg-red-50/20" };
+                }
+
                 if (lowerHeader.includes('pagas') || lowerHeader.includes('pagadas')) {
                     return { head: "bg-emerald-100 text-emerald-900 border-b-2 border-emerald-300 text-center", cellBase: "", bgColor: "bg-emerald-50 text-center font-black text-emerald-700 text-sm" };
                 }
@@ -1486,7 +1492,7 @@
                         row[deviceColumn] || '-',
                         row[storeColumn] || '-',
                         row[assignedColumn] || '-',
-                        cellStatus.substring(0, 40), 
+                        cellStatus.substring(0, 40), // Limitar texto por si es muy largo
                         cellAmount
                     ]);
                 });
@@ -1509,38 +1515,43 @@
                     headStyles: { fillColor: [79, 70, 229] }, // Color Índigo
                     styles: { fontSize: 8 },
                     columnStyles: {
-                        7: { cellWidth: 40 } 
+                        7: { cellWidth: 40 } // Darle espacio a la columna de estado
                     }
                 });
 
                 doc.save(`Filtro_Personalizado_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
-            const triggerQuickAction = (row, actionType) => {
+            const triggerQuickAction = (row, actionType, quotaId = null) => {
                 let msg = "";
                 let defaultAmount = "";
+                let qLabel = "";
+                
+                if (quotaId && QUOTA_LABELS[quotaId]) {
+                    qLabel = QUOTA_LABELS[quotaId].label;
+                }
 
-                if (actionType === 'COMPLETADO') msg = "¿Marcar cliente como COMPLETADO en Continuidad?";
+                if (actionType === 'COMPLETADO') msg = `¿Marcar cliente como COMPLETADO${qLabel ? ` en ${qLabel}` : ' en Continuidad'}?`;
                 else if (actionType === 'PAGO_GESTION') {
-                    msg = "¿Registrar PAGO CON GESTIÓN (préstamo) para este cliente?";
+                    msg = `¿Registrar PAGO CON GESTIÓN (préstamo) para este cliente${qLabel ? ` en ${qLabel}` : ''}?`;
                     const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
                     if (valCuotaCol && row[valCuotaCol]) {
                         defaultAmount = String(row[valCuotaCol]);
                     }
                 }
-                else msg = "¿Registrar PAGO para este cliente de forma rápida?";
+                else msg = `¿Registrar PAGO para este cliente de forma rápida${qLabel ? ` en ${qLabel}` : ''}?`;
                 
-                setConfirmModal({ show: true, row, actionType, message: msg, amount: defaultAmount });
+                setConfirmModal({ show: true, row, actionType, message: msg, amount: defaultAmount, quotaId });
             };
 
             const executeQuickAction = async () => {
-                const { row, actionType, amount } = confirmModal;
+                const { row, actionType, amount, quotaId } = confirmModal;
                 const phone = phoneColumn ? row[phoneColumn] : '';
                 const idVal = idColumn ? row[idColumn] : '';
                 
                 if (!phone && !idVal) {
                     setError("Cliente sin número de celular ni identificador, no se puede actualizar.");
-                    setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '' });
+                    setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '', quotaId: null });
                     return;
                 }
 
@@ -1557,24 +1568,30 @@
                     let fallbackAppend = false;
                     let fallbackClean = false;
                     
+                    let qLabelText = "";
+                    if (quotaId && QUOTA_LABELS[quotaId]) {
+                        qLabelText = ` (${QUOTA_LABELS[quotaId].label})`;
+                    }
+                    
                     if (actionType === 'COMPLETADO') {
                         if (!commentsCol) throw new Error("No se encontró la columna de comentarios en el Excel.");
                         
-                        updatesPayload.push({ column: commentsCol, value: "Completado", append: true, cleanWrite: false });
+                        const valComment = `Completado${qLabelText}`;
+                        updatesPayload.push({ column: commentsCol, value: valComment, append: true, cleanWrite: false });
                         
-                        fallbackComment = "Completado";
+                        fallbackComment = valComment;
                         fallbackCol = commentsCol;
                         fallbackAppend = true;
                         fallbackClean = false;
                         
                         const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
                         const oldVal = updatedRow[commentsCol] || '';
-                        updatedRow[commentsCol] = oldVal ? `[${dateStr}] Completado | ${oldVal}` : `[${dateStr}] Completado`;
+                        updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
 
                     } else {
                         const isGestion = actionType === 'PAGO_GESTION';
                         const valStatus = isGestion ? "PAGO CON GESTION" : "PAGO";
-                        const valComment = isGestion ? `Pago registrado con Gestión (Préstamo: $${amount || 0})` : "Pago registrado";
+                        const valComment = isGestion ? `Pago registrado con Gestión${qLabelText} (Préstamo: $${amount || 0})` : `Pago registrado${qLabelText}`;
 
                         if (paymentCol) {
                             updatesPayload.push({ column: paymentCol, value: valStatus, append: false, cleanWrite: true });
@@ -1634,7 +1651,7 @@
                     setError("Error: " + e.message);
                 } finally {
                     setIsSaving(false);
-                    setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '' });
+                    setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '', quotaId: null });
                 }
             };
 
@@ -2139,7 +2156,7 @@
                                                         
                                                         return (
                                                             <button 
-                                                                onClick={() => triggerQuickAction(row, 'COMPLETADO')}
+                                                                onClick={() => triggerQuickAction(row, 'COMPLETADO', activeQuotaForButton)}
                                                                 className="flex items-center gap-1.5 px-3 py-1.5 mx-auto rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 bg-violet-100 text-violet-700 border border-violet-200 hover:bg-violet-600 hover:text-white"
                                                                 title="Marcar Revisión Completada"
                                                                 disabled={isSaving}
@@ -2151,15 +2168,37 @@
                                                         let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
                                                         if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
                                                         const currentPay = statusCol ? String(row[statusCol] || '').toLowerCase() : '';
+                                                        const isFirstQuotaPaid = (currentPay === 'pago' || currentPay === 'pago con gestion' || currentPay === 'pago con gestión');
                                                         
-                                                        if (currentPay === 'pago' || currentPay === 'pago con gestion' || currentPay === 'pago con gestión') {
-                                                            return <span className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1"><Icons.CheckCircle className="w-3 h-3"/> Pagado</span>;
+                                                        let lateColName = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                                                        let lateNum = 0;
+                                                        if (lateColName && row[lateColName] !== undefined && row[lateColName] !== "") {
+                                                            lateNum = Number(String(row[lateColName]).trim()) || 0;
+                                                        }
+
+                                                        if (isFirstQuotaPaid) {
+                                                            if (lateNum > 0) {
+                                                                return (
+                                                                    <div className="flex justify-center gap-2">
+                                                                        <button 
+                                                                            onClick={() => triggerQuickAction(row, 'PAGO_GESTION', activeQuotaForButton)}
+                                                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white"
+                                                                            title="Registrar Pago con Gestión (Préstamo) para Cuota Atrasada"
+                                                                            disabled={isSaving}
+                                                                        >
+                                                                            <Icons.Handshake className="w-4 h-4"/> PAGO GESTIÓN
+                                                                        </button>
+                                                                    </div>
+                                                                );
+                                                            } else {
+                                                                return <span className="text-[10px] font-bold text-emerald-600 flex items-center justify-center gap-1"><Icons.CheckCircle className="w-3 h-3"/> Pagado</span>;
+                                                            }
                                                         }
 
                                                         return (
                                                             <div className="flex justify-center gap-2">
                                                                 <button 
-                                                                    onClick={() => triggerQuickAction(row, 'PAGO')}
+                                                                    onClick={() => triggerQuickAction(row, 'PAGO', activeQuotaForButton)}
                                                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white"
                                                                     title="Registrar Pago Directo"
                                                                     disabled={isSaving}
@@ -2167,7 +2206,7 @@
                                                                     <Icons.DollarSign className="w-4 h-4"/> PAGO
                                                                 </button>
                                                                 <button 
-                                                                    onClick={() => triggerQuickAction(row, 'PAGO_GESTION')}
+                                                                    onClick={() => triggerQuickAction(row, 'PAGO_GESTION', activeQuotaForButton)}
                                                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white"
                                                                     title="Registrar Pago con Gestión (Préstamo)"
                                                                     disabled={isSaving}
@@ -2192,7 +2231,57 @@
                                                 
                                                 let tdContent = null;
 
-                                                if (isCleanEditableCol) {
+                                                // --- INYECCIÓN VISUAL DE DÍAS MORA ---
+                                                if (h === 'DÍAS MORA') {
+                                                    const dueDate = getDueDate(row, headers);
+                                                    
+                                                    let isUnpaid = false;
+                                                    const lateColName = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                                                    if (lateColName && row[lateColName] !== undefined && row[lateColName] !== "") {
+                                                        const lateNum = Number(String(row[lateColName]).trim()) || 0;
+                                                        if (lateNum > 0) isUnpaid = true;
+                                                    } else {
+                                                        let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                                                        if (statusCol) isUnpaid = isObsUnpaid(row[statusCol]);
+                                                    }
+                                                    
+                                                    let textMora = "-";
+                                                    let badgeClass = "text-slate-400 bg-slate-100 border border-slate-200";
+                                                    
+                                                    if (dueDate) {
+                                                        const today = new Date();
+                                                        today.setHours(0,0,0,0);
+                                                        const dDate = new Date(dueDate);
+                                                        dDate.setHours(0,0,0,0);
+                                                        const diffDays = Math.floor((today.getTime() - dDate.getTime()) / (1000 * 60 * 60 * 24));
+                                                        
+                                                        if (isUnpaid) {
+                                                            if (diffDays > 0) {
+                                                                textMora = `${diffDays} Días`;
+                                                                badgeClass = "text-red-700 bg-red-100 border border-red-300 shadow-sm"; 
+                                                            } else if (diffDays === 0) {
+                                                                textMora = "Vence Hoy";
+                                                                badgeClass = "text-amber-700 bg-amber-100 border border-amber-300 shadow-sm";
+                                                            } else {
+                                                                textMora = `Faltan ${Math.abs(diffDays)}d`;
+                                                                badgeClass = "text-blue-700 bg-blue-100 border border-blue-200 shadow-sm";
+                                                            }
+                                                        } else {
+                                                            textMora = "Al Día";
+                                                            badgeClass = "text-emerald-700 bg-emerald-100 border border-emerald-200 shadow-sm";
+                                                        }
+                                                    }
+
+                                                    tdContent = (
+                                                        <td key={j} className={`px-4 py-3 whitespace-nowrap text-xs text-center border-l border-r border-red-100 bg-red-50/10`}>
+                                                            <span className={`inline-block px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${badgeClass}`}>
+                                                                {textMora}
+                                                            </span>
+                                                        </td>
+                                                    );
+                                                } 
+                                                // --- EDICIÓN NORMAL DE COLUMNAS ---
+                                                else if (isCleanEditableCol) {
                                                     const clientVal = clientColumn ? row[clientColumn] : '';
                                                     const deviceVal = deviceColumn ? row[deviceColumn] : '';
                                                     const clean = isPhoneCol && val ? cleanPhoneNumber(val) : null;
@@ -2429,7 +2518,7 @@
                                 </div>
                                 <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-center gap-3 rounded-b-2xl">
                                     <button 
-                                        onClick={() => setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '' })} 
+                                        onClick={() => setConfirmModal({ show: false, row: null, actionType: null, message: '', amount: '', quotaId: null })} 
                                         className="px-6 py-2.5 text-slate-600 font-bold text-sm hover:bg-slate-200 rounded-full transition-colors"
                                         disabled={isSaving}
                                     >
@@ -2502,13 +2591,10 @@
                                                     <td className="px-6 py-3.5 font-bold text-slate-700">{row.name}</td>
                                                     <td className="px-4 py-3.5 text-center font-bold text-slate-800">{row.total}</td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-xs">{row.pagas}</span></td>
-                                                    
-                                                    {/* NUEVAS COLUMNAS DE PRÉSTAMO (CAJA) */}
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-bold text-xs">{row.prestamos}</span></td>
                                                     <td className="px-4 py-3.5 text-right font-bold text-slate-700">
                                                         {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(row.prestamosDinero)}
                                                     </td>
-
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg font-bold text-xs">{row.gestion}</span></td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg font-bold text-xs">{row.noCancelo}</span></td>
                                                     <td className="px-4 py-3.5 text-center"><span className="inline-block px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg font-bold text-xs">{row.porVencer}</span></td>
