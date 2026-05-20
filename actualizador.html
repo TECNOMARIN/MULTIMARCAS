@@ -37,9 +37,6 @@
             X: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         };
 
-        // ⚠️ ASEGÚRATE DE PEGAR AQUÍ TU URL CORRECTA Y ACTUALIZADA
-        const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
-        
         // --- COLUMNAS DEL SISTEMA ---
         const TARGET_COLUMNS = [
             "RESPONSABLE", "VENDEDOR", "TIENDA", "FECHA", "ID APLICACION", "NOMBRE CLIENTE", "CEDULA", 
@@ -78,7 +75,7 @@
                         setExcelHeaders(headers);
                         setFileData(json);
                         
-                        // 🧠 Auto-mapeo inteligente 
+                        // 🧠 Auto-mapeo inteligente mejorado
                         let initialMap = {};
                         headers.forEach(h => {
                             const upperH = h.toUpperCase().trim();
@@ -88,22 +85,22 @@
                             if (exactMatch) {
                                 initialMap[h] = exactMatch;
                             } else {
-                                // 2. Traductor Consola -> Cartera
+                                // 2. Traductor Consola -> Cartera (Soporte total para Alocredit)
                                 if (upperH === 'CC' || upperH === 'CÉDULA' || upperH === 'CEDULA' || upperH === 'DOCUMENTO') initialMap[h] = 'CEDULA';
-                                else if (upperH === 'CUOTAS PAGADAS') initialMap[h] = 'cuotas pagas';
-                                else if (upperH === 'CUOTAS ATRASADAS') initialMap[h] = 'Cuotas Atrasadas';
-                                else if (upperH === 'CUOTAS TOTALES' || upperH === 'PLAZO') initialMap[h] = 'PLAZO';
-                                else if (upperH === 'NOMBRE DEL CLIENTE' || upperH === 'NOMBRES') initialMap[h] = 'NOMBRE CLIENTE';
-                                else if (upperH === 'CELULAR DEL CLIENTE' || upperH === 'TELEFONO') initialMap[h] = 'CELULAR';
-                                else if (upperH === 'FECHA DE CONTRATO' || upperH === 'FECHA VENTA') initialMap[h] = 'FECHA';
-                                else if (upperH === 'NÚMERO DE CONTRATO' || upperH === 'NUMERO DE CONTRATO') initialMap[h] = 'ID APLICACION';
+                                else if (upperH === 'CUOTAS PAGADAS' || upperH === 'CUOTAS PAGAS' || upperH === 'PAGADAS') initialMap[h] = 'cuotas pagas';
+                                else if (upperH === 'CUOTAS ATRASADAS' || upperH === 'ATRASADAS') initialMap[h] = 'Cuotas Atrasadas';
+                                else if (upperH === 'CUOTAS TOTALES' || upperH === 'PLAZO' || upperH === 'PLAZO DEL PRESTAMO') initialMap[h] = 'PLAZO';
+                                else if (upperH === 'NOMBRE DEL CLIENTE' || upperH === 'NOMBRES' || upperH === 'NOMBRE COMPLETO') initialMap[h] = 'NOMBRE CLIENTE';
+                                else if (upperH === 'CELULAR DEL CLIENTE' || upperH === 'TELEFONO' || upperH === 'NUMERO CELULAR') initialMap[h] = 'CELULAR';
+                                else if (upperH === 'FECHA DE CONTRATO' || upperH === 'FECHA VENTA' || upperH === 'FECHA FIRMA' || upperH === 'FECHA_FIRMA') initialMap[h] = 'FECHA';
+                                else if (upperH === 'NÚMERO DE CONTRATO' || upperH === 'NUMERO DE CONTRATO' || upperH === 'CONTRATO') initialMap[h] = 'ID APLICACION';
                                 else if (upperH === 'MODELO' || upperH === 'REFERENCIA') initialMap[h] = 'EQUIPO';
-                                else if (upperH === 'EMAIL') initialMap[h] = 'CORREO';
+                                else if (upperH === 'EMAIL' || upperH === 'CORREO') initialMap[h] = 'CORREO';
                                 else if (upperH === 'VENDEDOR' || upperH === 'ASESOR') initialMap[h] = 'VENDEDOR';
-                                else if (upperH === 'VALOR TOTAL' || upperH === 'PRECIO TOTAL') initialMap[h] = 'VALOR VENTA';
-                                else if (upperH === 'VALOR CUOTA INICIAL') initialMap[h] = 'CUOTA INICIAL';
-                                else if (upperH === 'VALOR CUOTA') initialMap[h] = 'VALOR CUOTA';
-                                else if (upperH === 'VALOR CREDITO' || upperH === 'MONTO CREDITO') initialMap[h] = 'SALDO A FINACIAR'; 
+                                else if (upperH === 'VALOR TOTAL' || upperH === 'PRECIO TOTAL' || upperH === 'PRECIO DE VENTA') initialMap[h] = 'VALOR VENTA';
+                                else if (upperH === 'VALOR CUOTA INICIAL' || upperH === 'VALOR CUOTA INICIAL ') initialMap[h] = 'CUOTA INICIAL';
+                                else if (upperH === 'VALOR CUOTA' || upperH === 'MONTO CUOTA') initialMap[h] = 'VALOR CUOTA';
+                                else if (upperH === 'VALOR CREDITO' || upperH === 'MONTO CREDITO' || upperH === 'MONTO TOTAL A CONSIGNAR') initialMap[h] = 'SALDO A FINACIAR'; 
                                 else if (upperH === 'TIENDA' || upperH === 'SUCURSAL') initialMap[h] = 'TIENDA';
                             }
                         });
@@ -129,15 +126,40 @@
                         if (targetName && targetName !== "IGNORAR") {
                             let val = row[excelHeader];
                             
-                            // 🛡️ SANITIZACIÓN ROBUSTA FINANCIERA Y TEXTUAL
+                            // 🛡️ SANITIZACIÓN ROBUSTA FINANCIERA, TEXTUAL Y DE FECHAS EN EL NAVEGADOR
                             if (targetName === "CEDULA" || targetName === "CELULAR") {
                                 val = String(val).replace(/\D/g, ''); 
                             } else if (targetName === "cuotas pagas" || targetName === "Cuotas Atrasadas" || targetName === "PLAZO") {
                                 val = parseInt(String(val).replace(/\D/g, '')) || 0; 
                             } else if (targetName === "VALOR VENTA" || targetName === "CUOTA INICIAL" || targetName === "SALDO A FINACIAR" || targetName === "VALOR CUOTA") {
-                                // Limpia valores como "$400,000.00" y los deja listos para matemáticas
                                 val = Number(String(val).replace(/[^0-9.-]+/g,"")) || 0;
                             } else if (targetName === "FECHA") {
+                                // 🌟 PRE-PARSEO DE FECHAS A FORMATO ISO ESTRICTO (Para evitar errores en Google)
+                                if (typeof val === 'number') {
+                                    const date = new Date(1899, 11, 30);
+                                    date.setDate(date.getDate() + val);
+                                    const d = String(date.getDate()).padStart(2, '0');
+                                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                                    const y = date.getFullYear();
+                                    val = `${y}-${m}-${d}`;
+                                } else if (val) {
+                                    const parsedDate = new Date(val);
+                                    if (parsedDate && !isNaN(parsedDate.getTime())) {
+                                        const d = String(parsedDate.getDate()).padStart(2, '0');
+                                        const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                                        const y = parsedDate.getFullYear();
+                                        val = `${y}-${m}-${d}`;
+                                    } else {
+                                        // Intento manual por si es formato texto DD/MM/YYYY
+                                        const parts = String(val).split('/');
+                                        if (parts.length === 3) {
+                                            const day = parts[0].padStart(2, '0');
+                                            const month = parts[1].padStart(2, '0');
+                                            const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+                                            val = `${year}-${month}-${day}`;
+                                        }
+                                    }
+                                }
                                 val = val || "";
                             }
                             
@@ -158,8 +180,8 @@
                 }
                 
                 if (brand === 'alocredit') {
-                    if (!mappedCols.includes("SALDO A FINACIAR") || !mappedCols.includes("CUOTA INICIAL")) {
-                        alert("¡OJO! Para automatizar comisiones en Ventas Alocredit, asegúrate de mapear 'VALOR CREDITO' (como Saldo a Financiar) y 'CUOTA INICIAL'.");
+                    if (!mappedCols.includes("SALDO A FINACIAR") || !mappedCols.includes("CUOTA INICIAL") || !mappedCols.includes("FECHA")) {
+                        alert("¡OJO! Para automatizar comisiones en Ventas Alocredit, asegúrate de mapear 'Monto Total a Consignar' como 'SALDO A FINACIAR', 'Cuota Inicial' y 'Fecha Firma' como 'FECHA'.");
                         setShowMappingModal(true);
                         return;
                     }
@@ -273,7 +295,8 @@
                                         <thead className="bg-slate-800 text-white text-[11px] uppercase tracking-widest sticky top-0">
                                             <tr>
                                                 <th className="p-4 font-bold">Cédula</th>
-                                                <th className="p-4 font-bold">Vendedor</th>
+                                                <th className="p-4 font-bold">Nombre Completo</th>
+                                                <th className="p-4 font-bold">Fecha Firma</th>
                                                 <th className="p-4 text-center font-bold text-emerald-300">Cuotas Pagas</th>
                                                 <th className="p-4 text-center font-black text-rose-400">Atrasadas</th>
                                                 <th className="p-4 text-right font-bold text-blue-300">Saldo Financiar<br/><span className="text-[9px] font-normal">(Monto a Consignar)</span></th>
@@ -283,8 +306,9 @@
                                         <tbody className="divide-y divide-slate-100 border border-slate-200">
                                             {sanitizedPayloadData.slice(0, 100).map((row, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-50">
-                                                    <td className="p-4 font-mono text-slate-700 font-bold bg-slate-50/50">{row['CEDULA'] || row['CC'] || '-'}</td>
-                                                    <td className="p-4 text-slate-600 font-bold">{row['VENDEDOR'] || '-'}</td>
+                                                    <td className="p-4 font-mono text-slate-700 font-bold bg-slate-50/50">{row['CEDULA'] || '-'}</td>
+                                                    <td className="p-4 text-slate-600 font-bold">{row['NOMBRE CLIENTE'] || '-'}</td>
+                                                    <td className="p-4 text-slate-500 font-mono text-xs">{row['FECHA'] || '-'}</td>
                                                     <td className="p-4 text-center font-black text-emerald-600 bg-emerald-50/30 text-base">{row['cuotas pagas'] ?? '-'}</td>
                                                     <td className="p-4 text-center font-black text-rose-600 bg-rose-50/30 text-base">{row['Cuotas Atrasadas'] ?? '-'}</td>
                                                     <td className="p-4 text-right font-bold text-blue-600">{row['SALDO A FINACIAR'] ? row['SALDO A FINACIAR'].toLocaleString('es-CO') : '-'}</td>
@@ -353,7 +377,7 @@
                                 <div className="flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
                                     <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl mb-6 text-sm text-indigo-800 font-medium flex gap-3 shadow-sm">
                                         <Icons.Shield className="w-6 h-6 flex-shrink-0 text-indigo-600"/>
-                                        <p>Verifica que <strong>Valor Credito</strong> esté asignado a SALDO A FINANCIAR (que será tu Monto a Consignar).</p>
+                                        <p>Verifica que <strong>Fecha Firma</strong> esté asignada a FECHA, y <strong>Monto Total a Consignar</strong> a SALDO A FINACIAR.</p>
                                     </div>
 
                                     <table className="w-full text-left text-sm border-collapse rounded-xl overflow-hidden shadow-sm">
@@ -388,7 +412,7 @@
                                 </div>
 
                                 <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">
-                                    <button onClick={() => setShowMappingModal(false)} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors shadow-sm">Confirmar y Cerrar</button>
+                                    <button onClick={() => setShowMappingModal(true)} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-colors shadow-sm">Confirmar y Cerrar</button>
                                 </div>
                             </div>
                         </div>
