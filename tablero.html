@@ -937,11 +937,31 @@
                                     if (breakdownFilter.type === 'conGestion') return isManaged;
                                     if (breakdownFilter.type === 'vacio') return val === '';
                                     if (breakdownFilter.type === 'noCancelo') return val !== '' && !isPaid && !isManaged;
+                                    return false;
                                 }
                             }
                             
-                            // Si NO hay breakdown filter, devuelve todos los que matchean el cohort
-                            return true;
+                            // Si NO hay breakdown filter, ocultamos los que ya pagaron limpiamente
+                            if (ALO_QUOTAS.includes(activeFilter)) {
+                                let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                                let lateVal = String(row[lateCol] || '').trim();
+                                let isZero = lateVal === '0' || lateVal === '0.0';
+                                return !isZero;
+                            } else if (CONTINUITY_QUOTAS.includes(activeFilter)) {
+                                let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
+                                const val = String(row[commentsCol] || '').toLowerCase().trim();
+                                return !val.includes('completado'); 
+                            } else {
+                                let quotaName = QUOTA_LABELS[activeFilter].id;
+                                let statusCol = findColumnName(activeConfig.columns.paymentStatus, quotaName, headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                                const val = String(row[statusCol] || '').toLowerCase().trim();
+
+                                const isUnpaidExplicit = val.includes('no se') || val.includes('no cancelo') || val.includes('no pago');
+                                const isLoan = val.includes('pago con gestion') || val.includes('pago con gestión') || val.includes('prestamo');
+                                const isPaid = !isUnpaidExplicit && !isLoan && (val.includes('pago') || val.includes('cancelo') || val.includes('canceló'));
+
+                                return !isPaid; // Solo muestra Mora, Gestión y Vacíos
+                            }
                         });
                     }
                 }
