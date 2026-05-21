@@ -21,7 +21,7 @@
         .input-animated:focus { transform: translateY(-1px); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col relative overflow-hidden">
+<body class="min-h-screen flex flex-col relative overflow-x-hidden custom-scrollbar">
     <div id="root" class="flex-1 flex flex-col"></div>
 
     <script type="text/babel">
@@ -43,7 +43,7 @@
             AlertTriangle: (p) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         };
 
-        // ⚠️ ENLACE AL CEREBRO CENTRALIZADO EN GOOGLE APPS SCRIPT
+        // ENLACE AL CEREBRO CENTRALIZADO EN GOOGLE APPS SCRIPT
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
 
         // Componente de Notificación (Toast)
@@ -93,7 +93,7 @@
                 }, 5000);
             };
 
-            // 🧠 EFECTO DE LECTURA DINÁMICA DE ALIADOS DESDE GOOGLE SHEETS
+            // EFECTO DE LECTURA DINÁMICA DE ALIADOS DESDE GOOGLE SHEETS
             useEffect(() => {
                 const loadResponsibles = async () => {
                     try {
@@ -262,7 +262,7 @@
             };
 
             return (
-                <div className="min-h-screen flex flex-col relative overflow-hidden">
+                <div className="min-h-screen flex flex-col relative overflow-x-hidden">
                     {/* TOAST DE NOTIFICACIÓN */}
                     <Toast 
                         show={toast.show} 
