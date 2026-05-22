@@ -93,7 +93,7 @@
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'], // Soporte WhatsApp/Llamadas
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
                 } 
             },
             krediya: { 
@@ -112,12 +112,12 @@
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
                 } 
             },
             payjoy: { 
                 name: "PAYJOY", theme: "blue",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'fpd10'], 
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'fpd10', 'fpd11'], 
                 columns: { 
                     assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], 
                     seller: ['vendedor', 'asesor', 'ejecutivo'], 
@@ -131,7 +131,7 @@
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
                 } 
             },
             credismart: { 
@@ -149,7 +149,7 @@
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
                 } 
             }
         };
@@ -215,6 +215,14 @@
             const itemsPerPage = 500;
 
             // --- UTILS ---
+            const parseAmount = (val) => {
+                let s = String(val || '');
+                s = s.replace(/[^0-9.,]/g, '');
+                s = s.replace(/[.,]00$/, '');
+                s = s.replace(/[.,]/g, '');
+                return parseInt(s, 10) || 0;
+            };
+
             const parseDate = (dateVal) => {
                 if (!dateVal) return null;
                 let dateObj = null;
@@ -335,29 +343,22 @@
 
             const isObsUnpaid = (val) => {
                 const v = String(val || '').toLowerCase().trim();
-                if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago')) return true; 
-                if (v.includes('pago con gestion') || v.includes('pago con gestión')) return false; 
-                if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló')) return false;
+                if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago') || v.includes('mora')) return true; 
+                if (v.includes('pago con gestion') || v.includes('pago con gestión') || v.includes('prestamo')) return false; 
+                if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló') || v.includes('pagad') || v.includes('cancelad') || v.includes('al dia')) return false;
                 return true; 
             };
 
             const getStatus = (val) => {
                 const v = String(val || '').toLowerCase().trim();
-                if (!v) return 'empty';
-                if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago')) return 'unpaid';
-                if (v.includes('pago con gestion') || v.includes('pago con gestión')) return 'managed';
-                if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló')) return 'clean';
+                if (!v || v === 'pendiente') return 'empty';
+                if (v.includes('no se') || v.includes('no cancelo') || v.includes('no pago') || v.includes('mora')) return 'unpaid';
+                if (v.includes('pago con gestion') || v.includes('pago con gestión') || v.includes('prestamo')) return 'managed';
+                if (v.includes('pago') || v.includes('pagó') || v.includes('cancelo') || v.includes('canceló') || v.includes('pagad') || v.includes('cancelad') || v.includes('al dia')) return 'clean';
                 if (v.includes('compromiso') || v.includes('gestion') || v.includes('gestión')) return 'managed';
                 return 'unpaid'; 
             };
 
-            const parseAmount = (val) => {
-                let s = String(val || '');
-                s = s.replace(/[^0-9.,]/g, '');
-                s = s.replace(/[.,]00$/, '');
-                s = s.replace(/[.,]/g, '');
-                return parseInt(s, 10) || 0;
-            };
 
             // --- ESTADOS DE ALERTA UNIFICADOS Y DINÁMICOS POR MARCA ---
             
@@ -373,14 +374,14 @@
                 if (portfolio === 'credismart') {
                     // Credismart FPD3: -2 a 3 días de vencido
                     if (diffDaysFromDue >= -2 && diffDaysFromDue <= 3) {
-                        return isObsUnpaid(String(row[statusCol] || '').trim());
+                        return isObsUnpaid(String(row[statusCol]).trim());
                     }
                     return false;
                 }
 
                 // Prevención Temprana General: Faltan de 0 a 2 días
                 if (diffDaysFromDue >= -2 && diffDaysFromDue <= 0) {
-                    return isObsUnpaid(String(row[statusCol] || '').trim());
+                    return isObsUnpaid(String(row[statusCol]).trim());
                 }
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
@@ -400,7 +401,7 @@
                 }
 
                 if (diffDaysFromDue === 5 || diffDaysFromDue === 6) {
-                    return isObsUnpaid(String(row[statusCol] || '').trim());
+                    return isObsUnpaid(String(row[statusCol]).trim());
                 }
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
@@ -417,13 +418,13 @@
                 if (portfolio === 'credismart') {
                     // Credismart FPD7: 4 a 7 días de vencido
                     if (diffDaysFromDue > 3 && diffDaysFromDue <= 7) {
-                        return isObsUnpaid(String(row[statusCol] || '').trim());
+                        return isObsUnpaid(String(row[statusCol]).trim());
                     }
                     return false;
                 }
 
                 if (diffDaysFromDue === 7) {
-                    return isObsUnpaid(String(row[statusCol] || '').trim());
+                    return isObsUnpaid(String(row[statusCol]).trim());
                 }
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
@@ -443,7 +444,7 @@
                 }
 
                 if (diffDaysFromDue === 11 || diffDaysFromDue === 12) {
-                    return isObsUnpaid(String(row[statusCol] || '').trim());
+                    return isObsUnpaid(String(row[statusCol]).trim());
                 }
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
@@ -460,13 +461,13 @@
                 if (portfolio === 'credismart') {
                     // Credismart FPD15: 8 a 15 días de vencido
                     if (diffDaysFromDue > 7 && diffDaysFromDue <= 15) {
-                        return isObsUnpaid(String(row[statusCol] || '').trim());
+                        return isObsUnpaid(String(row[statusCol]).trim());
                     }
                     return false;
                 }
 
                 if (diffDaysFromDue === 13 || diffDaysFromDue === 14) {
-                    return isObsUnpaid(String(row[statusCol] || '').trim());
+                    return isObsUnpaid(String(row[statusCol]).trim());
                 }
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
@@ -522,34 +523,51 @@
 
                     const cKeys = Object.keys(carteraData[0]);
                     
-                    // 👑 EL QUE MANDA ES VENTAS: Imponer el "Asignado" de Ventas sobre Cartera
+                    // 👑 EL QUE MANDA ES VENTAS: Imponer Asignado, Nombre, Celular y FechaNac de Ventas sobre Cartera
                     if (Array.isArray(ventasData) && ventasData.length > 0) {
                         const vKeys = Object.keys(ventasData[0]);
                         
                         const vCedulaCol = findConfigColumn(activeConfig?.columns?.id, vKeys) || vKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
                         const vAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, vKeys) || findConfigColumn(activeConfig?.columns?.seller, vKeys);
                         
-                        if (vCedulaCol && vAsignadoCol) {
+                        // ⚡ NUEVAS COLUMNAS PARA FORZAR DESDE VENTAS
+                        const vNombreCol = findConfigColumn(activeConfig?.columns?.client, vKeys);
+                        const vCelularCol = findConfigColumn(activeConfig?.columns?.phone, vKeys);
+                        const vFechaNacCol = findConfigColumn(activeConfig?.columns?.birthDate, vKeys);
+
+                        if (vCedulaCol) {
                             const mapaVentas = {};
                             ventasData.forEach(vRow => {
                                 const cedLimpia = String(vRow[vCedulaCol] || '').replace(/\D/g, '');
-                                const asigVal = String(vRow[vAsignadoCol] || '').trim();
-                                if (cedLimpia && asigVal) {
-                                    mapaVentas[cedLimpia] = asigVal;
+                                if (cedLimpia) {
+                                    mapaVentas[cedLimpia] = {
+                                        asignado: vAsignadoCol ? String(vRow[vAsignadoCol] || '').trim() : '',
+                                        nombre: vNombreCol ? String(vRow[vNombreCol] || '').trim() : '',
+                                        celular: vCelularCol ? String(vRow[vCelularCol] || '').trim() : '',
+                                        fechaNac: vFechaNacCol ? vRow[vFechaNacCol] : ''
+                                    };
                                 }
                             });
 
                             const cCedulaCol = findConfigColumn(activeConfig?.columns?.id, cKeys) || cKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
                             const cAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, cKeys);
                             const cResponsableCol = cKeys.find(k => String(k).toUpperCase().trim() === "RESPONSABLE");
+                            const cNombreCol = findConfigColumn(activeConfig?.columns?.client, cKeys);
+                            const cCelularCol = findConfigColumn(activeConfig?.columns?.phone, cKeys);
+                            const cFechaNacCol = findConfigColumn(activeConfig?.columns?.birthDate, cKeys);
 
                             if (cCedulaCol) {
                                 carteraData = carteraData.map(cRow => {
                                     const cedC = String(cRow[cCedulaCol] || '').replace(/\D/g, '');
-                                    if (cedC && mapaVentas[cedC]) {
-                                        const trueAsignado = mapaVentas[cedC];
-                                        if (cAsignadoCol) cRow[cAsignadoCol] = trueAsignado;
-                                        if (cResponsableCol) cRow[cResponsableCol] = trueAsignado;
+                                    const vData = mapaVentas[cedC];
+                                    
+                                    // Sobreescribir Cartera con la verdad absoluta de Ventas
+                                    if (cedC && vData) {
+                                        if (cAsignadoCol && vData.asignado) cRow[cAsignadoCol] = vData.asignado;
+                                        if (cResponsableCol && vData.asignado) cRow[cResponsableCol] = vData.asignado;
+                                        if (cNombreCol && vData.nombre) cRow[cNombreCol] = vData.nombre;
+                                        if (cCelularCol && vData.celular) cRow[cCelularCol] = vData.celular;
+                                        if (cFechaNacCol && vData.fechaNac) cRow[cFechaNacCol] = vData.fechaNac;
                                     }
                                     return cRow;
                                 });
@@ -615,7 +633,7 @@
                 });
             }, [headers, activeConfig]);
 
-            // Reorganizar encabezados dinámicamente: Inyectamos "DÍAS MORA"
+            // Reorganización visual de las columnas de la tabla para eficiencia del asesor
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
@@ -693,7 +711,6 @@
                 if (!dateCol) return [];
 
                 const reportCol = assignedColumn || sellerColumn;
-
                 let filterRanges = [];
                 const now = new Date();
 
@@ -711,17 +728,14 @@
                     if (!isInRange) return;
 
                     const personName = String(row[reportCol] || 'Sin Asignar').trim().toUpperCase();
+                    if (!report[personName]) report[personName] = { name: personName, total: 0, pagas: 0, gestion: 0, noCancelo: 0, vacio: 0, porVencer: 0, prestamos: 0, prestamosDinero: 0 };
                     
-                    if (!report[personName]) {
-                        report[personName] = { name: personName, total: 0, pagas: 0, gestion: 0, noCancelo: 0, vacio: 0, porVencer: 0, prestamos: 0, prestamosDinero: 0 };
-                    }
                     report[personName].total++;
                     
                     let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                    
                     const rawStatus = statusCol ? String(row[statusCol]).toLowerCase().trim() : '';
-                    const isPrestamo = rawStatus.includes('pago con gestion') || rawStatus.includes('pago con gestión');
-                    const status = getStatus(rawStatus);
+                    
+                    const status = getStatus(rawStatus); 
 
                     const dueDate = getDueDate(row, headers);
                     const dueDateCheck = dueDate ? new Date(dueDate) : new Date(0);
@@ -730,26 +744,18 @@
                     const today = new Date();
                     today.setHours(0,0,0,0);
 
-                    if (status === 'clean') {
-                        report[personName].pagas++;
-                    } else if (status === 'managed') {
-                        report[personName].gestion++;
-                    } else {
-                        if (dueDateCheck >= today) {
-                            report[personName].porVencer++;
-                        } else if (status === 'unpaid') {
-                            report[personName].noCancelo++;
-                        } else {
-                            report[personName].vacio++; 
-                        }
+                    if (status === 'clean') report[personName].pagas++;
+                    else if (status === 'managed') report[personName].gestion++;
+                    else {
+                        if (dueDateCheck >= today) report[personName].porVencer++;
+                        else if (status === 'unpaid') report[personName].noCancelo++;
+                        else report[personName].vacio++; 
                     }
 
-                    if (isPrestamo) {
+                    if (status === 'managed') {
                         report[personName].prestamos++;
                         const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
-                        if (valCuotaCol) {
-                            report[personName].prestamosDinero += parseAmount(row[valCuotaCol]);
-                        }
+                        if (valCuotaCol) report[personName].prestamosDinero += parseAmount(row[valCuotaCol]);
                     }
                 });
 
@@ -763,7 +769,6 @@
             const sellerDetailData = useMemo(() => {
                 if (!detailSeller || !activeConfig) return [];
                 const dateCol = findConfigColumn(activeConfig.columns.date, headers);
-                
                 const idCol = findConfigColumn(activeConfig.columns.id, headers);
                 const emailCol = findConfigColumn(activeConfig.columns.email, headers);
                 const phoneCol = findConfigColumn(activeConfig.columns.phone, headers);
@@ -795,22 +800,19 @@
                     if (rowPerson !== detailSeller) return;
 
                     let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                    
                     const rawStatus = statusCol ? String(row[statusCol]).toLowerCase().trim() : '';
+                    
                     let status = getStatus(rawStatus);
-                    const isPrestamo = rawStatus.includes('pago con gestion') || rawStatus.includes('pago con gestión');
+                    const isPrestamo = status === 'managed';
 
                     const dueDate = getDueDate(row, headers);
                     const dueDateStr = dueDate ? dueDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
 
-                    const today = new Date();
-                    today.setHours(0,0,0,0);
+                    const today = new Date(); today.setHours(0,0,0,0);
                     const dueDateCheck = dueDate ? new Date(dueDate) : new Date(0);
                     dueDateCheck.setHours(0,0,0,0);
 
-                    if ((status === 'unpaid' || status === 'empty') && dueDateCheck >= today) {
-                        status = 'upcoming';
-                    }
+                    if ((status === 'unpaid' || status === 'empty') && dueDateCheck >= today) status = 'upcoming';
 
                     result.push({
                         name: clientCol ? row[clientCol] : '-',
@@ -821,10 +823,7 @@
                         device: deviceCol ? row[deviceCol] : '-',
                         assigned: assignedCol && row[assignedCol] ? row[assignedCol] : '-',
                         dueDate: dueDateStr, 
-                        status: isPrestamo ? 'Gestión($)' : status === 'clean' ? 'Pagó' : 
-                                status === 'managed' ? 'Gestión' : 
-                                status === 'upcoming' ? 'Por Vencer' : 
-                                status === 'unpaid' ? 'Mora' : 'Sin Dato',
+                        status: isPrestamo ? 'Gestión($)' : status === 'clean' ? 'Pagó' : status === 'managed' ? 'Gestión' : status === 'upcoming' ? 'Por Vencer' : status === 'unpaid' ? 'Mora' : 'Sin Dato',
                         statusCode: status,
                         isLoan: isPrestamo,
                         amountStr: valCuotaCol && row[valCuotaCol] ? String(row[valCuotaCol]) : '$0',
@@ -868,13 +867,11 @@
                     
                     if (dateCol) {
                         let range = null;
-                        // Si NO es Credismart (o no es FPD3/7/15), usamos los rangos de venta normales
                         if (!(portfolio === 'credismart' && ['fpd3', 'fpd7', 'fpd15'].includes(activeFilter))) {
                             range = getCohortRange(activeFilter);
                         }
 
                         result = result.filter(row => {
-                            // MATCH COHORT / DÍAS DE MORA
                             let matchesCohort = false;
                             
                             if (portfolio === 'credismart' && ['fpd3', 'fpd7', 'fpd15'].includes(activeFilter)) {
@@ -897,7 +894,6 @@
 
                             if (!matchesCohort) return false;
                             
-                            // MATCH BREAKDOWN (Si hizo click en una sub-tarjeta como "Ya Canceló")
                             if (breakdownFilter) {
                                 if (ALO_QUOTAS.includes(activeFilter)) {
                                     let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
@@ -966,17 +962,15 @@
                     }
                 }
 
-                // --- ORDENAR POR FECHA (Más reciente a más antigua) ---
+                // ORDENAR POR FECHA (Más reciente a más antigua)
                 const dateCol = findConfigColumn(activeConfig?.columns?.date, headers);
                 if (dateCol) {
                     result.sort((a, b) => {
                         const dateA = parseDate(a[dateCol]);
                         const dateB = parseDate(b[dateCol]);
-                        
                         if (!dateA && !dateB) return 0;
                         if (!dateA) return 1; 
                         if (!dateB) return -1;
-                        
                         return dateB.getTime() - dateA.getTime();
                     });
                 }
@@ -995,7 +989,7 @@
 
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-            // --- KPI ALOCREDIT: CUMPLIMIENTO RECAUDO (MARZO - HOY) ---
+            // --- INDICADORES ALOCREDIT ---
             const alocreditKPI = useMemo(() => {
                 if (portfolio !== 'alocredit' || !headers.length || !activeConfig) return null;
 
@@ -1036,6 +1030,7 @@
                 };
             }, [dataForStats, headers, activeConfig, portfolio]);
 
+            // --- INDICADORES DE FPD Y ALERTAS GLOBALES ---
             const alertStats7 = useMemo(() => {
                 let stats = { total: 0 };
                 dataForStats.forEach(row => { if (getRowAlertStatus7(row, headers)) stats.total++; });
@@ -1073,11 +1068,14 @@
                 if (!dateCol) return { found: false };
                 const formatDateShort = (d) => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
                 
+                const totalValueCol = findConfigColumn(['valor credito', 'valor total', 'capital', 'saldo a finaciar', 'monto a financiar'], headers);
+                const quotaValueCol = findConfigColumn(['valor cuota', 'monto cuota'], headers);
+                const paidQuotasCol = findConfigColumn(['cuotas pagas', 'cuotas pagadas', 'pagadas'], headers);
+
                 const calculateFPD = (quotaKey) => {
                     let cohortSales = [];
                     let rangeStr = "";
 
-                    // LÓGICA ESPECIAL CREDISMART
                     if (portfolio === 'credismart' && ['fpd3', 'fpd7', 'fpd15'].includes(quotaKey)) {
                         cohortSales = dataForStats.filter(row => {
                             const dueDate = getDueDate(row, headers);
@@ -1096,7 +1094,6 @@
                         else if (quotaKey === 'fpd7') rangeStr = "Mora: 4 a 7 días";
                         else if (quotaKey === 'fpd15') rangeStr = "Mora: 8 a 15 días";
                     } 
-                    // LÓGICA NORMAL OTRAS FINANCIERAS
                     else {
                         const range = getCohortRange(quotaKey);
                         cohortSales = dataForStats.filter(row => {
@@ -1107,10 +1104,20 @@
                     }
                     
                     const totalSales = cohortSales.length;
-                    if (totalSales === 0) return { totalSales: 0, unpaid: 0, upcoming: 0, rangeStr };
+                    if (totalSales === 0) return { totalSales: 0, unpaid: 0, upcoming: 0, rangeStr, cohortFinanced: 0, cohortCollected: 0 };
                     
                     let unpaid = 0;
                     let upcoming = 0; 
+                    let cohortFinanced = 0;
+                    let cohortCollected = 0;
+
+                    cohortSales.forEach(row => {
+                        if (totalValueCol) cohortFinanced += parseAmount(row[totalValueCol]);
+                        if (quotaValueCol && paidQuotasCol) {
+                            const pagas = parseInt(String(row[paidQuotasCol]).replace(/\D/g, '')) || 0;
+                            cohortCollected += pagas * parseAmount(row[quotaValueCol]);
+                        }
+                    });
 
                     if (ALO_QUOTAS.includes(quotaKey)) {
                         let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
@@ -1135,7 +1142,7 @@
                         
                         if (statusCol) {
                             cohortSales.forEach(row => {
-                                if (!isObsUnpaid(row[statusCol])) return;
+                                if (!isObsUnpaid(String(row[statusCol] || ''))) return;
 
                                 const dueDate = getDueDate(row, headers);
                                 if (!dueDate) return;
@@ -1154,7 +1161,7 @@
                         }
                     }
                     
-                    return { totalSales, unpaid, upcoming, rangeStr };
+                    return { totalSales, unpaid, upcoming, rangeStr, cohortFinanced, cohortCollected };
                 };
                 
                 const statsObj = { found: true, colUsed: String(dateCol) };
@@ -1185,7 +1192,6 @@
                     let s = { conGestion: 0, noCancelo: 0, yaCancelo: 0, vacio: 0 };
                     let cohortSales = [];
 
-                    // LÓGICA ESPECIAL CREDISMART
                     if (portfolio === 'credismart' && ['fpd3', 'fpd7', 'fpd15'].includes(quotaKey)) {
                         cohortSales = dataForStats.filter(row => {
                             const dueDate = getDueDate(row, headers);
@@ -1276,7 +1282,6 @@
                 return statsObj;
             }, [dataForStats, headers, findColumnName, findConfigColumn, activeConfig, portfolio, getDueDate]);
 
-            // --- ESTILOS DE COLUMNAS ---
             const getColumnStyles = (headerName) => {
                 if (!headerName) return null;
                 const lowerHeader = String(headerName).toLowerCase().trim();
@@ -1360,6 +1365,22 @@
                                     {(!isContinuity && !isAloLate) && (
                                         <div className="flex justify-between text-red-800 font-bold mt-1 bg-white/30 p-1 rounded -mx-1">
                                             <span className="text-[10px] flex items-center gap-1"><Icons.Target className="w-3 h-3"/> Meta {targetPercent}%:</span><span>{recoverNeeded}</span>
+                                        </div>
+                                    )}
+                                    {/* FINANCIADO VS RECAUDADO (MÓDULO DE CAJA EN ALOCREDIT/KREDIYA) */}
+                                    {(portfolio === 'alocredit' || portfolio === 'krediya') && (
+                                        <div className="mt-2 pt-2 border-t border-black/5">
+                                            <div className="flex justify-between text-slate-600">
+                                                <span className="font-bold">Financiado:</span>
+                                                <span className="font-black">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(fpdInfo.cohortFinanced)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-emerald-700">
+                                                <span className="font-bold">Recaudado:</span>
+                                                <span className="font-black">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(fpdInfo.cohortCollected)}</span>
+                                            </div>
+                                            <div className="w-full bg-slate-200 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                                                <div className="bg-emerald-500 h-full transition-all duration-500" style={{width: `${fpdInfo.cohortFinanced > 0 ? Math.min(100, (fpdInfo.cohortCollected / fpdInfo.cohortFinanced) * 100) : 0}%`}}></div>
+                                            </div>
                                         </div>
                                     )}
                                     <div className="text-[9px] text-right opacity-60 pt-1 mt-1 border-t border-black/5">{fpdInfo.rangeStr}</div>
@@ -1504,7 +1525,7 @@
                 });
 
                 doc.setFontSize(16);
-                doc.text(`Reporte de Mora Crítica (FPD7) - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.text(`Reporte de Mora Crítica (Exactamente 7 Días) - ${portfolio.toUpperCase()}`, 14, 15);
                 doc.setFontSize(11);
                 doc.text(`Fecha de Corte: ${new Date().toLocaleDateString()} | Total Clientes en Riesgo: ${exportRows.length}`, 14, 22);
                 
@@ -1522,7 +1543,7 @@
                     styles: { fontSize: 9 }
                 });
 
-                doc.save(`Mora_Critica_FPD7_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
+                doc.save(`Mora_Critica_7Dias_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
             const handleExportCritical15PDF = () => {
@@ -1561,7 +1582,7 @@
                 });
 
                 doc.setFontSize(16);
-                doc.text(`Reporte de Riesgo FPD15 - ${portfolio.toUpperCase()}`, 14, 15);
+                doc.text(`Reporte de Riesgo FPD15 (13 y 14 Días) - ${portfolio.toUpperCase()}`, 14, 15);
                 doc.setFontSize(11);
                 doc.text(`Fecha de Corte: ${new Date().toLocaleDateString()} | Total Clientes en Riesgo: ${exportRows.length}`, 14, 22);
                 
@@ -2260,6 +2281,15 @@
                                         const isAlert15Row = portfolio === 'credismart' ? false : getRowAlertStatus15(row, headers); 
                                         const isAlert7Row = portfolio === 'credismart' ? false : getRowAlertStatus7(row, headers);
                                         const isEarlyRow = getRowEarlyStatus(row, headers);
+                                        
+                                        let lateCol_ui = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                                        let lateNum = lateCol_ui && row[lateCol_ui] !== undefined && row[lateCol_ui] !== "" ? Number(String(row[lateCol_ui]).trim()) : 0;
+                                        
+                                        let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                                        const valStatus = statusCol ? row[statusCol] : '';
+                                        const finalStatus = getStatus(valStatus);
+
+                                        const isGeneralLate = lateNum > 0; // Visualmente es mora general si debe cuotas
 
                                         let rowBgClass = 'hover:bg-indigo-50/30';
                                         let rowBorderClass = '';
@@ -2308,17 +2338,8 @@
                                                             </button>
                                                         );
                                                     } else {
-                                                        let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
-                                                        if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                                                        const currentPay = statusCol ? String(row[statusCol] || '').toLowerCase() : '';
-                                                        const isFirstQuotaPaid = (currentPay === 'pago' || currentPay === 'pago con gestion' || currentPay === 'pago con gestión');
+                                                        const isFirstQuotaPaid = (valStatus.includes('pago') && !valStatus.includes('gestion') && !valStatus.includes('gestión')) || valStatus.includes('cancelo') || valStatus.includes('canceló') || valStatus.includes('pagad') || valStatus.includes('cancelad') || valStatus.includes('al dia') || valStatus.includes('listo') || valStatus.includes('ok');
                                                         
-                                                        let lateColName = findConfigColumn(activeConfig.columns.lateQuotas, headers);
-                                                        let lateNum = 0;
-                                                        if (lateColName && row[lateColName] !== undefined && row[lateColName] !== "") {
-                                                            lateNum = Number(String(row[lateColName]).trim()) || 0;
-                                                        }
-
                                                         if (isFirstQuotaPaid) {
                                                             if (lateNum > 0) {
                                                                 return (
@@ -2378,27 +2399,23 @@
                                                 if (h === 'DÍAS MORA') {
                                                     const dueDate = getDueDate(row, headers);
                                                     
-                                                    let isUnpaid = false;
-                                                    const lateColName = findConfigColumn(activeConfig.columns.lateQuotas, headers);
-                                                    if (lateColName && row[lateColName] !== undefined && row[lateColName] !== "") {
-                                                        const lateNum = Number(String(row[lateColName]).trim()) || 0;
-                                                        if (lateNum > 0) isUnpaid = true;
-                                                    } else {
-                                                        let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                                                        if (statusCol) isUnpaid = isObsUnpaid(row[statusCol]);
-                                                    }
-                                                    
                                                     let textMora = "-";
                                                     let badgeClass = "text-slate-400 bg-slate-100 border border-slate-200";
                                                     
-                                                    if (dueDate) {
+                                                    if (lateNum > 0) {
+                                                        textMora = `Mora (${lateNum})`;
+                                                        badgeClass = "text-red-700 bg-red-100 border border-red-300 shadow-sm";
+                                                    } else if (finalStatus === 'clean') {
+                                                        textMora = "Al Día";
+                                                        badgeClass = "text-emerald-700 bg-emerald-100 border border-emerald-200 shadow-sm";
+                                                    } else if (dueDate) {
                                                         const today = new Date();
                                                         today.setHours(0,0,0,0);
                                                         const dDate = new Date(dueDate);
                                                         dDate.setHours(0,0,0,0);
                                                         const diffDays = Math.floor((today.getTime() - dDate.getTime()) / (1000 * 60 * 60 * 24));
                                                         
-                                                        if (isUnpaid) {
+                                                        if (finalStatus === 'unpaid' || finalStatus === 'managed') {
                                                             if (diffDays > 0) {
                                                                 textMora = `${diffDays} Días`;
                                                                 badgeClass = "text-red-700 bg-red-100 border border-red-300 shadow-sm"; 
@@ -2410,9 +2427,12 @@
                                                                 badgeClass = "text-blue-700 bg-blue-100 border border-blue-200 shadow-sm";
                                                             }
                                                         } else {
+                                                            // Casos 'empty' (Pendiente sin atrasos)
                                                             textMora = "Al Día";
                                                             badgeClass = "text-emerald-700 bg-emerald-100 border border-emerald-200 shadow-sm";
                                                         }
+                                                    } else {
+                                                        textMora = "Sin Fecha";
                                                     }
 
                                                     tdContent = (
@@ -2464,7 +2484,7 @@
                                                                 <button 
                                                                     onClick={() => setEditModal({ show: true, row, colName: h, currentValue: String(row[h] || '') })}
                                                                     className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-600 shadow-md border border-indigo-700 rounded-lg text-white hover:bg-indigo-700 transition-all z-10 opacity-0 group-hover:opacity-100 hover:scale-105"
-                                                                    title="Agregar gestión"
+                                                                    title="Anotar Gestión"
                                                                 >
                                                                     <Icons.Edit2 className="w-3.5 h-3.5"/>
                                                                 </button>
