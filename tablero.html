@@ -120,7 +120,7 @@
             },
             payjoy: { 
                 name: "PAYJOY", theme: "blue",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'fpd10', 'fpd11', 'fpd12'], // ⚡ Restaurado Cuota 2, 3 y 4
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: { 
                     assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], 
                     seller: ['vendedor', 'asesor', 'ejecutivo'], 
@@ -140,7 +140,7 @@
             },
             credismart: { 
                 name: "CREDISMART", theme: "rose",
-                quotas: ['fpd3', 'fpd7', 'fpd15', 'alo_q2', 'alo_q3', 'alo_q4', 'fpd10', 'fpd11', 'fpd12'], // ⚡ Restaurado Cuota 2, 3 y 4
+                quotas: ['fpd3', 'fpd7', 'fpd15', 'fpd10', 'fpd11', 'fpd12'], 
                 columns: { 
                     assigned: ['asignado', 'responsable', 'gestor', 'cobrador'], 
                     seller: ['vendedor', 'asesor', 'ejecutivo'], 
@@ -153,8 +153,6 @@
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    paidQuotas: ['cuotas pagas', 'cuotas pagadas', 'pagadas'],
                     editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
                 } 
             }
@@ -249,59 +247,53 @@
                 return dateObj;
             };
 
-            const findColumnName = useCallback((keyword1, keyword2, headersList) => {
-                if (!headersList) return null;
-                return headersList.find(h => {
-                    const lower = String(h).toLowerCase();
-                    return lower.includes(keyword1) && (keyword2 ? lower.includes(keyword2) : true);
-                });
-            }, []);
-
+            // 🛡️ Buscador Anti-Símbolos (Ignora columnas con '#' para no confundir # COD_CLI con Cliente)
             const findConfigColumn = useCallback((possibleNames, headersList) => {
                 if (!possibleNames || !headersList) return null;
                 for (const name of possibleNames) {
-                    const found = headersList.find(h => h.toLowerCase().includes(name));
+                    const found = headersList.find(h => {
+                        const l = h.toLowerCase();
+                        if (l.includes('#')) return false; // Bloqueo estricto anti-símbolos
+                        return l.includes(name);
+                    });
                     if (found) return found;
                 }
                 return null;
             }, []);
 
-            // 🧠 NÚCLEO INTELIGENTE DE FECHAS (Calcula Vencimientos Reales basados en la Primera Cuota o Fecha de Venta)
+            const findColumnName = useCallback((keyword1, keyword2, headersList) => {
+                if (!headersList) return null;
+                return headersList.find(h => {
+                    const lower = String(h).toLowerCase();
+                    if (lower.includes('#')) return false;
+                    return lower.includes(keyword1) && (keyword2 ? lower.includes(keyword2) : true);
+                });
+            }, []);
+
+            // 🧠 NÚCLEO INTELIGENTE DE FECHAS
             const getDueDate = useCallback((row, headersList) => {
-                // PRIORIDAD 1: Fecha de Primera Cuota explícita
                 const firstQuotaCol = findConfigColumn(['primera cuota', '1era cuota', 'fecha pago', 'fecha de pago'], headersList);
                 if (firstQuotaCol && row[firstQuotaCol]) {
                     const parsedFirstQuota = parseDate(row[firstQuotaCol]);
                     if (parsedFirstQuota && !isNaN(parsedFirstQuota.getTime())) {
-                        
                         const paidCol = findConfigColumn(activeConfig?.columns?.paidQuotas, headersList);
                         const paidQuotas = paidCol && row[paidCol] ? parseInt(String(row[paidCol]).replace(/\D/g, '')) || 0 : 0;
-                        
                         const dueDate = new Date(parsedFirstQuota);
-                        
-                        // Si ya pagó cuotas, sumamos 14 días por cada cuota adicional pagada desde la primera
                         const daysToAdd = paidQuotas > 0 ? (paidQuotas * 14) : 0;
                         dueDate.setDate(dueDate.getDate() + daysToAdd);
-                        
                         return dueDate;
                     }
                 }
 
-                // PRIORIDAD 2: Fallback General a Fecha de Venta
                 const dateCol = findConfigColumn(activeConfig?.columns?.date, headersList);
                 if (dateCol && row[dateCol]) {
                     const saleDate = parseDate(row[dateCol]);
                     if (saleDate && !isNaN(saleDate.getTime())) {
-                        
                         const paidCol = findConfigColumn(activeConfig?.columns?.paidQuotas, headersList);
                         const paidQuotas = paidCol && row[paidCol] ? parseInt(String(row[paidCol]).replace(/\D/g, '')) || 0 : 0;
-                        
                         const dueDate = new Date(saleDate);
-                        
-                        // 14 Días de gracia base + 14 días por cada cuota pagada
                         const daysToAdd = 14 + (paidQuotas * 14);
                         dueDate.setDate(dueDate.getDate() + daysToAdd);
-                        
                         return dueDate;
                     }
                 }
@@ -391,9 +383,7 @@
                 return 'unpaid'; 
             };
 
-
             // --- ESTADOS DE ALERTA UNIFICADOS Y DINÁMICOS POR MARCA ---
-            
             const getRowEarlyStatus = useCallback((row, headersList) => {
                 let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList) || findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
                 const dueDate = getDueDate(row, headersList);
@@ -404,17 +394,10 @@
                 const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
 
                 if (portfolio === 'credismart') {
-                    // Credismart FPD3: -2 a 3 días de vencido
-                    if (diffDaysFromDue >= -2 && diffDaysFromDue <= 3) {
-                        return isObsUnpaid(String(row[statusCol]).trim());
-                    }
+                    if (diffDaysFromDue >= -2 && diffDaysFromDue <= 3) return isObsUnpaid(String(row[statusCol]).trim());
                     return false;
                 }
-
-                // Prevención Temprana General: Faltan de 0 a 2 días
-                if (diffDaysFromDue >= -2 && diffDaysFromDue <= 0) {
-                    return isObsUnpaid(String(row[statusCol]).trim());
-                }
+                if (diffDaysFromDue >= -2 && diffDaysFromDue <= 0) return isObsUnpaid(String(row[statusCol]).trim());
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
 
@@ -427,14 +410,8 @@
                 const dDate = new Date(dueDate); dDate.setHours(0,0,0,0);
                 const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
 
-                if (portfolio === 'credismart') {
-                    // Credismart Pre-Alerta 7 no lo tiene explícito, agruparemos el rango en Crítico
-                    return false; 
-                }
-
-                if (diffDaysFromDue === 5 || diffDaysFromDue === 6) {
-                    return isObsUnpaid(String(row[statusCol]).trim());
-                }
+                if (portfolio === 'credismart') return false; 
+                if (diffDaysFromDue === 5 || diffDaysFromDue === 6) return isObsUnpaid(String(row[statusCol]).trim());
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
 
@@ -448,16 +425,10 @@
                 const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
 
                 if (portfolio === 'credismart') {
-                    // Credismart FPD7: 4 a 7 días de vencido
-                    if (diffDaysFromDue > 3 && diffDaysFromDue <= 7) {
-                        return isObsUnpaid(String(row[statusCol]).trim());
-                    }
+                    if (diffDaysFromDue > 3 && diffDaysFromDue <= 7) return isObsUnpaid(String(row[statusCol]).trim());
                     return false;
                 }
-
-                if (diffDaysFromDue === 7) {
-                    return isObsUnpaid(String(row[statusCol]).trim());
-                }
+                if (diffDaysFromDue === 7) return isObsUnpaid(String(row[statusCol]).trim());
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
 
@@ -470,14 +441,8 @@
                 const dDate = new Date(dueDate); dDate.setHours(0,0,0,0);
                 const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
 
-                if (portfolio === 'credismart') {
-                    // Credismart Pre-Alerta 15 no explícita, se usa Crítico
-                    return false;
-                }
-
-                if (diffDaysFromDue === 11 || diffDaysFromDue === 12) {
-                    return isObsUnpaid(String(row[statusCol]).trim());
-                }
+                if (portfolio === 'credismart') return false;
+                if (diffDaysFromDue === 11 || diffDaysFromDue === 12) return isObsUnpaid(String(row[statusCol]).trim());
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
 
@@ -491,16 +456,10 @@
                 const diffDaysFromDue = Math.round((today.getTime() - dDate.getTime()) / 86400000);
 
                 if (portfolio === 'credismart') {
-                    // Credismart FPD15: 8 a 15 días de vencido
-                    if (diffDaysFromDue > 7 && diffDaysFromDue <= 15) {
-                        return isObsUnpaid(String(row[statusCol]).trim());
-                    }
+                    if (diffDaysFromDue > 7 && diffDaysFromDue <= 15) return isObsUnpaid(String(row[statusCol]).trim());
                     return false;
                 }
-
-                if (diffDaysFromDue === 13 || diffDaysFromDue === 14) {
-                    return isObsUnpaid(String(row[statusCol]).trim());
-                }
+                if (diffDaysFromDue === 13 || diffDaysFromDue === 14) return isObsUnpaid(String(row[statusCol]).trim());
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
 
@@ -567,7 +526,7 @@
                                         if (conv && conv !== 'CONVENIO') {
                                             if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
                                             if (asigKey && r[asigKey]) conveniosMap[String(r[asigKey]).toLowerCase().trim()] = conv;
-                                            if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; 
+                                            if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; // ⚡ Por Tienda
                                         }
                                     });
                                 } else {
@@ -583,7 +542,7 @@
                                             if (conv) {
                                                 if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
                                                 if (asigKey && r[asigKey]) conveniosMap[String(r[asigKey]).toLowerCase().trim()] = conv;
-                                                if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; 
+                                                if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; // ⚡ Por Tienda
                                             }
                                         });
                                     }
@@ -612,8 +571,11 @@
                         const vCedulaCol = findConfigColumn(activeConfig?.columns?.id, vKeys) || vKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
                         const vAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, vKeys) || findConfigColumn(activeConfig?.columns?.seller, vKeys);
                         
-                        // ⚡ NUEVAS COLUMNAS PARA FORZAR DESDE VENTAS
+                        // ⚡ NUEVAS COLUMNAS PARA FORZAR DESDE VENTAS (Ignora '#')
                         const vNombreCol = findConfigColumn(activeConfig?.columns?.client, vKeys);
+                        const vNombresCol = findConfigColumn(['nombres', 'nombre'], vKeys);
+                        const vApellidosCol = findConfigColumn(['apellidos', 'apellido'], vKeys);
+                        
                         const vCelularCol = findConfigColumn(activeConfig?.columns?.phone, vKeys);
                         const vFechaNacCol = findConfigColumn(activeConfig?.columns?.birthDate, vKeys);
                         const vTiendaCol = findConfigColumn(activeConfig?.columns?.store, vKeys); 
@@ -623,9 +585,18 @@
                             ventasData.forEach(vRow => {
                                 const cedLimpia = String(vRow[vCedulaCol] || '').replace(/\D/g, '');
                                 if (cedLimpia) {
+                                    // UNIR NOMBRES Y APELLIDOS SI EXISTEN
+                                    let n1 = vNombresCol ? String(vRow[vNombresCol] || '').trim() : '';
+                                    let a1 = vApellidosCol ? String(vRow[vApellidosCol] || '').trim() : '';
+                                    let finalName = a1 ? `${n1} ${a1}`.trim() : n1;
+                                    
+                                    if (!finalName && vNombreCol) {
+                                        finalName = String(vRow[vNombreCol] || '').trim();
+                                    }
+
                                     mapaVentas[cedLimpia] = {
                                         asignado: vAsignadoCol ? String(vRow[vAsignadoCol] || '').trim() : '',
-                                        nombre: vNombreCol ? String(vRow[vNombreCol] || '').trim() : '',
+                                        nombre: finalName,
                                         celular: vCelularCol ? String(vRow[vCelularCol] || '').trim() : '',
                                         fechaNac: vFechaNacCol ? vRow[vFechaNacCol] : '',
                                         tienda: vTiendaCol ? String(vRow[vTiendaCol] || '').trim() : ''
@@ -633,7 +604,7 @@
                                 }
                             });
 
-                            const cCedulaCol = findConfigColumn(activeConfig?.columns?.id, cKeys) || cKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
+                            const cCedulaCol = findConfigColumn(activeConfig?.columns?.id, cKeys) || cKeys.find(k => { const l = String(k).toUpperCase().trim(); return !l.includes('#') && (l.includes('CEDULA') || l === 'CC'); });
                             const cResponsableCol = cKeys.find(k => String(k).toUpperCase().trim() === "RESPONSABLE");
                             const cNombreCol = findConfigColumn(activeConfig?.columns?.client, cKeys);
                             const cCelularCol = findConfigColumn(activeConfig?.columns?.phone, cKeys);
@@ -736,6 +707,7 @@
                 });
             }, [headers, activeConfig]);
 
+            // Reorganización Mágica de Columnas para la UI
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
@@ -784,10 +756,7 @@
                 if (firstQuotaCol || paidCol || lateCol) {
                     const colsToInsert = [];
                     if (firstQuotaCol) colsToInsert.push(firstQuotaCol);
-                    
-                    // 🚀 SE INYECTA LA COLUMNA DE DÍAS MORA
                     colsToInsert.push('DÍAS MORA'); 
-                    
                     if (paidCol) colsToInsert.push(paidCol);
                     if (lateCol) colsToInsert.push(lateCol);
 
@@ -804,6 +773,23 @@
                 
                 return arr;
             }, [headers, assignedColumn, commentsColName, phoneColumn, activeConfig, findConfigColumn]);
+
+            // Función unificadora de nombres exclusiva para PDF y Modal
+            const getFullName = useCallback((row) => {
+                let cName = clientColumn ? String(row[clientColumn] || '').trim() : '-';
+                // Solo unimos si no la hemos unificado previamente en la tabla de datos
+                // (Ahora el fetchData ya se encarga de esto, pero lo mantenemos como respaldo de seguridad para PDFs viejos)
+                const nCol = headers.find(k => String(k).toUpperCase().trim() === "NOMBRES" || String(k).toUpperCase().trim() === "NOMBRE");
+                const aCol = headers.find(k => String(k).toUpperCase().trim() === "APELLIDOS" || String(k).toUpperCase().trim() === "APELLIDO");
+
+                if (clientColumn && String(clientColumn).toUpperCase().includes("NOMBRE") && aCol && row[aCol] && !cName.includes(String(row[aCol]).trim())) {
+                    cName += " " + String(row[aCol]).trim();
+                } else if (!clientColumn && nCol) {
+                    cName = String(row[nCol] || '').trim();
+                    if (aCol && row[aCol]) cName += " " + String(row[aCol]).trim();
+                }
+                return cName;
+            }, [clientColumn, headers]);
 
             const sellerReportData = useMemo(() => {
                 if (!showSellerModal || !activeConfig) return [];
@@ -872,7 +858,6 @@
                 const idCol = findConfigColumn(activeConfig.columns.id, headers);
                 const emailCol = findConfigColumn(activeConfig.columns.email, headers);
                 const phoneCol = findConfigColumn(activeConfig.columns.phone, headers);
-                const clientCol = findConfigColumn(activeConfig.columns.client, headers);
                 const deviceCol = findConfigColumn(activeConfig.columns.device, headers);
                 const commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
                 const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
@@ -915,7 +900,7 @@
                     if ((status === 'unpaid' || status === 'empty') && dueDateCheck >= today) status = 'upcoming';
 
                     result.push({
-                        name: clientCol ? row[clientCol] : '-',
+                        name: getFullName(row), // ⚡ Uso de función unificadora
                         id: idCol ? row[idCol] : '-',
                         birthDate: birthDateCol && row[birthDateCol] ? formatCellData(row[birthDateCol]) : '-',
                         phone: phoneCol ? row[phoneCol] : '-',
@@ -939,7 +924,7 @@
                     return weight[b.status] - weight[a.status];
                 });
 
-            }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn, getDueDate]);
+            }, [detailSeller, reportFilter, data, headers, activeConfig, findColumnName, findConfigColumn, portfolio, sellerColumn, assignedColumn, getDueDate, getFullName]);
 
             const dataForStats = useMemo(() => {
                 let result = data;
@@ -1629,7 +1614,7 @@
                     let cellBirth = birthDateCol && row[birthDateCol] ? formatCellData(row[birthDateCol]) : '-';
 
                     tableRows.push([
-                        row[clientColumn] || '-',
+                        getFullName(row),
                         row[idColumn] || '-',
                         cellBirth,
                         row[phoneColumn] || '-',
@@ -1686,7 +1671,7 @@
                     let cellBirth = birthDateCol && row[birthDateCol] ? formatCellData(row[birthDateCol]) : '-';
 
                     tableRows.push([
-                        row[clientColumn] || '-',
+                        getFullName(row),
                         row[idColumn] || '-',
                         cellBirth,
                         row[phoneColumn] || '-',
@@ -1730,9 +1715,7 @@
 
                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
                 if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                let birthDateCol = findConfigColumn(activeConfig.columns.birthDate, headers);
-
-                // ⚡ SE INCLUYE EL CONVENIO EN EL EXPORT
+                
                 const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Convenio", "Asignado", "Estado", "Cuota"];
                 const tableRows = [];
                 let totalAmount = 0;
@@ -1745,7 +1728,7 @@
                     let cellStatus = statusCol && row[statusCol] ? String(row[statusCol]) : '-';
 
                     tableRows.push([
-                        row[clientColumn] || '-',
+                        getFullName(row),
                         row[idColumn] || '-',
                         row[phoneColumn] || '-',
                         String(row[deviceColumn] || '-').substring(0, 15),
@@ -2407,8 +2390,8 @@
                                     {paginatedData.length > 0 ? paginatedData.map((row, i) => {
                                         const isCritical7Row = getRowCriticalStatus7(row, headers);
                                         const isCritical15Row = getRowCriticalStatus15(row, headers);
-                                        const isAlert15Row = getRowAlertStatus15(row, headers); 
-                                        const isAlert7Row = getRowAlertStatus7(row, headers);
+                                        const isAlert15Row = portfolio === 'credismart' ? false : getRowAlertStatus15(row, headers); 
+                                        const isAlert7Row = portfolio === 'credismart' ? false : getRowAlertStatus7(row, headers);
                                         const isEarlyRow = getRowEarlyStatus(row, headers);
 
                                         let lateCol_ui = findConfigColumn(activeConfig.columns.lateQuotas, headers);
@@ -2462,7 +2445,7 @@
                                                         
                                                         return (
                                                             <button 
-                                                                onClick={() => triggerQuickAction(row, 'COMPLETADO')}
+                                                                onClick={() => triggerQuickAction(row, 'COMPLETADO', activeQuotaForButton)}
                                                                 className="flex items-center gap-1.5 px-3 py-1.5 mx-auto rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 bg-violet-100 text-violet-700 border border-violet-200 hover:bg-violet-600 hover:text-white"
                                                                 title="Marcar Revisión Completada"
                                                                 disabled={isSaving}
@@ -2482,7 +2465,7 @@
                                                         return (
                                                             <div className="flex justify-center gap-2">
                                                                 <button 
-                                                                    onClick={() => triggerQuickAction(row, 'PAGO')}
+                                                                    onClick={() => triggerQuickAction(row, 'PAGO', activeQuotaForButton)}
                                                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white"
                                                                     title="Registrar Pago Directo"
                                                                     disabled={isSaving}
@@ -2490,7 +2473,7 @@
                                                                     <Icons.DollarSign className="w-4 h-4"/> PAGO
                                                                 </button>
                                                                 <button 
-                                                                    onClick={() => triggerQuickAction(row, 'PAGO_GESTION')}
+                                                                    onClick={() => triggerQuickAction(row, 'PAGO_GESTION', activeQuotaForButton)}
                                                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-600 hover:text-white"
                                                                     title="Registrar Pago con Gestión (Préstamo)"
                                                                     disabled={isSaving}
@@ -2576,29 +2559,31 @@
                                                     
                                                     tdContent = (
                                                         <td key={j} className={`px-4 py-3 whitespace-nowrap ${j===0 ? rowBorderClass : ''} ${style?.bgColor || ''}`}>
-                                                            <div className="flex items-center justify-between gap-3">
-                                                                <span 
-                                                                    className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${(isCritical7Row || isCritical15Row) ? 'text-red-950 hover:text-red-700' : h === assignedColumn ? 'text-blue-800' : 'text-slate-600 hover:text-indigo-600'}`} 
-                                                                    title={`Clic para editar ${h}`} 
-                                                                    onClick={() => openCleanEdit(row, h)}
-                                                                >
-                                                                    {val || <span className="text-slate-300 italic font-normal">Vacío</span>}
-                                                                    <Icons.Edit2 className={`w-3 h-3 opacity-0 group-hover:opacity-100 ${h===assignedColumn ? 'text-blue-500' : 'text-indigo-500'}`} />
-                                                                </span>
-                                                                {isPhoneCol && clean && (
-                                                                    <div className="flex gap-1.5 ml-2">
-                                                                        <a href={getWhatsAppLink(val, clientVal, deviceVal)} target="_blank" className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors shadow-sm" title="WhatsApp"><Icons.MessageCircle className="w-4 h-4"/></a>
-                                                                        <a href={`tel:${clean}`} className="p-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors shadow-sm" title="Llamar"><Icons.Phone className="w-4 h-4"/></a>
-                                                                    </div>
+                                                            <div className="flex flex-col gap-1">
+                                                                <div className="flex items-center justify-between gap-3">
+                                                                    <span 
+                                                                        className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${(isCritical7Row || isCritical15Row) ? 'text-red-950 hover:text-red-700' : h === assignedColumn ? 'text-blue-800' : 'text-slate-600 hover:text-indigo-600'}`} 
+                                                                        title={`Clic para editar ${h}`} 
+                                                                        onClick={() => openCleanEdit(row, h)}
+                                                                    >
+                                                                        {val || <span className="text-slate-300 italic font-normal">Vacío</span>}
+                                                                        <Icons.Edit2 className={`w-3 h-3 opacity-0 group-hover:opacity-100 ${h===assignedColumn ? 'text-blue-500' : 'text-indigo-500'}`} />
+                                                                    </span>
+                                                                    {isPhoneCol && clean && (
+                                                                        <div className="flex gap-1.5 ml-2">
+                                                                            <a href={getWhatsAppLink(val, clientVal, deviceVal)} target="_blank" className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors shadow-sm" title="WhatsApp"><Icons.MessageCircle className="w-4 h-4"/></a>
+                                                                            <a href={`tel:${clean}`} className="p-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors shadow-sm" title="Llamar"><Icons.Phone className="w-4 h-4"/></a>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                {/* ⚡ ETIQUETA VISUAL DEL CONVENIO DEBAJO DEL ASIGNADO */}
+                                                                {h === assignedColumn && (
+                                                                    <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none mt-1 inline-block">
+                                                                        {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-400 italic">Sin Convenio</span>}
+                                                                    </span>
                                                                 )}
                                                             </div>
-                                                            
-                                                            {/* ⚡ ETIQUETA VISUAL DEL CONVENIO DEBAJO DEL ASIGNADO */}
-                                                            {h === assignedColumn && (
-                                                                <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none mt-1 inline-block">
-                                                                    {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-400 italic">Sin Convenio</span>}
-                                                                </span>
-                                                            )}
                                                         </td>
                                                     );
                                                 } else {
