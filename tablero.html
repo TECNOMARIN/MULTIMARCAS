@@ -54,7 +54,7 @@
             DollarSign: (p) => <IconBase {...p}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></IconBase>,
             X: (p) => <IconBase {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></IconBase>,
             Target: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>,
-            Handshake: (p) => <IconBase {...p}><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-1.42-1.42l4.82-4.82a1 1 0 0 1 1.42 0l2.12 2.12a1 1 0 0 0 1.42 0l1.29-1.29a3 3 0 0 0 0-4.24l-2.12-2.12a3 3 0 0 0-4.24 0l-3.65 3.65a3 3 0 0 0 0 4.24l.88.88a1 1 0 0 1-1.42 1.42l-4.24-4.24a1 1 0 0 0-1.42 0l-2.12 2.12a3 3 0 0 0 0 4.24l2.12 2.12"/><path d="m7 13 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-1.42-1.42l4.82-4.82a1 1 0 0 1 1.42 0l2.12 2.12a1 1 0 0 0 1.42 0l1.29-1.29a3 3 0 0 0 0-4.24l-2.12-2.12a3 3 0 0 0-4.24 0l-3.65 3.65a3 3 0 0 0 0 4.24l.88.88a1 1 0 0 1-1.42 1.42l-4.24-4.24a1 1 0 0 0-1.42 0l-2.12 2.12a3 3 0 0 0 0 4.24l2.12 2.12"/></IconBase>,
+            Handshake: (p) => <IconBase {...p}><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-1.42-1.42l4.82-4.82a1 1 0 0 1 1.42 0l2.12 2.12a1 1 0 0 0 1.42 0l1.29-1.29a3 3 0 0 0 0-4.24l-2.12-2.12a3 3 0 0 0-4.24 0l-3.65 3.65a3 3 0 0 0 0 4.24l.88.88a1 1 0 0 1-1.42 1.42l-4.24-4.24a1 1 0 0 0-1.42 0l-2.12 2.12a3 3 0 0 0 0 4.24l2.12 2.12"/></IconBase>,
             Smartphone: (p) => <IconBase {...p}><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></IconBase>,
             ShieldAlert: (p) => <IconBase {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></IconBase>,
             AlertTriangle: (p) => <IconBase {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>,
@@ -93,7 +93,7 @@
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'], // Soporte WhatsApp/Llamadas
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             },
             krediya: { 
@@ -112,7 +112,7 @@
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             },
             payjoy: { 
@@ -131,7 +131,7 @@
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             },
             credismart: { 
@@ -149,7 +149,7 @@
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
                     phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'],
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
-                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador'] 
+                    editableText: ['celular', 'telefono', 'teléfono', 'movil', 'contacto', 'tlf', 'ref', 'referencia', 'valor cuota', 'nombre', 'nombres', 'cliente', 'nombre cliente', 'fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac', 'asignado', 'responsable', 'gestor', 'cobrador', 'primera cuota', 'primera', 'cuota 1', 'fecha pago'] 
                 } 
             }
         };
@@ -174,7 +174,7 @@
 
         // --- COMPONENTE PRINCIPAL ---
         function App() {
-            const [portfolio, setPortfolio] = useState('credismart');
+            const [portfolio, setPortfolio] = useState('payjoy');
             const activeConfig = PORTFOLIO_CONFIG[portfolio];
 
             const [data, setData] = useState([]);
@@ -188,6 +188,7 @@
             const [selectedAssigned, setSelectedAssigned] = useState('');
             const [selectedDevice, setSelectedDevice] = useState('');
             const [selectedStore, setSelectedStore] = useState(''); 
+            const [selectedConvenio, setSelectedConvenio] = useState(''); // ⚡ NUEVO: Filtro Convenio
             
             // Filtros de Alertas
             const [showOnlyAlerts7, setShowOnlyAlerts7] = useState(false);
@@ -213,6 +214,13 @@
             // Paginación
             const [currentPage, setCurrentPage] = useState(1);
             const itemsPerPage = 500;
+
+            // ⚡ EFECTO: Si selecciona tienda, se apaga el convenio
+            useEffect(() => {
+                if (selectedStore !== '' && selectedConvenio !== '') {
+                    setSelectedConvenio('');
+                }
+            }, [selectedStore, selectedConvenio]);
 
             // --- UTILS ---
             const parseAmount = (val) => {
@@ -481,6 +489,7 @@
                 setSelectedAssigned('');
                 setSelectedDevice('');
                 setSelectedStore(''); 
+                setSelectedConvenio(''); // ⚡ Reset Convenio
                 setFpdQuotaFilter(null);
                 setBreakdownFilter(null);
                 setShowOnlyAlerts7(false);
@@ -492,13 +501,15 @@
                 try {
                     const separator = API_URL.includes('?') ? '&' : '?';
                     
-                    // 🚀 DUAL FETCH: Traemos Cartera y Ventas al mismo tiempo
+                    // 🚀 TRIPLE FETCH: Traemos Cartera, Ventas y Usuarios al mismo tiempo
                     const carteraUrl = `${API_URL}${separator}type=${portfolio}&t=${new Date().getTime()}`;
                     const ventasUrl = `${API_URL}${separator}type=ventas_${portfolio}&t=${new Date().getTime()}`;
+                    const usuUrl = `${API_URL}${separator}type=usuarios_payjoy&t=${new Date().getTime()}`;
 
-                    const [carteraRes, ventasRes] = await Promise.all([
+                    const [carteraRes, ventasRes, usuRes] = await Promise.all([
                         fetch(carteraUrl, { method: "GET", redirect: "follow" }),
-                        fetch(ventasUrl, { method: "GET", redirect: "follow" })
+                        fetch(ventasUrl, { method: "GET", redirect: "follow" }),
+                        fetch(usuUrl, { method: "GET", redirect: "follow" })
                     ]);
                     
                     if (!carteraRes.ok) throw new Error(`Error servidor Cartera: ${carteraRes.status}`);
@@ -512,6 +523,51 @@
                          throw new Error('La hoja está vacía.');
                     }
 
+                    // ⚡ Procesar Usuarios para sacar Convenios
+                    let conveniosMap = {};
+                    if (usuRes.ok) {
+                        try {
+                            const jsonUsu = JSON.parse(await usuRes.text());
+                            if (Array.isArray(jsonUsu) && jsonUsu.length > 0) {
+                                const headerRowObj = jsonUsu.find(r => Object.values(r).some(v => String(v).toUpperCase().includes('CONVENIO')));
+                                let nameKey, asigKey, convKey, tiendaKey;
+
+                                if (headerRowObj) {
+                                    nameKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase().includes('NOMBRE') || String(headerRowObj[k]).toUpperCase().includes('APELLIDO'));
+                                    asigKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase().includes('ASINGACION') || String(headerRowObj[k]).toUpperCase().includes('ASIGNACION'));
+                                    convKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase().includes('CONVENIO'));
+                                    tiendaKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase() === 'TIENDA');
+                                    
+                                    jsonUsu.forEach(r => {
+                                        let conv = String(r[convKey] || '').trim().toUpperCase();
+                                        if (conv && conv !== 'CONVENIO') {
+                                            if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
+                                            if (asigKey && r[asigKey]) conveniosMap[String(r[asigKey]).toLowerCase().trim()] = conv;
+                                            if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; // ⚡ Por Tienda
+                                        }
+                                    });
+                                } else {
+                                    const keys = Object.keys(jsonUsu[0]);
+                                    nameKey = keys.find(k => k.toUpperCase().includes('NOMBRE') || k.toUpperCase().includes('APELLIDO'));
+                                    asigKey = keys.find(k => k.toUpperCase().includes('ASINGACION') || k.toUpperCase().includes('ASIGNACION'));
+                                    convKey = keys.find(k => k.toUpperCase().includes('CONVENIO'));
+                                    tiendaKey = keys.find(k => k.toUpperCase() === 'TIENDA');
+
+                                    if (convKey) {
+                                        jsonUsu.forEach(r => {
+                                            let conv = String(r[convKey] || '').trim().toUpperCase();
+                                            if (conv) {
+                                                if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
+                                                if (asigKey && r[asigKey]) conveniosMap[String(r[asigKey]).toLowerCase().trim()] = conv;
+                                                if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; // ⚡ Por Tienda
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        } catch(e) { console.error("Error parseando usuarios", e); }
+                    }
+
                     // 🧠 Procesar Ventas para el cruce (silencioso si falla)
                     let ventasData = [];
                     if (ventasRes.ok) {
@@ -522,6 +578,8 @@
                     }
 
                     const cKeys = Object.keys(carteraData[0]);
+                    const cTiendaCol = findConfigColumn(activeConfig?.columns?.store, cKeys);
+                    const cAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, cKeys);
                     
                     // 👑 EL QUE MANDA ES VENTAS: Imponer Asignado, Nombre, Celular y FechaNac de Ventas sobre Cartera
                     if (Array.isArray(ventasData) && ventasData.length > 0) {
@@ -534,6 +592,7 @@
                         const vNombreCol = findConfigColumn(activeConfig?.columns?.client, vKeys);
                         const vCelularCol = findConfigColumn(activeConfig?.columns?.phone, vKeys);
                         const vFechaNacCol = findConfigColumn(activeConfig?.columns?.birthDate, vKeys);
+                        const vTiendaCol = findConfigColumn(activeConfig?.columns?.store, vKeys); // Necesaria para el convenio
 
                         if (vCedulaCol) {
                             const mapaVentas = {};
@@ -544,13 +603,13 @@
                                         asignado: vAsignadoCol ? String(vRow[vAsignadoCol] || '').trim() : '',
                                         nombre: vNombreCol ? String(vRow[vNombreCol] || '').trim() : '',
                                         celular: vCelularCol ? String(vRow[vCelularCol] || '').trim() : '',
-                                        fechaNac: vFechaNacCol ? vRow[vFechaNacCol] : ''
+                                        fechaNac: vFechaNacCol ? vRow[vFechaNacCol] : '',
+                                        tienda: vTiendaCol ? String(vRow[vTiendaCol] || '').trim() : ''
                                     };
                                 }
                             });
 
                             const cCedulaCol = findConfigColumn(activeConfig?.columns?.id, cKeys) || cKeys.find(k => String(k).toUpperCase().includes('CEDULA') || String(k).toUpperCase() === 'CC');
-                            const cAsignadoCol = findConfigColumn(activeConfig?.columns?.assigned, cKeys);
                             const cResponsableCol = cKeys.find(k => String(k).toUpperCase().trim() === "RESPONSABLE");
                             const cNombreCol = findConfigColumn(activeConfig?.columns?.client, cKeys);
                             const cCelularCol = findConfigColumn(activeConfig?.columns?.phone, cKeys);
@@ -569,10 +628,26 @@
                                         if (cCelularCol && vData.celular) cRow[cCelularCol] = vData.celular;
                                         if (cFechaNacCol && vData.fechaNac) cRow[cFechaNacCol] = vData.fechaNac;
                                     }
+
+                                    // ⚡ ASIGNAR EL CONVENIO
+                                    let finalAsignado = cAsignadoCol ? String(cRow[cAsignadoCol] || '').toLowerCase().trim() : '';
+                                    let finalTienda = cTiendaCol ? String(cRow[cTiendaCol] || '').toLowerCase().trim() : '';
+                                    if (cedC && vData && vData.tienda) finalTienda = vData.tienda.toLowerCase(); // Prioridad tienda ventas
+
+                                    cRow._convenio = conveniosMap[finalTienda] || conveniosMap[finalAsignado] || 'SIN CONVENIO';
+
                                     return cRow;
                                 });
                             }
                         }
+                    } else {
+                        // Si no hay ventas, igual le asignamos convenio usando lo que hay en cartera
+                        carteraData = carteraData.map(cRow => {
+                            let finalAsignado = cAsignadoCol ? String(cRow[cAsignadoCol] || '').toLowerCase().trim() : '';
+                            let finalTienda = cTiendaCol ? String(cRow[cTiendaCol] || '').toLowerCase().trim() : '';
+                            cRow._convenio = conveniosMap[finalTienda] || conveniosMap[finalAsignado] || 'SIN CONVENIO';
+                            return cRow;
+                        });
                     }
 
                     setHeaders(cKeys);
@@ -591,8 +666,9 @@
                 fetchData(); 
             }, [fetchData]);
 
-            const { sellers, sellerColumn, assignees, assignedColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn, idColumn } = useMemo(() => {
-                if (!activeConfig || !activeConfig.columns) return { sellers: [], assignees: [], devices: [], stores: [] };
+            // --- FILTROS Y BÚSQUEDAS DINÁMICAS ---
+            const { sellers, sellerColumn, assignees, assignedColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn, idColumn, convenios } = useMemo(() => {
+                if (!activeConfig || !activeConfig.columns) return { sellers: [], assignees: [], devices: [], stores: [], convenios: [] };
                 
                 const sCol = findConfigColumn(activeConfig.columns.seller, headers);
                 const aCol = findConfigColumn(activeConfig.columns.assigned, headers);
@@ -606,19 +682,22 @@
                 const uniqueAssignees = new Set();
                 const uniqueDevices = new Set();
                 const uniqueStores = new Set(); 
+                const uniqueConvenios = new Set();
 
                 data.forEach(row => {
                     if (sCol && row[sCol]) uniqueSellers.add(String(row[sCol]).trim());
                     if (aCol && row[aCol]) uniqueAssignees.add(String(row[aCol]).trim());
                     if (dCol && row[dCol]) uniqueDevices.add(String(row[dCol]).trim());
                     if (stCol && row[stCol]) uniqueStores.add(String(row[stCol]).trim());
+                    if (row._convenio && row._convenio !== 'SIN CONVENIO') uniqueConvenios.add(row._convenio);
                 });
                 return { 
                     sellers: Array.from(uniqueSellers).sort(), sellerColumn: sCol,
                     assignees: Array.from(uniqueAssignees).sort(), assignedColumn: aCol,
                     devices: Array.from(uniqueDevices).sort(), deviceColumn: dCol,
                     stores: Array.from(uniqueStores).sort(), storeColumn: stCol, 
-                    phoneColumn: pCol, clientColumn: cCol, idColumn: idCol
+                    phoneColumn: pCol, clientColumn: cCol, idColumn: idCol,
+                    convenios: Array.from(uniqueConvenios).sort()
                 };
             }, [data, headers, activeConfig, findConfigColumn]);
 
@@ -633,12 +712,10 @@
                 });
             }, [headers, activeConfig]);
 
-            // Reorganización visual de las columnas de la tabla para eficiencia del asesor
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
                 
-                // --- OCULTAR COLUMNAS INDESEADAS ---
                 arr = arr.filter(h => {
                     const lowerH = String(h).toLowerCase().trim();
                     if (lowerH === 'empresa') return false; 
@@ -680,13 +757,12 @@
                     }
                 }
 
-                // INYECCIÓN DE LA COLUMNA "DÍAS MORA"
                 if (firstQuotaCol || paidCol || lateCol) {
                     const colsToInsert = [];
                     if (firstQuotaCol) colsToInsert.push(firstQuotaCol);
                     
-                    // Columna Virtual de Días Mora
-                    colsToInsert.push('DÍAS MORA');
+                    // 🚀 SE INYECTA LA COLUMNA DE DÍAS MORA
+                    colsToInsert.push('DÍAS MORA'); 
                     
                     if (paidCol) colsToInsert.push(paidCol);
                     if (lateCol) colsToInsert.push(lateCol);
@@ -847,8 +923,9 @@
                 if (selectedAssigned && assignedColumn) result = result.filter(row => String(row[assignedColumn]).trim() === selectedAssigned);
                 if (selectedDevice && deviceColumn) result = result.filter(row => String(row[deviceColumn]).trim() === selectedDevice);
                 if (selectedStore && storeColumn) result = result.filter(row => String(row[storeColumn]).trim() === selectedStore); 
+                if (selectedConvenio) result = result.filter(row => row._convenio === selectedConvenio); // ⚡ Filtro Convenio Stats
                 return result;
-            }, [data, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn]);
+            }, [data, selectedSeller, sellerColumn, selectedAssigned, assignedColumn, selectedDevice, deviceColumn, selectedStore, storeColumn, selectedConvenio]);
 
             const filteredData = useMemo(() => {
                 let result = [...dataForStats];
@@ -893,7 +970,8 @@
                             }
 
                             if (!matchesCohort) return false;
-                            
+
+                            // 🚀 INTEGRACIÓN CUOTAS ATRASADAS PARA FILTROS (CONTINUIDAD Y ALOCREDIT)
                             if (breakdownFilter) {
                                 if (ALO_QUOTAS.includes(activeFilter)) {
                                     let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
@@ -912,32 +990,34 @@
                                 }
                                 else if (CONTINUITY_QUOTAS.includes(activeFilter)) {
                                     let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
-                                    const val = String(row[commentsCol] || '').toLowerCase().trim();
-                                    
-                                    if (breakdownFilter.type === 'yaCancelo') return val.includes('completado');
-                                    if (breakdownFilter.type === 'conGestion') return !val.includes('completado') && val !== '';
-                                    if (breakdownFilter.type === 'vacio') return val === '';
+                                    let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers); 
+
+                                    const val = commentsCol ? String(row[commentsCol] || '').toLowerCase().trim() : '';
+                                    let lateVal = lateCol ? String(row[lateCol] || '').trim() : '';
+                                    let isLate = lateVal !== '' && lateVal !== '0' && lateVal !== '0.0' && !isNaN(Number(lateVal)) && Number(lateVal) > 0;
+
+                                    if (breakdownFilter.type === 'yaCancelo') return val.includes('completado') && !isLate;
+                                    if (breakdownFilter.type === 'conGestion') return (isLate && val !== '') || (!isLate && val !== '' && !val.includes('completado'));
+                                    if (breakdownFilter.type === 'noCancelo') return isLate && val === '';
+                                    if (breakdownFilter.type === 'vacio') return val === '' && !isLate;
                                     return false; 
                                 } 
                                 else {
                                     let quotaName = QUOTA_LABELS[activeFilter].id;
                                     let statusCol = findColumnName(activeConfig.columns.paymentStatus, quotaName, headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                                    const val = String(row[statusCol] || '').toLowerCase().trim();
+                                    const val = String(row[statusCol] || '');
+                                    
+                                    const status = getStatus(val); 
 
-                                    const isUnpaidExplicit = val.includes('no se') || val.includes('no cancelo') || val.includes('no pago');
-                                    const isLoan = val.includes('pago con gestion') || val.includes('pago con gestión') || val.includes('prestamo');
-                                    const isPaid = !isUnpaidExplicit && !isLoan && (val.includes('pago') || val.includes('cancelo') || val.includes('canceló'));
-                                    const isManaged = isLoan || (!isPaid && !isUnpaidExplicit && (val.includes('compromiso') || val.includes('gestion') || val.includes('gestión')));
-
-                                    if (breakdownFilter.type === 'yaCancelo') return isPaid;
-                                    if (breakdownFilter.type === 'conGestion') return isManaged;
-                                    if (breakdownFilter.type === 'vacio') return val === '';
-                                    if (breakdownFilter.type === 'noCancelo') return val !== '' && !isPaid && !isManaged;
+                                    if (breakdownFilter.type === 'yaCancelo') return status === 'clean';
+                                    if (breakdownFilter.type === 'conGestion') return status === 'managed';
+                                    if (breakdownFilter.type === 'vacio') return status === 'empty';
+                                    if (breakdownFilter.type === 'noCancelo') return status === 'unpaid';
                                     return false;
                                 }
                             }
                             
-                            // Si NO hay breakdown filter, ocultamos los que ya pagaron limpiamente
+                            // Si NO hay breakdown filter (Click principal en el cajón FPD)
                             if (ALO_QUOTAS.includes(activeFilter)) {
                                 let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
                                 let lateVal = String(row[lateCol] || '').trim();
@@ -945,18 +1025,20 @@
                                 return !isZero;
                             } else if (CONTINUITY_QUOTAS.includes(activeFilter)) {
                                 let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
-                                const val = String(row[commentsCol] || '').toLowerCase().trim();
-                                return !val.includes('completado'); 
+                                let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                                
+                                const val = commentsCol ? String(row[commentsCol] || '').toLowerCase().trim() : '';
+                                let lateVal = lateCol ? String(row[lateCol] || '').trim() : '';
+                                let isLate = lateVal !== '' && lateVal !== '0' && lateVal !== '0.0' && !isNaN(Number(lateVal)) && Number(lateVal) > 0;
+
+                                return !(val.includes('completado') && !isLate); 
                             } else {
                                 let quotaName = QUOTA_LABELS[activeFilter].id;
                                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, quotaName, headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
-                                const val = String(row[statusCol] || '').toLowerCase().trim();
-
-                                const isUnpaidExplicit = val.includes('no se') || val.includes('no cancelo') || val.includes('no pago');
-                                const isLoan = val.includes('pago con gestion') || val.includes('pago con gestión') || val.includes('prestamo');
-                                const isPaid = !isUnpaidExplicit && !isLoan && (val.includes('pago') || val.includes('cancelo') || val.includes('canceló'));
-
-                                return !isPaid; // Solo muestra Mora, Gestión y Vacíos
+                                const val = String(row[statusCol] || '');
+                                
+                                const status = getStatus(val);
+                                return status !== 'clean'; 
                             }
                         });
                     }
@@ -1068,6 +1150,7 @@
                 if (!dateCol) return { found: false };
                 const formatDateShort = (d) => d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
                 
+                // ⚡ NUEVAS COLUMNAS FINANCIERAS PARA ALOCREDIT / KREDIYA
                 const totalValueCol = findConfigColumn(['valor credito', 'valor total', 'capital', 'saldo a finaciar', 'monto a financiar'], headers);
                 const quotaValueCol = findConfigColumn(['valor cuota', 'monto cuota'], headers);
                 const paidQuotasCol = findConfigColumn(['cuotas pagas', 'cuotas pagadas', 'pagadas'], headers);
@@ -1130,10 +1213,16 @@
                         }
                     } else if (CONTINUITY_QUOTAS.includes(quotaKey)) {
                         let commentsCol = findConfigColumn(activeConfig.columns.comments, headers);
+                        let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers); 
+                        
                         if (commentsCol) {
                             cohortSales.forEach(row => {
                                 const val = String(row[commentsCol] || '').toLowerCase().trim();
-                                if (!val.includes('completado')) unpaid++; 
+                                let lateVal = lateCol ? String(row[lateCol] || '').trim() : '';
+                                let isLate = lateVal !== '' && lateVal !== '0' && lateVal !== '0.0' && !isNaN(Number(lateVal)) && Number(lateVal) > 0;
+                                
+                                // Si está en mora, o NO está completado = Unpaid
+                                if (!val.includes('completado') || isLate) unpaid++; 
                             });
                         }
                     } else {
@@ -1142,7 +1231,7 @@
                         
                         if (statusCol) {
                             cohortSales.forEach(row => {
-                                if (!isObsUnpaid(String(row[statusCol] || ''))) return;
+                                if (!isObsUnpaid(row[statusCol])) return;
 
                                 const dueDate = getDueDate(row, headers);
                                 if (!dueDate) return;
@@ -1237,11 +1326,19 @@
                         return s;
                     } else if (CONTINUITY_QUOTAS.includes(quotaKey)) {
                         let col = findConfigColumn(activeConfig.columns.comments, headers);
+                        let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
                         if (!col) return s;
+                        
                         cohortSales.forEach(row => {
                             const val = String(row[col] || '').toLowerCase().trim();
-                            if (val.includes('completado')) {
+                            let lateVal = lateCol ? String(row[lateCol] || '').trim() : ''; 
+                            let isLate = lateVal !== '' && lateVal !== '0' && lateVal !== '0.0' && !isNaN(Number(lateVal)) && Number(lateVal) > 0; 
+
+                            if (val.includes('completado') && !isLate) {
                                 s.yaCancelo++;
+                            } else if (isLate) {
+                                if (val !== '') s.conGestion++;
+                                else s.noCancelo++;
                             } else if (val !== '') {
                                 s.conGestion++;
                             } else {
@@ -1256,20 +1353,13 @@
                         if(!col) return s;
 
                         cohortSales.forEach(row => {
-                            const val = String(row[col] || '').toLowerCase().trim();
-                            if (val === '') {
-                                s.vacio++;
-                            } else if (val.includes('no se') || val.includes('no cancelo') || val.includes('no pago')) {
-                                s.noCancelo++;
-                            } else if (val.includes('pago con gestion') || val.includes('pago con gestión')) {
-                                s.conGestion++; 
-                            } else if (val.includes('pago') || val.includes('cancelo') || val.includes('canceló')) {
-                                s.yaCancelo++;
-                            } else if (val.includes('compromiso') || val.includes('gestion') || val.includes('gestión')) {
-                                s.conGestion++;
-                            } else {
-                                s.noCancelo++;
-                            }
+                            const val = String(row[col] || '');
+                            const status = getStatus(val); 
+
+                            if (status === 'clean') s.yaCancelo++;
+                            else if (status === 'managed') s.conGestion++;
+                            else if (status === 'empty') s.vacio++;
+                            else s.noCancelo++;
                         });
                         return s;
                     }
@@ -1367,6 +1457,7 @@
                                             <span className="text-[10px] flex items-center gap-1"><Icons.Target className="w-3 h-3"/> Meta {targetPercent}%:</span><span>{recoverNeeded}</span>
                                         </div>
                                     )}
+
                                     {/* FINANCIADO VS RECAUDADO (MÓDULO DE CAJA EN ALOCREDIT/KREDIYA) */}
                                     {(portfolio === 'alocredit' || portfolio === 'krediya') && (
                                         <div className="mt-2 pt-2 border-t border-black/5">
@@ -1383,6 +1474,7 @@
                                             </div>
                                         </div>
                                     )}
+
                                     <div className="text-[9px] text-right opacity-60 pt-1 mt-1 border-t border-black/5">{fpdInfo.rangeStr}</div>
                                 </div>
                             ) : <span className="text-[10px] opacity-70">Sin ventas en {fpdInfo ? fpdInfo.rangeStr : 'periodo'}</span>}
@@ -1616,7 +1708,8 @@
                 if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
                 let birthDateCol = findConfigColumn(activeConfig.columns.birthDate, headers);
 
-                const tableColumn = ["Cliente", "Cédula", "F. Nac.", "Celular", "Equipo", "Tienda", "Asignado", "Estado", "Cuota"];
+                // ⚡ SE INCLUYE EL CONVENIO EN EL EXPORT
+                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Convenio", "Asignado", "Estado", "Cuota"];
                 const tableRows = [];
                 let totalAmount = 0;
 
@@ -1626,17 +1719,15 @@
 
                     let cellAmount = amountCol && row[amountCol] ? String(row[amountCol]) : '$0';
                     let cellStatus = statusCol && row[statusCol] ? String(row[statusCol]) : '-';
-                    let cellBirth = birthDateCol && row[birthDateCol] ? formatCellData(row[birthDateCol]) : '-';
 
                     tableRows.push([
                         row[clientColumn] || '-',
                         row[idColumn] || '-',
-                        cellBirth,
                         row[phoneColumn] || '-',
-                        row[deviceColumn] || '-',
-                        row[storeColumn] || '-',
-                        row[assignedColumn] || '-',
-                        cellStatus.substring(0, 40), // Limitar texto por si es muy largo
+                        String(row[deviceColumn] || '-').substring(0, 15),
+                        String(row._convenio || '-').substring(0, 15),
+                        String(row[assignedColumn] || '-').substring(0, 15),
+                        cellStatus.substring(0, 40), 
                         cellAmount
                     ]);
                 });
@@ -1656,10 +1747,10 @@
                     body: tableRows,
                     startY: 33,
                     theme: 'grid',
-                    headStyles: { fillColor: [79, 70, 229] }, // Color Índigo
+                    headStyles: { fillColor: [79, 70, 229] }, 
                     styles: { fontSize: 8 },
                     columnStyles: {
-                        7: { cellWidth: 40 } // Darle espacio a la columna de estado
+                        6: { cellWidth: 40 }
                     }
                 });
 
@@ -1935,7 +2026,7 @@
                             >
                                 <Icons.ArrowLeft className="w-5 h-5" />
                             </button>
-                            <img src="https://github.com/TECNOMARIN/MULTIMARCAS/blob/main/SOLUCIONES%20PNG.png?raw=true" alt="Logo Multimarcas" className="h-16 object-contain drop-shadow-sm" />
+                            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-16 object-contain drop-shadow-sm" />
                             <div className="h-10 w-px bg-slate-200 hidden md:block"></div>
                             <div>
                                 <h1 className="text-2xl font-black text-slate-900 tracking-tight">Tablero de Cartera</h1>
@@ -1965,7 +2056,7 @@
                                 </div>
                             </div>
 
-                            <button onClick={() => window.location.href = 'dashboard.html'} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-bold text-sm tracking-wide border border-amber-600">
+                            <button onClick={() => window.location.href = 'index.html'} className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-bold text-sm tracking-wide border border-amber-600">
                                 <Icons.Globe className="w-4 h-4"/> Visión Global
                             </button>
                             
@@ -1974,28 +2065,6 @@
                             </button>
                             
                             <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-full border border-slate-200 ml-2">
-                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN ALOCREDIT */}
-                                {portfolio === 'alocredit' && (
-                                    <button 
-                                        onClick={() => window.location.href = 'actualizador.html'} 
-                                        className="flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-600 rounded-full hover:bg-indigo-50 transition-all shadow-sm font-bold text-sm border border-indigo-100"
-                                        title="Subir archivo Excel de Alocredit"
-                                    >
-                                        <Icons.UploadCloud className="w-4 h-4"/> Subir Excel
-                                    </button>
-                                )}
-
-                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN PAYJOY */}
-                                {portfolio === 'payjoy' && (
-                                    <button 
-                                        onClick={() => window.location.href = 'actualizador_payjoy.html'} 
-                                        className="flex items-center gap-1.5 px-4 py-2 bg-white text-blue-600 rounded-full hover:bg-blue-50 transition-all shadow-sm font-bold text-sm border border-blue-100"
-                                        title="Subir archivo Excel de Payjoy"
-                                    >
-                                        <Icons.UploadCloud className="w-4 h-4"/> Subir Excel
-                                    </button>
-                                )}
-                                
                                 <button onClick={fetchData} disabled={loading} className="p-2.5 bg-white text-slate-500 hover:text-indigo-600 rounded-full transition-all shadow-sm hover:shadow-md disabled:opacity-50 border border-transparent hover:border-slate-200" title="Recargar datos de la BD">
                                     <Icons.RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
                                 </button>
@@ -2012,15 +2081,25 @@
 
                     {/* FILTROS BUSCADOR */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                        <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Vendedor</label>
+                        
+                        {/* ⚡ NUEVO: Filtro Convenio */}
+                        <div className={`bg-white p-3 rounded-2xl shadow-sm border border-slate-100 transition-opacity ${selectedStore !== '' ? 'opacity-40' : ''}`}>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Convenio</label>
                             <div className="relative">
-                                <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium" value={selectedSeller} onChange={e => setSelectedSeller(e.target.value)}>
-                                    <option value="">Todos</option>
-                                    {sellers.map((s,i) => <option key={i} value={s}>{s}</option>)}
+                                <select 
+                                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-bold disabled:cursor-not-allowed" 
+                                    value={selectedConvenio} 
+                                    onChange={e => setSelectedConvenio(e.target.value)}
+                                    disabled={selectedStore !== ''}
+                                    title={selectedStore !== '' ? 'Desactivado por Filtro de Tienda' : ''}
+                                >
+                                    <option value="">Todos los Convenios</option>
+                                    <option value="SIN CONVENIO">-- Sin Convenio --</option>
+                                    {convenios.map((c,i) => <option key={i} value={c}>{c}</option>)}
                                 </select>
                             </div>
                         </div>
+
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Asignado</label>
                             <div className="relative">
@@ -2030,6 +2109,7 @@
                                 </select>
                             </div>
                         </div>
+                        
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Tienda</label>
                             <div className="relative">
@@ -2039,6 +2119,7 @@
                                 </select>
                             </div>
                         </div>
+                        
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Equipo</label>
                             <div className="relative">
@@ -2048,13 +2129,15 @@
                                 </select>
                             </div>
                         </div>
+
                         <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">Búsqueda</label>
                              <div className="relative">
-                                <input type="text" className="w-full p-2.5 pl-10 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all placeholder:text-slate-400" placeholder="Nombre, identificador..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                                <input type="text" className="w-full p-2.5 pl-10 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all placeholder:text-slate-400" placeholder="Nombre, doc..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                                 <Icons.Search className="w-4 h-4 text-indigo-400 absolute left-3.5 top-3" />
                              </div>
                         </div>
+                        
                         <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-4 rounded-2xl shadow-sm border border-indigo-100 flex flex-col justify-center relative">
                             <div className="flex justify-between items-center px-1">
                                 <div>
@@ -2315,6 +2398,10 @@
                                             rowBgClass = 'bg-amber-50/40 hover:bg-amber-100/50';
                                             rowBorderClass = 'border-l-2 border-amber-400';
                                             rowTextClass = 'text-amber-900 font-medium';
+                                        } else if (isGeneralLate) {
+                                            rowBgClass = 'bg-rose-50/40 hover:bg-rose-100/50';
+                                            rowBorderClass = 'border-l-[4px] border-rose-300';
+                                            rowTextClass = 'text-rose-900 font-medium';
                                         }
 
                                         const actionCell = (
@@ -2399,6 +2486,16 @@
                                                 if (h === 'DÍAS MORA') {
                                                     const dueDate = getDueDate(row, headers);
                                                     
+                                                    let isUnpaid = false;
+                                                    const lateColName = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                                                    if (lateColName && row[lateColName] !== undefined && row[lateColName] !== "") {
+                                                        const lateNum_in = Number(String(row[lateColName]).trim()) || 0;
+                                                        if (lateNum_in > 0) isUnpaid = true;
+                                                    } else {
+                                                        let statusCol_in = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                                                        if (statusCol_in) isUnpaid = isObsUnpaid(row[statusCol_in]);
+                                                    }
+                                                    
                                                     let textMora = "-";
                                                     let badgeClass = "text-slate-400 bg-slate-100 border border-slate-200";
                                                     
@@ -2415,7 +2512,7 @@
                                                         dDate.setHours(0,0,0,0);
                                                         const diffDays = Math.floor((today.getTime() - dDate.getTime()) / (1000 * 60 * 60 * 24));
                                                         
-                                                        if (finalStatus === 'unpaid' || finalStatus === 'managed') {
+                                                        if (isUnpaid) {
                                                             if (diffDays > 0) {
                                                                 textMora = `${diffDays} Días`;
                                                                 badgeClass = "text-red-700 bg-red-100 border border-red-300 shadow-sm"; 
@@ -2427,7 +2524,6 @@
                                                                 badgeClass = "text-blue-700 bg-blue-100 border border-blue-200 shadow-sm";
                                                             }
                                                         } else {
-                                                            // Casos 'empty' (Pendiente sin atrasos)
                                                             textMora = "Al Día";
                                                             badgeClass = "text-emerald-700 bg-emerald-100 border border-emerald-200 shadow-sm";
                                                         }
@@ -2443,7 +2539,7 @@
                                                         </td>
                                                     );
                                                 } 
-                                                // --- EDICIÓN NORMAL DE COLUMNAS ---
+                                                // --- EDICIÓN NORMAL DE COLUMNAS E INYECCIÓN DE CONVENIO ---
                                                 else if (isCleanEditableCol) {
                                                     const clientVal = clientColumn ? row[clientColumn] : '';
                                                     const deviceVal = deviceColumn ? row[deviceColumn] : '';
@@ -2451,20 +2547,29 @@
                                                     
                                                     tdContent = (
                                                         <td key={j} className={`px-4 py-3 whitespace-nowrap ${j===0 ? rowBorderClass : ''} ${style?.bgColor || ''}`}>
-                                                            <div className="flex items-center justify-between gap-3">
-                                                                <span 
-                                                                    className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${(isCritical7Row || isCritical15Row) ? 'text-red-950 hover:text-red-700' : h === assignedColumn ? 'text-blue-800' : 'text-slate-600 hover:text-indigo-600'}`} 
-                                                                    title={`Clic para editar ${h}`} 
-                                                                    onClick={() => openCleanEdit(row, h)}
-                                                                >
-                                                                    {val || <span className="text-slate-300 italic font-normal">Vacío</span>}
-                                                                    <Icons.Edit2 className={`w-3 h-3 opacity-0 group-hover:opacity-100 ${h===assignedColumn ? 'text-blue-500' : 'text-indigo-500'}`} />
-                                                                </span>
-                                                                {isPhoneCol && clean && (
-                                                                    <div className="flex gap-1.5 ml-2">
-                                                                        <a href={getWhatsAppLink(val, clientVal, deviceVal)} target="_blank" className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors shadow-sm" title="WhatsApp"><Icons.MessageCircle className="w-4 h-4"/></a>
-                                                                        <a href={`tel:${clean}`} className="p-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors shadow-sm" title="Llamar"><Icons.Phone className="w-4 h-4"/></a>
-                                                                    </div>
+                                                            <div className="flex flex-col gap-1">
+                                                                <div className="flex items-center justify-between gap-3">
+                                                                    <span 
+                                                                        className={`font-mono text-xs font-bold group relative cursor-pointer px-1 -mx-1 rounded flex items-center gap-1 ${(isCritical7Row || isCritical15Row) ? 'text-red-950 hover:text-red-700' : h === assignedColumn ? 'text-blue-800' : 'text-slate-600 hover:text-indigo-600'}`} 
+                                                                        title={`Clic para editar ${h}`} 
+                                                                        onClick={() => openCleanEdit(row, h)}
+                                                                    >
+                                                                        {val || <span className="text-slate-300 italic font-normal">Vacío</span>}
+                                                                        <Icons.Edit2 className={`w-3 h-3 opacity-0 group-hover:opacity-100 ${h===assignedColumn ? 'text-blue-500' : 'text-indigo-500'}`} />
+                                                                    </span>
+                                                                    {isPhoneCol && clean && (
+                                                                        <div className="flex gap-1.5 ml-2">
+                                                                            <a href={getWhatsAppLink(val, clientVal, deviceVal)} target="_blank" className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors shadow-sm" title="WhatsApp"><Icons.MessageCircle className="w-4 h-4"/></a>
+                                                                            <a href={`tel:${clean}`} className="p-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors shadow-sm" title="Llamar"><Icons.Phone className="w-4 h-4"/></a>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                {/* ⚡ ETIQUETA VISUAL DEL CONVENIO DEBAJO DEL ASIGNADO */}
+                                                                {h === assignedColumn && (
+                                                                    <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">
+                                                                        {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-400 italic">Sin Convenio</span>}
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                         </td>
@@ -2810,7 +2915,6 @@
                                     </div>
                                 </div>
 
-                                {/* FILTRO DE PRÉSTAMOS DENTRO DEL DETALLE */}
                                 <div className="px-5 py-3 border-b border-slate-100 bg-white flex items-center gap-3">
                                     <span className="text-xs font-bold text-slate-400 uppercase">Filtro de Vista:</span>
                                     <button 
@@ -2853,7 +2957,6 @@
                                                         <td className="px-4 py-3 text-slate-600 text-xs">{row.device}</td>
                                                         <td className="px-4 py-3 text-center text-slate-500 text-xs font-medium">{row.dueDate}</td>
                                                         
-                                                        {/* CELDA DE VALOR CUOTA */}
                                                         <td className={`px-4 py-3 text-center font-mono text-xs font-bold ${row.isLoan ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-500'}`}>
                                                             {row.amountStr}
                                                         </td>
