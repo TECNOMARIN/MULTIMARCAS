@@ -212,11 +212,11 @@
             const [detailSeller, setDetailSeller] = useState(null); 
             const [detailFilter, setDetailFilter] = useState('all'); 
 
-            // Modal Edición
+            // Modales
             const [editModal, setEditModal] = useState({ show: false, row: null, colName: null, currentValue: '' });
             const [cleanEditModal, setCleanEditModal] = useState({ show: false, row: null, colName: null, currentValue: '', isDate: false });
             
-            // ⚡ ESTRUCTURA DE CONFIRMMODAL CON LA SÚPER CALCULADORA
+            // ⚡ ESTRUCTURA DE CONFIRMMODAL SEPARADA (PAGO vs PAGO GESTIÓN)
             const [confirmModal, setConfirmModal] = useState({ 
                 show: false, 
                 row: null, 
@@ -286,10 +286,9 @@
                 });
             }, []);
 
-            // 🧠 1. EXTRACTOR INTELIGENTE DEL MONTO DEL PRÉSTAMO DIRECTO EN EL COMENTARIO
+            // 🧠 EXTRACTOR INTELIGENTE DEL MONTO DEL PRÉSTAMO DIRECTO EN EL COMENTARIO
             const extractLoanAmount = useCallback((row, commentsCol) => {
                 if (!commentsCol || !row[commentsCol]) return null;
-                // Busca de forma robusta "(Préstamo: $100.000 por 2 cuota(s))" o "(Préstamo: $100.000)"
                 const match = String(row[commentsCol]).match(/(?:Préstamo|Prestamo|Monto):\s*([$\d.,\s]+)(?:\s*por|\))/i);
                 return match ? String(match[1]).trim() : null;
             }, []);
@@ -403,6 +402,7 @@
                 return 'unpaid'; 
             };
 
+            // --- ESTADOS DE ALERTA UNIFICADOS Y DINÁMICOS POR MARCA ---
             const getRowEarlyStatus = useCallback((row, headersList) => {
                 let statusCol = findColumnName(activeConfig?.columns?.paymentStatus, 'primera', headersList) || findColumnName(activeConfig?.columns?.paymentStatus, '', headersList);
                 const dueDate = getDueDate(row, headersList);
@@ -471,6 +471,7 @@
                 if (diffDaysFromDue === 13 || diffDaysFromDue === 14) return isObsUnpaid(String(row[statusCol]).trim());
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
+
 
             // --- FETCH PARA TABLERO INDIVIDUAL ---
             const fetchData = useCallback(async () => {
@@ -847,7 +848,6 @@
 
                             if (!matchesCohort) return false;
 
-                            // 🚀 INTEGRACIÓN CUOTAS ATRASADAS PARA FILTROS
                             if (breakdownFilter) {
                                 if (ALO_QUOTAS.includes(activeFilter)) {
                                     let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
@@ -1582,6 +1582,7 @@
                 let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
                 if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
                 
+                // ⚡ SE INCLUYE EL CONVENIO EN EL EXPORT
                 const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Convenio", "Asignado", "Estado", "Cuota"];
                 const tableRows = [];
                 let totalAmount = 0;
@@ -1630,6 +1631,7 @@
                 doc.save(`Filtro_Personalizado_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
+            // --- ⚡ LÓGICA DE ACCIÓN RÁPIDA SEPARADA ---
             const triggerQuickAction = (row, actionType, quotaId = null) => {
                 let msg = "";
                 let qLabel = "";
@@ -1641,11 +1643,12 @@
                 const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
                 const quotaValNum = valCuotaCol && row[valCuotaCol] ? parseAmount(row[valCuotaCol]) : 0;
 
-                if (actionType === 'COMPLETADO') msg = `¿Marcar cliente como COMPLETADO${qLabel ? ` en ${qLabel}` : ' en Continuidad'}?`;
-                else if (actionType === 'PAGO_GESTION') {
+                if (actionType === 'COMPLETADO') {
+                    msg = `¿Marcar cliente como COMPLETADO${qLabel ? ` en ${qLabel}` : ' en Continuidad'}?`;
+                } else if (actionType === 'PAGO_GESTION') {
                     msg = `¿Registrar PAGO CON GESTIÓN (préstamo) para este cliente${qLabel ? ` en ${qLabel}` : ''}?`;
-                } else {
-                    msg = `¿Registrar PAGO para este cliente de forma rápida${qLabel ? ` en ${qLabel}` : ''}?`;
+                } else if (actionType === 'PAGO') {
+                    msg = `¿Confirmas que el cliente realizó su PAGO normal${qLabel ? ` de ${qLabel}` : ''}?`;
                 }
                 
                 setConfirmModal({ 
@@ -1705,16 +1708,10 @@
                         const oldVal = updatedRow[commentsCol] || '';
                         updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
 
-                    } else {
-                        const isGestion = actionType === 'PAGO_GESTION';
-                        const valStatus = isGestion ? "PAGO CON GESTION" : "PAGO";
-                        
-                        const parsedCustomAmount = parseAmount(customAmount);
-                        const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(parsedCustomAmount);
-                        
-                        const valComment = isGestion 
-                            ? `Pago registrado con Gestión${qLabelText} (Préstamo: ${formattedTotal} por ${numQuotas} cuota(s))` 
-                            : `Pago registrado${qLabelText} (Monto: ${formattedTotal} por ${numQuotas} cuota(s))`;
+                    } else if (actionType === 'PAGO') {
+                        // 🟢 FLUJO DE PAGO NORMAL (SIN PRÉSTAMOS, SÓLO CUOTAS)
+                        const valStatus = "PAGO";
+                        const valComment = `Pago registrado${qLabelText} (${numQuotas} cuota(s))`;
 
                         if (paymentCol) {
                             updatesPayload.push({ column: paymentCol, value: valStatus, append: false, cleanWrite: true });
@@ -1734,6 +1731,7 @@
                             updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
                         }
 
+                        // Aumentar Cuotas Pagas
                         if (paidCol && numQuotas > 0) {
                             const currentPaid = parseInt(String(row[paidCol]).replace(/\D/g, '')) || 0;
                             const newPaidVal = currentPaid + numQuotas;
@@ -1742,6 +1740,52 @@
                             updatedRow[paidCol] = newPaidVal;
                         }
 
+                        // Reducir Cuotas Atrasadas (Si Aplica)
+                        let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
+                        if (lateCol && numQuotas > 0) {
+                            const currentLate = parseInt(String(row[lateCol]).replace(/\D/g, '')) || 0;
+                            const newLateVal = Math.max(0, currentLate - numQuotas);
+                            
+                            updatesPayload.push({ column: lateCol, value: String(newLateVal), append: false, cleanWrite: true });
+                            updatedRow[lateCol] = newLateVal;
+                        }
+
+                    } else if (actionType === 'PAGO_GESTION') {
+                        // 🔵 FLUJO DE PAGO CON GESTIÓN (CALCULADORA DE PRÉSTAMOS)
+                        const valStatus = "PAGO CON GESTION";
+                        const parsedCustomAmount = parseAmount(customAmount);
+                        const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(parsedCustomAmount);
+                        
+                        const valComment = `Pago registrado con Gestión${qLabelText} (Préstamo: ${formattedTotal} por ${numQuotas} cuota(s))`;
+
+                        if (paymentCol) {
+                            updatesPayload.push({ column: paymentCol, value: valStatus, append: false, cleanWrite: true });
+                            updatedRow[paymentCol] = valStatus;
+                            
+                            fallbackComment = valStatus;
+                            fallbackCol = paymentCol;
+                            fallbackAppend = false;
+                            fallbackClean = true;
+                        }
+
+                        if (commentsCol) {
+                            updatesPayload.push({ column: commentsCol, value: valComment, append: true, cleanWrite: false });
+                            
+                            const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+                            const oldVal = updatedRow[commentsCol] || '';
+                            updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
+                        }
+
+                        // Aumentar Cuotas Pagas
+                        if (paidCol && numQuotas > 0) {
+                            const currentPaid = parseInt(String(row[paidCol]).replace(/\D/g, '')) || 0;
+                            const newPaidVal = currentPaid + numQuotas;
+                            
+                            updatesPayload.push({ column: paidCol, value: String(newPaidVal), append: false, cleanWrite: true });
+                            updatedRow[paidCol] = newPaidVal;
+                        }
+
+                        // Reducir Cuotas Atrasadas
                         let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
                         if (lateCol && numQuotas > 0) {
                             const currentLate = parseInt(String(row[lateCol]).replace(/\D/g, '')) || 0;
@@ -1751,6 +1795,7 @@
                             updatedRow[lateCol] = newLateVal;
                         }
                         
+                        // Si era cuota desconocida, la guarda
                         const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
                         if (valCuotaCol && amount <= 0 && numQuotas > 0) {
                              const calculatedBaseQuota = Math.round(parsedCustomAmount / numQuotas);
@@ -1918,7 +1963,6 @@
                  return <div className="p-8 text-center text-red-500 font-bold">Error de configuración de la marca. Verificando...</div>;
             }
 
-            // --- VARIABLES PARA EL RENDERIZADO VISUAL ---
             let statusCol_ui = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers) || findColumnName(activeConfig.columns.paymentStatus, '', headers);
 
             return (
@@ -1972,6 +2016,39 @@
                             </button>
                             
                             <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-full border border-slate-200 ml-2">
+                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN ALOCREDIT */}
+                                {portfolio === 'alocredit' && (
+                                    <button 
+                                        onClick={() => window.location.href = 'actualizador.html'} 
+                                        className="flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-600 rounded-full hover:bg-indigo-50 transition-all shadow-sm font-bold text-sm border border-indigo-100"
+                                        title="Subir archivo Excel de Alocredit"
+                                    >
+                                        <Icons.UploadCloud className="w-4 h-4"/> Subir Excel
+                                    </button>
+                                )}
+
+                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN KREDIYA */}
+                                {portfolio === 'krediya' && (
+                                    <button 
+                                        onClick={() => window.location.href = 'actualizador_krediya.html'} 
+                                        className="flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-600 rounded-full hover:bg-emerald-50 transition-all shadow-sm font-bold text-sm border border-emerald-100"
+                                        title="Subir archivo Excel de Krediya"
+                                    >
+                                        <Icons.UploadCloud className="w-4 h-4"/> Subir Excel
+                                    </button>
+                                )}
+
+                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN PAYJOY */}
+                                {portfolio === 'payjoy' && (
+                                    <button 
+                                        onClick={() => window.location.href = 'actualizador_payjoy.html'} 
+                                        className="flex items-center gap-1.5 px-4 py-2 bg-white text-blue-600 rounded-full hover:bg-blue-50 transition-all shadow-sm font-bold text-sm border border-blue-100"
+                                        title="Subir archivo Excel de Payjoy"
+                                    >
+                                        <Icons.UploadCloud className="w-4 h-4"/> Subir Excel
+                                    </button>
+                                )}
+                                
                                 <button onClick={fetchData} disabled={loading} className="p-2.5 bg-white text-slate-500 hover:text-indigo-600 rounded-full transition-all shadow-sm hover:shadow-md disabled:opacity-50 border border-transparent hover:border-slate-200" title="Recargar datos de la BD">
                                     <Icons.RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin text-indigo-600' : ''}`} />
                                 </button>
@@ -2304,6 +2381,10 @@
                                             rowBgClass = 'bg-amber-50/40 hover:bg-amber-100/50';
                                             rowBorderClass = 'border-l-2 border-amber-400';
                                             rowTextClass = 'text-amber-900 font-medium';
+                                        } else if (isGeneralLate) {
+                                            rowBgClass = 'bg-rose-50/40 hover:bg-rose-100/50';
+                                            rowBorderClass = 'border-l-[4px] border-rose-300';
+                                            rowTextClass = 'text-rose-900 font-medium';
                                         }
 
                                         const actionCell = (
@@ -2338,7 +2419,7 @@
                                                                     <button 
                                                                         onClick={() => triggerQuickAction(row, 'PAGO', activeQuotaForButton)}
                                                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs shadow-sm transition-transform hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:opacity-50 bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white"
-                                                                        title="Registrar Pago Directo"
+                                                                        title="Registrar Pago Normal"
                                                                         disabled={isSaving}
                                                                     >
                                                                         <Icons.DollarSign className="w-4 h-4"/> PAGO
@@ -2371,7 +2452,6 @@
                                                 
                                                 let tdContent = null;
 
-                                                // --- INYECCIÓN VISUAL DE DÍAS MORA ---
                                                 if (h === 'DÍAS MORA') {
                                                     const dueDate = getDueDate(row, headers);
                                                     
@@ -2424,7 +2504,6 @@
                                                         </td>
                                                     );
                                                 }
-                                                // --- COLUMNA CONVENIO ---
                                                 else if (h === 'CONVENIO') {
                                                     tdContent = (
                                                         <td key={j} className={`px-4 py-3 whitespace-nowrap text-[10px] font-black uppercase tracking-widest ${val !== 'SIN CONVENIO' ? 'text-indigo-600 bg-indigo-50/30' : 'text-slate-400 italic bg-slate-50/30'}`}>
@@ -2432,7 +2511,6 @@
                                                         </td>
                                                     );
                                                 }
-                                                // ⚡ MAGIA: RESALTADOR VISUAL DE PRÉSTAMOS EN EL ESTADO
                                                 else if (h === statusCol_ui) {
                                                     const isPrestamo = String(val).toLowerCase().includes('gestion') || String(val).toLowerCase().includes('gestión');
                                                     const isPagado = String(val).toLowerCase() === 'pago';
@@ -2461,7 +2539,6 @@
                                                         </td>
                                                     );
                                                 }
-                                                // --- EDICIÓN NORMAL DE COLUMNAS ---
                                                 else if (isCleanEditableCol) {
                                                     const clientVal = clientColumn ? row[clientColumn] : '';
                                                     const deviceVal = deviceColumn ? row[deviceColumn] : '';
@@ -2667,7 +2744,7 @@
                         </div>
                     )}
 
-                    {/* ⚡ MODAL DE CONFIRMACIÓN INTELIGENTE (LA SÚPER CALCULADORA) ⚡ */}
+                    {/* ⚡ MODAL DE CONFIRMACIÓN INTELIGENTE (PAGO vs PAGO GESTIÓN) ⚡ */}
                     {confirmModal.show && (
                         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                              <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
@@ -2678,13 +2755,33 @@
                                           'bg-emerald-100 text-emerald-600'}`}>
                                         {confirmModal.actionType === 'COMPLETADO' ? <Icons.CheckCircle className="w-8 h-8"/> : 
                                          confirmModal.actionType === 'PAGO_GESTION' ? <Icons.Handshake className="w-8 h-8"/> :
-                                         <Icons.DollarSign className="w-8 h-8"/>}
+                                         <Icons.CheckCircle className="w-8 h-8"/>}
                                     </div>
                                     <h3 className="text-lg font-black text-slate-800 mb-2">Confirmar Acción</h3>
                                     <p className="text-sm text-slate-500 mb-4">{confirmModal.message}</p>
 
-                                    {/* PANEL INTELIGENTE DE CÁLCULO DE CUOTAS PARA PAGOS Y GESTIÓN */}
-                                    {(confirmModal.actionType === 'PAGO' || confirmModal.actionType === 'PAGO_GESTION') && (
+                                    {/* 🟢 OPCIÓN 1: PAGO NORMAL (SIN DINERO, SOLO CANTIDAD DE CUOTAS) */}
+                                    {confirmModal.actionType === 'PAGO' && (
+                                        <div className="text-left space-y-4 bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-4 shadow-inner">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-emerald-800 uppercase block mb-1">¿Cuántas cuotas pagó el cliente?</label>
+                                                <input 
+                                                    type="number" 
+                                                    min="1" 
+                                                    max="24" 
+                                                    value={confirmModal.numQuotas} 
+                                                    onChange={(e) => setConfirmModal(prev => ({ ...prev, numQuotas: parseInt(e.target.value, 10) || 1 }))}
+                                                    className="w-full p-2 border border-emerald-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-emerald-900 bg-white"
+                                                />
+                                            </div>
+                                            <p className="text-[9px] text-emerald-600 mt-2.5 italic leading-snug">
+                                                * Se sumarán <strong>+{confirmModal.numQuotas} cuotas pagas</strong> en el Excel y actualizará la mora en tiempo real.<br/>(No se registrará ningún préstamo).
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* 🔵 OPCIÓN 2: PAGO GESTIÓN (CALCULADORA COMPLETA) */}
+                                    {confirmModal.actionType === 'PAGO_GESTION' && (
                                         <div className="text-left space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 shadow-inner">
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
@@ -2731,14 +2828,14 @@
                                                             }));
                                                         }}
                                                         className="w-full p-2.5 pl-7 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-indigo-900 bg-white"
-                                                        placeholder={confirmModal.amount > 0 ? "Monto total..." : "Ingresa el monto total cobrado..."}
+                                                        placeholder={confirmModal.amount > 0 ? "Monto total..." : "Ingresa el monto total prestado..."}
                                                     />
                                                 </div>
                                                 {confirmModal.amount === 0 && (
-                                                    <p className="text-[10px] text-orange-600 font-bold mt-1.5 leading-tight">⚠️ Cuota desconocida. Ingresa el monto total cobrado manualmente. El sistema calculará y guardará el valor de la cuota.</p>
+                                                    <p className="text-[10px] text-orange-600 font-bold mt-1.5 leading-tight">⚠️ Cuota desconocida. Ingresa el monto prestado manualmente para el cálculo.</p>
                                                 )}
                                                 <p className="text-[9px] text-slate-400 mt-2.5 italic leading-snug">
-                                                    * El sistema sumará automáticamente <strong>+{confirmModal.numQuotas} cuotas pagas</strong> en el Excel y actualizará los días de mora en tiempo real.
+                                                    * Quedará registrado en la base de datos como un préstamo a favor de la caja y se sumarán <strong>+{confirmModal.numQuotas} cuotas pagas</strong>.
                                                 </p>
                                             </div>
                                         </div>
