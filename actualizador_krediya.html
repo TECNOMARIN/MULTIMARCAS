@@ -126,10 +126,6 @@
                             const cliente = findValue(row, ['nombrecompletocliente', 'cliente', 'nombres']);
                             if (!cliente) return; // Si la fila no tiene nombre, se ignora
 
-                            // Respaldos opcionales (Solo para visualizarlos en la tabla del Paso 2, NO se envían)
-                            const cedula = findValue(row, ['identificacion', 'cedula', 'cc', 'numerocontrato', 'documento']);
-                            const telefono = findValue(row, ['telefono', 'celular']);
-
                             // ⚡ MAPEO DIRECTO DE KREDIYA ⚡
                             const pagadas = parseInt(findValue(row, ['cuotaspagadas', 'pagadas'])) || 0;
                             const cicladas = parseInt(findValue(row, ['cuotascicladas', 'exigibles', 'ciclados'])) || 0;
@@ -148,7 +144,7 @@
                             }
 
                             // =========================================================================
-                            // 🛡️ EL PAYLOAD BLINDADO: SOLO ENVÍA LAS CUOTAS
+                            // 🛡️ EL PAYLOAD BLINDADO: SOLO ENVÍA LAS CUOTAS Y EL NOMBRE
                             // =========================================================================
                             let newRow = {};
                             
@@ -165,7 +161,6 @@
                             // Visualización en Interfaz
                             displayList.push({
                                 cliente: cliente, 
-                                ident: cedula || telefono || '-',
                                 fecha: fechaVentaFormateada, 
                                 cicladas: cicladas,
                                 pagadas: pagadas,
@@ -308,8 +303,7 @@
                                     <table className="w-full text-left text-sm border-collapse rounded-xl overflow-hidden shadow-sm">
                                         <thead className="bg-slate-800 text-white text-[11px] uppercase tracking-widest sticky top-0">
                                             <tr>
-                                                <th className="p-4 font-bold text-emerald-300 w-1/3">Llave Principal (Nombre)</th>
-                                                <th className="p-4 font-bold opacity-60">ID / Contacto <br/><span className="text-[8px] font-normal italic">(No se actualizará)</span></th>
+                                                <th className="p-4 font-bold text-emerald-300 w-1/2">Llave Principal (Nombre Completo)</th>
                                                 <th className="p-4 text-center font-bold text-blue-300">Pagadas</th>
                                                 <th className="p-4 text-center font-bold text-emerald-300">Cicladas</th>
                                                 <th className="p-4 text-center font-black text-rose-400">Pendientes (Atrasadas)</th>
@@ -319,7 +313,6 @@
                                             {processedData.slice(0, 100).map((row, idx) => (
                                                 <tr key={idx} className="hover:bg-slate-50">
                                                     <td className="p-4 text-emerald-900 font-black bg-emerald-50/20">{row.cliente}</td>
-                                                    <td className="p-4 font-mono text-slate-400 font-medium">{row.ident}</td>
                                                     <td className="p-4 text-center font-bold text-blue-600">{row.pagadas}</td>
                                                     <td className="p-4 text-center font-bold text-emerald-600">{row.cicladas}</td>
                                                     <td className="p-4 text-center font-black text-rose-600 bg-rose-50/30 text-base">{row.atrasadas}</td>
