@@ -126,7 +126,7 @@
                             const cliente = findValue(row, ['nombrecompletocliente', 'cliente', 'nombres']);
                             if (!cliente) return; // Si la fila no tiene nombre, se ignora
 
-                            // Respaldos opcionales (Cédula y Teléfono, solo por si se necesitan)
+                            // Respaldos opcionales (Solo para visualizarlos en la tabla del Paso 2, NO se envían)
                             const cedula = findValue(row, ['identificacion', 'cedula', 'cc', 'numerocontrato', 'documento']);
                             const telefono = findValue(row, ['telefono', 'celular']);
 
@@ -135,7 +135,7 @@
                             const cicladas = parseInt(findValue(row, ['cuotascicladas', 'exigibles', 'ciclados'])) || 0;
                             const atrasadas = parseInt(findValue(row, ['cuotaspendientes', 'pendientes'])) || 0;
                             
-                            // Fechas
+                            // Fechas (Solo para visualizarlas en la tabla del Paso 2)
                             const fechaRaw = findValue(row, ['fechaventa', 'fecha']);
                             const fVenta = parseDateString(fechaRaw);
                             
@@ -147,29 +147,24 @@
                                 fechaVentaFormateada = `${d}/${m}/${y}`;
                             }
 
-                            // Armado del objeto exacto para Apps Script
+                            // =========================================================================
+                            // 🛡️ EL PAYLOAD BLINDADO: SOLO ENVÍA LAS CUOTAS
+                            // =========================================================================
                             let newRow = {};
                             
-                            // 🔥 EL DATO MÁS IMPORTANTE PARA EL CRUCE DE KREDIYA 🔥
+                            // 🔥 LLAVE DE CRUCE 🔥
                             newRow['NOMBRE CLIENTE'] = cliente;
                             
-                            newRow['CEDULA'] = cedula || ''; 
-                            newRow['CELULAR'] = telefono;
-                            newRow['FECHA'] = fechaVentaFormateada;
-                            newRow['TIENDA'] = findValue(row, ['tienda', 'sucursal']);
-                            newRow['VENDEDOR'] = findValue(row, ['vendedor', 'asesor']);
-                            newRow['EQUIPO'] = findValue(row, ['referencia', 'equipo']);
-                            
-                            newRow['SALDO A FINACIAR'] = parseAmount(findValue(row, ['montoafinanciar', 'saldofinanciar']));
-                            newRow['VALOR CUOTA'] = parseAmount(findValue(row, ['montocuotas', 'valorcuota', 'montocuota']));
+                            // ⚡ SOLO ACTUALIZAMOS CUOTAS PARA PROTEGER CÉDULAS Y DATOS EXISTENTES ⚡
                             newRow['cuotas pagas'] = pagadas;
                             newRow['Cuotas Atrasadas'] = atrasadas;
                             
                             payloadList.push(newRow);
+                            // =========================================================================
                             
-                            // Visualización
+                            // Visualización en Interfaz
                             displayList.push({
-                                cliente: cliente, // Llave Principal
+                                cliente: cliente, 
                                 ident: cedula || telefono || '-',
                                 fecha: fechaVentaFormateada, 
                                 cicladas: cicladas,
@@ -242,7 +237,7 @@
                                 <h1 className="text-2xl font-black tracking-tight text-emerald-900 flex items-center gap-2">
                                     <Icons.Database className="w-6 h-6 text-emerald-600"/> Sincronizador <span className="bg-emerald-600 text-white px-3 py-1 rounded-lg text-sm ml-2">KREDIYA</span>
                                 </h1>
-                                <p className="text-sm text-slate-500 font-medium mt-1">Cruce de cartera basado en Nombre del Cliente</p>
+                                <p className="text-sm text-slate-500 font-medium mt-1">Modo Seguro: Solo actualiza Cuotas y Mora</p>
                             </div>
                         </div>
                         
@@ -260,7 +255,7 @@
                             <div className="p-10 flex flex-col items-center justify-center flex-1 animate-in fade-in zoom-in duration-300">
                                 <h2 className="text-xl font-bold mb-2 text-emerald-950">Sube el reporte de Clientes de Krediya</h2>
                                 <p className="text-sm text-slate-500 mb-8 text-center max-w-lg">
-                                    El sistema cruzará los datos usando el <strong>Nombre Completo Cliente</strong> ya que el número de cédula presenta inconsistencias en la plataforma.
+                                    El sistema cruzará los datos usando el <strong>Nombre Completo</strong> y <strong>SÓLO ACTUALIZARÁ LAS CUOTAS</strong>, protegiendo tus cédulas y demás datos.
                                 </p>
                                 
                                 {error && (
@@ -300,9 +295,9 @@
                                 <div className="p-6 border-b border-emerald-100 bg-emerald-50 flex justify-between items-center shrink-0">
                                     <div>
                                         <h2 className="text-xl font-black text-emerald-900 flex items-center gap-2">
-                                            <Icons.UserCheck className="w-5 h-5"/> Mapeo por Nombre Exitoso
+                                            <Icons.UserCheck className="w-5 h-5"/> Protección de Datos Activada
                                         </h2>
-                                        <p className="text-sm text-emerald-700 font-medium mt-1">El nombre del cliente se usará como llave principal para inyectar la mora.</p>
+                                        <p className="text-sm text-emerald-700 font-medium mt-1">El sistema solo inyectará las <strong>Cuotas Atrasadas</strong> y <strong>Pagadas</strong> usando el Nombre.</p>
                                     </div>
                                     <div className="bg-white px-4 py-2 rounded-xl border border-emerald-200 shadow-sm font-black text-sm text-emerald-600 flex items-center gap-2">
                                         <Icons.Database className="w-4 h-4"/> {processedData.length} Clientes
@@ -314,7 +309,7 @@
                                         <thead className="bg-slate-800 text-white text-[11px] uppercase tracking-widest sticky top-0">
                                             <tr>
                                                 <th className="p-4 font-bold text-emerald-300 w-1/3">Llave Principal (Nombre)</th>
-                                                <th className="p-4 font-bold opacity-60">ID / Contacto</th>
+                                                <th className="p-4 font-bold opacity-60">ID / Contacto <br/><span className="text-[8px] font-normal italic">(No se actualizará)</span></th>
                                                 <th className="p-4 text-center font-bold text-blue-300">Pagadas</th>
                                                 <th className="p-4 text-center font-bold text-emerald-300">Cicladas</th>
                                                 <th className="p-4 text-center font-black text-rose-400">Pendientes (Atrasadas)</th>
@@ -357,7 +352,7 @@
                                     <Icons.CheckCircle className="w-12 h-12"/>
                                 </div>
                                 <h2 className="text-3xl font-black text-slate-800 mb-2">¡Sincronización Exitosa!</h2>
-                                <p className="text-lg text-slate-500 mb-8 max-w-md">Tu cartera de KREDIYA ha sido actualizada cruzando a los clientes mediante su Nombre Completo.</p>
+                                <p className="text-lg text-slate-500 mb-8 max-w-md">Se han actualizado únicamente las cuotas y la mora en tu cartera de KREDIYA. Tus datos personales están intactos.</p>
                                 
                                 <div className="flex gap-4">
                                     <button onClick={() => { setStep(1); setProcessedData([]); setPayloadData([]); }} className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Subir Nuevo Archivo</button>
