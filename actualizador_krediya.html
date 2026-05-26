@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualizador KREDIYA - Multimarcas</title>
+    
+    <!-- Librerías -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col">
+    <div id="root" class="flex-1 flex flex-col h-full overflow-hidden"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useCallback } = React;
+
+        // URL de tu Apps Script
+        const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
+        
+        const Icons = {
+            UploadCloud: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>,
+            Database: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>,
+            CheckCircle: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+            AlertTriangle: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+            ArrowLeft: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+            RefreshCw: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>,
+            Calculator: (p) => <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+        };
+
+        // Conversor de Fechas de Excel
+        function parseDateString(dateStr) {
+            if (!dateStr) return null;
+            if (typeof dateStr === 'number') {
+                const date = new Date(1899, 11, 30);
+                date.setDate(date.getDate() + dateStr);
+                return date;
+            }
+            const parts = String(dateStr).split(/[\/\-]/);
+            if (parts.length === 3) {
+                // Formato DD-MM-YYYY o YYYY-MM-DD
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(dateStr);
+        }
+
+        const parseAmount = (val) => {
+            if (!val) return 0;
+            let s = String(val).replace(/[^0-9.,-]/g, '').replace(/[.,]00$/, '').replace(/[.,]/g, '');
+            return parseInt(s, 10) || 0;
+        };
+
+        function KrediyaUpdater() {
+            const [step, setStep] = useState(1);
+            const [processedData, setProcessedData] = useState([]);
+            const [payloadData, setPayloadData] = useState([]);
+            
+            const [isDragging, setIsDragging] = useState(false);
+            const [isUploading, setIsUploading] = useState(false);
+            const [error, setError] = useState(null);
+            
+            const fileInputRef = useRef(null);
+
+            // 🧠 PROCESAMIENTO INTELIGENTE KREDIYA (AJUSTADO AL NUEVO CSV)
+            const processExcel = (selectedFile) => {
+                if (!selectedFile) return;
+                
+                const fileExt = selectedFile.name.split('.').pop().toLowerCase();
+                if (fileExt !== 'xlsx' && fileExt !== 'xls' && fileExt !== 'csv') {
+                    setError('Por favor, selecciona un archivo válido (.xlsx, .xls, .csv).');
+                    return;
+                }
+
+                setError(null);
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = window.XLSX.read(data, { type: 'array', cellDates: true });
+                        
+                        // Buscar hoja "Clientes", si no, usar la primera
+                        const sheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('cliente')) || workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        
+                        const json = window.XLSX.utils.sheet_to_json(worksheet, { defval: "", raw: false });
+                        
+                        if (json.length === 0) {
+                            setError(`La hoja "${sheetName}" está vacía.`);
+                            return;
+                        }
+
+                        const displayList = [];
+                        const payloadList = [];
+
+                        // Buscador flexible de columnas (ignora caracteres especiales para no fallar con corchetes como [Referencia])
+                        const findValue = (rowObj, possibleKeys) => {
+                            const key = Object.keys(rowObj).find(k => {
+                                const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                return possibleKeys.some(pk => cleanK.includes(pk.toLowerCase().replace(/[^a-z0-9]/g, '')));
+                            });
+                            return key ? rowObj[key] : undefined;
+                        };
+
+                        json.forEach(row => {
+                            // Extraer Identificador: Cédula y Teléfono
+                            const cedula = findValue(row, ['identificacion', 'cedula', 'cc', 'numerocontrato', 'documento']);
+                            const telefono = findValue(row, ['telefono', 'celular']);
+                            const cliente = findValue(row, ['nombrecompletocliente', 'cliente', 'nombres']);
+                            
+                            // Si la fila no tiene un medio de identificación del cliente, se salta (probablemente sea un subtotal del CSV)
+                            if (!cliente && !cedula && !telefono) return;
+
+                            // ⚡ MAPEO DIRECTO DE KREDIYA ⚡
+                            const pagadas = parseInt(findValue(row, ['cuotaspagadas', 'pagadas'])) || 0;
+                            const cicladas = parseInt(findValue(row, ['cuotascicladas', 'exigibles', 'ciclados'])) || 0;
+                            
+                            // El reporte nativo trae explícitamente "CUOTAS PENDIENTES" que son las Atrasadas
+                            const atrasadas = parseInt(findValue(row, ['cuotaspendientes', 'pendientes'])) || 0;
+                            
+                            // Fechas
+                            const fechaRaw = findValue(row, ['fechaventa', 'fecha']);
+                            const fVenta = parseDateString(fechaRaw);
+                            
+                            let fechaVentaFormateada = fechaRaw;
+                            if (fVenta && !isNaN(fVenta.getTime())) {
+                                const d = String(fVenta.getDate()).padStart(2, '0');
+                                const m = String(fVenta.getMonth() + 1).padStart(2, '0');
+                                const y = fVenta.getFullYear();
+                                fechaVentaFormateada = `${d}/${m}/${y}`;
+                            }
+
+                            // Armado del objeto exacto para Apps Script
+                            let newRow = {};
+                            
+                            // IMPORTANTE: En algunos reportes pivot Krediya oculta la cédula. 
+                            // Usaremos el teléfono como llave de respaldo si la cédula está vacía.
+                            newRow['CEDULA'] = cedula || telefono || ''; 
+                            newRow['NOMBRE CLIENTE'] = cliente;
+                            newRow['CELULAR'] = telefono;
+                            newRow['FECHA'] = fechaVentaFormateada;
+                            newRow['TIENDA'] = findValue(row, ['tienda', 'sucursal']);
+                            newRow['VENDEDOR'] = findValue(row, ['vendedor', 'asesor']);
+                            newRow['EQUIPO'] = findValue(row, ['referencia', 'equipo']);
+                            
+                            newRow['SALDO A FINACIAR'] = parseAmount(findValue(row, ['montoafinanciar', 'saldofinanciar']));
+                            newRow['VALOR CUOTA'] = parseAmount(findValue(row, ['montocuotas', 'valorcuota', 'montocuota']));
+                            newRow['cuotas pagas'] = pagadas;
+                            newRow['Cuotas Atrasadas'] = atrasadas;
+                            
+                            payloadList.push(newRow);
+                            
+                            // Visualización
+                            displayList.push({
+                                ident: cedula || telefono || '-',
+                                cliente: cliente || '-', 
+                                fecha: fechaVentaFormateada, 
+                                cicladas: cicladas,
+                                pagadas: pagadas,
+                                atrasadas: atrasadas,
+                                valorCuota: newRow['VALOR CUOTA']
+                            });
+                        });
+
+                        if (payloadList.length === 0) throw new Error("No se encontraron clientes válidos en el archivo. Verifica que sea el reporte 'Clientes' de Krediya.");
+
+                        // ⚡ Orden de auditoría: los más atrasados primero
+                        displayList.sort((a, b) => b.atrasadas - a.atrasadas);
+
+                        setProcessedData(displayList);
+                        setPayloadData(payloadList);
+                        setStep(2);
+                    } catch (err) {
+                        setError('Error de lectura: ' + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(selectedFile);
+            };
+
+            const onDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+            const onDragLeave = () => { setIsDragging(false); };
+            const onDrop = (e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) processExcel(e.dataTransfer.files[0]);
+            };
+            const handleFileSelect = (e) => {
+                if (e.target.files && e.target.files.length > 0) processExcel(e.target.files[0]);
+            };
+
+            const executeSync = async () => {
+                setIsUploading(true);
+
+                const payload = {
+                    action: "bulk", 
+                    type: "krediya",
+                    data: payloadData
+                };
+
+                try {
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', 
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    setStep(3);
+                } catch (error) {
+                    alert("Error en la conexión: " + error.message);
+                } finally {
+                    setIsUploading(false);
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 p-6 font-sans text-slate-800 flex flex-col items-center">
+                    
+                    {/* ENCABEZADO */}
+                    <div className="w-full max-w-5xl flex justify-between items-center mb-8">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-white border border-slate-200 text-slate-600 rounded-full hover:bg-slate-100 transition-all shadow-sm" title="Volver al Tablero">
+                                <Icons.ArrowLeft className="w-5 h-5"/>
+                            </button>
+                            <div>
+                                <h1 className="text-2xl font-black tracking-tight text-emerald-900 flex items-center gap-2">
+                                    <Icons.Database className="w-6 h-6 text-emerald-600"/> Sincronizador <span className="bg-emerald-600 text-white px-3 py-1 rounded-lg text-sm ml-2">KREDIYA</span>
+                                </h1>
+                                <p className="text-sm text-slate-500 font-medium mt-1">Sincronización Directa de Cuotas</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                            <div className={`h-2 w-12 rounded-full transition-colors duration-300 ${step >= 1 ? 'bg-emerald-600' : 'bg-slate-200'}`}></div>
+                            <div className={`h-2 w-12 rounded-full transition-colors duration-300 ${step >= 2 ? 'bg-emerald-600' : 'bg-slate-200'}`}></div>
+                            <div className={`h-2 w-12 rounded-full transition-colors duration-300 ${step >= 3 ? 'bg-blue-500' : 'bg-slate-200'}`}></div>
+                        </div>
+                    </div>
+
+                    <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-emerald-100 overflow-hidden relative min-h-[500px] flex flex-col">
+                        
+                        {/* PASO 1: SUBIR ARCHIVO */}
+                        {step === 1 && (
+                            <div className="p-10 flex flex-col items-center justify-center flex-1 animate-in fade-in zoom-in duration-300">
+                                <h2 className="text-xl font-bold mb-2 text-emerald-950">Sube el reporte de Clientes de Krediya</h2>
+                                <p className="text-sm text-slate-500 mb-8 text-center max-w-lg">
+                                    El sistema detectará el campo exacto de <strong>CUOTAS PENDIENTES</strong> para inyectarlo como mora en tu cartera.
+                                </p>
+                                
+                                {error && (
+                                    <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-2xl flex items-start gap-3 shadow-sm w-full max-w-md mb-6">
+                                        <Icons.AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                        <p className="text-xs font-bold mt-1">{error}</p>
+                                    </div>
+                                )}
+
+                                <div 
+                                    className={`w-full max-w-md border-4 border-dashed rounded-3xl p-10 flex flex-col items-center justify-center text-center transition-all cursor-pointer group ${isDragging ? 'border-emerald-500 bg-emerald-50/50 scale-[1.02]' : 'border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50 hover:border-emerald-400'}`}
+                                    onDragOver={onDragOver}
+                                    onDragLeave={onDragLeave}
+                                    onDrop={onDrop}
+                                    onClick={() => fileInputRef.current.click()}
+                                >
+                                    <div className="p-5 bg-white text-emerald-600 rounded-full mb-4 group-hover:scale-110 transition-transform shadow-sm border border-emerald-100">
+                                        <Icons.UploadCloud className="w-10 h-10"/>
+                                    </div>
+                                    <p className="font-black text-emerald-900 text-lg mb-1">Haz clic o arrastra el Excel</p>
+                                    <p className="text-xs text-emerald-400 font-bold uppercase tracking-widest">Formatos: .xlsx, .csv</p>
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        accept=".xlsx, .xls, .csv" 
+                                        className="hidden" 
+                                        onChange={handleFileSelect} 
+                                    />
+                                </div>
+                                <p className="text-xs text-slate-400 mt-4 italic">Descarga la hoja que dice "Clientes" o el reporte general desde Krediya.</p>
+                            </div>
+                        )}
+
+                        {/* PASO 2: PREVISUALIZACIÓN MATEMÁTICA */}
+                        {step === 2 && (
+                            <div className="flex flex-col h-[75vh] animate-in slide-in-from-right duration-300">
+                                <div className="p-6 border-b border-emerald-100 bg-emerald-50 flex justify-between items-center shrink-0">
+                                    <div>
+                                        <h2 className="text-xl font-black text-emerald-900 flex items-center gap-2">
+                                            <Icons.Calculator className="w-5 h-5"/> Extracción Automática Exitosa
+                                        </h2>
+                                        <p className="text-sm text-emerald-700 font-medium mt-1">El valor de Cuotas Pendientes ha sido enlazado a la mora.</p>
+                                    </div>
+                                    <div className="bg-white px-4 py-2 rounded-xl border border-emerald-200 shadow-sm font-black text-sm text-emerald-600 flex items-center gap-2">
+                                        <Icons.Database className="w-4 h-4"/> {processedData.length} Clientes
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
+                                    <table className="w-full text-left text-sm border-collapse rounded-xl overflow-hidden shadow-sm">
+                                        <thead className="bg-slate-800 text-white text-[11px] uppercase tracking-widest sticky top-0">
+                                            <tr>
+                                                <th className="p-4 font-bold">Identificación</th>
+                                                <th className="p-4 font-bold">Cliente</th>
+                                                <th className="p-4 text-center font-bold text-blue-300">Pagadas</th>
+                                                <th className="p-4 text-center font-bold text-emerald-300">Cicladas</th>
+                                                <th className="p-4 text-center font-black text-rose-400">Pendientes (Atrasadas)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 border border-slate-200">
+                                            {processedData.slice(0, 100).map((row, idx) => (
+                                                <tr key={idx} className="hover:bg-slate-50">
+                                                    <td className="p-4 font-mono text-slate-700 font-bold bg-slate-50/50">{row.ident}</td>
+                                                    <td className="p-4 text-slate-600 font-bold">{row.cliente}</td>
+                                                    <td className="p-4 text-center font-bold text-blue-600">{row.pagadas}</td>
+                                                    <td className="p-4 text-center font-bold text-emerald-600 bg-emerald-50/20">{row.cicladas}</td>
+                                                    <td className="p-4 text-center font-black text-rose-600 bg-rose-50/30 text-base">{row.atrasadas}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {processedData.length > 100 && (
+                                        <p className="text-center text-xs text-slate-400 mt-4 italic">Mostrando los primeros 100 registros ordenados por mora. Se enviarán {processedData.length} a la base de datos.</p>
+                                    )}
+                                </div>
+
+                                <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-between shrink-0">
+                                    <button onClick={() => setStep(1)} className="px-6 py-3 font-bold text-slate-500 hover:bg-slate-200 hover:text-slate-700 rounded-xl transition-colors">Volver / Cambiar Archivo</button>
+                                    <button 
+                                        onClick={executeSync}
+                                        disabled={isUploading}
+                                        className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-wait"
+                                    >
+                                        {isUploading ? <><Icons.RefreshCw className="w-5 h-5 animate-spin"/> Procesando...</> : 'Confirmar y Actualizar BD'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* PASO 3: ÉXITO */}
+                        {step === 3 && (
+                            <div className="p-16 flex flex-col items-center justify-center flex-1 text-center animate-in zoom-in duration-500">
+                                <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-emerald-50">
+                                    <Icons.CheckCircle className="w-12 h-12"/>
+                                </div>
+                                <h2 className="text-3xl font-black text-slate-800 mb-2">¡Sincronización Exitosa!</h2>
+                                <p className="text-lg text-slate-500 mb-8 max-w-md">Tu cartera de KREDIYA ha sido actualizada usando los datos directos del CSV.</p>
+                                
+                                <div className="flex gap-4">
+                                    <button onClick={() => { setStep(1); setProcessedData([]); setPayloadData([]); }} className="px-6 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Subir Nuevo Archivo</button>
+                                    <button onClick={() => window.location.href = 'tablero.html'} className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-md hover:bg-emerald-700 transition-colors">Ir al Tablero Principal</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<KrediyaUpdater />);
+    </script>
+</body>
+</html>
