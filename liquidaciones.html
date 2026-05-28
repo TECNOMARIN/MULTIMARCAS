@@ -61,7 +61,6 @@
             return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val || 0);
         };
 
-        // Alias para evitar errores de ReferenceError si la tabla busca formatMoney
         const formatMoney = formatCurrency;
 
         const parseDate = (dateVal) => {
@@ -330,23 +329,24 @@
                     ventasTotales: 0,
                     costoTotal: 0,
                     utilidadAdmin: 0,
-                    pipe: 0,
-                    ricardo: 0,
-                    jc: 0,
-                    ejecutivos: 0,
+                    aConsignarSocioTotal: 0,
+                    cuatroPorMilTotal: 0,
                     cartera: 0,
                     remanente: 0,
                     cantidad: filteredData.length
                 };
 
                 filteredData.forEach(row => {
+                    const consignarMontoBruto = row._pipe + row._ricardo + row._jc + row._ejec;
+                    const cuatroPorMil = consignarMontoBruto * 0.004;
+                    const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
+
                     stats.ventasTotales += row._venta;
                     stats.costoTotal += row._costo;
                     stats.utilidadAdmin += row._admin112;
-                    stats.pipe += row._pipe;
-                    stats.ricardo += row._ricardo;
-                    stats.jc += row._jc;
-                    stats.ejecutivos += row._ejec;
+                    stats.aConsignarSocioTotal += consignarMontoNeto;
+                    stats.cuatroPorMilTotal += cuatroPorMil;
+                    
                     stats.cartera += row._cartera;
                     stats.remanente += (row._remanente || 0);
                 });
@@ -373,16 +373,20 @@
                 
                 doc.text(`Convenio: ${cName} | Aliado: ${pName} | Tiendas: ${tName} | Periodo: ${dateRangeStr}`, 14, 22);
 
+                // Reordenado: 4x1000 antes de A Consignar
                 const tableColumn = brand === 'todas' 
-                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Admin 112", "Pipe/Ch", "Ricardo", "JuanC/Ejec"]
-                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Admin 112", "Pipe/Ch", "Ricardo", "JuanC/Ejec"];
+                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Admin 112", "4x1000", "A Consignar"]
+                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Admin 112", "4x1000", "A Consignar"];
                 
                 const tableRows = [];
 
                 filteredData.forEach(row => {
                     const d = parseDate(row._date);
                     const fechaStr = d ? d.toLocaleDateString('es-ES') : '-';
-                    const comisionExtra = formatCurrency(row._jc + row._ejec);
+                    
+                    const consignarMontoBruto = row._pipe + row._ricardo + row._jc + row._ejec;
+                    const cuatroPorMil = consignarMontoBruto * 0.004;
+                    const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
 
                     const rowData = [
                         fechaStr,
@@ -392,9 +396,8 @@
                         formatCurrency(row._venta),
                         formatCurrency(row._costo),
                         formatCurrency(row._admin112),
-                        formatCurrency(row._pipe),
-                        formatCurrency(row._ricardo),
-                        comisionExtra
+                        formatCurrency(cuatroPorMil),
+                        formatCurrency(consignarMontoNeto)
                     ];
 
                     if (brand === 'todas') rowData.unshift(row._brandName);
@@ -402,8 +405,8 @@
                 });
 
                 const footRow = brand === 'todas'
-                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.pipe), formatCurrency(kpis.ricardo), formatCurrency(kpis.jc + kpis.ejecutivos)]]
-                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.pipe), formatCurrency(kpis.ricardo), formatCurrency(kpis.jc + kpis.ejecutivos)]];
+                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]]
+                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]];
 
                 doc.autoTable({
                     head: [tableColumn],
@@ -421,6 +424,10 @@
 
             const handleExportExcel = () => {
                 const exportData = filteredData.map(row => {
+                    const consignarMontoBruto = row._pipe + row._ricardo + row._jc + row._ejec;
+                    const cuatroPorMil = consignarMontoBruto * 0.004;
+                    const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
+
                     const obj = {};
                     if (brand === 'todas') obj["Financiera"] = row._brandName;
                     obj["Fecha"] = row._date ? parseDate(row._date).toLocaleDateString('es-ES') : '';
@@ -434,9 +441,8 @@
                     obj["Cartera"] = row._cartera;
                     obj["Remanente"] = row._remanente;
                     obj["Admin 112"] = row._admin112;
-                    obj["Pipe y Chamorro"] = row._pipe;
-                    obj["Ricardo Marin"] = row._ricardo;
-                    obj["Juan Camilo / Ejecutivos"] = row._jc + row._ejec;
+                    obj["4x1000"] = cuatroPorMil;
+                    obj["A Consignar"] = consignarMontoNeto; // A Consignar de último
                     return obj;
                 });
                 
@@ -625,13 +631,15 @@
                                     <p className="text-2xl font-black">{formatCurrency(kpis.utilidadAdmin)}</p>
                                 </div>
                                 
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500 transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Socios (Pipe/Ric)</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.pipe + kpis.ricardo)}</p>
+                                {/* Tarjeta 4x1000 antes de A Consignar */}
+                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Impuesto 4x1000</p>
+                                    <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.cuatroPorMilTotal)}</p>
                                 </div>
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-amber-500 transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Retail (JC/Ejec)</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.jc + kpis.ejecutivos)}</p>
+
+                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500 transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">A Consignar (Neto)</p>
+                                    <p className="text-2xl font-black text-emerald-700">{formatCurrency(kpis.aConsignarSocioTotal)}</p>
                                 </div>
                             </div>
 
@@ -661,8 +669,8 @@
                                                 <th className="px-4 py-3 font-black text-right">Venta</th>
                                                 <th className="px-4 py-3 font-black text-right">Costo</th>
                                                 <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50 text-right">Admin 112</th>
-                                                <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50 text-center">Socios</th>
-                                                <th className="px-4 py-3 font-black text-amber-600 bg-amber-50/50 text-center">Retail / Aliados</th>
+                                                <th className="px-4 py-3 font-black text-rose-600 bg-rose-50/50 text-right">4x1000</th>
+                                                <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50 text-right">A Consignar</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
@@ -670,10 +678,13 @@
                                                 const d = parseDate(row._date);
                                                 const fechaStr = d ? d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
                                                 
-                                                const jcEjec = row._jc + row._ejec;
+                                                const consignarMontoBruto = row._pipe + row._ricardo + row._jc + row._ejec;
+                                                const cuatroPorMil = consignarMontoBruto * 0.004;
+                                                const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
 
                                                 // 🎯 LÓGICA DE DETECCIÓN REGLA 40/60 EN LA UI
-                                                const isPipeOChamorro = String(row._assigned || '').toLowerCase().includes('pipe') || String(row._assigned || '').toLowerCase().includes('chamorro');
+                                                const assignedLower = String(row._assigned || '').toLowerCase();
+                                                const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz');
                                                 const isNewRuleDate = d && d.getTime() >= new Date(2026, 4, 26).getTime();
                                                 const isNewRule = isNewRuleDate && isPipeOChamorro && ['ALOCREDIT', 'KREDIYA', 'CREDISMART'].includes(row._brandName);
 
@@ -718,19 +729,16 @@
                                                                 {isNewRule && row._admin112 !== 0 && <span className="text-[8px] text-indigo-400 font-bold leading-none mt-0.5" title="Se aplica 40% directo sobre la Utilidad Real">40% Utilidad</span>}
                                                             </div>
                                                         </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-center bg-emerald-50/20">
-                                                            <div className="flex flex-col items-center gap-0.5 text-[11px]">
-                                                                {row._pipe > 0 && <div className="flex flex-col items-center">
-                                                                    <span className="font-bold text-emerald-700">{formatCurrency(row._pipe)}</span>
-                                                                    {isNewRule && <span className="text-[8px] text-emerald-500 font-bold leading-none mt-0.5" title="Se aplica 60% sobre Utilidad Real menos peaje de cartera">60% (-Peaje)</span>}
-                                                                </div>}
-                                                                {row._ricardo > 0 && <div className="font-bold text-emerald-700">{formatCurrency(row._ricardo)}</div>}
-                                                                {row._pipe === 0 && row._ricardo === 0 && <span className="text-slate-300">-</span>}
-                                                            </div>
+
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right bg-rose-50/20 font-bold text-xs text-rose-700">
+                                                            {cuatroPorMil > 0 ? formatCurrency(cuatroPorMil) : '-'}
                                                         </td>
-                                                        
-                                                        <td className="px-4 py-3 whitespace-nowrap text-center bg-amber-50/20 font-bold text-xs text-amber-700">
-                                                            {jcEjec > 0 ? formatCurrency(jcEjec) : '-'}
+
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right bg-emerald-50/20 font-black text-emerald-700">
+                                                            <div className="flex flex-col items-end">
+                                                                <span>{consignarMontoNeto > 0 ? formatCurrency(consignarMontoNeto) : '-'}</span>
+                                                                {isNewRule && consignarMontoNeto > 0 && <span className="text-[8px] text-emerald-500 font-bold leading-none mt-0.5" title="Se aplica 60% sobre Utilidad Real menos peaje de cartera y 4x1000">60% (-Impuestos)</span>}
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 );
