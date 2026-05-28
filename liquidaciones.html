@@ -61,8 +61,6 @@
             return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val || 0);
         };
 
-        const formatMoney = formatCurrency;
-
         const parseDate = (dateVal) => {
             if (!dateVal) return null;
             let dateObj = null;
@@ -373,10 +371,9 @@
                 
                 doc.text(`Convenio: ${cName} | Aliado: ${pName} | Tiendas: ${tName} | Periodo: ${dateRangeStr}`, 14, 22);
 
-                // Reordenado: 4x1000 antes de A Consignar
                 const tableColumn = brand === 'todas' 
-                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Admin 112", "4x1000", "A Consignar"]
-                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Admin 112", "4x1000", "A Consignar"];
+                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"]
+                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"];
                 
                 const tableRows = [];
 
@@ -395,6 +392,7 @@
                         String(row._client || '').substring(0, 20),
                         formatCurrency(row._venta),
                         formatCurrency(row._costo),
+                        formatCurrency(row._cartera), // Columna añadida al PDF
                         formatCurrency(row._admin112),
                         formatCurrency(cuatroPorMil),
                         formatCurrency(consignarMontoNeto)
@@ -405,8 +403,8 @@
                 });
 
                 const footRow = brand === 'todas'
-                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]]
-                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]];
+                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]]
+                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]];
 
                 doc.autoTable({
                     head: [tableColumn],
@@ -442,7 +440,7 @@
                     obj["Remanente"] = row._remanente;
                     obj["Admin 112"] = row._admin112;
                     obj["4x1000"] = cuatroPorMil;
-                    obj["A Consignar"] = consignarMontoNeto; // A Consignar de último
+                    obj["A Consignar"] = consignarMontoNeto; 
                     return obj;
                 });
                 
@@ -614,7 +612,7 @@
                     ) : (
                         <>
                             {/* Tarjetas de Resumen Financiero */}
-                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
                                 <div className="bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-700 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ventas Brutas</p>
                                     <p className="text-2xl font-black">{formatCurrency(kpis.ventasTotales)}</p>
@@ -626,12 +624,17 @@
                                     <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.costoTotal)}</p>
                                 </div>
 
+                                {/* TARJETA PEAJE CARTERA */}
+                                <div className="bg-amber-50 p-5 rounded-3xl shadow-sm border border-amber-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Peaje Cartera</p>
+                                    <p className="text-2xl font-black text-amber-800">{formatCurrency(kpis.cartera)}</p>
+                                </div>
+
                                 <div className="bg-gradient-to-br from-indigo-500 to-blue-600 p-5 rounded-3xl shadow-md border border-indigo-600 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">Utilidad Admin 112</p>
                                     <p className="text-2xl font-black">{formatCurrency(kpis.utilidadAdmin)}</p>
                                 </div>
                                 
-                                {/* Tarjeta 4x1000 antes de A Consignar */}
                                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Impuesto 4x1000</p>
                                     <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.cuatroPorMilTotal)}</p>
@@ -668,6 +671,7 @@
                                                 <th className="px-4 py-3 font-black">Cliente / Equipo</th>
                                                 <th className="px-4 py-3 font-black text-right">Venta</th>
                                                 <th className="px-4 py-3 font-black text-right">Costo</th>
+                                                <th className="px-4 py-3 font-black text-amber-600 bg-amber-50/50 text-right">Cartera</th>
                                                 <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50 text-right">Admin 112</th>
                                                 <th className="px-4 py-3 font-black text-rose-600 bg-rose-50/50 text-right">4x1000</th>
                                                 <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50 text-right">A Consignar</th>
@@ -704,7 +708,6 @@
                                                         <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-slate-500">{fechaStr}</td>
                                                         <td className="px-4 py-3 border-r border-slate-100">
                                                             <div className="font-bold text-slate-800 text-xs truncate max-w-[150px]" title={row._assigned}>{row._assigned || '-'}</div>
-                                                            {/* ⚡ AQUÍ SE MUESTRA EL CONVENIO Y LA ETIQUETA 40/60 SI APLICA */}
                                                             <div className="flex items-center gap-1.5 mt-0.5">
                                                                 <div className="text-[9px] font-black text-indigo-500 tracking-wider uppercase" title={row._convenio}>
                                                                     {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-300 font-normal italic">Sin Convenio</span>}
@@ -722,6 +725,9 @@
                                                         </td>
                                                         <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-700 bg-slate-50/30">{row._venta > 0 ? formatCurrency(row._venta) : '-'}</td>
                                                         <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-rose-500 bg-rose-50/10">{row._costo > 0 ? formatCurrency(row._costo) : '-'}</td>
+                                                        
+                                                        {/* COLUMNA CARTERA AÑADIDA */}
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-amber-600 bg-amber-50/20">{row._cartera > 0 ? formatCurrency(row._cartera) : '-'}</td>
                                                         
                                                         <td className="px-4 py-3 whitespace-nowrap text-right bg-indigo-50/30 font-black text-indigo-700">
                                                             <div className="flex flex-col items-end">
@@ -744,7 +750,7 @@
                                                 );
                                             }) : (
                                                 <tr>
-                                                    <td colSpan={brand === 'todas' ? "9" : "8"} className="px-6 py-20 text-center text-slate-400">
+                                                    <td colSpan={brand === 'todas' ? "10" : "9"} className="px-6 py-20 text-center text-slate-400">
                                                         <div className="flex flex-col items-center gap-3">
                                                             <Icons.Database className="w-8 h-8 opacity-20"/>
                                                             <p>No se encontraron liquidaciones para los filtros aplicados.</p>
