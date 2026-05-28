@@ -139,10 +139,10 @@
                                     tiendaKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase() === 'TIENDA');
                                     
                                     jsonUsu.forEach(r => {
-                                        let conv = String(r[convKey] || '').trim().toUpperCase();
-                                        if (conv && conv !== 'CONVENIO') {
+                                        let convRaw = String(r[convKey] || '').trim().toUpperCase();
+                                        let conv = convRaw === '' ? 'SIN CONVENIO' : convRaw;
+                                        if (conv !== 'CONVENIO') {
                                             if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
-                                            if (asigKey && r[asigKey]) conveniosMap[String(r[asigKey]).toLowerCase().trim()] = conv;
                                             if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; 
                                         }
                                     });
@@ -155,12 +155,10 @@
 
                                     if (convKey) {
                                         jsonUsu.forEach(r => {
-                                            let conv = String(r[convKey] || '').trim().toUpperCase();
-                                            if (conv) {
-                                                if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
-                                                if (asigKey && r[asigKey]) conveniosMap[String(r[asigKey]).toLowerCase().trim()] = conv;
-                                                if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; 
-                                            }
+                                            let convRaw = String(r[convKey] || '').trim().toUpperCase();
+                                            let conv = convRaw === '' ? 'SIN CONVENIO' : convRaw;
+                                            if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
+                                            if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; 
                                         });
                                     }
                                 }
@@ -196,7 +194,7 @@
                                         let searchVend = String(vendedorRaw).toLowerCase().trim();
                                         let searchTienda = String(tiendaRaw).toLowerCase().trim();
                                         
-                                        let convenioFound = conveniosMap[searchTienda] || conveniosMap[searchAsig] || conveniosMap[searchVend] || 'SIN CONVENIO';
+                                        let convenioFound = conveniosMap[searchTienda] || conveniosMap[searchVend] || 'SIN CONVENIO';
 
                                         let aConsignarTotal = 0;
                                         Object.keys(row).forEach(k => {
