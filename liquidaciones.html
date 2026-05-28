@@ -38,145 +38,225 @@
             Download: (p) => <IconBase {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconBase>,
             ArrowLeft: (p) => <IconBase {...p}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></IconBase>,
             Calendar: (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconBase>,
-            Wallet: (p) => <IconBase {...p}><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></IconBase>
+            Wallet: (p) => <IconBase {...p}><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></IconBase>,
+            AlertCircle: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconBase>,
+            CheckCircle: (p) => <IconBase {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>,
+            Search: (p) => <IconBase {...p}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></IconBase>,
+            Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>
         };
 
         // ⚠️ PEGA AQUÍ TU URL CORRECTA DE GOOGLE APPS SCRIPT
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
 
+        // UTILIDADES
+        const parseAmount = (val) => {
+            let s = String(val || '');
+            s = s.replace(/[^0-9.,-]/g, '');
+            s = s.replace(/[.,]00$/, '');
+            s = s.replace(/[.,]/g, '');
+            return parseInt(s, 10) || 0;
+        };
+
+        const formatCurrency = (val) => {
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val || 0);
+        };
+
+        // Alias para evitar errores de ReferenceError si la tabla busca formatMoney
+        const formatMoney = formatCurrency;
+
+        const parseDate = (dateVal) => {
+            if (!dateVal) return null;
+            let dateObj = null;
+            
+            if (typeof dateVal === 'number') {
+                if (dateVal > 30000 && dateVal < 60000) return new Date(Math.round((dateVal - 25569) * 86400 * 1000));
+            }
+
+            if (typeof dateVal === 'string' && dateVal.length > 5) {
+                if (dateVal.match(/^\d{4}-\d{2}-\d{2}/)) return new Date(dateVal.substring(0,10).replace(/\//g, '-'));
+                dateObj = new Date(dateVal);
+            } else if (dateVal instanceof Date) {
+                dateObj = dateVal;
+            }
+            if (!dateObj || isNaN(dateObj.getTime())) return null;
+            return dateObj;
+        };
+
         function LiquidacionesApp() {
-            const [brand, setBrand] = useState('credismart'); 
+            const [brand, setBrand] = useState('payjoy'); 
             const [data, setData] = useState([]);
             const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
             
             // Filtros
-            const [dateFilter, setDateFilter] = useState('thisWeek');
+            const [dateFilter, setDateFilter] = useState('thisMonth');
             const [customStartDate, setCustomStartDate] = useState('');
             const [customEndDate, setCustomEndDate] = useState('');
             const [selectedPartner, setSelectedPartner] = useState('');
+            const [selectedConvenio, setSelectedConvenio] = useState('');
+            const [searchTerm, setSearchTerm] = useState('');
             
-            // NUEVO ESTADO PARA TIENDAS MÚLTIPLES
             const [selectedTiendas, setSelectedTiendas] = useState([]);
             const [isTiendaDropdownOpen, setIsTiendaDropdownOpen] = useState(false);
 
-            const formatMoney = (val) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(val || 0);
-            
-            const parseDate = (dateVal) => {
-                if (!dateVal) return null;
-                let dateObj = null;
-                if (typeof dateVal === 'string' && dateVal.length > 5) dateObj = new Date(dateVal);
-                else if (dateVal instanceof Date) dateObj = dateVal;
-                if (!dateObj || isNaN(dateObj.getTime())) return null;
-                return dateObj;
-            };
+            useEffect(() => {
+                if (selectedTiendas.length > 0 && selectedConvenio !== '') {
+                    setSelectedConvenio('');
+                }
+            }, [selectedTiendas, selectedConvenio]);
 
-            const parseAmount = (val) => {
-                let s = String(val || '').trim();
-                s = s.replace(/[^0-9.,-]/g, '');
-                s = s.replace(/[.,]00$/, '');
-                s = s.replace(/[.,]/g, '');
-                return parseInt(s, 10) || 0;
-            };
-
-            const fetchVentasData = async () => {
+            const fetchVentasData = useCallback(async () => {
                 setLoading(true);
+                setError(null);
                 try {
                     const separator = API_URL.includes('?') ? '&' : '?';
                     const brandsToFetch = brand === 'todas' ? ['payjoy', 'alocredit', 'krediya', 'credismart'] : [brand];
                     
                     let combinedData = [];
 
-                    const fetchPromises = brandsToFetch.map(async (b) => {
-                        const res = await fetch(`${API_URL}${separator}type=ventas_${b}&t=${new Date().getTime()}`);
-                        if (!res.ok) return [];
-                        const text = await res.text();
-                        let jsonData = [];
-                        try { jsonData = JSON.parse(text); } catch (e) { return []; }
-                        
-                        if (Array.isArray(jsonData) && jsonData.length > 0) {
-                            return jsonData.map(row => {
-                                // Buscador avanzado de columnas dinámicas (Primero búsqueda exacta, luego parcial)
-                                const findVal = (keywords) => {
-                                    let k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().trim() === kw));
-                                    if(!k) k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().includes(kw)));
-                                    return k ? row[k] : undefined;
-                                };
+                    const promises = [
+                        fetch(`${API_URL}${separator}type=usuarios_payjoy&t=${new Date().getTime()}`),
+                        ...brandsToFetch.map(b => fetch(`${API_URL}${separator}type=ventas_${b}&t=${new Date().getTime()}`))
+                    ];
+
+                    const responses = await Promise.all(promises);
+                    
+                    const usuariosRes = responses[0];
+                    let conveniosMap = {}; 
+                    
+                    if (usuariosRes.ok) {
+                        try {
+                            const jsonUsu = JSON.parse(await usuariosRes.text());
+                            if (Array.isArray(jsonUsu) && jsonUsu.length > 0) {
                                 
-                                const dateKey = Object.keys(row).find(k => {
-                                    const upper = String(k).toUpperCase();
-                                    return upper.includes('FECHA') && !upper.includes('NACI');
-                                });
+                                const headerRowObj = jsonUsu.find(r => Object.values(r).some(v => String(v).toUpperCase().includes('CONVENIO')));
+                                let nameKey, asigKey, convKey, tiendaKey;
 
-                                // Agrupador de "A Consignar"
-                                let aConsignarTotal = 0;
-                                Object.keys(row).forEach(k => {
-                                    const u = k.toUpperCase().trim();
-                                    // Sumamos todo lo que pertenezca a asesores/aliados y tenga que ver con "consignar" o su nombre
-                                    if (
-                                        (u.includes('CONSIGNAR') && !u.includes('MONTO') && !u.includes('TOTAL')) || 
-                                        u.includes('PIPE') || 
-                                        u.includes('RICARDO') || 
-                                        u.includes('EJECUTIVOS') || 
-                                        u.includes('JUAN CAMILO')
-                                    ) {
-                                        aConsignarTotal += parseAmount(row[k]);
-                                    }
-                                });
-
-                                // --- EXTRACTOR INTELIGENTE DEL VALOR FINANCIADO ---
-                                let financed = parseAmount(findVal([
-                                    'SALDO A FINANCIAR', 
-                                    'SALDO A FINACIAR', 
-                                    'MONTO A FINANCIAR', 
-                                    'MONTO TOTAL A FINANCIAR',
-                                    'MONTO TOTAL A CONSIGNAR', 
-                                    'MONTO A CONSIGNAR', 
-                                    'VALOR CREDITO'
-                                ]));
-
-                                if (financed === 0 || isNaN(financed)) {
-                                    let totalVenta = parseAmount(findVal(['TOTAL VENTA', 'PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL']));
-                                    let cuotaInicial = parseAmount(findVal(['CUOTA INICIAL', 'VALOR CUOTA INICIAL', 'INICIAL']));
+                                if (headerRowObj) {
+                                    nameKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase().includes('NOMBRE') || String(headerRowObj[k]).toUpperCase().includes('APELLIDO'));
+                                    asigKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase().includes('ASINGACION') || String(headerRowObj[k]).toUpperCase().includes('ASIGNACION'));
+                                    convKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase().includes('CONVENIO'));
+                                    tiendaKey = Object.keys(headerRowObj).find(k => String(headerRowObj[k]).toUpperCase() === 'TIENDA');
                                     
-                                    if (totalVenta > 0 && cuotaInicial >= 0) {
-                                        financed = totalVenta - cuotaInicial;
+                                    jsonUsu.forEach(r => {
+                                        let conv = String(r[convKey] || '').trim().toUpperCase();
+                                        if (conv && conv !== 'CONVENIO') {
+                                            if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
+                                            if (asigKey && r[asigKey]) conveniosMap[String(r[asigKey]).toLowerCase().trim()] = conv;
+                                            if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; 
+                                        }
+                                    });
+                                } else {
+                                    const keys = Object.keys(jsonUsu[0]);
+                                    nameKey = keys.find(k => k.toUpperCase().includes('NOMBRE') || k.toUpperCase().includes('APELLIDO'));
+                                    asigKey = keys.find(k => k.toUpperCase().includes('ASINGACION') || k.toUpperCase().includes('ASIGNACION'));
+                                    convKey = keys.find(k => k.toUpperCase().includes('CONVENIO'));
+                                    tiendaKey = keys.find(k => k.toUpperCase() === 'TIENDA');
+
+                                    if (convKey) {
+                                        jsonUsu.forEach(r => {
+                                            let conv = String(r[convKey] || '').trim().toUpperCase();
+                                            if (conv) {
+                                                if (nameKey && r[nameKey]) conveniosMap[String(r[nameKey]).toLowerCase().trim()] = conv;
+                                                if (asigKey && r[asigKey]) conveniosMap[String(r[asigKey]).toLowerCase().trim()] = conv;
+                                                if (tiendaKey && r[tiendaKey]) conveniosMap[String(r[tiendaKey]).toLowerCase().trim()] = conv; 
+                                            }
+                                        });
                                     }
                                 }
+                            }
+                        } catch(e) { console.error("Error al procesar convenios", e); }
+                    }
 
-                                return {
-                                    _brandName: b.toUpperCase(),
-                                    _date: dateKey ? row[dateKey] : undefined,
-                                    _client: findVal(['NOMBRE COMPLETO', 'NOMBRE DEL CLIENTE', 'NOMBRE CLIENTE', 'NOMBRES', 'CLIENTE']),
-                                    _tienda: findVal(['TIENDA', 'PUNTO DE VENTA', 'SUCURSAL', 'SEDE', 'PUNTO']),
-                                    _device: findVal(['REFERENCIA EQUIPO', 'REFERENCIA', 'MODELO', 'EQUIPO']),
-                                    _assigned: findVal(['RESPONSABLE', 'ASIGNADO', 'VENDEDOR']),
-                                    _financedAmount: financed,
-                                    _remanente: parseAmount(findVal(['EXCEDENTE DE INICIAL', 'REMANENTE DE INICIAL', 'REMANENTE'])),
-                                    _cartera: parseAmount(findVal(['CARTERA', 'COSTO CARTERA', 'FEE CARTERA'])),
-                                    _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112', 'UTILIDAD ADMIN'])),
-                                    _aConsignar: aConsignarTotal
-                                };
-                            });
+                    for (let i = 1; i < responses.length; i++) {
+                        const res = responses[i];
+                        const currentBrand = brandsToFetch[i-1];
+                        
+                        if (res.ok) {
+                            try {
+                                const jsonVentas = JSON.parse(await res.text());
+                                if (Array.isArray(jsonVentas) && jsonVentas.length > 0) {
+                                    const parsedRows = jsonVentas.map(row => {
+                                        const findVal = (keywords) => {
+                                            let k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().trim() === kw));
+                                            if(!k) k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().includes(kw)));
+                                            return k ? row[k] : undefined;
+                                        };
+                                        
+                                        const dateKey = Object.keys(row).find(k => {
+                                            const upper = String(k).toUpperCase();
+                                            return upper.includes('FECHA') && !upper.includes('NACI');
+                                        });
+
+                                        let asignadoRaw = findVal(['RESPONSABLE', 'ASIGNADO']) || findVal(['VENDEDOR', 'ASESOR']) || '';
+                                        let vendedorRaw = findVal(['VENDEDOR', 'ASESOR']) || '';
+                                        let tiendaRaw = findVal(['TIENDA', 'PUNTO DE VENTA', 'SUCURSAL', 'SEDE', 'PUNTO']) || '';
+                                        
+                                        let searchAsig = String(asignadoRaw).toLowerCase().trim();
+                                        let searchVend = String(vendedorRaw).toLowerCase().trim();
+                                        let searchTienda = String(tiendaRaw).toLowerCase().trim();
+                                        
+                                        let convenioFound = conveniosMap[searchTienda] || conveniosMap[searchAsig] || conveniosMap[searchVend] || 'SIN CONVENIO';
+
+                                        let aConsignarTotal = 0;
+                                        Object.keys(row).forEach(k => {
+                                            const u = k.toUpperCase().trim();
+                                            if (
+                                                (u.includes('CONSIGNAR') && !u.includes('MONTO') && !u.includes('TOTAL')) || 
+                                                u.includes('PIPE') || u.includes('RICARDO') || 
+                                                u.includes('EJECUTIVOS') || u.includes('JUAN CAMILO')
+                                            ) {
+                                                aConsignarTotal += parseAmount(row[k]);
+                                            }
+                                        });
+
+                                        let financed = parseAmount(findVal(['SALDO A FINANCIAR', 'SALDO A FINACIAR', 'MONTO A FINANCIAR', 'MONTO TOTAL A FINANCIAR', 'MONTO TOTAL A CONSIGNAR', 'MONTO A CONSIGNAR', 'VALOR CREDITO']));
+
+                                        if (financed === 0 || isNaN(financed)) {
+                                            let totalVenta = parseAmount(findVal(['TOTAL VENTA', 'PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL']));
+                                            let cuotaInicial = parseAmount(findVal(['CUOTA INICIAL', 'VALOR CUOTA INICIAL', 'INICIAL']));
+                                            if (totalVenta > 0 && cuotaInicial >= 0) financed = totalVenta - cuotaInicial;
+                                        }
+
+                                        return {
+                                            _brandName: currentBrand.toUpperCase(),
+                                            _date: dateKey ? row[dateKey] : undefined,
+                                            _client: findVal(['NOMBRE COMPLETO', 'NOMBRE DEL CLIENTE', 'NOMBRE CLIENTE', 'NOMBRES', 'CLIENTE']),
+                                            _tienda: tiendaRaw,
+                                            _assigned: asignadoRaw,
+                                            _convenio: convenioFound,
+                                            _device: findVal(['REFERENCIA EQUIPO', 'REFERENCIA', 'MODELO', 'EQUIPO']),
+                                            _venta: parseAmount(findVal(['TOTAL VENTA', 'PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL'])),
+                                            _costo: parseAmount(findVal(['COSTOS EQUIPOS', 'COSTO EQUIPO', 'COSTO'])),
+                                            _cartera: parseAmount(findVal(['CARTERA', 'COSTO CARTERA', 'FEE CARTERA'])),
+                                            _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112', 'UTILIDAD ADMIN'])),
+                                            _pipe: parseAmount(findVal(['PIPE Y CHAMORRO', 'LIQUIDACION PIPE'])),
+                                            _ricardo: parseAmount(findVal(['RICARDO MARIN', 'CONSIGNAR RICARDO'])),
+                                            _jc: parseAmount(findVal(['JUAN CAMILO'])),
+                                            _ejec: parseAmount(findVal(['EJECUTIVOS'])),
+                                            _remanente: parseAmount(findVal(['EXCEDENTE DE INICIAL', 'REMANENTE DE INICIAL', 'REMANENTE'])),
+                                            _aConsignar: aConsignarTotal
+                                        };
+                                    });
+                                    combinedData = combinedData.concat(parsedRows);
+                                }
+                            } catch(e) { console.error("Error parseando ventas", e); }
                         }
-                        return [];
-                    });
-
-                    const results = await Promise.all(fetchPromises);
-                    combinedData = results.flat();
+                    }
                     
                     setData(combinedData);
                 } catch (error) {
                     console.error("Fetch Error:", error);
-                    alert("No se pudieron cargar los datos de ventas.");
+                    setError("No se pudieron cargar los datos de ventas.");
                     setData([]);
                 } finally {
                     setLoading(false);
                 }
-            };
+            }, [brand]);
 
             useEffect(() => {
                 fetchVentasData();
-            }, [brand]);
+            }, [brand, fetchVentasData]);
 
             const getDateRange = () => {
                 const now = new Date();
@@ -201,21 +281,33 @@
                 return data.filter(row => {
                     const d = parseDate(row._date);
                     if (!d || d < range.start || d > range.end) return false;
+                    
                     if (selectedPartner && String(row._assigned || '').trim().toUpperCase() !== selectedPartner.toUpperCase()) return false;
                     
-                    // NUEVO FILTRO POR MÚLTIPLES TIENDAS
                     if (selectedTiendas.length > 0) {
                         const rowTienda = String(row._tienda || '').trim().toUpperCase();
                         if (!selectedTiendas.includes(rowTienda)) return false;
                     }
+
+                    if (selectedTiendas.length === 0 && selectedConvenio && row._convenio !== selectedConvenio) return false;
                     
+                    if (searchTerm) {
+                        const s = searchTerm.toLowerCase();
+                        if (
+                            !String(row._client || '').toLowerCase().includes(s) &&
+                            !String(row._assigned || '').toLowerCase().includes(s) &&
+                            !String(row._tienda || '').toLowerCase().includes(s) &&
+                            !String(row._device || '').toLowerCase().includes(s)
+                        ) return false;
+                    }
+
                     return true;
                 }).sort((a, b) => {
                     const dA = parseDate(a._date) || 0;
                     const dB = parseDate(b._date) || 0;
                     return dB - dA;
                 });
-            }, [data, dateFilter, customStartDate, customEndDate, selectedPartner, selectedTiendas]);
+            }, [data, dateFilter, customStartDate, customEndDate, selectedPartner, selectedTiendas, selectedConvenio, searchTerm]);
 
             const uniquePartners = useMemo(() => {
                 const s = new Set();
@@ -223,74 +315,97 @@
                 return Array.from(s).sort();
             }, [data]);
 
-            // NUEVO EXTRACTOR DE TIENDAS ÚNICAS
             const uniqueTiendas = useMemo(() => {
                 const s = new Set();
                 data.forEach(r => { if(r._tienda) s.add(String(r._tienda).trim().toUpperCase()); });
                 return Array.from(s).sort();
             }, [data]);
 
-            const totals = useMemo(() => {
-                let tFinanced = 0, tCartera = 0, tAdmin = 0, tConsignar = 0, tRemanente = 0;
-                filteredData.forEach(r => {
-                    tFinanced += r._financedAmount;
-                    tRemanente += (r._remanente || 0); // NUEVO: Sumar remanente
-                    tCartera += r._cartera;
-                    tAdmin += r._admin112;
-                    tConsignar += r._aConsignar;
+            const uniqueConvenios = useMemo(() => {
+                const s = new Set();
+                data.forEach(r => { if(r._convenio && r._convenio !== 'SIN CONVENIO') s.add(r._convenio); });
+                return Array.from(s).sort();
+            }, [data]);
+
+            const kpis = useMemo(() => {
+                let stats = {
+                    ventasTotales: 0,
+                    costoTotal: 0,
+                    utilidadAdmin: 0,
+                    pipe: 0,
+                    ricardo: 0,
+                    jc: 0,
+                    ejecutivos: 0,
+                    cartera: 0,
+                    remanente: 0,
+                    cantidad: filteredData.length
+                };
+
+                filteredData.forEach(row => {
+                    stats.ventasTotales += row._venta;
+                    stats.costoTotal += row._costo;
+                    stats.utilidadAdmin += row._admin112;
+                    stats.pipe += row._pipe;
+                    stats.ricardo += row._ricardo;
+                    stats.jc += row._jc;
+                    stats.ejecutivos += row._ejec;
+                    stats.cartera += row._cartera;
+                    stats.remanente += (row._remanente || 0);
                 });
-                return { tFinanced, tRemanente, tCartera, tAdmin, tConsignar, count: filteredData.length };
+
+                return stats;
             }, [filteredData]);
 
             const handleExportPDF = () => {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('landscape');
+                const doc = new jsPDF('landscape'); 
                 
+                doc.setFontSize(18);
+                const titleStr = brand === 'todas' ? 'TODAS LAS FINANCIERAS' : brand.toUpperCase();
+                doc.text(`Liquidación Financiera - ${titleStr}`, 14, 15);
+                
+                const { start, end } = getDateRange();
+                let dateRangeStr = dateFilter === 'all' ? "Todo el Histórico" : `${start.toLocaleDateString('es-ES')} al ${end.toLocaleDateString('es-ES')}`;
+                
+                doc.setFontSize(10);
+                const cName = selectedTiendas.length > 0 ? "DESACTIVADO (Filtro Tienda)" : (selectedConvenio || "TODOS");
+                const pName = selectedPartner || "TODOS";
+                const tNameRaw = selectedTiendas.length > 0 ? selectedTiendas.join(', ') : "TODAS";
+                const tName = tNameRaw.length > 30 ? tNameRaw.substring(0, 27) + '...' : tNameRaw;
+                
+                doc.text(`Convenio: ${cName} | Aliado: ${pName} | Tiendas: ${tName} | Periodo: ${dateRangeStr}`, 14, 22);
+
                 const tableColumn = brand === 'todas' 
-                    ? ["Financiera", "Fecha", "Asignado", "Tienda", "Cliente", "Referencia", "V. Financiado", "Remanente", "Cartera", "Admin 112", "A Consignar"]
-                    : ["Fecha", "Asignado", "Tienda", "Cliente", "Referencia", "V. Financiado", "Remanente", "Cartera", "Admin 112", "A Consignar"];
+                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Admin 112", "Pipe/Ch", "Ricardo", "JuanC/Ejec"]
+                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Admin 112", "Pipe/Ch", "Ricardo", "JuanC/Ejec"];
                 
                 const tableRows = [];
 
                 filteredData.forEach(row => {
-                    const dateStr = row._date ? parseDate(row._date).toLocaleDateString('es-ES') : '';
+                    const d = parseDate(row._date);
+                    const fechaStr = d ? d.toLocaleDateString('es-ES') : '-';
+                    const comisionExtra = formatCurrency(row._jc + row._ejec);
+
                     const rowData = [
-                        dateStr,
+                        fechaStr,
+                        String(row._convenio || '').substring(0, 15),
                         String(row._assigned || '').substring(0, 15),
-                        String(row._tienda || '').substring(0, 15),
                         String(row._client || '').substring(0, 20),
-                        String(row._device || '').substring(0, 20),
-                        formatMoney(row._financedAmount),
-                        formatMoney(row._remanente),
-                        formatMoney(row._cartera),
-                        formatMoney(row._admin112),
-                        formatMoney(row._aConsignar)
+                        formatCurrency(row._venta),
+                        formatCurrency(row._costo),
+                        formatCurrency(row._admin112),
+                        formatCurrency(row._pipe),
+                        formatCurrency(row._ricardo),
+                        comisionExtra
                     ];
+
                     if (brand === 'todas') rowData.unshift(row._brandName);
                     tableRows.push(rowData);
                 });
 
-                doc.setFontSize(16);
-                const titleStr = brand === 'todas' ? 'TODAS LAS FINANCIERAS' : brand.toUpperCase();
-                doc.text(`Liquidación de Comisiones - ${titleStr}`, 14, 15);
-                
-                const { start, end } = getDateRange();
-                let dateRangeStr = "";
-                if (dateFilter === 'all') {
-                    dateRangeStr = "Todo el Histórico";
-                } else {
-                    dateRangeStr = `${start.toLocaleDateString('es-ES')} al ${end.toLocaleDateString('es-ES')}`;
-                }
-
-                doc.setFontSize(10);
-                const pName = selectedPartner || "TODOS";
-                const tNameRaw = selectedTiendas.length > 0 ? selectedTiendas.join(', ') : "TODAS";
-                const tName = tNameRaw.length > 35 ? tNameRaw.substring(0, 32) + '...' : tNameRaw;
-                doc.text(`Aliado: ${pName}  |  Tiendas: ${tName}  |  Periodo: ${dateRangeStr}  |  Créditos: ${totals.count}`, 14, 22);
-
                 const footRow = brand === 'todas'
-                    ? [["", "", "", "", "", "TOTALES:", formatMoney(totals.tFinanced), formatMoney(totals.tRemanente), formatMoney(totals.tCartera), formatMoney(totals.tAdmin), formatMoney(totals.tConsignar)]]
-                    : [["", "", "", "", "TOTALES:", formatMoney(totals.tFinanced), formatMoney(totals.tRemanente), formatMoney(totals.tCartera), formatMoney(totals.tAdmin), formatMoney(totals.tConsignar)]];
+                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.pipe), formatCurrency(kpis.ricardo), formatCurrency(kpis.jc + kpis.ejecutivos)]]
+                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.pipe), formatCurrency(kpis.ricardo), formatCurrency(kpis.jc + kpis.ejecutivos)]];
 
                 doc.autoTable({
                     head: [tableColumn],
@@ -303,7 +418,7 @@
                     footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' }
                 });
 
-                doc.save(`Liquidacion_${brand}_${pName}_${new Date().toISOString().slice(0,10)}.pdf`);
+                doc.save(`Liquidacion_${brand}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
             const handleExportExcel = () => {
@@ -311,15 +426,19 @@
                     const obj = {};
                     if (brand === 'todas') obj["Financiera"] = row._brandName;
                     obj["Fecha"] = row._date ? parseDate(row._date).toLocaleDateString('es-ES') : '';
+                    obj["Convenio"] = row._convenio || '';
                     obj["Responsable"] = row._assigned || '';
                     obj["Tienda"] = row._tienda || '';
                     obj["Cliente"] = row._client || '';
                     obj["Referencia"] = row._device || '';
-                    obj["Valor Financiado"] = row._financedAmount;
-                    obj["Remanente"] = row._remanente || 0;
+                    obj["Valor Venta"] = row._venta;
+                    obj["Costo Equipo"] = row._costo;
                     obj["Cartera"] = row._cartera;
+                    obj["Remanente"] = row._remanente;
                     obj["Admin 112"] = row._admin112;
-                    obj["A Consignar"] = row._aConsignar;
+                    obj["Pipe y Chamorro"] = row._pipe;
+                    obj["Ricardo Marin"] = row._ricardo;
+                    obj["Juan Camilo / Ejecutivos"] = row._jc + row._ejec;
                     return obj;
                 });
                 
@@ -330,23 +449,25 @@
             };
 
             return (
-                <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
-                    {/* Header Modificado con Logo */}
-                    <div className="bg-white px-6 py-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-                        <div className="flex items-center gap-5">
+                <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-12">
+                    
+                    {/* ENCABEZADO */}
+                    <div className="bg-white px-6 py-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 relative overflow-hidden">
+                        <div className="absolute right-0 top-0 w-64 h-64 bg-indigo-50 rounded-full blur-3xl -mr-20 -mt-20 opacity-60 pointer-events-none"></div>
+                        
+                        <div className="flex items-center gap-5 relative z-10">
                             <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm border border-slate-200" title="Volver al Dashboard">
                                 <Icons.ArrowLeft className="w-5 h-5"/>
                             </button>
-                            {/* NUEVO LOGO CORPORATIVO AQUÍ */}
                             <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-10 md:h-12 object-contain" />
                             <div className="h-8 w-px bg-slate-300 hidden md:block"></div>
                             <div>
-                                <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">Liquidación de Comisiones</h2>
+                                <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">Liquidación Comercial</h2>
                                 <p className="text-sm font-medium text-slate-500 mt-1">Calculadora financiera por cortes y aliados</p>
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                        <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto relative z-10">
                             <select value={brand} onChange={(e) => setBrand(e.target.value)} className="bg-slate-100 border border-slate-200 text-slate-700 font-bold text-sm py-2.5 px-4 rounded-xl outline-none cursor-pointer hover:bg-slate-200 transition-colors">
                                 <option value="todas">TODAS LAS FINANCIERAS</option>
                                 <option value="payjoy">PAYJOY</option>
@@ -375,78 +496,111 @@
                         </div>
                     </div>
 
-                    {/* Filtro Especial */}
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-3 relative z-20">
-                            <Icons.Filter className="w-5 h-5 text-slate-400 shrink-0"/>
-                            <div className="w-full flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Filtrar por Aliado / Responsable</label>
-                                    <select value={selectedPartner} onChange={e=>setSelectedPartner(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm font-bold text-slate-700 outline-none cursor-pointer">
-                                        <option value="">TODOS LOS ASIGNADOS</option>
-                                        {uniquePartners.map((p, i) => <option key={i} value={p}>{p}</option>)}
-                                    </select>
-                                </div>
-                                <div className="flex-1 relative">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Filtrar por Tienda(s)</label>
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setIsTiendaDropdownOpen(!isTiendaDropdownOpen)}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm font-bold text-slate-700 outline-none text-left flex justify-between items-center cursor-pointer"
-                                    >
-                                        <span className="truncate pr-2">
-                                            {selectedTiendas.length === 0 ? 'TODAS LAS TIENDAS' : 
-                                             selectedTiendas.length === 1 ? selectedTiendas[0] : 
-                                             `${selectedTiendas.length} TIENDAS SELECCIONADAS`}
-                                        </span>
-                                        <span className="text-slate-400 text-xs">▼</span>
-                                    </button>
-                                    
-                                    {isTiendaDropdownOpen && (
-                                        <>
-                                            <div className="fixed inset-0 z-10" onClick={() => setIsTiendaDropdownOpen(false)}></div>
-                                            <div className="absolute z-20 top-full left-0 mt-1 w-full bg-white border border-slate-200 shadow-xl rounded-xl max-h-60 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
-                                                <div 
-                                                    className={`p-2 hover:bg-slate-50 rounded-lg cursor-pointer flex items-center gap-3 transition-colors ${selectedTiendas.length === 0 ? 'bg-indigo-50' : ''}`}
-                                                    onClick={() => setSelectedTiendas([])}
-                                                >
-                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedTiendas.length === 0 ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-slate-300'}`}>
-                                                        {selectedTiendas.length === 0 && <Icons.RefreshCw className="w-3 h-3" />}
-                                                    </div>
-                                                    <span className="text-sm font-black text-slate-700">TODAS LAS TIENDAS</span>
+                    {error && (
+                        <div className="bg-red-50 p-4 rounded-2xl border border-red-200 flex gap-3 text-red-700 items-start shadow-sm">
+                            <Icons.AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0"/>
+                            <div><h3 className="font-bold text-sm">Error al cargar</h3><p className="text-xs mt-1">{String(error)}</p></div>
+                        </div>
+                    )}
+
+                    {/* FILTROS DE BÚSQUEDA Y EXPORTACIÓN */}
+                    <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 flex flex-col gap-4 relative z-20">
+                        <div className="flex flex-col lg:flex-row gap-4 items-center w-full">
+                            <div className="flex items-center gap-2 bg-indigo-50/50 p-2 rounded-xl border border-indigo-100 w-full lg:w-auto shrink-0">
+                                <Icons.Filter className="w-5 h-5 text-indigo-400 shrink-0 ml-2"/>
+                                <span className="text-xs font-bold text-indigo-800 uppercase tracking-widest mr-2">Filtros</span>
+                            </div>
+                            
+                            {/* 1. FILTRO CONVENIO (CONDICIONADO) */}
+                            <div className={`flex-1 w-full relative transition-opacity ${selectedTiendas.length > 0 ? 'opacity-40' : ''}`}>
+                                <select 
+                                    value={selectedConvenio} 
+                                    onChange={e=>setSelectedConvenio(e.target.value)} 
+                                    disabled={selectedTiendas.length > 0}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm font-bold text-indigo-800 outline-none cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-slate-100"
+                                    title={selectedTiendas.length > 0 ? 'Solo disponible cuando "Todas las Tiendas" está seleccionado' : ''}
+                                >
+                                    <option value="">TODOS LOS CONVENIOS</option>
+                                    <option value="SIN CONVENIO">-- SIN CONVENIO ASIGNADO --</option>
+                                    {uniqueConvenios.map((c, i) => <option key={i} value={c}>{c}</option>)}
+                                </select>
+                                {selectedTiendas.length > 0 && <span className="absolute -top-2 right-2 bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm">INACTIVO POR TIENDA</span>}
+                            </div>
+
+                            {/* 2. FILTRO ALIADO */}
+                            <div className="flex-1 w-full">
+                                <select value={selectedPartner} onChange={e=>setSelectedPartner(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm font-medium text-slate-700 outline-none cursor-pointer hover:bg-slate-100">
+                                    <option value="">TODOS LOS ALIADOS</option>
+                                    {uniquePartners.map((p, i) => <option key={i} value={p}>{p}</option>)}
+                                </select>
+                            </div>
+                            
+                            {/* 3. FILTRO TIENDAS (Múltiple) */}
+                            <div className="flex-1 w-full relative">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsTiendaDropdownOpen(!isTiendaDropdownOpen)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm font-medium text-slate-700 outline-none text-left flex justify-between items-center cursor-pointer hover:bg-slate-100"
+                                >
+                                    <span className="truncate pr-2 font-bold">
+                                        {selectedTiendas.length === 0 ? 'TODAS LAS TIENDAS' : 
+                                         selectedTiendas.length === 1 ? selectedTiendas[0] : 
+                                         `${selectedTiendas.length} SELECCIONADAS`}
+                                    </span>
+                                    <span className="text-slate-400 text-xs">▼</span>
+                                </button>
+                                
+                                {isTiendaDropdownOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setIsTiendaDropdownOpen(false)}></div>
+                                        <div className="absolute z-20 top-full left-0 mt-1 w-full bg-white border border-slate-200 shadow-xl rounded-xl max-h-60 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-1">
+                                            <div 
+                                                className={`p-2 hover:bg-slate-50 rounded-lg cursor-pointer flex items-center gap-3 transition-colors ${selectedTiendas.length === 0 ? 'bg-indigo-50' : ''}`}
+                                                onClick={() => setSelectedTiendas([])}
+                                            >
+                                                <div className={`w-4 h-4 rounded border flex items-center justify-center ${selectedTiendas.length === 0 ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-slate-300'}`}>
+                                                    {selectedTiendas.length === 0 && <Icons.CheckCircle className="w-3 h-3" />}
                                                 </div>
-                                                <div className="h-px bg-slate-100 my-1"></div>
-                                                {uniqueTiendas.map((t, i) => {
-                                                    const isSelected = selectedTiendas.includes(t);
-                                                    return (
-                                                        <label key={i} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
-                                                            <input 
-                                                                type="checkbox" 
-                                                                checked={isSelected}
-                                                                onChange={() => {
-                                                                    setSelectedTiendas(prev => 
-                                                                        prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
-                                                                    );
-                                                                }}
-                                                                className="w-4 h-4 text-indigo-600 rounded border-slate-300 accent-indigo-600 cursor-pointer"
-                                                            />
-                                                            <span className="text-sm font-medium text-slate-600 truncate">{t}</span>
-                                                        </label>
-                                                    );
-                                                })}
+                                                <span className="text-sm font-black text-slate-700">TODAS LAS TIENDAS</span>
                                             </div>
-                                        </>
-                                    )}
-                                </div>
+                                            <div className="h-px bg-slate-100 my-1"></div>
+                                            {uniqueTiendas.map((t, i) => {
+                                                const isSelected = selectedTiendas.includes(t);
+                                                return (
+                                                    <label key={i} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            checked={isSelected}
+                                                            onChange={() => {
+                                                                setSelectedTiendas(prev => 
+                                                                    prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
+                                                                );
+                                                            }}
+                                                            className="w-4 h-4 text-indigo-600 rounded border-slate-300 accent-indigo-600 cursor-pointer"
+                                                        />
+                                                        <span className="text-sm font-medium text-slate-600 truncate">{t}</span>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* 4. BUSCADOR GENERAL */}
+                            <div className="flex-1 w-full relative">
+                                <input type="text" placeholder="Búsqueda libre..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2.5 pl-9 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                                <Icons.Search className="w-4 h-4 text-slate-400 absolute left-3 top-3"/>
                             </div>
                         </div>
 
+                        {/* Rango Personalizado Visible si Aplica */}
                         {dateFilter === 'custom' && (
-                            <div className="bg-indigo-50 px-6 py-4 rounded-2xl border border-indigo-100 flex gap-4 items-center flex-wrap">
-                                <span className="text-sm font-black text-indigo-800 uppercase tracking-widest">Rango:</span>
-                                <input type="date" value={customStartDate} onChange={e=>setCustomStartDate(e.target.value)} className="text-sm font-bold text-slate-700 px-3 py-1.5 rounded-lg border border-indigo-200 outline-none" />
-                                <span className="text-indigo-400 font-bold">hasta</span>
-                                <input type="date" value={customEndDate} onChange={e=>setCustomEndDate(e.target.value)} className="text-sm font-bold text-slate-700 px-3 py-1.5 rounded-lg border border-indigo-200 outline-none" />
+                            <div className="bg-indigo-50 px-6 py-3 rounded-xl border border-indigo-100 flex gap-4 items-center flex-wrap mx-2 mb-2">
+                                <span className="text-xs font-black text-indigo-800 uppercase tracking-widest">Rango:</span>
+                                <input type="date" value={customStartDate} onChange={e=>setCustomStartDate(e.target.value)} className="text-sm font-bold text-slate-700 px-3 py-1.5 rounded-lg border border-indigo-200 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm" />
+                                <span className="text-indigo-400 font-bold text-xs">HASTA</span>
+                                <input type="date" value={customEndDate} onChange={e=>setCustomEndDate(e.target.value)} className="text-sm font-bold text-slate-700 px-3 py-1.5 rounded-lg border border-indigo-200 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm" />
                             </div>
                         )}
                     </div>
@@ -455,31 +609,31 @@
                         <div className="flex justify-center py-20"><Icons.RefreshCw className="w-10 h-10 animate-spin text-indigo-500" /></div>
                     ) : (
                         <>
-                            {/* Tarjetas de Resumen (Cuentas Claras) AHORA CON 5 COLUMNAS PARA METER EL REMANENTE */}
+                            {/* Tarjetas de Resumen Financiero */}
                             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                                <div className="bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-700 text-white flex flex-col justify-center">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Valor Financiado</p>
-                                    <p className="text-2xl font-black">{formatMoney(totals.tFinanced)}</p>
-                                    <p className="text-xs text-slate-400 mt-1">{totals.count} equipos liquidados</p>
+                                <div className="bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-700 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ventas Brutas</p>
+                                    <p className="text-2xl font-black">{formatCurrency(kpis.ventasTotales)}</p>
+                                    <p className="text-xs text-slate-400 mt-1">{kpis.cantidad} equipos</p>
                                 </div>
                                 
-                                {/* NUEVA TARJETA: REMANENTE */}
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-purple-500">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Remanente</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tRemanente)}</p>
+                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Costo Equipos</p>
+                                    <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.costoTotal)}</p>
                                 </div>
 
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-blue-500">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Costo Cartera</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tCartera)}</p>
+                                <div className="bg-gradient-to-br from-indigo-500 to-blue-600 p-5 rounded-3xl shadow-md border border-indigo-600 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">Utilidad Admin 112</p>
+                                    <p className="text-2xl font-black">{formatCurrency(kpis.utilidadAdmin)}</p>
                                 </div>
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-indigo-500">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Admin 112</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tAdmin)}</p>
+                                
+                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500 transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Socios (Pipe/Ric)</p>
+                                    <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.pipe + kpis.ricardo)}</p>
                                 </div>
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">A Consignar</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatMoney(totals.tConsignar)}</p>
+                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-amber-500 transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Retail (JC/Ejec)</p>
+                                    <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.jc + kpis.ejecutivos)}</p>
                                 </div>
                             </div>
 
@@ -487,7 +641,7 @@
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-4">
                                     <h3 className="font-black text-slate-800 flex items-center gap-2">
-                                        <Icons.DollarSign className="w-5 h-5 text-emerald-500" /> Desglose de Liquidación
+                                        <Icons.DollarSign className="w-5 h-5 text-emerald-500" /> Desglose de Operaciones
                                     </h3>
                                     <div className="flex gap-2">
                                         <button onClick={handleExportExcel} className="flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-700 border border-emerald-200 rounded-xl hover:bg-emerald-50 transition-colors font-bold text-xs shadow-sm">
@@ -498,61 +652,99 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div className="overflow-x-auto custom-scrollbar max-h-[500px]">
+                                <div className="overflow-x-auto custom-scrollbar max-h-[600px]">
                                     <table className="w-full text-sm text-left">
                                         <thead className="text-[10px] text-slate-500 uppercase tracking-widest bg-white sticky top-0 shadow-sm z-10 border-b border-slate-200">
                                             <tr>
                                                 {brand === 'todas' && <th className="px-4 py-3 font-black">Financiera</th>}
                                                 <th className="px-4 py-3 font-black">Fecha</th>
-                                                <th className="px-4 py-3 font-black">Asignado</th>
-                                                <th className="px-4 py-3 font-black">Tienda</th>
-                                                <th className="px-4 py-3 font-black">Cliente</th>
-                                                <th className="px-4 py-3 font-black">V. Financiado</th>
-                                                {/* NUEVA COLUMNA REMANENTE AQUÍ */}
-                                                <th className="px-4 py-3 font-black text-purple-600 bg-purple-50/50">Remanente</th>
-                                                <th className="px-4 py-3 font-black text-blue-600 bg-blue-50/50">Cartera</th>
-                                                <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50">Admin 112</th>
-                                                <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50">A Consignar</th>
+                                                <th className="px-4 py-3 font-black">Asignado / Convenio</th>
+                                                <th className="px-4 py-3 font-black">Cliente / Equipo</th>
+                                                <th className="px-4 py-3 font-black text-right">Venta</th>
+                                                <th className="px-4 py-3 font-black text-right">Costo</th>
+                                                <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50 text-right">Admin 112</th>
+                                                <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50 text-center">Socios</th>
+                                                <th className="px-4 py-3 font-black text-amber-600 bg-amber-50/50 text-center">Retail / Aliados</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {filteredData.length > 0 ? filteredData.map((row, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                    {brand === 'todas' && (
-                                                        <td className="px-4 py-3 font-bold text-xs">
-                                                            <span className={`inline-block px-2 py-1 rounded text-[9px] tracking-widest border shadow-sm
-                                                                ${row._brandName === 'PAYJOY' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
-                                                                  row._brandName === 'ALOCREDIT' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 
-                                                                  row._brandName === 'KREDIYA' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                                                                  'bg-rose-50 text-rose-700 border-rose-200'}`}>
-                                                                {row._brandName}
-                                                            </span>
+                                            {filteredData.length > 0 ? filteredData.map((row, idx) => {
+                                                const d = parseDate(row._date);
+                                                const fechaStr = d ? d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                                                
+                                                const jcEjec = row._jc + row._ejec;
+
+                                                // 🎯 LÓGICA DE DETECCIÓN REGLA 40/60 EN LA UI
+                                                const isPipeOChamorro = String(row._assigned || '').toLowerCase().includes('pipe') || String(row._assigned || '').toLowerCase().includes('chamorro');
+                                                const isNewRuleDate = d && d.getTime() >= new Date(2026, 4, 26).getTime();
+                                                const isNewRule = isNewRuleDate && isPipeOChamorro && ['ALOCREDIT', 'KREDIYA', 'CREDISMART'].includes(row._brandName);
+
+                                                return (
+                                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                                        {brand === 'todas' && (
+                                                            <td className="px-4 py-3 font-bold text-xs align-middle">
+                                                                <span className={`inline-block px-2 py-1 rounded text-[9px] tracking-widest border shadow-sm
+                                                                    ${row._brandName === 'PAYJOY' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                                                                      row._brandName === 'ALOCREDIT' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 
+                                                                      row._brandName === 'KREDIYA' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                                                                      'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                                                                    {row._brandName}
+                                                                </span>
+                                                            </td>
+                                                        )}
+                                                        <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-slate-500">{fechaStr}</td>
+                                                        <td className="px-4 py-3 border-r border-slate-100">
+                                                            <div className="font-bold text-slate-800 text-xs truncate max-w-[150px]" title={row._assigned}>{row._assigned || '-'}</div>
+                                                            {/* ⚡ AQUÍ SE MUESTRA EL CONVENIO Y LA ETIQUETA 40/60 SI APLICA */}
+                                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                                <div className="text-[9px] font-black text-indigo-500 tracking-wider uppercase" title={row._convenio}>
+                                                                    {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-300 font-normal italic">Sin Convenio</span>}
+                                                                </div>
+                                                                {isNewRule && (
+                                                                    <span className="bg-emerald-500 text-white px-1.5 py-[1px] rounded text-[8px] font-black tracking-widest shadow-sm" title="Aplica nueva regla de liquidación (40% Admin / 60% Asesor - Peaje)">
+                                                                        40/60
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </td>
-                                                    )}
-                                                    <td className="px-4 py-3 font-medium text-xs text-slate-500">
-                                                        {row._date ? parseDate(row._date).toLocaleDateString('es-ES') : '-'}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-bold text-slate-700 text-xs truncate max-w-[120px]">{row._assigned || '-'}</td>
-                                                    <td className="px-4 py-3 font-medium text-slate-600 text-xs truncate max-w-[120px]">{row._tienda || '-'}</td>
-                                                    <td className="px-4 py-3 font-medium text-slate-600 text-xs truncate max-w-[150px]">{row._client || '-'}</td>
-                                                    <td className="px-4 py-3 font-bold text-slate-800 text-xs">{formatMoney(row._financedAmount)}</td>
-                                                    
-                                                    {/* VALOR REMANENTE */}
-                                                    <td className="px-4 py-3 font-bold text-purple-700 bg-purple-50/30 text-xs">
-                                                        {formatMoney(row._remanente)}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-bold text-blue-700 bg-blue-50/30 text-xs">
-                                                        {formatMoney(row._cartera)}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-bold text-indigo-700 bg-indigo-50/30 text-xs">
-                                                        {formatMoney(row._admin112)}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-bold text-emerald-700 bg-emerald-50/30 text-xs">
-                                                        {formatMoney(row._aConsignar)}
+                                                        <td className="px-4 py-3 border-r border-slate-100">
+                                                            <div className="font-bold text-slate-700 text-xs truncate max-w-[180px]" title={row._client}>{row._client || '-'}</div>
+                                                            <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[180px]">{row._device || '-'}</div>
+                                                        </td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-700 bg-slate-50/30">{row._venta > 0 ? formatCurrency(row._venta) : '-'}</td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-rose-500 bg-rose-50/10">{row._costo > 0 ? formatCurrency(row._costo) : '-'}</td>
+                                                        
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right bg-indigo-50/30 font-black text-indigo-700">
+                                                            <div className="flex flex-col items-end">
+                                                                <span>{row._admin112 !== 0 ? formatCurrency(row._admin112) : '-'}</span>
+                                                                {isNewRule && row._admin112 !== 0 && <span className="text-[8px] text-indigo-400 font-bold leading-none mt-0.5" title="Se aplica 40% directo sobre la Utilidad Real">40% Utilidad</span>}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-center bg-emerald-50/20">
+                                                            <div className="flex flex-col items-center gap-0.5 text-[11px]">
+                                                                {row._pipe > 0 && <div className="flex flex-col items-center">
+                                                                    <span className="font-bold text-emerald-700">{formatCurrency(row._pipe)}</span>
+                                                                    {isNewRule && <span className="text-[8px] text-emerald-500 font-bold leading-none mt-0.5" title="Se aplica 60% sobre Utilidad Real menos peaje de cartera">60% (-Peaje)</span>}
+                                                                </div>}
+                                                                {row._ricardo > 0 && <div className="font-bold text-emerald-700">{formatCurrency(row._ricardo)}</div>}
+                                                                {row._pipe === 0 && row._ricardo === 0 && <span className="text-slate-300">-</span>}
+                                                            </div>
+                                                        </td>
+                                                        
+                                                        <td className="px-4 py-3 whitespace-nowrap text-center bg-amber-50/20 font-bold text-xs text-amber-700">
+                                                            {jcEjec > 0 ? formatCurrency(jcEjec) : '-'}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            }) : (
+                                                <tr>
+                                                    <td colSpan={brand === 'todas' ? "9" : "8"} className="px-6 py-20 text-center text-slate-400">
+                                                        <div className="flex flex-col items-center gap-3">
+                                                            <Icons.Database className="w-8 h-8 opacity-20"/>
+                                                            <p>No se encontraron liquidaciones para los filtros aplicados.</p>
+                                                        </div>
                                                     </td>
                                                 </tr>
-                                            )) : (
-                                                <tr><td colSpan={brand === 'todas' ? "10" : "9"} className="px-6 py-10 text-center text-slate-400">No hay ventas registradas para este filtro.</td></tr>
                                             )}
                                         </tbody>
                                     </table>
