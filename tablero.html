@@ -72,11 +72,10 @@
             Calendar: (p) => <IconBase {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></IconBase>,
             RefreshCcw: (p) => <IconBase {...p}><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></IconBase>,
             UploadCloud: (p) => <IconBase {...p}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></IconBase>,
-            Settings: (p) => <IconBase {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>
+            Settings: (p) => <IconBase {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1-2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>
         };
 
-        // ⚠️ PEGA AQUÍ TU URL DEL WEB APP DE GOOGLE APPS SCRIPT
-        // (Asegúrate de haber creado una NUEVA IMPLEMENTACIÓN en Apps Script después de modificar el doGet)
+        // ⚠️ ENLACE DE TU API WEB APP
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
 
         // --- CONFIGURACIÓN BLINDADA PARA TODAS LAS MARCAS ---
@@ -94,7 +93,7 @@
                     id: ['cedula', 'documento', 'cc', 'nit', 'id', 'codigo_venta', 'codigo del dispositivo', 'codigo dispositivo'], 
                     email: ['email', 'correo', 'mail'], 
                     birthDate: ['fecha de nacimiento', 'nacimiento', 'fecha nac', 'f. nac'], 
-                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'], // Soporte WhatsApp/Llamadas
+                    phone: ['celular', 'cel cliente', 'telefono', 'teléfono', 'movil', 'contacto'], 
                     store: ['tienda', 'almacen', 'sucursal', 'sede', 'punto'], 
                     lateQuotas: ['cuotas atrasadas', 'atrasadas', 'cuotas_atrasadas'], 
                     paidQuotas: ['cuotas pagas', 'cuotas pagadas', 'pagadas'],
@@ -191,7 +190,6 @@
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState(null);
             
-            // ⚡ NUEVO: Estado para guardar el catálogo maestro del simulador
             const [catalogoPrecios, setCatalogoPrecios] = useState([]);
             const [selectedSeller, setSelectedSeller] = useState('');
             const [selectedAssigned, setSelectedAssigned] = useState('');
@@ -200,7 +198,6 @@
             const [selectedConvenio, setSelectedConvenio] = useState(''); 
             const [searchTerm, setSearchTerm] = useState(''); 
             
-            // Filtros de Alertas
             const [showOnlyAlerts7, setShowOnlyAlerts7] = useState(false);
             const [showOnlyAlerts15, setShowOnlyAlerts15] = useState(false);
             const [showOnlyEarly, setShowOnlyEarly] = useState(false); 
@@ -215,7 +212,6 @@
             const [detailSeller, setDetailSeller] = useState(null); 
             const [detailFilter, setDetailFilter] = useState('all'); 
 
-            // Fallbacks para evitar errores de referencia en el Reporte Analítico
             const sellerReportData = useMemo(() => [], []);
             const sellerDetailData = useMemo(() => [], []);
 
@@ -501,10 +497,8 @@
                     const ventasUrl = `${API_URL}${separator}type=ventas_${portfolio}&t=${new Date().getTime()}`;
                     const usuUrl = `${API_URL}${separator}type=usuarios_payjoy&t=${new Date().getTime()}`;
                     
-                    // ⚡ NUEVO: Llamamos al catálogo usando la misma URL del Backend Principal
                     const preciosUrl = `${API_URL}${separator}type=precios&t=${new Date().getTime()}`; 
 
-                    // 🛡️ FUNCIÓN DE FETCH SEGURA
                     const safeFetch = (url) => fetch(url, { method: "GET", redirect: "follow" }).catch(e => {
                         console.warn(`Aviso: No se pudo conectar a ${url}`, e);
                         return { ok: false, text: async () => '[]' };
@@ -533,6 +527,7 @@
                         try {
                             const jsonUsu = JSON.parse(await usuRes.text());
                             if (Array.isArray(jsonUsu) && jsonUsu.length > 0) {
+                                
                                 const headerRowObj = jsonUsu.find(r => Object.values(r).some(v => String(v).toUpperCase().includes('CONVENIO')));
                                 let nameKey, convKey, tiendaKey;
 
@@ -576,7 +571,6 @@
                         } catch(e) {}
                     }
 
-                    // ⚡ NUEVO: Procesamiento de los Precios del Simulador (desde el API principal)
                     let catPrecios = [];
                     if (preciosRes.ok) {
                         try {
@@ -718,7 +712,6 @@
                 const uniqueConvenios = new Set();
                 const devCostMap = {}; 
                 
-                // ⚡ Llenamos el mapa de costos EXCLUSIVAMENTE con el catálogo oficial
                 if (catalogoPrecios && catalogoPrecios.length > 0) {
                     catalogoPrecios.forEach(item => {
                         const ref = item['REFERENCIA'] || item['EQUIPO'] || item['referencia'];
@@ -761,7 +754,6 @@
                 });
             }, [headers, activeConfig]);
 
-            // Reorganización Mágica de Columnas para la UI
             const displayHeaders = useMemo(() => {
                 if (!headers || headers.length === 0) return [];
                 let arr = [...headers];
@@ -816,7 +808,6 @@
 
                 if (firstQuotaCol || paidCol || lateCol) {
                     const colsToInsert = [];
-                    // ⚡ NUEVO: Insertamos la nueva columna virtual
                     colsToInsert.push('DÍAS CRÉDITO');
                     if (firstQuotaCol) colsToInsert.push(firstQuotaCol);
                     colsToInsert.push('DÍAS MORA'); 
@@ -967,7 +958,6 @@
                     }
                 }
 
-                // ORDENAR POR FECHA
                 const dateCol = findConfigColumn(activeConfig?.columns?.date, headers);
                 if (dateCol) {
                     result.sort((a, b) => {
@@ -1141,7 +1131,6 @@
                                 let lateVal = lateCol ? String(row[lateCol] || '').trim() : '';
                                 let isLate = lateVal !== '' && lateVal !== '0' && lateVal !== '0.0' && !isNaN(Number(lateVal)) && Number(lateVal) > 0;
                                 
-                                // Si está en mora, o NO está completado = Unpaid
                                 if (!val.includes('completado') || isLate) unpaid++; 
                             });
                         }
@@ -1303,7 +1292,6 @@
                     return { head: "bg-indigo-100/70 text-indigo-900 border-b-2 border-indigo-200", cellBase: "", bgColor: "bg-indigo-50/60 font-black text-indigo-800 shadow-sm" };
                 }
                 
-                // ⚡ NUEVO: Estilos para la nueva columna DÍAS CRÉDITO
                 if (headerName === 'DÍAS CRÉDITO') {
                     return { head: "bg-slate-100 text-slate-600 border-b-2 border-slate-300 text-center font-bold", cellBase: "border-l border-slate-100", bgColor: "bg-slate-50 text-center font-mono text-slate-500" };
                 }
@@ -1386,7 +1374,6 @@
                                         </div>
                                     )}
 
-                                    {/* FINANCIADO VS RECAUDADO (MÓDULO DE CAJA EN ALOCREDIT/KREDIYA) */}
                                     {(portfolio === 'alocredit' || portfolio === 'krediya') && (
                                         <div className="mt-2 pt-2 border-t border-black/5">
                                             <div className="flex justify-between text-slate-600">
@@ -1559,7 +1546,7 @@
                     body: tableRows,
                     startY: 33,
                     theme: 'grid',
-                    headStyles: { fillColor: [220, 38, 38] }, // Rojo intenso
+                    headStyles: { fillColor: [220, 38, 38] }, 
                     styles: { fontSize: 9 }
                 });
 
@@ -1616,13 +1603,14 @@
                     body: tableRows,
                     startY: 33,
                     theme: 'grid',
-                    headStyles: { fillColor: [225, 29, 72] }, // Rose intenso
+                    headStyles: { fillColor: [225, 29, 72] }, 
                     styles: { fontSize: 9 }
                 });
 
                 doc.save(`Mora_RiesgoFPD15_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
+            // ⚡ SE ENCUENTRA ACTUALIZADO CON TUS REQUERIMIENTOS: "Cuotas Pagas", "Cuotas Atrasadas" y quita "Estado".
             const handleExportFilteredPDF = () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape');
@@ -1632,11 +1620,11 @@
                     return l.includes('valor cuota') || l.includes('monto') || l.includes('valor de la cuota') || l === 'cuota';
                 });
 
-                let statusCol = findColumnName(activeConfig.columns.paymentStatus, 'primera', headers);
-                if (!statusCol) statusCol = findColumnName(activeConfig.columns.paymentStatus, '', headers);
+                let paidCol = findConfigColumn(activeConfig?.columns?.paidQuotas, headers);
+                let lateCol = findConfigColumn(activeConfig?.columns?.lateQuotas, headers);
                 
-                // ⚡ SE INCLUYE EL CONVENIO EN EL EXPORT
-                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Convenio", "Asignado", "Estado", "Cuota"];
+                // Columnas deseadas en el PDF: Se removió "Estado", se agregaron "Cuotas Pagas" y "Cuotas Atrasadas"
+                const tableColumn = ["Cliente", "Cédula", "Celular", "Equipo", "Convenio", "Asignado", "Cuotas Pagas", "Cuotas Atrasadas", "Cuota"];
                 const tableRows = [];
                 let totalAmount = 0;
 
@@ -1645,7 +1633,8 @@
                     totalAmount += amount;
 
                     let cellAmount = amountCol && row[amountCol] ? String(row[amountCol]) : '$0';
-                    let cellStatus = statusCol && row[statusCol] ? String(row[statusCol]) : '-';
+                    let cellPaid = paidCol && row[paidCol] !== undefined ? String(row[paidCol]) : '0';
+                    let cellLate = lateCol && row[lateCol] !== undefined ? String(row[lateCol]) : '0';
 
                     tableRows.push([
                         getFullName(row),
@@ -1654,7 +1643,8 @@
                         String(row[deviceColumn] || '-').substring(0, 15),
                         String(row['CONVENIO'] || '-').substring(0, 15),
                         String(row[assignedColumn] || '-').substring(0, 15),
-                        cellStatus.substring(0, 40), 
+                        cellPaid,
+                        cellLate,
                         cellAmount
                     ]);
                 });
@@ -1675,13 +1665,43 @@
                     startY: 33,
                     theme: 'grid',
                     headStyles: { fillColor: [79, 70, 229] }, 
-                    styles: { fontSize: 8 },
-                    columnStyles: {
-                        6: { cellWidth: 40 }
-                    }
+                    styles: { fontSize: 8 }
                 });
 
                 doc.save(`Filtro_Personalizado_${portfolio}_${new Date().toISOString().slice(0,10)}.pdf`);
+            };
+
+            const handleExportFilteredExcel = () => {
+                let amountCol = headers.find(h => {
+                    const l = h.toLowerCase();
+                    return l.includes('valor cuota') || l.includes('monto') || l.includes('valor de la cuota') || l === 'cuota';
+                });
+
+                let paidCol = findConfigColumn(activeConfig?.columns?.paidQuotas, headers);
+                let lateCol = findConfigColumn(activeConfig?.columns?.lateQuotas, headers);
+                
+                const exportData = filteredData.map(row => {
+                    let amount = amountCol ? parseAmount(row[amountCol]) : 0;
+                    let cellPaid = paidCol && row[paidCol] !== undefined ? String(row[paidCol]) : '0';
+                    let cellLate = lateCol && row[lateCol] !== undefined ? String(row[lateCol]) : '0';
+
+                    return {
+                        "Cliente": getFullName(row),
+                        "Cédula": row[idColumn] || '-',
+                        "Celular": row[phoneColumn] || '-',
+                        "Equipo": String(row[deviceColumn] || '-').substring(0, 15),
+                        "Convenio": String(row['CONVENIO'] || '-').substring(0, 15),
+                        "Asignado": String(row[assignedColumn] || '-').substring(0, 15),
+                        "Cuotas Pagas": Number(cellPaid) || 0,
+                        "Cuotas Atrasadas": Number(cellLate) || 0,
+                        "Cuota": amount
+                    };
+                });
+                
+                const worksheet = window.XLSX.utils.json_to_sheet(exportData);
+                const workbook = window.XLSX.utils.book_new();
+                window.XLSX.utils.book_append_sheet(workbook, worksheet, "Datos Filtrados");
+                window.XLSX.writeFile(workbook, `Filtro_Personalizado_${portfolio}_${new Date().toISOString().slice(0,10)}.xlsx`);
             };
 
             // --- ⚡ LÓGICA DE ACCIÓN RÁPIDA SEPARADA ---
@@ -1762,7 +1782,6 @@
                         updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
 
                     } else if (actionType === 'PAGO') {
-                        // 🟢 FLUJO DE PAGO NORMAL (SIN PRÉSTAMOS, SÓLO CUOTAS)
                         const valStatus = "PAGO";
                         const valComment = `Pago registrado${qLabelText} (${numQuotas} cuota(s))`;
 
@@ -1784,7 +1803,6 @@
                             updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
                         }
 
-                        // Aumentar Cuotas Pagas
                         if (paidCol && numQuotas > 0) {
                             const currentPaid = parseInt(String(row[paidCol]).replace(/\D/g, '')) || 0;
                             const newPaidVal = currentPaid + numQuotas;
@@ -1793,7 +1811,6 @@
                             updatedRow[paidCol] = newPaidVal;
                         }
 
-                        // Reducir Cuotas Atrasadas (Si Aplica)
                         let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
                         if (lateCol && numQuotas > 0) {
                             const currentLate = parseInt(String(row[lateCol]).replace(/\D/g, '')) || 0;
@@ -1804,7 +1821,6 @@
                         }
 
                     } else if (actionType === 'PAGO_GESTION') {
-                        // 🔵 FLUJO DE PAGO CON GESTIÓN (CALCULADORA COMPLETA)
                         const valStatus = "PAGO CON GESTION";
                         const parsedCustomAmount = parseAmount(customAmount);
                         const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(parsedCustomAmount);
@@ -1829,7 +1845,6 @@
                             updatedRow[commentsCol] = oldVal ? `[${dateStr}] ${valComment} | ${oldVal}` : `[${dateStr}] ${valComment}`;
                         }
 
-                        // Aumentar Cuotas Pagas
                         if (paidCol && numQuotas > 0) {
                             const currentPaid = parseInt(String(row[paidCol]).replace(/\D/g, '')) || 0;
                             const newPaidVal = currentPaid + numQuotas;
@@ -1838,7 +1853,6 @@
                             updatedRow[paidCol] = newPaidVal;
                         }
 
-                        // Reducir Cuotas Atrasadas
                         let lateCol = findConfigColumn(activeConfig.columns.lateQuotas, headers);
                         if (lateCol && numQuotas > 0) {
                             const currentLate = parseInt(String(row[lateCol]).replace(/\D/g, '')) || 0;
@@ -1848,7 +1862,6 @@
                             updatedRow[lateCol] = newLateVal;
                         }
                         
-                        // Si era cuota desconocida, la guarda
                         const valCuotaCol = headers.find(h => h.toLowerCase().includes('valor cuota') || h.toLowerCase() === 'cuota');
                         if (valCuotaCol && amount <= 0 && numQuotas > 0) {
                              const calculatedBaseQuota = Math.round(parsedCustomAmount / numQuotas);
@@ -1976,7 +1989,6 @@
                 const currentDevice = deviceCol && row[deviceCol] ? String(row[deviceCol]).trim() : '';
                 let currentCost = costCol && row[costCol] ? String(row[costCol]).trim() : '';
 
-                // ⚡ Auto-completar el costo desde el catálogo (si está vacío o es cero en la BD)
                 if ((!currentCost || parseAmount(currentCost) === 0) && currentDevice) {
                     const mappedCost = deviceCostMap[currentDevice.toUpperCase()];
                     if (mappedCost) currentCost = String(mappedCost);
@@ -2022,7 +2034,7 @@
                     if (updatesPayload.length === 0) {
                         setAdvancedEditModal({ show: false, row: null, asignado: '', equipo: '', costo: '', cols: {} });
                         setIsSaving(false);
-                        return; // No hubo cambios
+                        return; 
                     }
 
                     const payload = { 
@@ -2030,7 +2042,7 @@
                         id: idVal, 
                         phone: phone || '', 
                         comment: "Edición Avanzada desde Tablero", 
-                        column: "COMENTARIOS", // Fallback técnico
+                        column: "COMENTARIOS", 
                         append: true,   
                         cleanWrite: false,
                         updates: updatesPayload 
@@ -2113,7 +2125,7 @@
 
             return (
                 <div className="max-w-7xl mx-auto p-4 space-y-6">
-                    {/* ENCABEZADO CON LOGO Y BOTONES ESTILO LANDING */}
+                    {/* ENCABEZADO */}
                     <div className="bg-white rounded-3xl shadow-sm p-6 border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-5">
                             <button 
@@ -2162,7 +2174,6 @@
                             </button>
                             
                             <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-full border border-slate-200 ml-2">
-                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN ALOCREDIT */}
                                 {portfolio === 'alocredit' && (
                                     <button 
                                         onClick={() => window.location.href = 'actualizador.html'} 
@@ -2173,7 +2184,6 @@
                                     </button>
                                 )}
 
-                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN KREDIYA */}
                                 {portfolio === 'krediya' && (
                                     <button 
                                         onClick={() => window.location.href = 'actualizador_krediya.html'} 
@@ -2184,7 +2194,6 @@
                                     </button>
                                 )}
 
-                                {/* BOTÓN DE SUBIDA QUE SOLO SALE EN PAYJOY */}
                                 {portfolio === 'payjoy' && (
                                     <button 
                                         onClick={() => window.location.href = 'actualizador_payjoy.html'} 
@@ -2276,12 +2285,22 @@
                                 <div className="p-3 bg-white text-indigo-600 rounded-xl shadow-sm"><Icons.Users className="w-6 h-6" /></div>
                             </div>
                             {filteredData.length > 0 && (
-                                <button 
-                                    onClick={handleExportFilteredPDF} 
-                                    className="mt-3 flex justify-center items-center gap-1.5 px-3 py-2 bg-white border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm hover:shadow font-bold text-xs group"
-                                >
-                                    <Icons.Download className="w-3.5 h-3.5 group-hover:animate-bounce"/> Exportar a PDF
-                                </button>
+                                <div className="mt-3 flex gap-2">
+                                    <button 
+                                        onClick={handleExportFilteredExcel} 
+                                        className="flex-1 flex justify-center items-center gap-1.5 px-2 py-2 bg-white border border-emerald-200 text-emerald-700 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm hover:shadow font-bold text-xs group"
+                                        title="Exportar a Excel"
+                                    >
+                                        <Icons.Download className="w-3.5 h-3.5 group-hover:animate-bounce"/> EXCEL
+                                    </button>
+                                    <button 
+                                        onClick={handleExportFilteredPDF} 
+                                        className="flex-1 flex justify-center items-center gap-1.5 px-2 py-2 bg-white border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-600 hover:text-white transition-all shadow-sm hover:shadow font-bold text-xs group"
+                                        title="Exportar a PDF"
+                                    >
+                                        <Icons.Download className="w-3.5 h-3.5 group-hover:animate-bounce"/> PDF
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -2598,7 +2617,6 @@
                                                 
                                                 let tdContent = null;
 
-                                                // ⚡ NUEVA LÓGICA: Rellenar la celda de DÍAS CRÉDITO
                                                 if (h === 'DÍAS CRÉDITO') {
                                                     const dateCol = findConfigColumn(activeConfig?.columns?.date, headers);
                                                     let diasCreditoTxt = "-";
@@ -2926,7 +2944,7 @@
                         </div>
                     )}
 
-                    {/* --- MODAL EDICIÓN AVANZADA (GESTOR, EQUIPO Y COSTO) --- */}
+                    {/* --- MODAL EDICIÓN AVANZADA --- */}
                     {advancedEditModal.show && (
                         <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                              <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-100">
@@ -2970,7 +2988,6 @@
                                                 const newDevice = e.target.value;
                                                 let newCost = advancedEditModal.costo;
                                                 
-                                                // ⚡ Auto-completar el costo si el equipo existe en el diccionario
                                                 const mappedCost = deviceCostMap[String(newDevice).trim().toUpperCase()];
                                                 if (mappedCost !== undefined) {
                                                     newCost = String(mappedCost);
@@ -2989,7 +3006,7 @@
                                     <div>
                                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5 px-1">Costo del Equipo (Opcional)</label>
                                         <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
                                             <input 
                                                 type="text"
                                                 value={advancedEditModal.costo}
@@ -3021,7 +3038,7 @@
                         </div>
                     )}
 
-                    {/* ⚡ MODAL DE CONFIRMACIÓN INTELIGENTE (PAGO vs PAGO GESTIÓN) ⚡ */}
+                    {/* --- MODAL DE CONFIRMACIÓN INTELIGENTE --- */}
                     {confirmModal.show && (
                         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                              <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all scale-100 border border-slate-100">
@@ -3037,7 +3054,6 @@
                                     <h3 className="text-lg font-black text-slate-800 mb-2">Confirmar Acción</h3>
                                     <p className="text-sm text-slate-500 mb-4">{confirmModal.message}</p>
 
-                                    {/* 🟢 OPCIÓN 1: PAGO NORMAL (SIN DINERO, SOLO CANTIDAD DE CUOTAS) */}
                                     {confirmModal.actionType === 'PAGO' && (
                                         <div className="text-left space-y-4 bg-emerald-50 p-4 rounded-xl border border-emerald-200 mb-4 shadow-inner">
                                             <div>
@@ -3057,7 +3073,6 @@
                                         </div>
                                     )}
 
-                                    {/* 🔵 OPCIÓN 2: PAGO GESTIÓN (CALCULADORA COMPLETA) */}
                                     {confirmModal.actionType === 'PAGO_GESTION' && (
                                         <div className="text-left space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 shadow-inner">
                                             <div className="grid grid-cols-2 gap-3">
@@ -3141,7 +3156,7 @@
                         </div>
                     )}
 
-                    {/* --- MODAL REPORTE VENDEDORES (NIVEL 1) --- */}
+                    {/* --- MODAL REPORTE VENDEDORES --- */}
                     {showSellerModal && (
                         <div id="printable-modal-content" className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
                             <div className="bg-white w-full max-w-6xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh] border border-slate-100 overflow-hidden transform scale-100 transition-transform">
@@ -3178,8 +3193,8 @@
                                                 <th className="px-6 py-4 font-black">Gestor / Asignado</th>
                                                 <th className="px-4 py-4 text-center font-black">Ventas</th>
                                                 <th className="px-4 py-4 text-center font-black text-emerald-500">Pagas</th>
-                                                <th className="px-4 py-4 text-center font-black text-indigo-500" title="Cantidad de cuotas prestadas por la empresa">Préstamos</th>
-                                                <th className="px-4 py-4 text-right font-black text-indigo-500" title="Dinero total prestado">$ Gest. / Prestado</th>
+                                                <th className="px-4 py-4 text-center font-black text-indigo-500">Préstamos</th>
+                                                <th className="px-4 py-4 text-right font-black text-indigo-500">$ Gest. / Prestado</th>
                                                 <th className="px-4 py-4 text-center font-black text-blue-500">Gestión</th>
                                                 <th className="px-4 py-4 text-center font-black text-rose-500">Mora</th>
                                                 <th className="px-4 py-4 text-center font-black text-amber-500">Por Vencer</th>
@@ -3223,7 +3238,7 @@
                         </div>
                     )}
 
-                    {/* --- MODAL DETALLE CLIENTES (NIVEL 2 - DRILL DOWN) --- */}
+                    {/* --- MODAL DETALLE CLIENTES --- */}
                     {detailSeller && (
                         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                             <div className="bg-white w-full max-w-6xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh] border border-slate-100 overflow-hidden transform scale-100 transition-transform">
