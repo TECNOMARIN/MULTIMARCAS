@@ -8,7 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- SOLUCIÓN 1: Usar una versión específica y estable de Babel -->
+    <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
     
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -24,7 +25,11 @@
 <body class="min-h-screen flex flex-col relative overflow-x-hidden custom-scrollbar">
     <div id="root" class="flex-1 flex flex-col"></div>
 
-    <script type="text/babel">
+    <script type="text/babel" data-presets="react">
+        /** @jsx React.createElement */
+        /** @jsxFrag React.Fragment */
+        /* SOLUCIÓN 2: Estas dos líneas de arriba obligan a Babel a no inyectar 'imports' */
+
         const { useState, useEffect, useRef, useMemo } = React;
 
         const Icons = {
