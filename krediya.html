@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión Soluciones Efectivas CTG - KREDIYA</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM (Production) -->
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <!-- Babel para JSX -->
+    <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+    <!-- html2pdf.js para generación de PDF directa -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+        
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: #f1f5f9;
+        }
+
+        /* CONFIGURACIÓN ESTRICTA CARTA PARA PDF */
+        .letter-size {
+            width: 8.5in !important;
+            height: 11in !important;
+            padding: 0.4in 0.6in !important; 
+            margin: 0 auto;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden; 
+        }
+
+        @media print {
+            body { background: white; }
+            .print\:hidden { display: none !important; }
+            .letter-size { box-shadow: none !important; margin: 0 !important; }
+            @page { size: letter; margin: 0; }
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
+        /* Emerald scrollbar for Krediya */
+        .custom-scroll::-webkit-scrollbar-thumb { background: #059669; border-radius: 10px; border: 2px solid #f8fafc; } 
+        
+        .animate-spin-slow { animation: spin 2s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-presets="react">
+        const { useState, useMemo, useEffect } = React;
+
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                Printer: <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z" />,
+                Building2: <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2m12-10h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2M10 6h4m-4 4h4m-4 4h4m-4 4h4" />,
+                MapPin: <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0zM12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />,
+                Phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />,
+                Search: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
+                X: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
+                Calculator: <><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="16" y1="14" x2="16" y2="18" /><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01" /></>,
+                Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></>,
+                ChevronDown: <path d="m6 9 6 6 6-6" />,
+                ChevronUp: <path d="m18 15-6-6-6 6" />,
+                ArrowLeft: <><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></>,
+                ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4" />,
+                Loader: <path d="M21 12a9 9 0 1 1-6.219-8.56" />,
+                UserPlus: <><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="17" y1="11" x2="23" y2="11" /></>,
+                Upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>,
+                CheckCircle2: <><circle cx="12" cy="12" r="10" /><path d="m9 12 2 2 4-4" /></>,
+                CreditCard: <><rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" /></>
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={name === 'Loader' ? `animate-spin-slow ${className}` : className}>
+                    {icons[name]}
+                </svg>
+            );
+        };
+
+        const App = () => {
+            const companyInfo = {
+                name: "SOLUCIONES EFECTIVAS CTG S.A.S",
+                nit: "901.831.921-2",
+                address: "Calle 31 # 80 - 16, Cond. Atlantic, T5 Apt 1102",
+                city: "Cartagena, Bolívar",
+                email: "ctgsolucionesefectivas@gmail.com",
+                phone: "322 255 9184",
+                bank: "Bancolombia",
+                tipoCuenta: "Ahorros",
+                numeroCuenta: "788-000110-50",
+                logoUrl: "https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png"
+            };
+
+            const fallbackData = [
+                { brand: 'TECNO', ref: 'SPARK GO2 64GB + 3+3RAM', cost: '265.000', sale: '730.000', initial: '146.000', receive: '219.000', return: '43.800', commTienda: '102.200', commDist: '83.800' }
+            ];
+
+            const [retailData, setRetailData] = useState([]);
+            const [isLoadingPrices, setIsLoadingPrices] = useState(true);
+
+            // Formulario y Estados
+            const [formData, setFormData] = useState({
+                fecha: new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }),
+                nombreCliente: '',
+                cedulaCliente: '',
+                expedicionCedula: '',
+                direccionCliente: '',
+                ciudadCliente: 'Cartagena',
+                telefonoCliente: '',
+            });
+
+            // Validaciones para habilitar los botones de PDF
+            const isAutorizacionReady = formData.nombreCliente.trim() !== '' && formData.cedulaCliente.trim() !== '' && formData.expedicionCedula.trim() !== '';
+
+            const [showPriceModal, setShowPriceModal] = useState(false);
+            const [selectedBrand, setSelectedBrand] = useState('TODAS LAS MARCAS');
+            const [searchTerm, setSearchTerm] = useState('');
+            const [isGenerating, setIsGenerating] = useState(false);
+
+            const [showAffiliateModal, setShowAffiliateModal] = useState(false);
+            const [submitStatus, setSubmitStatus] = useState(null); 
+            const [affiliateForm, setAffiliateForm] = useState({ 
+                tienda: '', 
+                emailTienda: '',
+                telefonoTienda: '',
+                nombreVendedor: '',
+                emailVendedor: '',
+                telefonoVendedor: ''
+            });
+            const [affiliateFiles, setAffiliateFiles] = useState({});
+
+            const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec"; 
+
+            useEffect(() => {
+                const fetchPrecios = async () => {
+                    try {
+                        const response = await fetch(GOOGLE_SCRIPT_URL + "?action=getPrecios");
+                        const data = await response.json();
+                        if (data && !data.error && data.length > 0) {
+                            setRetailData(data);
+                        } else {
+                            setRetailData(fallbackData); 
+                        }
+                    } catch (error) {
+                        setRetailData(fallbackData); 
+                    } finally {
+                        setIsLoadingPrices(false);
+                    }
+                };
+                fetchPrecios();
+            }, []);
+
+            const filteredData = useMemo(() => {
+                return retailData.filter(item => {
+                    const matchesSearch = item.ref?.toLowerCase().includes(searchTerm.toLowerCase()) || item.brand?.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesBrand = selectedBrand === 'TODAS LAS MARCAS' || item.brand === selectedBrand;
+                    return matchesSearch && matchesBrand;
+                });
+            }, [searchTerm, selectedBrand, retailData]);
+
+            const brandsList = ['TODAS LAS MARCAS', ...new Set(retailData.map(item => item.brand))];
+
+            const handleGeneratePDF = () => {
+                setIsGenerating(true);
+                const element = document.getElementById('pdf-content');
+                const opt = {
+                    margin: 0,
+                    filename: `Autorizacion_Krediya_${formData.nombreCliente || 'Aliado'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
+            };
+
+            const handleGeneratePDFAntifraude = () => {
+                setIsGenerating(true);
+                const element = document.getElementById('pdf-content-antifraude');
+                const opt = {
+                    margin: 0,
+                    filename: `Antifraude_Krediya_${formData.nombreCliente || 'Cliente'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
+            };
+
+            const handleGeneratePDFVitrina = () => {
+                setIsGenerating(true);
+                const element = document.getElementById('pdf-content-vitrina');
+                const opt = {
+                    margin: 0,
+                    filename: `Comodato_Vitrina_Krediya_${formData.nombreCliente || 'Aliado'}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(element).set(opt).save().then(() => setIsGenerating(false)).catch(() => setIsGenerating(false));
+            };
+
+            // Helpers matemáticos
+            const formatRoundToThousand = (val) => {
+                if (!val) return '0';
+                const strVal = String(val).replace(/\./g, '').trim();
+                const num = parseFloat(strVal);
+                if (isNaN(num)) return val;
+                const rounded = Math.round(num / 1000) * 1000;
+                return rounded.toLocaleString('es-CO');
+            };
+
+            const parseCurrency = (val) => {
+                if (!val) return 0;
+                const strVal = String(val).replace(/\./g, '').trim();
+                return parseFloat(strVal) || 0;
+            };
+
+            // Handlers de formulario
+            const handleFileChange = (e, fileType) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64String = reader.result.split(',')[1];
+                        setAffiliateFiles(prev => ({
+                            ...prev,
+                            [fileType]: {
+                                filename: file.name,
+                                mimeType: file.type,
+                                data: base64String
+                            }
+                        }));
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const handleAffiliateSubmit = async (e) => {
+                e.preventDefault();
+                setSubmitStatus('loading');
+                try {
+                    const payload = {
+                        action: 'afiliar',
+                        linea: 'Krediya', // Vinculación a la línea correcta
+                        tienda: affiliateForm.tienda,
+                        emailTienda: affiliateForm.emailTienda,
+                        telefonoTienda: affiliateForm.telefonoTienda,
+                        nombreVendedor: affiliateForm.nombreVendedor,
+                        emailVendedor: affiliateForm.emailVendedor,
+                        telefonoVendedor: affiliateForm.telefonoVendedor,
+                        archivos: affiliateFiles
+                    };
+
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    setSubmitStatus('success');
+                } catch (error) {
+                    console.error("Error al enviar solicitud:", error);
+                    setSubmitStatus('error');
+                }
+            };
+
+            const scrollToTop = (id) => {
+                const el = document.getElementById(id);
+                if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+            const scrollToBottom = (id) => {
+                const el = document.getElementById(id);
+                if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+            };
+
+            return (
+                <div className="min-h-screen py-8 px-4 flex flex-col items-center">
+                    
+                    {/* NAVEGACIÓN SUPERIOR */}
+                    <div className="w-full max-w-4xl mb-4 print:hidden flex flex-wrap gap-3 justify-between items-center">
+                        <div className="flex gap-2">
+                            <button onClick={() => window.location.href = 'index.html'} className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#2C4C8C] rounded-xl shadow-md font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all border-2 border-transparent">
+                                <Icon name="ArrowLeft" size={14} /> Regresar App
+                            </button>
+                        </div>
+
+                        {/* NAV ADAPTADA: Se elimina Credismart y se deja Krediya Activo */}
+                        <div className="flex gap-2 bg-white p-1 rounded-2xl shadow-lg border border-slate-100">
+                            <button 
+                                onClick={() => window.location.href = 'retailb.html'}
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all"
+                            >
+                                <Icon name="CreditCard" size={14} /> PayJoy
+                            </button>
+                            <button 
+                                onClick={() => window.location.href = 'alocredit.html'}
+                                className="flex items-center gap-2 px-4 py-2 bg-transparent text-slate-400 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all"
+                            >
+                                <Icon name="CreditCard" size={14} /> Alocredit
+                            </button>
+                            <button 
+                                onClick={() => window.location.href = 'krediya.html'}
+                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-md scale-105 transition-all"
+                            >
+                                <Icon name="CreditCard" size={14} /> Krediya
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* PANEL DE CONTROL CENTRAL KREDIYA */}
+                    <div className="w-full max-w-4xl bg-white p-6 rounded-3xl shadow-xl mb-8 print:hidden border-t-[10px] border-emerald-600">
+                        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6">
+                            <div className="flex items-center gap-4">
+                                <img src={companyInfo.logoUrl} alt="Logo" className="h-14 w-auto" />
+                                <div>
+                                    <h2 className="text-xl font-black text-[#2C4C8C] uppercase tracking-tighter italic leading-none">Gestión Soluciones</h2>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Línea Activa: <span className="text-emerald-600">KREDIYA</span></p>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 flex-wrap justify-center md:justify-end">
+                                <button onClick={() => { setShowAffiliateModal(true); setSubmitStatus(null); }} className="flex items-center gap-2 px-4 py-2.5 bg-[#2C4C8C] text-white rounded-xl font-black text-xs shadow-lg hover:bg-black transition-all uppercase tracking-widest">
+                                    <Icon name="UserPlus" size={16} /> Afiliar
+                                </button>
+                                <button onClick={() => setShowPriceModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-xs shadow-lg hover:bg-emerald-700 transition-all uppercase tracking-widest">
+                                    <Icon name="Calculator" size={16} /> Precios
+                                </button>
+                                {/* BOTONES PDF */}
+                                <button onClick={handleGeneratePDF} disabled={isGenerating || !isAutorizacionReady} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating || !isAutorizacionReady ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#2C4C8C] hover:bg-black'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Download" size={16} />} Autorización
+                                </button>
+                                <button onClick={handleGeneratePDFAntifraude} disabled={isGenerating || !isAutorizacionReady} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating || !isAutorizacionReady ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="ShieldCheck" size={16} />} Antifraude
+                                </button>
+                                <button onClick={handleGeneratePDFVitrina} disabled={isGenerating || !isAutorizacionReady} className={`flex items-center gap-2 px-4 py-2.5 ${isGenerating || !isAutorizacionReady ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'} text-white rounded-xl font-black text-xs shadow-lg transition-all uppercase tracking-widest`}>
+                                    {isGenerating ? <Icon name="Loader" size={16} /> : <Icon name="Building2" size={16} />} Vitrina
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* FORMULARIO DE RECOPILACIÓN */}
+                        <div className="bg-emerald-50/40 p-5 rounded-[25px] border border-emerald-100 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div><label className="block text-[10px] font-black text-emerald-800 uppercase mb-1 tracking-widest">Nombre Completo</label><input type="text" placeholder="Ej: Juan Pérez" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 text-sm" value={formData.nombreCliente} onChange={(e) => setFormData({...formData, nombreCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-emerald-800 uppercase mb-1 tracking-widest">Cédula / NIT</label><input type="text" placeholder="No. Documento" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 text-sm" value={formData.cedulaCliente} onChange={(e) => setFormData({...formData, cedulaCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-emerald-800 uppercase mb-1 italic text-emerald-700">Expedida en:</label><input type="text" placeholder="Ciudad" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 text-sm" value={formData.expedicionCedula} onChange={(e) => setFormData({...formData, expedicionCedula: e.target.value})} /></div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-emerald-100 pt-4">
+                                <div><label className="block text-[10px] font-black text-emerald-800 uppercase mb-1 tracking-widest">Dirección de Domicilio</label><input type="text" placeholder="Ej: Calle 1 # 2-3" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 text-sm" value={formData.direccionCliente} onChange={(e) => setFormData({...formData, direccionCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-emerald-800 uppercase mb-1 tracking-widest">Ciudad de Domicilio</label><input type="text" placeholder="Ej: Cartagena" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 text-sm" value={formData.ciudadCliente} onChange={(e) => setFormData({...formData, ciudadCliente: e.target.value})} /></div>
+                                <div><label className="block text-[10px] font-black text-emerald-800 uppercase mb-1 tracking-widest">Teléfono Celular</label><input type="text" placeholder="Ej: 300 123 4567" className="w-full rounded-xl border-2 border-emerald-50 p-3 font-bold shadow-sm outline-none focus:ring-4 focus:ring-emerald-600/10 focus:border-emerald-600 text-sm" value={formData.telefonoCliente} onChange={(e) => setFormData({...formData, telefonoCliente: e.target.value})} /></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {}
+                    {/* MODAL DE AFILIACIÓN */}
+                    {showAffiliateModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-900/90 backdrop-blur-md print:hidden">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-200 border-8 border-white">
+                                <div className="p-6 bg-emerald-600 text-white flex justify-between items-center shrink-0">
+                                    <div className="flex items-center gap-4">
+                                        <Icon name="UserPlus" size={28}/>
+                                        <div>
+                                            <h3 className="text-xl font-black uppercase tracking-tighter leading-none italic">Afiliar Nuevo Aliado</h3>
+                                            <p className="text-[10px] text-emerald-100 uppercase tracking-widest mt-1">Conexión con Retail B - KREDIYA</p>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setShowAffiliateModal(false)} className="hover:bg-white/20 p-2 rounded-full transition-all"><Icon name="X" size={28}/></button>
+                                </div>
+                                
+                                <div id="scroll-afiliar" className="p-6 bg-slate-50 flex-1 overflow-y-auto custom-scroll relative">
+                                    {submitStatus === 'loading' ? (
+                                        <div className="py-20 flex flex-col items-center justify-center text-emerald-600">
+                                            <Icon name="Loader" size={64} className="mb-6" />
+                                            <h4 className="text-xl font-black uppercase tracking-widest">Enviando Documentos...</h4>
+                                            <p className="text-sm font-bold text-gray-500 mt-2 text-center">Creando carpeta en Drive y guardando datos para Krediya.</p>
+                                        </div>
+                                    ) : submitStatus === 'success' ? (
+                                        <div className="py-20 flex flex-col items-center justify-center text-green-600">
+                                            <Icon name="CheckCircle2" size={64} className="mb-6" />
+                                            <h4 className="text-2xl font-black uppercase tracking-widest text-emerald-800">¡Afiliación Completada!</h4>
+                                            <p className="text-sm font-bold text-gray-500 mt-2 text-center max-w-md">La tienda, el asesor y sus documentos han sido vinculados correctamente a tu base de datos de Krediya.</p>
+                                        </div>
+                                    ) : (
+                                        <form id="afiliar-form" onSubmit={handleAffiliateSubmit} className="space-y-8 pb-4">
+                                            <div>
+                                                <h4 className="text-[11px] font-black text-emerald-800 uppercase tracking-widest border-b-2 border-emerald-100 pb-2 mb-4">1. Datos de la Tienda Comercial</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Nombre de la Tienda</label>
+                                                        <input required type="text" placeholder="Ej: Celulares VIP" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-emerald-500 text-sm bg-white" value={affiliateForm.tienda} onChange={(e) => setAffiliateForm({...affiliateForm, tienda: e.target.value})} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Correo de la Tienda</label>
+                                                        <input required type="email" placeholder="tienda@correo.com" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-emerald-500 text-sm bg-white" value={affiliateForm.emailTienda} onChange={(e) => setAffiliateForm({...affiliateForm, emailTienda: e.target.value})} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Teléfono de la Tienda</label>
+                                                        <input required type="text" placeholder="300 000 0000" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-emerald-500 text-sm bg-white" value={affiliateForm.telefonoTienda} onChange={(e) => setAffiliateForm({...affiliateForm, telefonoTienda: e.target.value})} />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <h4 className="text-[11px] font-black text-emerald-800 uppercase tracking-widest border-b-2 border-emerald-100 pb-2 mb-4">2. Datos del Asesor / Vendedor Encargado</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Nombre Asesor</label>
+                                                        <input required type="text" placeholder="Ej: Maria Lopez" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-emerald-500 text-sm bg-white" value={affiliateForm.nombreVendedor} onChange={(e) => setAffiliateForm({...affiliateForm, nombreVendedor: e.target.value})} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Correo Asesor</label>
+                                                        <input required type="email" placeholder="asesor@correo.com" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-emerald-500 text-sm bg-white" value={affiliateForm.emailVendedor} onChange={(e) => setAffiliateForm({...affiliateForm, emailVendedor: e.target.value})} />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Teléfono / Celular</label>
+                                                        <input required type="text" placeholder="300 123 4567" className="w-full rounded-xl border-2 border-slate-200 p-3.5 font-bold shadow-sm outline-none focus:border-emerald-500 text-sm bg-white" value={affiliateForm.telefonoVendedor} onChange={(e) => setAffiliateForm({...affiliateForm, telefonoVendedor: e.target.value})} />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <h4 className="text-[11px] font-black text-emerald-800 uppercase tracking-widest border-b-2 border-emerald-100 pb-2 mb-4">3. Documentación Obligatoria</h4>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                                    {[
+                                                        { id: 'camara', title: 'C. de Comercio', subtitle: 'Impresión < 30 días', accept: '.pdf,image/*' },
+                                                        { id: 'autorizacion', title: 'Autorización Terc.', subtitle: 'Firmada y autenticada', accept: '.pdf,image/*' },
+                                                        { id: 'cedulaFrontal', title: 'Cédula RL (Frente)', subtitle: 'Representante Legal', accept: '.pdf,image/*' },
+                                                        { id: 'cedulaReversa', title: 'Cédula RL (Reverso)', subtitle: 'Representante Legal', accept: '.pdf,image/*' },
+                                                        { id: 'foto1', title: 'Foto Fachada', subtitle: 'Exterior c/ Nomenclatura', accept: 'image/*,.pdf' },
+                                                        { id: 'video', title: 'Video 360°', subtitle: 'Desde fachada hasta interior', accept: 'video/*' }
+                                                    ].map((doc) => (
+                                                        <label key={doc.id} className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all bg-white ${affiliateFiles[doc.id] ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 hover:bg-slate-100'}`}>
+                                                            {affiliateFiles[doc.id] ? <Icon name="CheckCircle2" size={28} className="text-emerald-500 mb-2"/> : <Icon name="Upload" size={28} className="text-gray-300 mb-2"/>}
+                                                            <span className={`text-[11px] font-black uppercase text-center ${affiliateFiles[doc.id] ? 'text-emerald-600' : 'text-emerald-800'}`}>{doc.title}</span>
+                                                            <span className="text-[9px] text-gray-500 font-bold text-center mt-1 leading-tight">{doc.subtitle}</span>
+                                                            <input type="file" className="hidden" accept={doc.accept} onChange={(e) => handleFileChange(e, doc.id)} required />
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-[3px] shadow-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-3">
+                                                <Icon name="Upload" size={20} /> Registrar Aliado Krediya
+                                            </button>
+                                        </form>
+                                    )}
+                                </div>
+
+                                <div className="p-4 bg-white border-t flex justify-between items-center shrink-0">
+                                    <div className="flex gap-2">
+                                        <button onClick={() => scrollToTop('scroll-afiliar')} className="p-2 bg-slate-100 text-emerald-800 rounded-xl hover:bg-slate-200 transition-colors shadow-sm"><Icon name="ChevronUp" size={20}/></button>
+                                        <button onClick={() => scrollToBottom('scroll-afiliar')} className="p-2 bg-slate-100 text-emerald-800 rounded-xl hover:bg-slate-200 transition-colors shadow-sm"><Icon name="ChevronDown" size={20}/></button>
+                                    </div>
+                                    <button onClick={() => setShowAffiliateModal(false)} className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-black text-[11px] hover:bg-gray-200 transition-all uppercase tracking-[2px]">Cerrar Panel</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {}
+                    {/* MODAL DE PRECIOS KREDIYA */}
+                    {showPriceModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-900/90 backdrop-blur-md print:hidden">
+                            <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden animate-in zoom-in duration-300 border-8 border-white">
+                                <div className="p-6 bg-emerald-600 text-white flex justify-between items-center shrink-0">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter leading-none">Lista de Rentabilidad - KREDIYA</h3>
+                                    <div className="flex gap-4 items-center">
+                                        {isLoadingPrices && <span className="text-xs font-bold flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full"><Icon name="Loader" size={14}/> Conectando a Sheets...</span>}
+                                        <button onClick={() => setShowPriceModal(false)} className="hover:bg-white/20 p-2 rounded-full transition-all"><Icon name="X" size={28}/></button>
+                                    </div>
+                                </div>
+                                <div className="p-5 bg-slate-50 border-b flex flex-col md:flex-row gap-4 shrink-0">
+                                    <div className="relative flex-1 group"><div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600"><Icon name="Search" size={18} /></div><input type="text" placeholder="Buscar modelo o marca..." className="w-full pl-12 pr-6 py-3 rounded-2xl border-2 border-slate-200 font-bold outline-none focus:border-emerald-600 bg-white" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+                                    <div className="relative w-full md:w-64">
+                                        <select className="w-full pl-6 pr-10 py-3 rounded-2xl border-2 border-slate-200 font-black text-[11px] uppercase tracking-widest outline-none focus:border-emerald-600 bg-white appearance-none cursor-pointer text-emerald-800" value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)}>
+                                            {brandsList.map(brand => (<option key={brand} value={brand}>{brand}</option>))}
+                                        </select>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"><Icon name="ChevronDown" size={16} /></div>
+                                    </div>
+                                </div>
+                                
+                                <div id="scroll-precios" className="flex-1 overflow-auto custom-scroll bg-white px-4">
+                                    <table className="min-w-full divide-y divide-slate-100">
+                                        <thead className="sticky top-0 bg-white z-10 text-[9px] font-black text-slate-400 uppercase tracking-widest shadow-sm">
+                                            <tr><th className="px-4 py-4 text-left">Referencia</th><th className="px-2 py-4">Costo</th><th className="px-2 py-4">Venta</th><th className="px-4 py-4 bg-emerald-50 text-emerald-600">Inicial plataforma</th><th className="px-2 py-4 text-blue-600">Recibe Tienda</th><th className="px-2 py-4 text-emerald-800">Te Consignamos</th><th className="px-4 py-4 bg-emerald-800 text-white rounded-tr-lg">Comisión</th></tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 font-bold text-[11px] uppercase">
+                                            {filteredData.map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-emerald-50/30 transition-all">
+                                                    <td className="px-4 py-4">
+                                                        <span className="text-[9px] text-emerald-500 block font-black">{item.brand}</span>
+                                                        {item.ref}
+                                                    </td>
+                                                    <td className="px-2 py-4 text-center text-slate-400 italic">${formatRoundToThousand(item.cost)}</td>
+                                                    <td className="px-2 py-4 text-center">${formatRoundToThousand(item.sale)}</td>
+                                                    <td className="px-4 py-4 text-center text-emerald-600 bg-emerald-50/30">${formatRoundToThousand(item.initial)}</td>
+                                                    <td className="px-2 py-4 text-center text-blue-600">${formatRoundToThousand(item.receive)}</td>
+                                                    {/* Calculo Mantenido Idéntico al Original de Payjoy */}
+                                                    <td className="px-2 py-4 text-center text-emerald-800 font-black bg-emerald-50/50">${formatRoundToThousand(parseCurrency(item.cost) - parseCurrency(item.return))}</td>
+                                                    <td className="px-4 py-4 text-center bg-emerald-800/5">
+                                                        <span className="text-base font-black text-emerald-800 italic">${formatRoundToThousand(item.commTienda)}</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div className="p-4 bg-white border-t flex justify-between items-center shrink-0">
+                                    <div className="flex gap-2">
+                                        <button onClick={() => scrollToTop('scroll-precios')} className="p-2 bg-slate-100 text-emerald-800 rounded-xl hover:bg-slate-200 transition-colors shadow-sm"><Icon name="ChevronUp" size={20}/></button>
+                                        <button onClick={() => scrollToBottom('scroll-precios')} className="p-2 bg-slate-100 text-emerald-800 rounded-xl hover:bg-slate-200 transition-colors shadow-sm"><Icon name="ChevronDown" size={20}/></button>
+                                    </div>
+                                    <button onClick={() => setShowPriceModal(false)} className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-black text-[11px] shadow-lg hover:bg-emerald-700 transition-all uppercase tracking-[2px]">Cerrar Precios</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {}
+                    {/* ============================== */}
+                    {/* MENSAJE DE ESPERA DOCUMENTOS   */}
+                    {/* ============================== */}
+                    {!isAutorizacionReady && (
+                        <div className="w-full max-w-4xl bg-white p-10 rounded-3xl shadow-sm border-2 border-dashed border-gray-300 text-center mb-8 flex flex-col items-center justify-center print:hidden">
+                            <Icon name="ShieldCheck" size={48} className="text-gray-300 mb-4" />
+                            <h3 className="text-lg font-black text-gray-500 uppercase tracking-widest">Documentos Ocultos</h3>
+                            <p className="text-sm font-bold text-gray-400 mt-2 max-w-md">Complete Nombre, Cédula y Expedición en el formulario superior para visualizar y descargar los contratos y autorizaciones.</p>
+                        </div>
+                    )}
+
+                    {/* ============================== */}
+                    {/* CARTA 1: AUTORIZACIÓN BANCARIA */}
+                    {/* ============================== */}
+                    {isAutorizacionReady && (
+                        <div id="pdf-content" className="letter-size shadow-2xl border-t-[10px] border-[#2C4C8C] mb-8">
+                            <header className="flex items-center justify-between border-b-2 border-slate-100 pb-3 mb-6 w-full">
+                                <img src={companyInfo.logoUrl} alt="Logo" className="h-24 w-auto object-contain" />
+                                <div className="text-right font-sans shrink-0">
+                                    <h1 className="text-xl font-black text-[#2C4C8C] uppercase italic leading-none tracking-tighter">{companyInfo.name}</h1>
+                                    <p className="text-sm font-bold text-gray-700 tracking-widest uppercase mt-1">NIT: {companyInfo.nit}</p>
+                                    <div className="flex flex-col gap-0.5 mt-2 text-[7.5pt] text-gray-400 font-bold uppercase tracking-widest">
+                                        <span className="flex items-center justify-end gap-1.5"><Icon name="MapPin" size={10} className="text-[#67B74D]"/> {companyInfo.city}</span>
+                                        <span className="flex items-center justify-end gap-1.5"><Icon name="Phone" size={10} className="text-[#67B74D]"/> {companyInfo.phone}</span>
+                                        <span className="lowercase italic font-normal">{companyInfo.email}</span>
+                                    </div>
+                                </div>
+                            </header>
+
+                            <div className="mb-6 font-sans font-bold text-right italic uppercase tracking-tighter text-[9pt]">Cartagena D.T. y C., {formData.fecha}</div>
+
+                            <div className="mb-6 space-y-1 font-sans">
+                                <p className="text-[10px] font-black text-[#2C4C8C] uppercase border-b border-[#67B74D] w-fit mb-2 pb-0.5 italic tracking-widest">Dirigido a:</p>
+                                <p className="text-lg font-black uppercase tracking-tighter text-gray-900 leading-none">KREDIYA COLOMBIA S.A.S.</p>
+                                <p className="text-[9pt] font-bold text-[#2C4C8C] italic opacity-80 uppercase tracking-tighter">Gestión de Cartera y Dispersión de Pagos</p>
+                            </div>
+
+                            <div className="bg-[#F1F8EE] p-5 border-l-[8px] border-[#67B74D] mb-6 rounded-r-xl">
+                                <p className="font-black text-[9.5pt] text-[#2C4C8C] uppercase italic leading-tight">
+                                    Asunto: Autorización expresa de dispersión de recaudos a cuenta jurídica de Soluciones Efectivas CTG S.A.S.
+                                </p>
+                            </div>
+
+                            <div className="text-justify leading-relaxed text-[10.5pt] space-y-4 font-sans flex-1">
+                                <p>Cordial saludo,</p>
+                                <p>
+                                    Yo, <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#2C4C8C] uppercase italic tracking-tighter">{formData.nombreCliente || "_________________________________________"}</span>, 
+                                    con C.C./NIT No. <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1">{formData.cedulaCliente || "_________________"}</span> expedida en 
+                                    <span className="font-black border-b-2 border-[#2C4C8C]/20 px-1 text-[#67B74D] italic tracking-tight"> {formData.expedicionCedula || "_______________"}</span>, 
+                                    actuando en mi calidad de aliado comercial de la sociedad jurídica <span className="font-black uppercase text-[#2C4C8C] tracking-tighter italic">{companyInfo.name}</span>, 
+                                    autorizo de manera voluntaria, expresa e irrevocable a <span className="font-black uppercase text-emerald-700">KREDIYA COLOMBIA S.A.S.</span> para que la totalidad de los recursos económicos generados sean consignados en la siguiente cuenta corporativa oficial:
+                                </p>
+                                
+                                <div className="max-w-md mx-auto border border-slate-200 rounded-2xl overflow-hidden shadow-sm my-4 bg-white">
+                                    <div className="bg-slate-50 py-1.5 text-center text-[7pt] font-black uppercase text-slate-500 tracking-[3px] border-b">Detalles de Transferencia</div>
+                                    <div className="p-4 space-y-1.5 text-[9pt] font-bold">
+                                        <div className="flex justify-between border-b pb-0.5 text-[7.5pt] uppercase text-gray-400 font-black"><span>Beneficiario</span><span className="text-[#2C4C8C] uppercase tracking-tighter italic">{companyInfo.name}</span></div>
+                                        <div className="flex justify-between border-b pb-0.5 text-[7.5pt] uppercase text-gray-400 font-black"><span>NIT Jurídico</span><span className="text-gray-800">{companyInfo.nit}</span></div>
+                                        <div className="flex justify-between items-center pt-1.5">
+                                            <div className="flex flex-col">
+                                                <span className="text-[6.5pt] uppercase text-gray-400 font-black">Entidad y Tipo</span>
+                                                <span className="text-gray-900 italic font-medium uppercase text-[8pt]">Bancolombia - {companyInfo.tipoCuenta}</span>
+                                            </div>
+                                            <span className="text-lg font-black text-[#2C4C8C] tracking-[2px] font-mono leading-none italic uppercase">No. {companyInfo.numeroCuenta}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p>
+                                    El abono realizado en la cuenta anteriormente descrita constituirá prueba fehaciente de pago y extinción total de las obligaciones monetarias por parte de la entidad pagadora hacia mi persona.
+                                </p>
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-slate-50">
+                                <div className="flex justify-between items-end font-sans mb-4">
+                                    <div className="w-1/2">
+                                        <div className="w-full border-b-4 border-[#2C4C8C] mb-3"></div>
+                                        <p className="font-black text-[#2C4C8C] uppercase text-[10pt] tracking-tighter leading-none italic">{formData.nombreCliente || "Firma del Aliado"}</p>
+                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C./NIT No. {formData.cedulaCliente || "__________________"}</p>
+                                    </div>
+                                    <div className="w-22 h-28 border-2 border-slate-100 rounded-[20px] flex flex-col items-center justify-end text-[6.5pt] text-slate-300 p-3 font-black bg-slate-50 italic border-dotted">
+                                        <div className="w-full border-t border-slate-200 pt-1 text-center uppercase tracking-widest">Huella</div>
+                                    </div>
+                                </div>
+
+                                <footer className="border-t-2 border-[#67B74D] pt-4 pb-2 flex justify-between text-[8pt] text-gray-400 font-black uppercase font-sans tracking-widest italic leading-tight">
+                                    <div className="italic tracking-tighter text-blue-900 leading-none">
+                                        {companyInfo.name} <br/>
+                                        <span className="text-[#67B74D] lowercase font-bold tracking-normal italic">soluciones a crédito</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <p>Registro de Alianzas Línea Krediya</p>
+                                        <p className="text-[6.5pt] font-bold text-slate-300 uppercase tracking-tighter leading-none">Soluciones Efectivas CTG</p>
+                                    </div>
+                                </footer>
+                            </div>
+                        </div>
+                    )}
+
+
+                    {/* ============================== */}
+                    {/* CARTA 2: ANTIFRAUDE KREDIYA    */}
+                    {/* ============================== */}
+                    {isAutorizacionReady && (
+                        <div id="pdf-content-antifraude" className="letter-size shadow-2xl border-t-[10px] border-emerald-600 bg-white mb-8">
+                            <div className="flex justify-between items-start mb-8">
+                                <div>
+                                    <h2 className="text-xl font-black text-gray-900 tracking-tighter">CARTA ANTIFRAUDE</h2>
+                                    <p className="mt-2 text-xs font-bold text-gray-800 leading-tight">SEÑORES<br />KREDIYA COLOMBIA S.A.S<br />CIUDAD</p>
+                                </div>
+                                <h1 className="text-4xl font-black text-emerald-600 italic tracking-tighter">KREDIYA</h1>
+                            </div>
+
+                            <div className="text-justify text-[9pt] leading-relaxed space-y-4 font-sans flex-1">
+                                <p>
+                                    YO, <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.nombreCliente || "_________________________________________"}</span>, 
+                                    DE <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.expedicionCedula || "_______________"}</span>, 
+                                    IDENTIFICADO CON CEDULA DE CIUDADANIA # <span className="font-black border-b border-gray-400 px-2">{formData.cedulaCliente || "_________________"}</span> 
+                                    Y CON DOMICILIO EN (DIRECCION EXАСТА) <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.direccionCliente || "_________________________________"}</span> 
+                                    DE LA CIUDAD DE <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.ciudadCliente || "_______________"}</span> 
+                                    Y CON NUMERO CELULAR <span className="font-black border-b border-gray-400 px-2">{formData.telefonoCliente || "_______________"}</span> 
+                                    ENTIENDO QUE SOY EL ÚNICO RESPONSABLE DE LA COMPRA DEL EQUIPO TERMINAL MÓVIL Y LO ESTOY ADQUIRIENDO BAJO MI ÚNICA VOLUNTAD, RESPONSABILIDAD Y CONSENTIMIENTO.
+                                </p>
+                                <p>
+                                    ENTIENDO QUE CONTRACTUALMENTE NO PUEDO VENDER EL CELULAR QUE KREDIYA ME ESTÁ FINANCIANDO HASTA QUE COMPLETE EL TOTAL DE LAS CUOTAS A PAGAR. ENTIENDO Y ACEPTO QUE LA CONDICIONES DEL CRÉDITO EXIGEN QUE A MI NUEVO CELULAR FINANCIADO POR KREDIYA SE LE INSTALE UNA APLICACIÓN DE SEGURIDAD QUE PERMITE INHABILITAR EL CELULAR EN CASO DE NO PAGO. QUE UNA VEZ PAGADAS TODAS MIS CUOTAS EL CELULAR QUEDARA LIBRE Y SOLO AHI, PODRE DISPONER DE ÉL, UNA VEZ LA APLICACIÓN DE SEGURIDAD HAYA SIDO DESINSTALADA.
+                                </p>
+                                <p>
+                                    ENTIENDO QUE CUALQUIER INTENTO DE MANIPULAR ESTA APLICACIÓN, ES PROHIBIDO CONTRACTUALMENTE Y PODRÍA SER CONSIDERADO UN DELITO. ENTIENDO QUE ESTE DELITO ESTÁ TIPIFICADO EN CÓDIGO PENAL COMO "VIOLACION AL SISTEMA INFORMÁTICO" POR EL CUAL TENDRÉ QUE ACEPTAR LAS CONSECUENCIAS PENALES Y RESPONDER ANTE LA FISCALÍA POR ESTOS ACTOS DELICTIVOS.
+                                </p>
+                                <p>
+                                    DOY CONSTANCIA QUE NO HE SIDO CONTACTADO POR UN TERCERO, NI ESTOY ACTUANDO COMO INTERMEDIARIO POR UN TERCERO, PARA TRAMITAR ESTE CRÉDITO Y SOY CONSCIENTE Y RESPONSABLE DE QUE LAS CONSECUENCIAS DE INCURRIR EN ESTE ACTO ESTÁN CONSIDERADAS COMO "CONCIERTO PARA DELINQUIR" TIPIFICADO EN EL CÓDIGO PENAL COLOMBIANO ARTÍCULO 340 Y QUE CUANDO VARIAS PERSONAS SE CONCIERTEN CON EL FIN DE COMETER DELITOS, CADA UNA DE ELLAS PODRÍA SER PENADA, POR ESA SOLA CONDUCTA, CON PRISIÓN DE CUARENTA Y OCHO (48) A CIENTO OCHO (108) MESES.
+                                </p>
+                                <p>
+                                    CONSECUENTEMENTE COMETIENDO TAMBIÉN EL DELITO DE "ESTAFA"; ARTÍCULO 248 DEL CÓDIGO PENAL, PARA LOS QUE, CON ÁNIMO DE LUCRO, UTILIZAN EL ENGAÑO PARA PRODUCIR ERROR EN OTRO (KREDIYA COLOMBIA S.A.S.) INDUCIÉNDOLO A REALIZAR UN ACTO EN DISPOSICIÓN EN PERJUICIO PROPIO O AJENO. LA PENA PREVISTA PARA EL DELITO DE ESTAFA OSCILA ENTRE SEIS (6) MESES Y TREINTA Y SEIS MESES (36) DE PRISIÓN.
+                                </p>
+                            </div>
+
+                            <div className="mt-6 pt-4 text-[9pt] font-sans">
+                                <p className="mb-5 font-bold">ATENTAMENTE,</p>
+                                <div className="flex justify-between items-start">
+                                    <div className="w-2/3 space-y-4">
+                                        <div>
+                                            <span className="font-bold inline-block w-20">NOMBRE:</span> <span className="border-b border-gray-400 inline-block w-[80%] uppercase">{formData.nombreCliente}</span>
+                                        </div>
+                                        <div>
+                                            <span className="font-bold inline-block w-20">CÉDULA:</span> <span className="border-b border-gray-400 inline-block w-[80%]">{formData.cedulaCliente}</span>
+                                        </div>
+                                        <div>
+                                            <span className="font-bold inline-block w-20">DIRECCIÓN:</span> <span className="border-b border-gray-400 inline-block w-[80%] uppercase">{formData.direccionCliente}</span>
+                                        </div>
+                                    </div>
+                                    <div className="w-24 h-28 border-2 border-gray-300 flex flex-col items-center justify-end text-[7.5pt] text-gray-500 p-2 font-bold shrink-0">
+                                        <div className="w-full border-t border-gray-300 pt-1 text-center uppercase tracking-wider">Índice Derecho</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 font-sans shrink-0">
+                                <h3 className="font-bold text-[9pt] mb-2 uppercase tracking-widest bg-gray-100 p-1.5 text-center border border-gray-400">Referencias</h3>
+                                <table className="w-full border-collapse border border-gray-400 text-[8pt]">
+                                    <thead>
+                                        <tr className="bg-gray-50">
+                                            <th className="border border-gray-400 p-2 text-left w-1/3">Nombre</th>
+                                            <th className="border border-gray-400 p-2 text-left w-1/3">Dirección</th>
+                                            <th className="border border-gray-400 p-2 text-left w-1/6">Teléfono</th>
+                                            <th className="border border-gray-400 p-2 text-left w-1/6">Parentesco</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                        <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                        <tr><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td><td className="border border-gray-400 p-3.5"></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ============================== */}
+                    {/* CARTA 3: CONTRATO DE COMODATO VITRINA */}
+                    {/* ============================== */}
+                    {isAutorizacionReady && (
+                        <div id="pdf-content-vitrina" className="letter-size shadow-2xl border-t-[10px] border-[#67B74D] bg-white mb-8">
+                            <header className="flex items-center justify-between border-b-2 border-slate-100 pb-3 mb-6 w-full">
+                                <img src={companyInfo.logoUrl} alt="Logo" className="h-24 w-auto object-contain" />
+                                <div className="text-right font-sans shrink-0">
+                                    <h1 className="text-xl font-black text-[#2C4C8C] uppercase italic leading-none tracking-tighter">{companyInfo.name}</h1>
+                                    <p className="text-sm font-bold text-gray-700 tracking-widest uppercase mt-1">NIT: {companyInfo.nit}</p>
+                                </div>
+                            </header>
+
+                            <h2 className="text-lg font-black text-center text-[#2C4C8C] uppercase tracking-tighter mb-6">CONTRATO DE COMODATO DE EQUIPO DE EXHIBICIÓN Y PUNTO DE EXPERIENCIA</h2>
+
+                            <div className="text-justify text-[9pt] leading-relaxed space-y-4 font-sans flex-1">
+                                <p>
+                                    <strong>ENTRE LOS SUSCRITOS: SOLUCIONES EFECTIVAS CTG SAS</strong>, identificada con NIT 901831921-2, representada legalmente por YOR MARIBEL RODRIGUEZ GOMEZ, identificada con C.C. 30.878.719, en adelante denominada el <strong>COMODANTE</strong>.
+                                </p>
+                                <p>
+                                    <strong>Y:</strong> <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.nombreCliente || "_________________________________________"}</span>, identificada con C.C./NIT <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.cedulaCliente || "_________________"}</span> expedida en <span className="font-black border-b border-gray-400 px-2 uppercase">{formData.expedicionCedula || "_______________"}</span>, en representación del establecimiento de comercio, en adelante denominada el <strong>COMODATARIO</strong>.
+                                </p>
+
+                                <p className="font-bold mt-4">CLÁUSULAS:</p>
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li><strong>OBJETO Y ALCANCE NACIONAL:</strong> El COMODANTE entrega al COMODATARIO, a título de préstamo de uso gratuito, una Vitrina Premium (Punto de Experiencia) para ser instalada en su establecimiento comercial, con el fin de promover los servicios financieros de KrediYA.</li>
+                                    <li><strong>VALOR DEL BIEN:</strong> Para efectos de seguros y responsabilidades legales, las partes valoran la vitrina en la suma de 1.270.000 COP más IVA.</li>
+                                    <li><strong>PRODUCTIVIDAD MÍNIMA REQUERIDA:</strong> El COMODATARIO se compromete a mantener un ritmo de ventas mínimo de siete (7) equipos mensuales financiados a través de la plataforma. El incumplimiento de esta meta de ventas por dos meses consecutivos facultará al COMODANTE para retirar la vitrina de manera inmediata.</li>
+                                    <li><strong>INDICADORES DE CALIDAD DE CARTERA:</strong> La permanencia del equipo está sujeta a la calidad del recaudo. El COMODATARIO debe cumplir estrictamente con los siguientes límites:
+                                        <ul className="list-decimal pl-5 mt-1">
+                                            <li>FPD 3 (Mora en el primer pago a 3 días) menor al 20%.</li>
+                                            <li>FPD 7 menor al 7%.</li>
+                                            <li>FPD 15 menor al 7%.</li>
+                                            <li>Cartera General menor al 20%.</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>RESPONSABILIDAD INTEGRAL:</strong> El COMODATARIO asume la responsabilidad del 100% sobre el cuidado, custodia y vigilancia de la vitrina y de todos los teléfonos móviles o dispositivos exhibidos en ella. El COMODANTE no responderá por hurtos, daños o vandalismo dentro del establecimiento aliado.</li>
+                                    <li><strong>SUPERVISIÓN TECNOLÓGICA:</strong> El COMODATARIO acepta el monitoreo mediante GPS y geolocalización (vía CityTroops), así como la auditoría mediante evidencia fotográfica en tiempo real.</li>
+                                </ul>
+                            </div>
+
+                            <div className="mt-8 pt-4 border-t border-slate-50">
+                                <div className="flex justify-between items-end font-sans mb-4">
+                                    <div className="w-1/2">
+                                        <div className="w-full border-b-4 border-[#2C4C8C] mb-3"></div>
+                                        <p className="font-black text-[#2C4C8C] uppercase text-[10pt] tracking-tighter leading-none italic">{formData.nombreCliente || "Firma del COMODATARIO"}</p>
+                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C./NIT No. {formData.cedulaCliente || "__________________"}</p>
+                                    </div>
+                                    <div className="w-1/2 ml-4 text-right">
+                                        <div className="w-full border-b-4 border-[#67B74D] mb-3"></div>
+                                        <p className="font-black text-[#67B74D] uppercase text-[10pt] tracking-tighter leading-none italic">YOR MARIBEL RODRIGUEZ GOMEZ</p>
+                                        <p className="text-[9pt] font-bold text-gray-400 uppercase tracking-widest mt-1">C.C. 30.878.719</p>
+                                        <p className="text-[8pt] font-bold text-gray-400 uppercase tracking-widest mt-1">Representante Legal COMODANTE</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
