@@ -6,6 +6,13 @@
   <title>Soluciones Efectivas CTG | Gestión empresarial V2.108</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- React & ReactDOM (Production) -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <!-- Babel para JSX (VERSIÓN FIJADA PARA EVITAR ERROR DE IMPORT) -->
+  <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+  
   <style>
     /* --- FUENTE CORPORATIVA --- */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
@@ -49,6 +56,7 @@
     .modal { z-index: 5000; }
     #mod-confirm { z-index: 6000; }
     #mod-precios { z-index: 7000; }
+    #mod-qr { z-index: 8000; }
     #toast-container { z-index: 100000; }
     #bg-sync-indicator { z-index: 4000; }
 
@@ -120,7 +128,7 @@
 
     .ext-card h3 { font-size: 1.1rem; font-weight: 900; margin-bottom: 0.75rem; color: var(--gets-dark); text-transform: uppercase; }
     .ext-card p { font-size: 0.8rem; color: #64748b; margin-bottom: 1.5rem; flex-grow: 1; line-height: 1.4; }
-    .btn-ext { border-radius: 12px; font-weight: 800; width: 100%; height: 50px; border: none; cursor: pointer; color: white !important; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none !important; transition: 0.3s; box-shadow: 0 8px 15px -3px rgba(0,0,0,0.1); }
+    .btn-ext { border-radius: 12px; font-weight: 800; height: 50px; border: none; cursor: pointer; color: white !important; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none !important; transition: 0.3s; box-shadow: 0 8px 15px -3px rgba(0,0,0,0.1); }
     .btn-ext:hover { transform: translateY(-2px); filter: brightness(1.1); color: white; }
 
     .btn-brilla { background: var(--color-brilla); }
@@ -246,15 +254,86 @@
       <button id="btn-main-action" class="button btn-modern is-save is-fullwidth is-medium" onclick="validateAndSave()"><i data-lucide="send" style="width: 18px; color: white !important;"></i> Enviar y Registrar</button>
     </div>
 
-    <!-- CRÉDITO EN LÍNEA -->
+    <!-- CRÉDITO EN LÍNEA CON BOTONES QR -->
     <div id="v-ext" class="section-view">
         <div class="columns is-multiline">
-            <div class="column is-6-tablet is-4-desktop"><div class="ext-card brilla"><h3>Cupo Brilla</h3><p>Usa tu Cupo Brilla Surtigas para tecnología y hogar.<br><br><span style="font-size: 0.75rem; opacity: 0.9;"><strong>Requisitos:</strong> Solo necesitas estar al día en tu factura del gas, los dos últimos recibos y tu cédula de ciudadanía.</span></p><button class="btn-ext btn-brilla" onclick="sendAssessorWhatsApp('Brilla Surtigas')">🏠 Contacta un asesor</button></div></div>
-            <div class="column is-6-tablet is-4-desktop"><div class="ext-card sumas"><h3>Sumas Pay</h3><p>Financiación 100% digital y sin papeles para tecnología.</p><a href="https://solicitud.mundosumas.com/v2/home/mai" target="_blank" class="btn-ext btn-sumas">📲 Autogestiona aquí</a></div></div>
-            <div class="column is-6-tablet is-4-desktop"><div class="ext-card bogota"><h3>Banco de Bogotá</h3><p>Crédito fácil y sin trámites físicos. Respuesta inmediata.</p><a href="https://slm.bancodebogota.com/lyzz2kdc" target="_blank" class="btn-ext btn-bogota">🏦 Iniciar solicitud</a></div></div>
-            <div class="column is-6-tablet is-4-desktop"><div class="ext-card addi"><h3>Addi</h3><p>Compra lo que quieras y paga después. Pregunta por las cuotas con 0% de interés.</p><a href="https://preapproval.addi.com/?allySlug=addi-preapproval" target="_blank" class="btn-ext btn-addi">🛍️ Ver pre-aprobado</a></div></div>
-            <div class="column is-6-tablet is-4-desktop"><div class="ext-card siste"><h3>Sistecredito</h3><p>Activa tu crédito personal y llévate lo que necesites ahora mismo.</p><a href="https://personas.credinet.co/login" target="_blank" class="btn-ext btn-siste">🚀 ¡Lo quiero ya!</a></div></div>
-            <div class="column is-6-tablet is-4-desktop"><div class="ext-card vanti"><h3 style="color:var(--color-vanti)">Vanti Listo</h3><p>Financia tus proyectos a través de tu factura de gas natural Vanti.</p><a href="https://autogestion.vantilisto.com/v3/opening-opportunity" target="_blank" class="btn-ext btn-vanti"><i data-lucide="zap"></i> Solicitar ahora</a></div></div>
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card brilla">
+                    <h3>Cupo Brilla</h3>
+                    <p>Usa tu Cupo Brilla Surtigas para tecnología y hogar.<br><br><span style="font-size: 0.75rem; opacity: 0.9;"><strong>Requisitos:</strong> Solo necesitas estar al día en tu factura del gas, los dos últimos recibos y tu cédula de ciudadanía.</span></p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <button class="btn-ext btn-brilla" onclick="sendAssessorWhatsApp('Brilla Surtigas')" style="flex: 1;">🏠 Contacta un asesor</button>
+                        <button class="btn-ext" style="flex: none; width: 50px; background: rgba(0,0,0,0.05); color: #64748b !important; border: 1px solid #e2e8f0; box-shadow: none;" onclick="openQR('https://wa.me/?text=' + encodeURIComponent('Hola, quisiera contactar a un asesor de Soluciones Efectivas CTG para solicitar información sobre el crédito con Brilla Surtigas.'), 'Cupo Brilla')" title="Mostrar Código QR">
+                            <i data-lucide="qr-code"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card sumas">
+                    <h3>Sumas Pay</h3>
+                    <p>Financiación 100% digital y sin papeles para tecnología.</p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <a href="https://solicitud.mundosumas.com/v2/home/mai" target="_blank" class="btn-ext btn-sumas" style="flex: 1;">📲 Autogestiona aquí</a>
+                        <button class="btn-ext" style="flex: none; width: 50px; background: rgba(0,0,0,0.05); color: #64748b !important; border: 1px solid #e2e8f0; box-shadow: none;" onclick="openQR('https://solicitud.mundosumas.com/v2/home/mai', 'Sumas Pay')" title="Mostrar Código QR">
+                            <i data-lucide="qr-code"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card bogota">
+                    <h3>Banco de Bogotá</h3>
+                    <p>Crédito fácil y sin trámites físicos. Respuesta inmediata.</p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <a href="https://slm.bancodebogota.com/lyzz2kdc" target="_blank" class="btn-ext btn-bogota" style="flex: 1;">🏦 Iniciar solicitud</a>
+                        <button class="btn-ext" style="flex: none; width: 50px; background: rgba(0,0,0,0.05); color: #64748b !important; border: 1px solid #e2e8f0; box-shadow: none;" onclick="openQR('https://slm.bancodebogota.com/lyzz2kdc', 'Banco de Bogotá')" title="Mostrar Código QR">
+                            <i data-lucide="qr-code"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card addi">
+                    <h3>Addi</h3>
+                    <p>Compra lo que quieras y paga después. Pregunta por las cuotas con 0% de interés.</p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <a href="https://preapproval.addi.com/?allySlug=addi-preapproval" target="_blank" class="btn-ext btn-addi" style="flex: 1;">🛍️ Ver pre-aprobado</a>
+                        <button class="btn-ext" style="flex: none; width: 50px; background: rgba(0,0,0,0.05); color: #64748b !important; border: 1px solid #e2e8f0; box-shadow: none;" onclick="openQR('https://preapproval.addi.com/?allySlug=addi-preapproval', 'Addi')" title="Mostrar Código QR">
+                            <i data-lucide="qr-code"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card siste">
+                    <h3>Sistecredito</h3>
+                    <p>Activa tu crédito personal y llévate lo que necesites ahora mismo.</p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <a href="https://personas.credinet.co/login" target="_blank" class="btn-ext btn-siste" style="flex: 1;">🚀 ¡Lo quiero ya!</a>
+                        <button class="btn-ext" style="flex: none; width: 50px; background: rgba(0,0,0,0.05); color: #64748b !important; border: 1px solid #e2e8f0; box-shadow: none;" onclick="openQR('https://personas.credinet.co/login', 'Sistecredito')" title="Mostrar Código QR">
+                            <i data-lucide="qr-code"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card vanti">
+                    <h3 style="color:var(--color-vanti)">Vanti Listo</h3>
+                    <p>Financia tus proyectos a través de tu factura de gas natural Vanti.</p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <a href="https://autogestion.vantilisto.com/v3/opening-opportunity" target="_blank" class="btn-ext btn-vanti" style="flex: 1;"><i data-lucide="zap" style="color: white; width: 16px;"></i> Solicitar ahora</a>
+                        <button class="btn-ext" style="flex: none; width: 50px; background: rgba(0,0,0,0.05); color: #64748b !important; border: 1px solid #e2e8f0; box-shadow: none;" onclick="openQR('https://autogestion.vantilisto.com/v3/opening-opportunity', 'Vanti Listo')" title="Mostrar Código QR">
+                            <i data-lucide="qr-code"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -419,7 +498,24 @@
       </div>
   </div>
 
-  <script>
+  <!-- MODAL CÓDIGO QR -->
+  <div id="mod-qr" class="modal">
+    <div class="modal-background" onclick="closeQR()"></div>
+    <div class="modal-card" style="max-width: 320px;">
+      <header class="modal-card-head" style="background: var(--brand-blue);">
+        <p id="qr-title" class="modal-card-title is-size-6 has-text-white has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Código QR</p>
+        <button class="delete" aria-label="close" onclick="closeQR()"></button>
+      </header>
+      <section class="modal-card-body has-text-centered py-5">
+        <p class="is-size-7 has-text-grey mb-4 font-bold">Escanea este código con tu celular para abrir el formulario directamente.</p>
+        <div style="background: white; padding: 15px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <img id="qr-image" src="" alt="Código QR" style="width: 200px; height: 200px;" />
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script data-presets="react">
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
     let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [], simulaciones: [], roles: [], roles_permisos: [] };
     let currentUser = null, confirmCallback = null;
@@ -432,6 +528,17 @@
         t.innerHTML = `<div class="toast-icon" style="color:${type==='success'?'var(--brand-green)':'var(--gets-red)'}"><i data-lucide="${type==='success'?'check-circle':'x-circle'}"></i></div><div class="toast-content" style="font-family: 'Montserrat', sans-serif;">${msg}</div>`;
         c.appendChild(t); lucide.createIcons(); setTimeout(() => t.classList.add('is-active'), 50);
         setTimeout(() => { t.classList.remove('is-active'); setTimeout(() => t.remove(), 600); }, 3500);
+    }
+
+    // Funciones Modal QR
+    function openQR(url, title) {
+        document.getElementById('qr-title').innerText = title;
+        document.getElementById('qr-image').src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" + encodeURIComponent(url);
+        document.getElementById('mod-qr').classList.add('is-active');
+    }
+    function closeQR() {
+        document.getElementById('mod-qr').classList.remove('is-active');
+        document.getElementById('qr-image').src = "";
     }
 
     // toNum original (se usa para las tasas de interés)
