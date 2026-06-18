@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel para JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
     <!-- html2pdf.js para generación de PDF directa -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
@@ -54,7 +54,7 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script type="text/babel" data-presets="react">
         const { useState, useMemo, useEffect } = React;
 
         const Icon = ({ name, size = 20, className = "" }) => {
@@ -595,7 +595,6 @@
                             </div>
                         </div>
                     )}
-
 
                     {/* CARTA 2: ANTIFRAUDE ALOCREDIT (Siempre Visible) */}
                     <div id="pdf-content-antifraude" className="letter-size shadow-2xl border-t-[10px] border-indigo-600 bg-white mb-8">
