@@ -457,7 +457,40 @@
   <div id="mod-confirm" class="modal"><div class="modal-background" onclick="closeConfirm()"></div><div class="modal-card" style="max-width: 350px;"><header class="modal-card-head has-background-danger"><p class="modal-card-title is-size-6 has-text-white has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Confirmar Acción</p></header><section class="modal-card-body has-text-centered py-5"><div class="mb-4 has-text-danger"><i data-lucide="alert-triangle" style="width:48px; height:48px;"></i></div><p id="confirm-text" class="has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">¿Seguro que desea eliminar este registro?</p></section><footer class="modal-card-foot is-justify-content-center"><button class="button is-light" onclick="closeConfirm()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cancelar</button><button id="btn-confirm-exec" class="button is-danger has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Sí, eliminar</button></footer></div></div>
 
   <!-- MODALES DE EDICIÓN Y ROLES -->
-  <div id="mod-cli" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Aliado</p></header><section class="modal-card-body"><input id="ed-cli-id" type="hidden"><div class="field"><label class="label is-small" style="font-weight: 700;">Tienda</label><input id="ed-cli-nom" class="input is-small" style="font-weight: 600;"></div><div class="field"><label class="label is-small" style="font-weight: 700;">Clave</label><input id="ed-cli-pass" class="input is-small" style="font-weight: 600;"></div><div class="field mt-3"><label class="label is-small" style="font-weight: 700;">Rol Asignado</label><div class="select is-small is-fullwidth"><select id="ed-cli-rol" onchange="renderAliadoVinculos(document.getElementById('ed-cli-id').value)" style="font-weight: 600;"></select></div></div><hr><div id="vinculos-container" class="table-container mt-4"></div></section><footer class="modal-card-foot"><button id="btn-del-ali" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteAliado()">Eliminar Aliado</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-ali" class="button btn-modern is-save" onclick="saveAliado()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar Todo</button></footer></div></div>
+  <div id="mod-cli" class="modal">
+    <div class="modal-background" onclick="closeModals()"></div>
+    <div class="modal-card">
+      <header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Aliado</p></header>
+      <section class="modal-card-body">
+        <input id="ed-cli-id" type="hidden">
+        <div class="field"><label class="label is-small" style="font-weight: 700;">Tienda</label><input id="ed-cli-nom" class="input is-small" style="font-weight: 600;"></div>
+        <div class="field"><label class="label is-small" style="font-weight: 700;">Clave</label><input id="ed-cli-pass" class="input is-small" style="font-weight: 600;"></div>
+        
+        <!-- NUEVO CAMPO ASESOR/KAM CON LISTA DESPLEGABLE Y OPCIÓN DE NUEVO -->
+        <div class="field">
+            <label class="label is-small" style="font-weight: 700;">Asesor / KAM</label>
+            <div class="columns is-mobile is-gapless mb-0">
+                <div class="column">
+                    <div class="select is-small is-fullwidth">
+                        <select id="ed-cli-asesor" style="font-weight: 600;" onchange="checkNewAsesor(this.value)">
+                            <!-- Las opciones se llenarán dinámicamente -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <input id="ed-cli-asesor-new" class="input is-small mt-2" style="font-weight: 600; display: none;" placeholder="Escriba el nombre del nuevo asesor">
+        </div>
+        
+        <div class="field mt-3"><label class="label is-small" style="font-weight: 700;">Rol Asignado</label><div class="select is-small is-fullwidth"><select id="ed-cli-rol" onchange="renderAliadoVinculos(document.getElementById('ed-cli-id').value)" style="font-weight: 600;"></select></div></div>
+        <hr><div id="vinculos-container" class="table-container mt-4"></div>
+      </section>
+      <footer class="modal-card-foot">
+        <button id="btn-del-ali" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteAliado()">Eliminar Aliado</button>
+        <button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button>
+        <button id="btn-upd-ali" class="button btn-modern is-save" onclick="saveAliado()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar Todo</button>
+      </footer>
+    </div>
+  </div>
   
   <div id="mod-rol" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Rol</p></header><section class="modal-card-body"><input id="ed-rol-id" type="hidden"><div class="field"><label class="label is-small" style="font-weight: 700;">Nombre del Rol</label><input id="ed-rol-nom" class="input is-small" style="font-weight: 600;"></div><hr><span class="admin-label">Permisos (Factores Predeterminados)</span><div id="rol-vinculos-container" class="table-container mt-4"></div></section><footer class="modal-card-foot"><button id="btn-del-rol" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteRol()">Eliminar Rol</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-rol" class="button btn-modern is-save" onclick="saveRol()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar Rol</button></footer></div></div>
 
@@ -763,24 +796,51 @@
     function render(c, q) { document.getElementById('out_consignar').innerText = fmtCop(c); document.getElementById('out_cuota').innerText = fmtCop(q); }
     function clearInputs() { ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio', 'in_direccion', 'in_articulo', 'in_ref1_nom', 'in_ref1_tel', 'in_ref2_nom', 'in_ref2_tel'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; }); render(0,0); }
     
-    function validateAndSave() {
-      const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
-      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Complete todos los campos.", 'error'); return; } }
-      const mainBtn = document.getElementById('btn-main-action');
-      mainBtn.classList.add('is-loading');
-      mainBtn.disabled = true;
-      const data = { ...calc(), cc: document.getElementById('in_cc').value, nombre: document.getElementById('in_nombre_sol').value, correo: document.getElementById('in_correo').value, celular: document.getElementById('in_celular').value };
-      sendWhatsApp(data); 
-      apiCall('guardarSimulacion', data, 'btn-main-action'); 
-      clearInputs();
+    // Función para manejar el campo de nuevo asesor
+    function checkNewAsesor(value) {
+        const newAsesorInput = document.getElementById('ed-cli-asesor-new');
+        if (value === 'NUEVO') {
+            newAsesorInput.style.display = 'block';
+            newAsesorInput.focus();
+        } else {
+            newAsesorInput.style.display = 'none';
+            newAsesorInput.value = '';
+        }
     }
-    
+
     function openAliado(id) {
         const c = db.clientes.find(x => String(x.id_cliente).trim() === String(id).trim());
         if(!c) return;
         document.getElementById('ed-cli-id').value = c.id_cliente;
         document.getElementById('ed-cli-nom').value = c.nombre_cliente;
         document.getElementById('ed-cli-pass').value = c.contrasena;
+        
+        // Extraer lista única de asesores
+        const asesoresSet = new Set();
+        db.clientes.forEach(cli => {
+            if (cli.asesor && String(cli.asesor).trim() !== '') {
+                asesoresSet.add(String(cli.asesor).trim());
+            }
+        });
+        const asesoresList = Array.from(asesoresSet).sort();
+        
+        const asesorSelect = document.getElementById('ed-cli-asesor');
+        let asesorOpts = '<option value="">Sin Asesor</option>';
+        asesoresList.forEach(a => {
+            asesorOpts += `<option value="${a}" ${c.asesor === a ? 'selected' : ''}>${a}</option>`;
+        });
+        asesorOpts += '<option value="NUEVO">+ Agregar Nuevo Asesor...</option>';
+        
+        asesorSelect.innerHTML = asesorOpts;
+        
+        // Si el asesor del cliente actual no está en la lista (raro, pero posible si es nuevo)
+        if (c.asesor && !asesoresList.includes(c.asesor)) {
+            asesorSelect.innerHTML = `<option value="${c.asesor}" selected>${c.asesor}</option>` + asesorSelect.innerHTML;
+        }
+
+        // Restablecer el campo de texto de nuevo asesor
+        document.getElementById('ed-cli-asesor-new').style.display = 'none';
+        document.getElementById('ed-cli-asesor-new').value = '';
         
         let rolesOpts = '<option value="">Sin Rol (Personalizado)</option>';
         if(db.roles && db.roles.length) { rolesOpts += db.roles.map(r => `<option value="${r.id_rol}" ${c.rol === r.id_rol ? 'selected' : ''}>${r.nombre_rol}</option>`).join(''); }
@@ -862,7 +922,27 @@
         if (!rolSelect) {
             document.querySelectorAll('.v-fac').forEach(input => { if(input.value !== "") factores.push({ id_fin: input.dataset.fin, valor: input.value }); });
         }
-        await apiCall('updateCliente', { id_cliente: idCli, nombre_cliente: document.getElementById('ed-cli-nom').value, contrasena: document.getElementById('ed-cli-pass').value, rol: rolSelect, factores: factores }, 'btn-upd-ali');
+        
+        // Determinar el valor del asesor a guardar
+        let asesorValue = document.getElementById('ed-cli-asesor').value;
+        if (asesorValue === 'NUEVO') {
+            asesorValue = document.getElementById('ed-cli-asesor-new').value.trim();
+            if (asesorValue === '') {
+                showToast("Por favor, escriba el nombre del nuevo asesor.", "error");
+                return;
+            }
+        }
+        
+        // Incluimos el nuevo campo de asesor en el objeto que se envía a la API
+        await apiCall('updateCliente', { 
+            id_cliente: idCli, 
+            nombre_cliente: document.getElementById('ed-cli-nom').value, 
+            contrasena: document.getElementById('ed-cli-pass').value, 
+            asesor: asesorValue, 
+            rol: rolSelect, 
+            factores: factores 
+        }, 'btn-upd-ali');
+        
         closeModals(); 
     }
 
