@@ -7,12 +7,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   
-  <!-- React & ReactDOM (Production) -->
-  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-  <!-- Babel para JSX (VERSIÓN FIJADA PARA EVITAR ERROR DE IMPORT) -->
-  <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
-  
   <style>
     /* --- FUENTE CORPORATIVA --- */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
@@ -107,9 +101,14 @@
     .welcome-icon { background: var(--brand-green); color: white; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(103, 183, 77, 0.35); }
     
     .res-grid { background: var(--primary-gradient); border-radius: 20px; padding: 1.5rem; margin: 1.5rem 0; color: white; text-align: center; display: flex; gap: 15px; box-shadow: 0 10px 25px -5px rgba(44, 76, 140, 0.5); }
-    .res-item { flex: 1; }
+    .res-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .res-item p:first-child { font-size: 0.65rem; color: var(--brand-green); font-weight: 900; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em; }
     .res-item p:last-child { font-size: 1.3rem; font-weight: 900; }
+    
+    /* INPUT PARA TOTAL CRÉDITO DENTRO DEL RECUADRO AZUL */
+    .input-consignar { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important; font-weight: 900 !important; font-size: 1.2rem; text-align: center; border-radius: 8px; width: 90%; transition: all 0.3s ease; }
+    .input-consignar:focus { background: rgba(255,255,255,0.2); border-color: white; box-shadow: 0 0 0 0.125em rgba(255, 255, 255, 0.25) !important; outline: none; }
+    .input-consignar::placeholder { color: rgba(255,255,255,0.6) !important; }
 
     /* FILTROS HISTORIAL */
     .filter-panel-history { background: #f8fafc; padding: 1.25rem; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem; }
@@ -171,7 +170,6 @@
 
   <div id="toast-container"></div>
 
-  <!-- LOGIN -->
   <div id="login-container" class="main-card" style="display: block;">
     <div class="brand-header"><img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Soluciones Efectivas CTG" class="brand-logo"></div>
     <div id="login-view" style="padding: 1.5rem 2rem 2.5rem 2rem;">
@@ -187,7 +185,6 @@
     <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.108</div>
   </div>
 
-  <!-- APP PRINCIPAL -->
   <div id="app-container" class="main-card">
     <div id="bg-sync-indicator"><div class="button is-loading is-small is-white" style="height:15px; width:15px; margin-right:5px;"></div> Sincronizando datos...</div>
     
@@ -208,7 +205,6 @@
       <div id="t-con" class="tab-item" onclick="switchView('con')">Consultas</div>
     </div>
 
-    <!-- CALCULADORA -->
     <div id="v-sim" class="section-view is-active-view">
       <div class="welcome-banner" style="justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 15px;">
@@ -226,11 +222,33 @@
             </div>
         </div>
       </div>
-      <div class="field"><label class="label is-small">Tienda / Aliado</label><div class="select is-fullwidth"><select id="sel_cliente" onchange="handleAllyChange()"></select></div></div>
+      
+      <div class="field">
+          <label class="label is-small">Tienda / Aliado</label>
+          <div id="box-search-tienda" class="control has-icons-left mb-2" style="display:none;">
+              <input id="search-tienda-calc" class="input is-small" style="border-radius: 8px; font-weight: 600;" type="text" placeholder="🔍 Escribe para filtrar aliados rápidamente..." oninput="window.filterTiendasCalc()">
+              <span class="icon is-small is-left" style="color: #94a3b8 !important;"><i data-lucide="search"></i></span>
+          </div>
+          <div class="select is-fullwidth">
+              <select id="sel_cliente" onchange="handleAllyChange()"></select>
+          </div>
+      </div>
+      
       <div class="field"><label class="label is-small">Entidad Financiera</label><div class="select is-fullwidth"><select id="sel_financiera" onchange="loadPlanes()"></select></div></div>
       <div class="columns is-mobile mb-0"><div class="column"><label class="label is-small">Plan Elegido</label><div class="select is-fullwidth"><select id="sel_plan" onchange="loadNumCuotas()"></select></div></div><div class="column"><label class="label is-small">Cuotas</label><div class="select is-fullwidth"><select id="sel_n_cuotas" onchange="calc()"></select></div></div></div>
+      
       <div class="field"><label class="label is-small">Precio Venta (Contado $)</label><input id="in_precio" class="input is-medium" type="text" placeholder="$ 0" oninput="handlePriceInput(this)"></div>
-      <div class="res-grid"><div class="res-item"><p>Total Crédito</p><p id="out_consignar">$ 0</p></div><div class="res-item"><p>Cuota (Aprox.)</p><p id="out_cuota">$ 0</p></div></div>
+      
+      <div class="res-grid">
+        <div class="res-item">
+            <p>Total Crédito (Editar)</p>
+            <input id="in_consignar" class="input input-consignar" type="text" placeholder="$ 0" oninput="handleConsignarInput(this)">
+        </div>
+        <div class="res-item">
+            <p>Cuota (Aprox.)</p>
+            <p id="out_cuota">$ 0</p>
+        </div>
+      </div>
       
       <div class="solicitante-section" style="border-left: 4px solid var(--brand-green); padding: 0.75rem 1.25rem; margin-top: 1.5rem; margin-bottom: 2rem; background: #fafafa; border-radius: 0 16px 16px 0;">
         <span class="admin-label" style="margin-bottom: 1rem; color: var(--brand-green);">Datos del Solicitante (Cliente)</span>
@@ -254,7 +272,6 @@
       <button id="btn-main-action" class="button btn-modern is-save is-fullwidth is-medium" onclick="validateAndSave()"><i data-lucide="send" style="width: 18px; color: white !important;"></i> Enviar y Registrar</button>
     </div>
 
-    <!-- CRÉDITO EN LÍNEA CON BOTONES QR -->
     <div id="v-ext" class="section-view">
         <div class="columns is-multiline">
             <div class="column is-6-tablet is-4-desktop">
@@ -337,7 +354,6 @@
         </div>
     </div>
 
-    <!-- CONFIGURACIÓN -->
     <div id="v-adm" class="section-view">
       <nav class="query-tabs">
         <div id="at-ali" class="query-tab-item is-active" onclick="switchAdminTab('ali')">Aliados</div>
@@ -347,7 +363,6 @@
         <div id="at-pla" class="query-tab-item" onclick="switchAdminTab('pla')">Planes</div>
       </nav>
       <div class="py-5">
-          <!-- Aliados -->
           <div id="asec-ali" class="admin-sec is-active">
               <div class="box-admin">
                   <span class="admin-label">Nuevo Aliado Comercial</span>
@@ -359,12 +374,10 @@
                           <select id="new_cli_rol" style="font-weight: 600;"></select>
                       </div>
                   </div>
-                  <!-- Modificado: Envía currentUser.nombre_cliente como asesor automáticamente -->
-                  <button id="btn-admin-ali" class="button btn-modern is-save is-fullwidth mt-4" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value, rol: document.getElementById('new_cli_rol').value, asesor: currentUser.nombre_cliente}, 'btn-admin-ali')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Aliado</button>
+                  <button id="btn-admin-ali" class="button btn-modern is-save is-fullwidth mt-4" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value, rol: document.getElementById('new_cli_rol').value, asesor: currentUser ? currentUser.nombre_cliente : ''}, 'btn-admin-ali')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Aliado</button>
               </div>
           </div>
           
-          <!-- ROLES -->
           <div id="asec-rol" class="admin-sec">
             <div class="box-admin">
                 <span class="admin-label">Crear Nuevo Rol</span>
@@ -380,7 +393,6 @@
             </div>
           </div>
 
-          <!-- Vinculación Personalizada -->
           <div id="asec-vin" class="admin-sec"><div class="box-admin"><span class="admin-label">Vincular Factor Personalizado a Tienda</span><p class="is-size-7 has-text-grey mb-3 font-medium">Úsalo solo si la tienda no tiene rol o necesita una excepción.</p><div class="field"><label class="label is-size-7" style="font-weight: 700;">Tienda</label><div class="select is-fullwidth"><select id="rel_cli_id" style="font-weight: 600;"></select></div></div><div class="field"><label class="label is-size-7" style="font-weight: 700;">Entidad</label><div class="select is-fullwidth"><select id="rel_fin_id" style="font-weight: 600;"></select></div></div><div class="field mb-4"><label class="label is-size-7" style="font-weight: 700;">Factor Aliado</label><input id="rel_fac_val" class="input" style="font-weight: 600;" type="number" step="0.01" placeholder="0.00"></div><button id="btn-admin-vin" class="button btn-modern is-save is-fullwidth" onclick="apiCall('asignarFactorCliente', {id_cliente: document.getElementById('rel_cli_id').value, id_financiera: document.getElementById('rel_fin_id').value, factor_cliente: document.getElementById('rel_fac_val').value}, 'btn-admin-vin')"><i data-lucide="save" style="width: 18px;"></i> Guardar Vinculación</button></div></div>
           
           <div id="asec-ent" class="admin-sec"><div class="box-admin"><span class="admin-label">Nueva Entidad Financiera</span><input id="new_fin_nom" class="input mb-3" style="font-weight: 600;" placeholder="Nombre Entidad"><label class="label is-size-7" style="font-weight: 700;">Factor Base</label><input id="new_fin_fac" class="input mb-4" style="font-weight: 600;" type="number" step="0.01" placeholder="0.00"><button id="btn-admin-ent" class="button btn-modern is-save is-fullwidth" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value}, 'btn-admin-ent')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Entidad</button></div></div>
@@ -388,7 +400,6 @@
       </div>
     </div>
 
-    <!-- CONSULTAS -->
     <div id="v-con" class="section-view">
       <nav class="query-tabs">
         <div id="m-cli" class="query-tab-item is-active" onclick="switchQuery('cli')">Aliados</div>
@@ -398,17 +409,28 @@
       </nav>
       <div class="p-5">
         
-        <!-- ALIADOS: Tabla con Filtro de Búsqueda -->
         <div id="q-cli" class="q-section">
-            <div class="field mb-4">
-                <div class="control has-icons-left">
-                    <input id="search-cli" class="input" type="text" placeholder="🔍 Buscar aliado por nombre..." oninput="renderTables()">
-                    <span class="icon is-left"><i data-lucide="search"></i></span>
+            <div class="columns is-mobile is-multiline mb-4">
+                <div class="column is-6-tablet is-12-mobile">
+                    <div class="control has-icons-left">
+                        <input id="search-cli" class="input" type="text" placeholder="🔍 Buscar aliado por nombre..." oninput="window.renderTables()">
+                        <span class="icon is-left"><i data-lucide="search"></i></span>
+                    </div>
+                </div>
+                <div class="column is-6-tablet is-12-mobile">
+                    <div class="control has-icons-left">
+                        <div class="select is-fullwidth">
+                            <select id="search-asesor-consultas" onchange="window.renderTables()">
+                                <option value="">Todos los Asesores</option>
+                            </select>
+                        </div>
+                        <span class="icon is-left"><i data-lucide="users"></i></span>
+                    </div>
                 </div>
             </div>
             <div class="table-container">
                 <table class="table is-fullwidth is-striped is-clickable">
-                    <thead><tr><th>Nombre Aliado</th><th>Clave Acceso</th><th>Asesor / KAM</th></tr></thead>
+                    <thead><tr><th>Nombre Aliado</th><th>Clave Acceso</th><th>Asesor / KAM</th><th>Fecha Registro</th></tr></thead>
                     <tbody id="tb-clientes" style="font-weight: 500;"></tbody>
                 </table>
             </div>
@@ -436,14 +458,26 @@
                         </div>
                     </div>
                 </div>
-                <div class="column is-5 py-1"><label class="label is-size-7" style="font-weight: 700;">Desde</label><input id="f-desde" class="input input-date-history" type="date" onchange="filterSimulations()"></div>
-                <div class="column is-5 py-1"><label class="label is-size-7" style="font-weight: 700;">Hasta</label><input id="f-hasta" class="input input-date-history" type="date" onchange="filterSimulations()"></div>
-                <div class="column is-2 py-1 is-flex is-align-items-flex-end"><button class="button is-brand is-fullwidth" style="height:45px; border-radius:10px; background: linear-gradient(135deg, #74c456 0%, #58a33f 100%); color: white; border: none; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3);" onclick="filterSimulations()"><i data-lucide="filter"></i></button></div>
+                <div class="column is-6-mobile is-2-tablet py-1"><label class="label is-size-7" style="font-weight: 700;">Desde</label><input id="f-desde" class="input input-date-history" type="date" onchange="filterSimulations()"></div>
+                <div class="column is-6-mobile is-2-tablet py-1"><label class="label is-size-7" style="font-weight: 700;">Hasta</label><input id="f-hasta" class="input input-date-history" type="date" onchange="filterSimulations()"></div>
+                <div class="column is-4-mobile is-2-tablet py-1">
+                    <label class="label is-size-7" style="font-weight: 700;">Tienda</label>
+                    <div class="select is-fullwidth"><select id="f-tienda" onchange="filterSimulations()"><option value="">Todas</option></select></div>
+                </div>
+                <div class="column is-4-mobile is-2-tablet py-1">
+                    <label class="label is-size-7" style="font-weight: 700;">Entidad</label>
+                    <div class="select is-fullwidth"><select id="f-entidad" onchange="filterSimulations()"><option value="">Todas</option></select></div>
+                </div>
+                <div class="column is-4-mobile is-2-tablet py-1">
+                    <label class="label is-size-7" style="font-weight: 700;">Asesor</label>
+                    <div class="select is-fullwidth"><select id="f-asesor-his" onchange="filterSimulations()"><option value="">Todos</option></select></div>
+                </div>
+                <div class="column is-12-mobile is-2-tablet py-1 is-flex is-align-items-flex-end"><button class="button is-brand is-fullwidth" style="height:40px; border-radius:10px; background: linear-gradient(135deg, #74c456 0%, #58a33f 100%); color: white; border: none; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3);" onclick="filterSimulations()"><i data-lucide="filter"></i></button></div>
             </div>
           </div>
-          <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th style="color:var(--brand-blue)">Tienda</th><th>Entidad</th><th>CC / Doc</th><th>Nombre Cliente</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th></tr></thead><tbody id="tb-simulaciones" style="font-weight: 500;"></tbody></table></div>
+          <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th style="color:var(--brand-blue)">Tienda</th><th>Entidad</th><th>CC / Doc</th><th>Nombre Cliente</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th><th class="has-text-centered">Estado</th></tr></thead><tbody id="tb-simulaciones" style="font-weight: 500;"></tbody></table></div>
           <div class="kpi-grid">
-            <div class="kpi-card"><div style="background:#eff4fa; color:var(--brand-blue); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="bar-chart-2" style="width:18px;"></i></div><p style="font-size:0.6rem; font-weight:700; color:#64748b; text-transform:uppercase;">Registros</p><p id="total-count">0</p></div>
+            <div class="kpi-card"><div style="background:#eff4fa; color:var(--brand-blue); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="bar-chart-2" style="width:18px;"></i></div><p style="font-size:0.6rem; font-weight:700; color:#64748b; text-transform:uppercase;">Desembolsados</p><p id="total-count">0</p></div>
             <div class="kpi-card"><div style="background:#eff4fa; color:var(--gets-blue); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="banknote" style="width:18px;"></i></div><p style="font-size:0.6rem; font-weight:700; color:#64748b; text-transform:uppercase;">Colocación</p><p id="total-creditos">$ 0</p></div>
             <div class="kpi-card"><div style="background:#f1f9ef; color:var(--brand-green); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem;"><i data-lucide="trending-up" style="width:18px;"></i></div><p style="font-size:0.6rem; font-weight:700; color:#64748b; text-transform:uppercase;">Utilidad Total</p><p id="total-utilidad">$ 0</p></div>
           </div>
@@ -453,10 +487,37 @@
     <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.108</div>
   </div>
 
-  <!-- MODAL CONFIRMACIÓN (Z-INDEX SUPERIOR) -->
   <div id="mod-confirm" class="modal"><div class="modal-background" onclick="closeConfirm()"></div><div class="modal-card" style="max-width: 350px;"><header class="modal-card-head has-background-danger"><p class="modal-card-title is-size-6 has-text-white has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Confirmar Acción</p></header><section class="modal-card-body has-text-centered py-5"><div class="mb-4 has-text-danger"><i data-lucide="alert-triangle" style="width:48px; height:48px;"></i></div><p id="confirm-text" class="has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">¿Seguro que desea eliminar este registro?</p></section><footer class="modal-card-foot is-justify-content-center"><button class="button is-light" onclick="closeConfirm()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cancelar</button><button id="btn-confirm-exec" class="button is-danger has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Sí, eliminar</button></footer></div></div>
 
-  <!-- MODALES DE EDICIÓN Y ROLES -->
+  <div id="mod-estado" class="modal">
+    <div class="modal-background" onclick="closeEstadoModal()"></div>
+    <div class="modal-card" style="max-width: 350px;">
+      <header class="modal-card-head" style="background: var(--brand-blue);">
+        <p class="modal-card-title is-size-6 has-text-white has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Cambiar Estado</p>
+        <button class="delete" aria-label="close" onclick="closeEstadoModal()"></button>
+      </header>
+      <section class="modal-card-body">
+        <input type="hidden" id="estado-sim-id">
+        <div class="field">
+          <label class="label is-small" style="font-weight: 700;">Nuevo Estado</label>
+          <div class="select is-fullwidth">
+            <select id="sel-nuevo-estado" style="font-weight: 600;">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Aprobado">Aprobado</option>
+              <option value="Desembolsado">Desembolsado</option>
+              <option value="Rechazado">Rechazado</option>
+              <option value="Anulado">Anulado</option>
+            </select>
+          </div>
+        </div>
+      </section>
+      <footer class="modal-card-foot is-justify-content-center">
+        <button class="button is-light" onclick="closeEstadoModal()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cancelar</button>
+        <button id="btn-save-estado" class="button is-link has-text-weight-bold" onclick="saveEstadoSimulacion()" style="font-family: 'Montserrat', sans-serif; background: var(--brand-green);">Guardar Cambios</button>
+      </footer>
+    </div>
+  </div>
+
   <div id="mod-cli" class="modal">
     <div class="modal-background" onclick="closeModals()"></div>
     <div class="modal-card">
@@ -466,15 +527,13 @@
         <div class="field"><label class="label is-small" style="font-weight: 700;">Tienda</label><input id="ed-cli-nom" class="input is-small" style="font-weight: 600;"></div>
         <div class="field"><label class="label is-small" style="font-weight: 700;">Clave</label><input id="ed-cli-pass" class="input is-small" style="font-weight: 600;"></div>
         
-        <!-- NUEVO CAMPO ASESOR/KAM CON LISTA DESPLEGABLE Y OPCIÓN DE NUEVO -->
         <div class="field">
             <label class="label is-small" style="font-weight: 700;">Asesor / KAM</label>
             <div class="columns is-mobile is-gapless mb-0">
                 <div class="column">
                     <div class="select is-small is-fullwidth">
                         <select id="ed-cli-asesor" style="font-weight: 600;" onchange="checkNewAsesor(this.value)">
-                            <!-- Las opciones se llenarán dinámicamente -->
-                        </select>
+                            </select>
                     </div>
                 </div>
             </div>
@@ -496,7 +555,6 @@
 
   <div id="mod-fin" class="modal"><div class="modal-background" onclick="closeModals()"></div><div class="modal-card" style="width:95%; max-width:700px;"><header class="modal-card-head"><p class="modal-card-title is-size-6 has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Configurar Entidad</p></header><section class="modal-card-body"><input id="ed-fin-id" type="hidden"><div class="field"><label class="label is-small" style="font-weight: 700;">Entidad</label><input id="ed-fin-nom" class="input is-small" style="font-weight: 600;"></div><div class="field"><label class="label is-small" style="font-weight: 700;">Factor Base</label><input id="ed-fin-fac" class="input is-small" type="number" step="0.01" style="font-weight: 600;"></div><hr><span class="admin-label">Planes Asociados</span><div id="planes-container" class="table-container"></div></section><footer class="modal-card-foot"><button id="btn-del-fin" class="button is-danger mr-auto" style="border-radius:10px; font-weight:800; font-family: 'Montserrat', sans-serif;" onclick="askDeleteFinanciera()">Eliminar Entidad</button><button class="button is-light" onclick="closeModals()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cerrar</button><button id="btn-upd-fin" class="button btn-modern is-save" onclick="saveFinanciera()" style="font-family: 'Montserrat', sans-serif;"><i data-lucide="save" style="width: 18px;"></i> Actualizar</button></footer></div></div>
 
-  <!-- MODAL LISTA DE PRECIOS DISTRIBUIDOR -->
   <div id="mod-precios" class="modal">
       <div class="modal-background" onclick="closeModals()"></div>
       <div class="modal-card" style="width:95%; max-width:950px;">
@@ -531,7 +589,6 @@
       </div>
   </div>
 
-  <!-- MODAL CÓDIGO QR -->
   <div id="mod-qr" class="modal">
     <div class="modal-background" onclick="closeQR()"></div>
     <div class="modal-card" style="max-width: 320px;">
@@ -548,7 +605,7 @@
     </div>
   </div>
 
-  <script data-presets="react">
+  <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
     let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [], simulaciones: [], roles: [], roles_permisos: [] };
     let currentUser = null, confirmCallback = null;
@@ -574,11 +631,9 @@
         document.getElementById('qr-image').src = "";
     }
 
-    // toNum original (se usa para las tasas de interés)
     const toNum = (v) => { if (v === null || v === undefined || v === "") return 0; if (typeof v === 'number') return v; let clean = v.toString().replace(/[\$\.]/g, '').replace(',', '.').trim(); return parseFloat(clean) || 0; };
     const fmtCop = (v) => Number(v || 0).toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 
-    // PARSEADOR AVANZADO
     const parsePrice = (v) => {
         if (v === null || v === undefined || v === '') return 0;
         let num = 0;
@@ -596,9 +651,56 @@
         return Math.round(num / 1000) * 1000;
     };
 
-    function handlePriceInput(input) { let val = input.value.replace(/\D/g, ""); if (val === "") { input.value = ""; calc(); return; } input.value = "$ " + new Intl.NumberFormat('es-CO').format(parseInt(val)); calc(); }
+    /* --- FUNCIONES PARA INPUT INVERSO --- */
+    function handlePriceInput(input) { 
+        let val = input.value.replace(/\D/g, ""); 
+        if (val === "") { 
+            input.value = ""; 
+            document.getElementById('in_consignar').value = "";
+            calc(); 
+            return; 
+        } 
+        input.value = "$ " + new Intl.NumberFormat('es-CO').format(parseInt(val)); 
+        calc('venta'); 
+    }
+
+    function handleConsignarInput(input) {
+        let val = input.value.replace(/\D/g, ""); 
+        if (val === "") { 
+            input.value = ""; 
+            document.getElementById('in_precio').value = "";
+            calc(); 
+            return; 
+        } 
+        input.value = "$ " + new Intl.NumberFormat('es-CO').format(parseInt(val)); 
+        calc('consignar'); 
+    }
+
     function setDefaultDates() { const n = new Date(); const format = (d) => { let m = ''+(d.getMonth()+1), day = ''+d.getDate(), y = d.getFullYear(); if (m.length<2) m='0'+m; if (day.length<2) day='0'+day; return [y, m, day].join('-'); }; document.getElementById('f-desde').value = format(new Date(n.getFullYear(), n.getMonth(), 1)); document.getElementById('f-hasta').value = format(n); }
     function handlePredefinedFilter(val) { const today = new Date(); let start = null, end = new Date(); const format = (d) => d.toISOString().split('T')[0]; switch(val) { case 'semana': let day = today.getDay(), diff = today.getDate() - day + (day === 0 ? -6 : 1); start = new Date(today.setDate(diff)); break; case 'mes': start = new Date(today.getFullYear(), today.getMonth(), 1); break; case 'pasado': start = new Date(today.getFullYear(), today.getMonth() - 1, 1); end = new Date(today.getFullYear(), today.getMonth(), 0); break; case 'anio': start = new Date(today.getFullYear(), 0, 1); break; case 'anio_pasado': start = new Date(today.getFullYear() - 1, 0, 1); end = new Date(today.getFullYear() - 1, 11, 31); break; case 'todo': document.getElementById('f-desde').value = ""; document.getElementById('f-hasta').value = ""; filterSimulations(); return; } if(start) { document.getElementById('f-desde').value = format(start); document.getElementById('f-hasta').value = format(end); filterSimulations(); } }
+
+    /* --- FILTRO DINÁMICO DE ALIADOS --- */
+    function filterTiendasCalc() {
+        const term = document.getElementById('search-tienda-calc').value.toLowerCase();
+        const el = document.getElementById('sel_cliente');
+        if (!el) return;
+        
+        const currentVal = el.value;
+        const filtered = db.clientes.filter(c => String(c.nombre_cliente).toLowerCase().includes(term));
+        
+        el.innerHTML = filtered.length 
+            ? filtered.map(i => `<option value="${i.id_cliente}">${i.nombre_cliente}</option>`).join('') 
+            : '<option value="" disabled>Sin coincidencias</option>';
+            
+        if (filtered.some(c => c.id_cliente === currentVal)) {
+            el.value = currentVal;
+        } else if (filtered.length > 0) {
+            el.value = filtered[0].id_cliente;
+            handleAllyChange();
+        } else {
+            handleAllyChange();
+        }
+    }
 
     async function refresh() {
       document.getElementById('bg-sync-indicator').style.display = 'flex';
@@ -618,10 +720,41 @@
         if(document.getElementById('new_cli_rol')) document.getElementById('new_cli_rol').innerHTML = rolesOpts;
         if(document.getElementById('rel_rol_id')) document.getElementById('rel_rol_id').innerHTML = rolesOpts.replace('<option value="">Sin Rol (Personalizado)</option>','<option value="" disabled selected>Seleccione...</option>');
         
+        // Reaplicar filtro de búsqueda si el administrador lo está usando en calculadora
+        const searchInputCalc = document.getElementById('search-tienda-calc');
+        if (searchInputCalc && searchInputCalc.value) {
+            filterTiendasCalc();
+        }
+
+        // Obtener Asesores Únicos para Poblar las Listas de Consultas e Historial
+        const asesoresSet = new Set();
+        db.clientes.forEach(c => {
+            if (c.asesor && String(c.asesor).trim() !== '') asesoresSet.add(String(c.asesor).trim());
+        });
+        const asesoresList = Array.from(asesoresSet).sort();
+        const optAsesor = '<option value="">Todos los Asesores</option>' + asesoresList.map(a => `<option value="${a}">${a}</option>`).join('');
+        
+        const asesorConsultasEl = document.getElementById('search-asesor-consultas');
+        if (asesorConsultasEl) asesorConsultasEl.innerHTML = optAsesor;
+
+        const asesorHisEl = document.getElementById('f-asesor-his');
+        if (asesorHisEl) asesorHisEl.innerHTML = optAsesor;
+
+        // Popular filtros de historial
+        let optTienda = '<option value="">Todas</option>';
+        db.clientes.forEach(c => optTienda += `<option value="${c.id_cliente}">${c.nombre_cliente}</option>`);
+        const fTiendaEl = document.getElementById('f-tienda');
+        if (fTiendaEl) fTiendaEl.innerHTML = optTienda;
+
+        let optEntidad = '<option value="">Todas</option>';
+        db.financieras.forEach(f => optEntidad += `<option value="${f.id_financiera}">${f.nombre_financiera}</option>`);
+        const fEntidadEl = document.getElementById('f-entidad');
+        if (fEntidadEl) fEntidadEl.innerHTML = optEntidad;
+
         renderTables();
         if(currentUser) {
-            const store = db.clientes.find(c => String(c.id_cliente).trim() === String(currentUser.id_cliente).trim());
-            document.getElementById('display-store-name').innerText = store ? store.nombre_cliente : "Aliado Comercial";
+            const foundStore = db.clientes.find(c => String(c.id_cliente).trim() === String(currentUser.id_cliente).trim());
+            document.getElementById('display-store-name').innerText = foundStore ? foundStore.nombre_cliente : "Aliado Comercial";
             document.getElementById('sel_cliente').value = currentUser.id_cliente;
             handleAllyChange();
         }
@@ -629,7 +762,6 @@
       }
     }
 
-    /* --- LÓGICA DE LOGIN --- */
     function attemptLogin() {
       const u = document.getElementById('login-user').value.trim().toLowerCase(), p = document.getElementById('login-pass').value;
       const f = db.clientes.find(c => String(c.nombre_cliente).toLowerCase().trim() === u && String(c.contrasena) === p);
@@ -644,6 +776,7 @@
           const hasPrivileges = isFullAdmin || isSemiAdmin;
 
           document.getElementById('sel_cliente').disabled = !hasPrivileges; 
+          document.getElementById('box-search-tienda').style.display = hasPrivileges ? 'block' : 'none';
           document.getElementById('sel_cliente').value = currentUser.id_cliente; 
           document.getElementById('display-store-name').innerText = currentUser.nombre_cliente; 
           
@@ -670,50 +803,97 @@
     function renderTables() {
       const draw = (id, h) => { const el = document.getElementById(id); if(el) el.innerHTML = h; };
       
-      // FILTRO DE ALIADOS (Buscador)
-      const searchCli = (document.getElementById('search-cli')?.value || '').toLowerCase();
-      const filteredCli = db.clientes.filter(c => String(c.nombre_cliente).toLowerCase().includes(searchCli));
+      const sCliEl = document.getElementById('search-cli');
+      const searchCli = (sCliEl ? sCliEl.value : '').toLowerCase();
+      
+      const sAsesorEl = document.getElementById('search-asesor-consultas');
+      const searchAsesor = (sAsesorEl ? sAsesorEl.value : '').toLowerCase();
+
+      const filteredCli = db.clientes.filter(c => {
+          const matchName = String(c.nombre_cliente).toLowerCase().includes(searchCli);
+          const matchAsesor = searchAsesor ? String(c.asesor || '').toLowerCase() === searchAsesor : true;
+          return matchName && matchAsesor;
+      });
       
       draw('tb-clientes', filteredCli.map(c => `
-        <tr onclick="openAliado('${c.id_cliente}')">
+        <tr onclick="window.openAliado('${c.id_cliente}')">
           <td>${c.nombre_cliente}</td>
           <td><code style="font-family: monospace;">${c.contrasena}</code></td>
           <td><span class="tag is-light is-info" style="font-size:0.65rem; font-weight:800;">${c.asesor || 'SIN ASESOR'}</span></td>
+          <td style="font-size:0.75rem; font-weight:600;">${c.fecha_registro || c.fecha || c.Fecha_registro || '-'}</td>
         </tr>
       `).join(''));
       
-      draw('tb-financieras', db.financieras.map(f => `<tr onclick="openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
-      draw('tb-roles', db.roles.map(r => `<tr onclick="openRol('${r.id_rol}')"><td>${r.nombre_rol}</td><td><span class="tag is-success is-light" style="font-weight: 700;">${r.estado || 'Activo'}</span></td></tr>`).join(''));
+      draw('tb-financieras', db.financieras.map(f => `<tr onclick="window.openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
+      draw('tb-roles', db.roles.map(r => `<tr onclick="window.openRol('${r.id_rol}')"><td>${r.nombre_rol}</td><td><span class="tag is-success is-light" style="font-weight: 700;">${r.estado || 'Activo'}</span></td></tr>`).join(''));
       filterSimulations(); 
     }
 
     function filterSimulations() {
       const d = document.getElementById('f-desde').value, h = document.getElementById('f-hasta').value;
       const t1 = d ? new Date(d + 'T00:00:00').getTime() : null, t2 = h ? new Date(h + 'T23:59:59').getTime() : null;
+      
+      const fTienda = document.getElementById('f-tienda') ? document.getElementById('f-tienda').value : '';
+      const fEntidad = document.getElementById('f-entidad') ? document.getElementById('f-entidad').value : '';
+      const fAsesor = document.getElementById('f-asesor-his') ? document.getElementById('f-asesor-his').value : '';
+
       let list = db.simulaciones || [];
       const parseP = (s) => { if(!s) return 0; const b = (s.fecha || s.Fecha).split('/'); return new Date(b[2], b[1]-1, b[0]).getTime(); };
-      if(t1 && t2) list = list.filter(s => { const t = parseP(s); return t >= t1 && t <= t2; });
-      let sc = 0, su = 0;
+      
+      list = list.filter(s => {
+          const t = parseP(s);
+          if (t1 && t2 && (t < t1 || t > t2)) return false;
+          
+          if (fTienda && String(s.id_cliente).trim() !== String(fTienda).trim()) return false;
+          if (fEntidad && String(s.id_financiera).trim() !== String(fEntidad).trim()) return false;
+          
+          if (fAsesor) {
+              const foundC = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim());
+              if (!foundC || String(foundC.asesor || '').trim() !== String(fAsesor).trim()) return false;
+          }
+          
+          return true;
+      });
+      
+      let sc = 0, su = 0, countDesembolsado = 0;
       const html = list.length ? list.slice().reverse().map(s => {
-        const t = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim())?.nombre_cliente || 'Aliado';
-        const e = db.financieras.find(fi => String(fi.id_financiera).trim() === String(s.id_financiera).trim())?.nombre_financiera || 'Entidad';
+        const foundC = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim());
+        const t = (foundC && foundC.nombre_cliente) ? foundC.nombre_cliente : 'Aliado';
+        
+        const foundE = db.financieras.find(fi => String(fi.id_financiera).trim() === String(s.id_financiera).trim());
+        const e = (foundE && foundE.nombre_financiera) ? foundE.nombre_financiera : 'Entidad';
+        
         const cred = toNum(s.valor_a_consignar), util = toNum(s.utilidad);
-        sc += cred; su += util;
-        return `<tr><td>${s.fecha || s.Fecha}</td><td style="color:var(--brand-blue); font-weight:800;">${t}</td><td>${e}</td><td>${s.cc || s.CC || '-'}</td><td>${s.nombre || s.Nombre || '-'}</td><td class="has-text-right">${fmtCop(cred)}</td><td class="has-text-right" style="color:var(--brand-green); font-weight:800;">${fmtCop(util)}</td><td class="has-text-right" style="font-weight:700;">${fmtCop(toNum(s.valor_cuota))}</td><td class="has-text-centered">${s.n_cuotas}</td></tr>`;
-      }).join('') : '<tr><td colspan="9" class="has-text-centered py-6 has-text-grey" style="font-weight: 600;">Sin datos en el periodo</td></tr>';
-      document.getElementById('tb-simulaciones').innerHTML = html; document.getElementById('total-count').innerText = list.length; document.getElementById('total-creditos').innerText = fmtCop(sc); document.getElementById('total-utilidad').innerText = fmtCop(su); lucide.createIcons();
+        const estado = s.estado || s.Estado || 'Pendiente';
+        const estLower = estado.toLowerCase();
+        
+        if (estLower === 'desembolsado') {
+            sc += cred; 
+            su += util;
+            countDesembolsado++;
+        }
+        
+        let badgeClass = 'is-warning is-light';
+        if (estLower === 'aprobado' || estLower === 'desembolsado') badgeClass = 'is-success is-light';
+        else if (estLower === 'rechazado' || estLower === 'anulado') badgeClass = 'is-danger is-light';
+        
+        return `<tr><td>${s.fecha || s.Fecha}</td><td style="color:var(--brand-blue); font-weight:800;">${t}</td><td>${e}</td><td>${s.cc || s.CC || '-'}</td><td>${s.nombre || s.Nombre || '-'}</td><td class="has-text-right">${fmtCop(cred)}</td><td class="has-text-right" style="color:var(--brand-green); font-weight:800;">${fmtCop(util)}</td><td class="has-text-right" style="font-weight:700;">${fmtCop(toNum(s.valor_cuota))}</td><td class="has-text-centered">${s.n_cuotas}</td><td class="has-text-centered"><span class="tag ${badgeClass}" style="cursor: pointer; font-weight: 800; font-size: 0.65rem;" onclick="window.openEstadoModal('${s.id_simulacion || s.id || s.cc || ''}', '${estado}')" title="Clic para cambiar estado">${estado}</span></td></tr>`;
+      }).join('') : '<tr><td colspan="10" class="has-text-centered py-6 has-text-grey" style="font-weight: 600;">Sin datos en el periodo</td></tr>';
+      document.getElementById('tb-simulaciones').innerHTML = html; document.getElementById('total-count').innerText = countDesembolsado; document.getElementById('total-creditos').innerText = fmtCop(sc); document.getElementById('total-utilidad').innerText = fmtCop(su); lucide.createIcons();
     }
 
     function sendAssessorWhatsApp(service) { const msg = encodeURIComponent(`Hola, quisiera contactar a un asesor de Soluciones Efectivas CTG para solicitar información sobre el crédito con ${service}.`); window.open(`https://wa.me/?text=${msg}`, '_blank'); }
     
     function sendWhatsApp(data) {
         const clientObj = db.clientes.find(c => String(c.id_cliente).trim() === String(data.id_cliente).trim());
-        const storeName = clientObj?.nombre_cliente || "Tienda Aliada";
-        const asesorName = clientObj?.asesor || "No asignado"; // CAPTURA DEL ASESOR
-        const bankName = db.financieras.find(f => String(f.id_financiera).trim() === String(data.id_financiera).trim())?.nombre_financiera || "Entidad Financiera";
+        const storeName = (clientObj && clientObj.nombre_cliente) ? clientObj.nombre_cliente : "Tienda Aliada";
+        const asesorName = (clientObj && clientObj.asesor) ? clientObj.asesor : "No asignado"; 
+        
+        const bankFound = db.financieras.find(f => String(f.id_financiera).trim() === String(data.id_financiera).trim());
+        const bankName = (bankFound && bankFound.nombre_financiera) ? bankFound.nombre_financiera : "Entidad Financiera";
+        
         const planObj = db.cuotas.find(c => String(c.id_cuota).trim() === String(data.id_cuota).trim());
         
-        // ESTRUCTURA DEL MENSAJE ACTUALIZADO (INCLUYE PRECIO VENTA Y ASESOR)
         let message = `*NUEVA SIMULACION - SOLUCIONES EFECTIVAS CTG*\n\n*DATOS DE LA TIENDA*\n*●* Tienda: ${storeName}\n*●* Asesor: ${asesorName}\n*●* Entidad: ${bankName}\n*●* Plan: ${planObj ? planObj.tipo_cuota : ''} (${data.n_cuotas} cuotas)\n\n*DETALLES FINANCIEROS*\n*●* Precio Venta: ${fmtCop(data.precio_producto)}\n*●* Total Credito: ${fmtCop(data.valor_a_consignar)}\n*●* Cuota Aprox: ${fmtCop(data.valor_cuota)}\n\n*DATOS DEL CLIENTE*\n*●* Nombre: ${data.nombre}\n*●* Documento: ${data.cc}\n*●* Celular: ${data.celular}\n*●* Correo: ${data.correo}`;
         
         if(bankName.toLowerCase().includes("brilla")) {
@@ -761,11 +941,38 @@
         fill('sel_financiera', db.financieras.filter(f => assignedIds.includes(String(f.id_financiera).trim())), 'id_financiera', 'nombre_financiera', true); 
     }
     
-    function loadPlanes() { const idFin = document.getElementById('sel_financiera').value; const finObj = db.financieras.find(f => String(f.id_financiera).trim() === String(idFin).trim()); if(finObj && finObj.nombre_financiera.toLowerCase().includes("brilla")) { document.getElementById('brilla-fields').style.display = 'block'; } else { document.getElementById('brilla-fields').style.display = 'none'; } fill('sel_plan', db.cuotas.filter(c => String(c.id_financiera).trim() === String(idFin).trim()).map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true); }
-    function loadNumCuotas() { const p = db.cuotas.find(c => String(c.id_cuota).trim() === String(document.getElementById('sel_plan').value).trim()); if(p) { let o = '<option value="" selected disabled>...</option>'; for(let i=1; i <= toNum(p.numero_cuotas); i++) o += `<option value="${i}">${i} cuota${i>1?'s':''}</option>`; document.getElementById('sel_n_cuotas').innerHTML = o; } calc(); }
+    function loadPlanes() { 
+        const idFin = document.getElementById('sel_financiera').value; 
+        const finObj = db.financieras.find(f => String(f.id_financiera).trim() === String(idFin).trim()); 
+        if(finObj && finObj.nombre_financiera.toLowerCase().includes("brilla")) { 
+            document.getElementById('brilla-fields').style.display = 'block'; 
+        } else { 
+            document.getElementById('brilla-fields').style.display = 'none'; 
+        } 
+        fill('sel_plan', db.cuotas.filter(c => String(c.id_financiera).trim() === String(idFin).trim()).map(c => ({id: c.id_cuota, text: c.tipo_cuota.toUpperCase() + ' ('+c.numero_cuotas+')'})), 'id', 'text', true); 
+    }
+    
+    function loadNumCuotas() { 
+        const p = db.cuotas.find(c => String(c.id_cuota).trim() === String(document.getElementById('sel_plan').value).trim()); 
+        if(p) { 
+            let o = '<option value="" selected disabled>...</option>'; 
+            for(let i=1; i <= toNum(p.numero_cuotas); i++) {
+                o += `<option value="${i}">${i} cuota${i>1?'s':''}</option>`; 
+            }
+            document.getElementById('sel_n_cuotas').innerHTML = o; 
+        } 
+        calc('venta'); 
+    } 
 
-    function calc() {
-      const idCli = document.getElementById('sel_cliente').value, idFin = document.getElementById('sel_financiera').value, idCuo = document.getElementById('sel_plan').value, n = parseInt(document.getElementById('sel_n_cuotas').value) || 0, p = toNum(document.getElementById('in_precio').value);
+    function calc(source = 'venta') {
+      const idCli = document.getElementById('sel_cliente').value;
+      const idFin = document.getElementById('sel_financiera').value;
+      const idCuo = document.getElementById('sel_plan').value;
+      const n = parseInt(document.getElementById('sel_n_cuotas').value) || 0;
+      
+      const inPrecio = document.getElementById('in_precio');
+      const inConsignar = document.getElementById('in_consignar');
+      
       if (!idCli || idCli === "placeholder" || !idFin || idFin === "placeholder") return null;
       
       let factor = null;
@@ -781,22 +988,88 @@
       }
 
       const cuo = db.cuotas.find(c => String(c.id_cuota).trim() === String(idCuo).trim());
-      if(!factor || !cuo || p <= 0 || n <= 0) { render(0,0); return null; }
+      const finObj = db.financieras.find(f => String(f.id_financiera).trim() === String(idFin).trim());
       
-      const cons = p / factor;
+      if(!factor || !cuo || n <= 0) { 
+          render(0,0); 
+          return null; 
+      }
+      
+      let p = 0;
+      let cons = 0;
+      
+      if (source === 'venta') {
+          p = toNum(inPrecio.value);
+          if(p <= 0) { render(0,0); return null; }
+          cons = p / factor;
+          inConsignar.value = fmtCop(cons);
+      } 
+      else if (source === 'consignar') {
+          cons = toNum(inConsignar.value);
+          if(cons <= 0) { render(0,0); return null; }
+          p = cons * factor;
+          inPrecio.value = fmtCop(p);
+      }
+
       const tI = toNum(cuo.tasa_interes) / 100;
       const tF = toNum(cuo.tasa_fianza) / 100;
       const cB = (cons + (cons * tI * n)) / n;
       const vC = cB + (cB * tF);
       
-      render(cons, vC);
-      return { id_cliente: idCli, id_financiera: idFin, id_cuota: idCuo, precio_producto: p, valor_a_consignar: cons, valor_cuota: vC, n_cuotas: n };
+      document.getElementById('out_cuota').innerText = fmtCop(vC);
+      
+      // --- CÁLCULO DE LA UTILIDAD REAL CORREGIDO ---
+      let utilidadReal = 0;
+      if (finObj) {
+          const factorFinanciera = toNum(finObj.factor_financiera);
+          const factorDecimal = factorFinanciera >= 1 ? (factorFinanciera / 100) : factorFinanciera;
+          
+          let montoNetoRecibido = 0;
+          if (factorDecimal >= 0.50) {
+              montoNetoRecibido = cons * factorDecimal;
+          } else {
+              montoNetoRecibido = cons - (cons * factorDecimal);
+          }
+          
+          utilidadReal = montoNetoRecibido - p;
+      }
+      
+      return { id_cliente: idCli, id_financiera: idFin, id_cuota: idCuo, precio_producto: p, valor_a_consignar: cons, valor_cuota: vC, n_cuotas: n, utilidad: utilidadReal };
     }
 
-    function render(c, q) { document.getElementById('out_consignar').innerText = fmtCop(c); document.getElementById('out_cuota').innerText = fmtCop(q); }
-    function clearInputs() { ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio', 'in_direccion', 'in_articulo', 'in_ref1_nom', 'in_ref1_tel', 'in_ref2_nom', 'in_ref2_tel'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ""; }); render(0,0); }
+    function render(c, q) { 
+        document.getElementById('in_consignar').value = fmtCop(c); 
+        document.getElementById('out_cuota').innerText = fmtCop(q); 
+    }
     
-    // Función para manejar el campo de nuevo asesor
+    function clearInputs() { 
+        ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'in_precio', 'in_consignar', 'in_direccion', 'in_articulo', 'in_ref1_nom', 'in_ref1_tel', 'in_ref2_nom', 'in_ref2_tel'].forEach(id => { 
+            const el = document.getElementById(id); 
+            if(el) el.value = ""; 
+        }); 
+        render(0,0); 
+    }
+    
+    function validateAndSave() {
+      const checks = ['in_cc', 'in_celular', 'in_nombre_sol', 'in_correo', 'sel_financiera', 'sel_plan', 'sel_n_cuotas', 'in_precio'];
+      for (let id of checks) { if (!document.getElementById(id).value || document.getElementById(id).value === "placeholder") { showToast("Complete todos los campos.", 'error'); return; } }
+      const mainBtn = document.getElementById('btn-main-action');
+      mainBtn.classList.add('is-loading');
+      mainBtn.disabled = true;
+
+      const calcData = calc('venta') || {};
+      const data = Object.assign({}, calcData, { 
+          cc: document.getElementById('in_cc').value, 
+          nombre: document.getElementById('in_nombre_sol').value, 
+          correo: document.getElementById('in_correo').value, 
+          celular: document.getElementById('in_celular').value
+      });
+
+      window.sendWhatsApp(data); 
+      window.apiCall('guardarSimulacion', data, 'btn-main-action'); 
+      clearInputs();
+    }
+
     function checkNewAsesor(value) {
         const newAsesorInput = document.getElementById('ed-cli-asesor-new');
         if (value === 'NUEVO') {
@@ -815,7 +1088,6 @@
         document.getElementById('ed-cli-nom').value = c.nombre_cliente;
         document.getElementById('ed-cli-pass').value = c.contrasena;
         
-        // Extraer lista única de asesores
         const asesoresSet = new Set();
         db.clientes.forEach(cli => {
             if (cli.asesor && String(cli.asesor).trim() !== '') {
@@ -830,15 +1102,12 @@
             asesorOpts += `<option value="${a}" ${c.asesor === a ? 'selected' : ''}>${a}</option>`;
         });
         asesorOpts += '<option value="NUEVO">+ Agregar Nuevo Asesor...</option>';
-        
         asesorSelect.innerHTML = asesorOpts;
         
-        // Si el asesor del cliente actual no está en la lista (raro, pero posible si es nuevo)
         if (c.asesor && !asesoresList.includes(c.asesor)) {
             asesorSelect.innerHTML = `<option value="${c.asesor}" selected>${c.asesor}</option>` + asesorSelect.innerHTML;
         }
 
-        // Restablecer el campo de texto de nuevo asesor
         document.getElementById('ed-cli-asesor-new').style.display = 'none';
         document.getElementById('ed-cli-asesor-new').value = '';
         
@@ -866,7 +1135,7 @@
             h += '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor</th><th class="has-text-centered">X</th></tr></thead><tbody>';
             db.financieras.forEach(f => {
                 const r = db.porcentajes.find(p => String(p.id_cliente).trim() === String(idCli).trim() && String(p.id_financiera).trim() === String(f.id_financiera).trim());
-                h += `<tr><td class="is-size-7" style="font-weight: 700;">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?toNum(r.factor_cliente):''}" style="font-weight: 600;"></td><td class="has-text-centered">${r?`<span class="btn-delete-row" onclick="confirmDeleteVinculo('${idCli}','${f.id_financiera}')"><i data-lucide="trash-2" style="width:14px;"></i></span>`:''}</td></tr>`;
+                h += `<tr><td class="is-size-7" style="font-weight: 700;">${f.nombre_financiera}</td><td><input class="input is-small v-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${r?toNum(r.factor_cliente):''}" style="font-weight: 600;"></td><td class="has-text-centered">${r?`<span class="btn-delete-row" onclick="window.confirmDeleteVinculo('${idCli}','${f.id_financiera}')"><i data-lucide="trash-2" style="width:14px;"></i></span>`:''}</td></tr>`;
             });
             h += '</tbody></table>';
         }
@@ -883,7 +1152,7 @@
         let h = '<table class="table is-fullwidth is-narrow is-bordered"><thead><tr><th>Entidad</th><th>Factor Base</th><th class="has-text-centered">X</th></tr></thead><tbody>';
         db.financieras.forEach(f => {
             const p = db.roles_permisos.find(x => String(x.ROL).trim() === String(id).trim() && String(x.id_financiera).trim() === String(f.id_financiera).trim());
-            h += `<tr><td class="is-size-7" style="font-weight: 700;">${f.nombre_financiera}</td><td><input class="input is-small r-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${p?toNum(p.factor_cliente):''}" style="font-weight: 600;"></td><td class="has-text-centered">${p?`<span class="btn-delete-row" onclick="confirmDeleteVinculoRol('${id}','${f.id_financiera}')"><i data-lucide="trash-2" style="width:14px;"></i></span>`:''}</td></tr>`;
+            h += `<tr><td class="is-size-7" style="font-weight: 700;">${f.nombre_financiera}</td><td><input class="input is-small r-fac" data-fin="${f.id_financiera}" type="number" step="0.01" value="${p?toNum(p.factor_cliente):''}" style="font-weight: 600;"></td><td class="has-text-centered">${p?`<span class="btn-delete-row" onclick="window.confirmDeleteVinculoRol('${id}','${f.id_financiera}')"><i data-lucide="trash-2" style="width:14px;"></i></span>`:''}</td></tr>`;
         });
         h += '</tbody></table>';
         document.getElementById('rol-vinculos-container').innerHTML = h;
@@ -923,7 +1192,6 @@
             document.querySelectorAll('.v-fac').forEach(input => { if(input.value !== "") factores.push({ id_fin: input.dataset.fin, valor: input.value }); });
         }
         
-        // Determinar el valor del asesor a guardar
         let asesorValue = document.getElementById('ed-cli-asesor').value;
         if (asesorValue === 'NUEVO') {
             asesorValue = document.getElementById('ed-cli-asesor-new').value.trim();
@@ -933,7 +1201,6 @@
             }
         }
         
-        // Incluimos el nuevo campo de asesor en el objeto que se envía a la API
         await apiCall('updateCliente', { 
             id_cliente: idCli, 
             nombre_cliente: document.getElementById('ed-cli-nom').value, 
@@ -959,7 +1226,53 @@
     function confirmDeleteVinculo(idCli, idFin) { openConfirm("¿Borrar factor personalizado?", async () => { await apiCall('deletePorcentaje', { id_cliente: idCli, id_financiera: idFin }); openAliado(idCli); }); }
     function confirmDeleteVinculoRol(idRol, idFin) { openConfirm("¿Borrar factor de este rol?", async () => { await apiCall('deletePorcentajeRol', { id_rol: idRol, id_financiera: idFin }); openRol(idRol); }); }
 
-    // FUNCIONES DEL MODAL DE DISTRIBUIDOR
+    function openEstadoModal(id, estadoActual) {
+        if(!id) { showToast("Error: No se pudo identificar esta solicitud", "error"); return; }
+        
+        const estLower = String(estadoActual).toLowerCase();
+        if (estLower !== 'pendiente' && estLower !== 'en revisión' && estLower !== 'en revision') {
+            showToast("Estado bloqueado. Solicitar contactar a su Admin IT.", "error");
+            return;
+        }
+
+        document.getElementById('estado-sim-id').value = id;
+        
+        const select = document.getElementById('sel-nuevo-estado');
+        const exists = Array.from(select.options).some(opt => opt.value === estadoActual);
+        select.value = exists ? estadoActual : 'Pendiente';
+        
+        document.getElementById('mod-estado').classList.add('is-active');
+    }
+
+    function closeEstadoModal() {
+        document.getElementById('mod-estado').classList.remove('is-active');
+    }
+
+    async function saveEstadoSimulacion() {
+        const id = document.getElementById('estado-sim-id').value;
+        const nuevoEstado = document.getElementById('sel-nuevo-estado').value;
+        
+        const btn = document.getElementById('btn-save-estado');
+        btn.classList.add('is-loading');
+        
+        try {
+            await fetchApi('actualizarEstadoSimulacion', { id_simulacion: id, cc: id, estado: nuevoEstado });
+            
+            const sim = db.simulaciones.find(s => String(s.id_simulacion || s.id || s.cc) === String(id));
+            if (sim) {
+                sim.estado = nuevoEstado;
+                sim.Estado = nuevoEstado; 
+            }
+            filterSimulations(); 
+            showToast("Estado actualizado correctamente", "success");
+        } catch (error) {
+            showToast("Error al conectar con el servidor", "error");
+        } finally {
+            btn.classList.remove('is-loading');
+            closeEstadoModal();
+        }
+    }
+
     async function showDistribuidorPrices() {
         document.getElementById('mod-precios').classList.add('is-active');
         document.getElementById('precios-loader').style.display = 'block';
@@ -1004,6 +1317,19 @@
             lucide.createIcons();
         }
     }
+
+    // EXPORTACIÓN OBLIGATORIA AL ENTORNO GLOBAL
+    Object.assign(window, {
+        attemptLogin, switchView, showDistribuidorPrices, handleAllyChange, 
+        loadPlanes, loadNumCuotas, calc, handlePriceInput, handleConsignarInput, 
+        validateAndSave, sendAssessorWhatsApp, switchAdminTab, apiCall, switchQuery, 
+        renderTables, handlePredefinedFilter, filterSimulations, closeConfirm, 
+        closeModals, saveAliado, saveRol, saveFinanciera, askDeleteAliado, 
+        askDeleteRol, askDeleteFinanciera, openQR, closeQR, checkNewAsesor, 
+        openAliado, openFinanciera, openRol, confirmDeleteVinculo, 
+        confirmDeleteVinculoRol, renderAliadoVinculos, openEstadoModal, 
+        closeEstadoModal, saveEstadoSimulacion, sendWhatsApp, filterTiendasCalc
+    });
   </script>
 </body>
 </html>
