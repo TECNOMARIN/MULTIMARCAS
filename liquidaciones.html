@@ -352,7 +352,7 @@
             const kpis = useMemo(() => {
                 let stats = {
                     ventasTotales: 0,
-                    creditoTotal: 0, // Se incluye para la nueva tarjeta
+                    creditoTotal: 0, 
                     costoTotal: 0,
                     utilidadAdmin: 0,
                     aConsignarSocioTotal: 0,
@@ -645,44 +645,44 @@
                     ) : (
                         <>
                             {/* 🎯 TARJETAS DE RESUMEN (7 COLUMNAS) */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2 2xl:gap-3">
                                 
-                                <div className="bg-slate-100 p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ventas Brutas</p>
-                                    <p className="text-xl 2xl:text-2xl font-black text-slate-700 truncate" title={formatCurrency(kpis.ventasTotales)}>{formatCurrency(kpis.ventasTotales)}</p>
-                                    <p className="text-[10px] text-slate-400 mt-1">Valor en Vitrina</p>
+                                <div className="bg-slate-100 p-4 xl:p-3 2xl:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 truncate" title="Ventas Brutas">Ventas Brutas</p>
+                                    <p className="text-lg md:text-xl xl:text-[15px] 2xl:text-xl font-black text-slate-700 tracking-tighter truncate" title={formatCurrency(kpis.ventasTotales)}>{formatCurrency(kpis.ventasTotales)}</p>
+                                    <p className="text-[9px] text-slate-400 mt-0.5 truncate">Valor en Vitrina</p>
                                 </div>
                                 
-                                <div className="bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-700 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Financiado</p>
-                                    <p className="text-xl 2xl:text-2xl font-black truncate" title={formatCurrency(kpis.creditoTotal)}>{formatCurrency(kpis.creditoTotal)}</p>
-                                    <p className="text-[10px] text-slate-400 mt-1">{kpis.cantidad} equipos</p>
+                                <div className="bg-slate-800 p-4 xl:p-3 2xl:p-5 rounded-2xl shadow-sm border border-slate-700 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate" title="Total Financiado">Total Financiado</p>
+                                    <p className="text-lg md:text-xl xl:text-[15px] 2xl:text-xl font-black tracking-tighter truncate" title={formatCurrency(kpis.creditoTotal)}>{formatCurrency(kpis.creditoTotal)}</p>
+                                    <p className="text-[9px] text-slate-400 mt-0.5 truncate">{kpis.cantidad} equipos</p>
                                 </div>
                                 
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Costo Equipos</p>
-                                    <p className="text-xl 2xl:text-2xl font-black text-slate-800 truncate" title={formatCurrency(kpis.costoTotal)}>{formatCurrency(kpis.costoTotal)}</p>
+                                <div className="bg-white p-4 xl:p-3 2xl:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate" title="Costo Equipos">Costo Equipos</p>
+                                    <p className="text-lg md:text-xl xl:text-[15px] 2xl:text-xl font-black text-slate-800 tracking-tighter truncate" title={formatCurrency(kpis.costoTotal)}>{formatCurrency(kpis.costoTotal)}</p>
                                 </div>
 
                                 {/* TARJETA PEAJE CARTERA */}
-                                <div className="bg-amber-50 p-5 rounded-3xl shadow-sm border border-amber-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Peaje Cartera</p>
-                                    <p className="text-xl 2xl:text-2xl font-black text-amber-800 truncate" title={formatCurrency(kpis.cartera)}>{formatCurrency(kpis.cartera)}</p>
+                                <div className="bg-amber-50 p-4 xl:p-3 2xl:p-5 rounded-2xl shadow-sm border border-amber-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-0.5 truncate" title="Peaje Cartera">Peaje Cartera</p>
+                                    <p className="text-lg md:text-xl xl:text-[15px] 2xl:text-xl font-black text-amber-800 tracking-tighter truncate" title={formatCurrency(kpis.cartera)}>{formatCurrency(kpis.cartera)}</p>
                                 </div>
 
-                                <div className="bg-gradient-to-br from-indigo-500 to-blue-600 p-5 rounded-3xl shadow-md border border-indigo-600 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">Utilidad Admin 112</p>
-                                    <p className="text-xl 2xl:text-2xl font-black truncate" title={formatCurrency(kpis.utilidadAdmin)}>{formatCurrency(kpis.utilidadAdmin)}</p>
+                                <div className="bg-gradient-to-br from-indigo-500 to-blue-600 p-4 xl:p-3 2xl:p-5 rounded-2xl shadow-md border border-indigo-600 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-0.5 truncate" title="Utilidad Admin">Utilidad Admin</p>
+                                    <p className="text-lg md:text-xl xl:text-[15px] 2xl:text-xl font-black tracking-tighter truncate" title={formatCurrency(kpis.utilidadAdmin)}>{formatCurrency(kpis.utilidadAdmin)}</p>
                                 </div>
                                 
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Impuesto 4x1000</p>
-                                    <p className="text-xl 2xl:text-2xl font-black text-slate-800 truncate" title={formatCurrency(kpis.cuatroPorMilTotal)}>{formatCurrency(kpis.cuatroPorMilTotal)}</p>
+                                <div className="bg-white p-4 xl:p-3 2xl:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate" title="Impuesto 4x1000">Imp. 4x1000</p>
+                                    <p className="text-lg md:text-xl xl:text-[15px] 2xl:text-xl font-black text-slate-800 tracking-tighter truncate" title={formatCurrency(kpis.cuatroPorMilTotal)}>{formatCurrency(kpis.cuatroPorMilTotal)}</p>
                                 </div>
 
-                                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500 transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">A Consignar (Neto)</p>
-                                    <p className="text-xl 2xl:text-2xl font-black text-emerald-700 truncate" title={formatCurrency(kpis.aConsignarSocioTotal)}>{formatCurrency(kpis.aConsignarSocioTotal)}</p>
+                                <div className="bg-white p-4 xl:p-3 2xl:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500 transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate" title="A Consignar (Neto)">A Consignar</p>
+                                    <p className="text-lg md:text-xl xl:text-[15px] 2xl:text-xl font-black text-emerald-700 tracking-tighter truncate" title={formatCurrency(kpis.aConsignarSocioTotal)}>{formatCurrency(kpis.aConsignarSocioTotal)}</p>
                                 </div>
                             </div>
 
