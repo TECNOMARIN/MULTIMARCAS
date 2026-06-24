@@ -703,13 +703,8 @@
                                 </div>
                             </div>
 
-                            {/* 🎯 TARJETAS DE RESUMEN: SEGUNDA FILA (5 COLUMNAS) */}
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-                                <div className="bg-indigo-50 p-4 xl:p-5 rounded-2xl shadow-sm border border-indigo-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest mb-0.5 truncate" title="Utilidad">Utilidad</p>
-                                    <p className="text-xl 2xl:text-2xl font-black text-indigo-800 tracking-tighter truncate" title={formatCurrency(kpis.utilidad)}>{formatCurrency(kpis.utilidad)}</p>
-                                </div>
-
+                            {/* 🎯 TARJETAS DE RESUMEN: SEGUNDA FILA (4 COLUMNAS) */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                                 <div className="bg-amber-50 p-4 xl:p-5 rounded-2xl shadow-sm border border-amber-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-0.5 truncate" title="Peaje Cartera">Peaje Cartera</p>
                                     <p className="text-xl 2xl:text-2xl font-black text-amber-800 tracking-tighter truncate" title={formatCurrency(kpis.cartera)}>{formatCurrency(kpis.cartera)}</p>
