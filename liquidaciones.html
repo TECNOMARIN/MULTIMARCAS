@@ -363,16 +363,24 @@
                     const assignedLower = String(row._assigned || '').toLowerCase();
                     const storeLower = String(row._tienda || '').toLowerCase();
                     
-                    // 🛡️ Lógica Exclusión 4x1000 para vitrinas
-                    const isVitrina = assignedLower.includes('vitrina') || storeLower.includes('vitrina');
+                    // 🛡️ Lógica Exclusión 4x1000 obligatoria para este grupo
+                    const siemprePaga4x1000 = assignedLower.includes('chamorro') || assignedLower.includes('pipe') || assignedLower.includes('ricardo') || assignedLower.includes('edwin ortiz');
+                    const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
                     
                     const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
                     const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
                     const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
 
+                    const inicialValor = (row._venta || 0) - (row._financed || 0);
+
                     stats.ventasTotales += (row._venta || 0);
+                    stats.inicial += inicialValor;
                     stats.creditoTotal += (row._financed || 0);
                     stats.costoTotal += (row._costo || 0);
+                    
+                    // Utilidad = Venta Bruta - Costo Equipo
+                    stats.utilidad += (row._venta || 0) - (row._costo || 0);
+                    
                     stats.utilidadAdmin += (row._admin112 || 0);
                     stats.aConsignarSocioTotal += consignarMontoNeto;
                     stats.cuatroPorMilTotal += cuatroPorMil;
@@ -382,11 +390,7 @@
                 });
 
                 // Cálculos adicionales
-                stats.inicial = stats.ventasTotales - stats.creditoTotal;
                 stats.porcentajeInicial = stats.ventasTotales > 0 ? ((stats.inicial / stats.ventasTotales) * 100).toFixed(1) : "0.0";
-                
-                // Utilidad = Venta Bruta - Costo Equipo
-                stats.utilidad = stats.ventasTotales - stats.costoTotal;
 
                 return stats;
             }, [filteredData]);
@@ -423,7 +427,8 @@
                     
                     const assignedLower = String(row._assigned || '').toLowerCase();
                     const storeLower = String(row._tienda || '').toLowerCase();
-                    const isVitrina = assignedLower.includes('vitrina') || storeLower.includes('vitrina');
+                    const siemprePaga4x1000 = assignedLower.includes('chamorro') || assignedLower.includes('pipe') || assignedLower.includes('ricardo') || assignedLower.includes('edwin ortiz');
+                    const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
                     
                     const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
                     const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
@@ -474,7 +479,8 @@
                 const exportData = filteredData.map(row => {
                     const assignedLower = String(row._assigned || '').toLowerCase();
                     const storeLower = String(row._tienda || '').toLowerCase();
-                    const isVitrina = assignedLower.includes('vitrina') || storeLower.includes('vitrina');
+                    const siemprePaga4x1000 = assignedLower.includes('chamorro') || assignedLower.includes('pipe') || assignedLower.includes('ricardo') || assignedLower.includes('edwin ortiz');
+                    const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
                     
                     const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
                     const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
@@ -521,7 +527,7 @@
                             <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm border border-slate-200" title="Volver al Dashboard">
                                 <Icons.ArrowLeft className="w-5 h-5"/>
                             </button>
-                            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-10 md:h-12 object-contain" />
+                            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-10 md:h-12 object-contain" />
                             <div className="h-8 w-px bg-slate-300 hidden md:block"></div>
                             <div>
                                 <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">Liquidación Comercial</h2>
@@ -766,8 +772,9 @@
                                                 const assignedLower = String(row._assigned || '').toLowerCase();
                                                 const storeLower = String(row._tienda || '').toLowerCase();
                                                 
-                                                // 🛡️ Lógica Exclusión 4x1000 para vitrinas en la fila
-                                                const isVitrina = assignedLower.includes('vitrina') || storeLower.includes('vitrina');
+                                                // 🛡️ Lógica Exclusión 4x1000 para vitrinas en la fila (Actualizado)
+                                                const siemprePaga4x1000 = assignedLower.includes('chamorro') || assignedLower.includes('pipe') || assignedLower.includes('ricardo') || assignedLower.includes('edwin ortiz');
+                                                const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
                                                 
                                                 const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
                                                 const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
