@@ -72,11 +72,34 @@
             }
 
             if (typeof dateVal === 'string' && dateVal.length > 5) {
-                if (dateVal.match(/^\d{4}-\d{2}-\d{2}/)) return new Date(dateVal.substring(0,10).replace(/\//g, '-'));
+                // 🛡️ CORRECCIÓN ZONA HORARIA
+                // Si la fecha viene en formato ISO (ej. 2026-06-16T05:00:00.000Z)
+                if (dateVal.includes('T')) {
+                    const cleanDate = dateVal.split('T')[0]; // Tomamos solo la parte "2026-06-16"
+                    const parts = cleanDate.split('-');
+                    // Al usar new Date(año, mes, dia), evitamos que JS asuma que es UTC
+                    return new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]); 
+                }
+                
+                // Si viene como YYYY-MM-DD simple
+                if (dateVal.match(/^\d{4}-\d{2}-\d{2}/)) {
+                    const parts = dateVal.substring(0,10).split('-');
+                    return new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
+                }
+                
+                // Procesamiento estándar
                 dateObj = new Date(dateVal);
+                
+                // Compensación final si aún existe desfase por la zona horaria local
+                if (!isNaN(dateObj.getTime())) {
+                    const offset = dateObj.getTimezoneOffset() * 60000;
+                    dateObj = new Date(dateObj.getTime() + offset);
+                }
+
             } else if (dateVal instanceof Date) {
                 dateObj = dateVal;
             }
+            
             if (!dateObj || isNaN(dateObj.getTime())) return null;
             return dateObj;
         };
@@ -224,6 +247,7 @@
                                             _convenio: convenioFound,
                                             _device: findVal(['REFERENCIA EQUIPO', 'REFERENCIA', 'MODELO', 'EQUIPO']),
                                             _venta: parseAmount(findVal(['TOTAL VENTA', 'PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL'])),
+                                            _financed: financed, // 👈 SE EXTRAE Y GUARDA EL SALDO A FINANCIAR
                                             _costo: parseAmount(findVal(['COSTOS EQUIPOS', 'COSTO EQUIPO', 'COSTO'])),
                                             _cartera: parseAmount(findVal(['CARTERA', 'COSTO CARTERA', 'FEE CARTERA'])),
                                             _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112', 'UTILIDAD ADMIN'])),
@@ -324,9 +348,11 @@
                 return Array.from(s).sort();
             }, [data]);
 
+            // 🎯 LÓGICA DE KPIS ACTUALIZADA
             const kpis = useMemo(() => {
                 let stats = {
                     ventasTotales: 0,
+                    creditoTotal: 0, // Se incluye para la nueva tarjeta
                     costoTotal: 0,
                     utilidadAdmin: 0,
                     aConsignarSocioTotal: 0,
@@ -341,7 +367,8 @@
                     const cuatroPorMil = consignarMontoBruto * 0.004;
                     const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
 
-                    stats.ventasTotales += row._venta;
+                    stats.ventasTotales += (row._venta || 0);
+                    stats.creditoTotal += (row._financed || 0);
                     stats.costoTotal += row._costo;
                     stats.utilidadAdmin += row._admin112;
                     stats.aConsignarSocioTotal += consignarMontoNeto;
@@ -354,6 +381,7 @@
                 return stats;
             }, [filteredData]);
 
+            // 🎯 EXPORTACIÓN PDF ACTUALIZADA
             const handleExportPDF = () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape'); 
@@ -374,8 +402,8 @@
                 doc.text(`Convenio: ${cName} | Aliado: ${pName} | Tiendas: ${tName} | Periodo: ${dateRangeStr}`, 14, 22);
 
                 const tableColumn = brand === 'todas' 
-                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"]
-                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"];
+                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta Bruta", "Saldo Finan.", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"]
+                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta Bruta", "Saldo Finan.", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"];
                 
                 const tableRows = [];
 
@@ -393,8 +421,9 @@
                         String(row._assigned || '').substring(0, 15),
                         String(row._client || '').substring(0, 20),
                         formatCurrency(row._venta),
+                        formatCurrency(row._financed),
                         formatCurrency(row._costo),
-                        formatCurrency(row._cartera), // Columna añadida al PDF
+                        formatCurrency(row._cartera), 
                         formatCurrency(row._admin112),
                         formatCurrency(cuatroPorMil),
                         formatCurrency(consignarMontoNeto)
@@ -405,8 +434,8 @@
                 });
 
                 const footRow = brand === 'todas'
-                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]]
-                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]];
+                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.creditoTotal), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]]
+                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.creditoTotal), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]];
 
                 doc.autoTable({
                     head: [tableColumn],
@@ -422,6 +451,7 @@
                 doc.save(`Liquidacion_${brand}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
+            // 🎯 EXPORTACIÓN EXCEL ACTUALIZADA
             const handleExportExcel = () => {
                 const exportData = filteredData.map(row => {
                     const consignarMontoBruto = row._pipe + row._ricardo + row._jc + row._ejec;
@@ -436,7 +466,8 @@
                     obj["Tienda"] = row._tienda || '';
                     obj["Cliente"] = row._client || '';
                     obj["Referencia"] = row._device || '';
-                    obj["Valor Venta"] = row._venta;
+                    obj["Valor Venta Bruta"] = row._venta;
+                    obj["Saldo a Financiar"] = row._financed;
                     obj["Costo Equipo"] = row._costo;
                     obj["Cartera"] = row._cartera;
                     obj["Remanente"] = row._remanente;
@@ -463,7 +494,7 @@
                             <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm border border-slate-200" title="Volver al Dashboard">
                                 <Icons.ArrowLeft className="w-5 h-5"/>
                             </button>
-                            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-10 md:h-12 object-contain" />
+                            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-10 md:h-12 object-contain" />
                             <div className="h-8 w-px bg-slate-300 hidden md:block"></div>
                             <div>
                                 <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">Liquidación Comercial</h2>
@@ -613,42 +644,49 @@
                         <div className="flex justify-center py-20"><Icons.RefreshCw className="w-10 h-10 animate-spin text-indigo-500" /></div>
                     ) : (
                         <>
-                            {/* Tarjetas de Resumen Financiero */}
-                            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                            {/* 🎯 TARJETAS DE RESUMEN (7 COLUMNAS) */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+                                
+                                <div className="bg-slate-100 p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ventas Brutas</p>
+                                    <p className="text-xl 2xl:text-2xl font-black text-slate-700 truncate" title={formatCurrency(kpis.ventasTotales)}>{formatCurrency(kpis.ventasTotales)}</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">Valor en Vitrina</p>
+                                </div>
+                                
                                 <div className="bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-700 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Ventas Brutas</p>
-                                    <p className="text-2xl font-black">{formatCurrency(kpis.ventasTotales)}</p>
-                                    <p className="text-xs text-slate-400 mt-1">{kpis.cantidad} equipos</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Financiado</p>
+                                    <p className="text-xl 2xl:text-2xl font-black truncate" title={formatCurrency(kpis.creditoTotal)}>{formatCurrency(kpis.creditoTotal)}</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">{kpis.cantidad} equipos</p>
                                 </div>
                                 
                                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Costo Equipos</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.costoTotal)}</p>
+                                    <p className="text-xl 2xl:text-2xl font-black text-slate-800 truncate" title={formatCurrency(kpis.costoTotal)}>{formatCurrency(kpis.costoTotal)}</p>
                                 </div>
 
                                 {/* TARJETA PEAJE CARTERA */}
                                 <div className="bg-amber-50 p-5 rounded-3xl shadow-sm border border-amber-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-1">Peaje Cartera</p>
-                                    <p className="text-2xl font-black text-amber-800">{formatCurrency(kpis.cartera)}</p>
+                                    <p className="text-xl 2xl:text-2xl font-black text-amber-800 truncate" title={formatCurrency(kpis.cartera)}>{formatCurrency(kpis.cartera)}</p>
                                 </div>
 
                                 <div className="bg-gradient-to-br from-indigo-500 to-blue-600 p-5 rounded-3xl shadow-md border border-indigo-600 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest mb-1">Utilidad Admin 112</p>
-                                    <p className="text-2xl font-black">{formatCurrency(kpis.utilidadAdmin)}</p>
+                                    <p className="text-xl 2xl:text-2xl font-black truncate" title={formatCurrency(kpis.utilidadAdmin)}>{formatCurrency(kpis.utilidadAdmin)}</p>
                                 </div>
                                 
                                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-rose-500 transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Impuesto 4x1000</p>
-                                    <p className="text-2xl font-black text-slate-800">{formatCurrency(kpis.cuatroPorMilTotal)}</p>
+                                    <p className="text-xl 2xl:text-2xl font-black text-slate-800 truncate" title={formatCurrency(kpis.cuatroPorMilTotal)}>{formatCurrency(kpis.cuatroPorMilTotal)}</p>
                                 </div>
 
                                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center border-l-[4px] border-l-emerald-500 transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">A Consignar (Neto)</p>
-                                    <p className="text-2xl font-black text-emerald-700">{formatCurrency(kpis.aConsignarSocioTotal)}</p>
+                                    <p className="text-xl 2xl:text-2xl font-black text-emerald-700 truncate" title={formatCurrency(kpis.aConsignarSocioTotal)}>{formatCurrency(kpis.aConsignarSocioTotal)}</p>
                                 </div>
                             </div>
 
-                            {/* Tabla de Detalle */}
+                            {/* 🎯 TABLA DE DETALLE ACTUALIZADA */}
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-4">
                                     <h3 className="font-black text-slate-800 flex items-center gap-2">
@@ -671,7 +709,8 @@
                                                 <th className="px-4 py-3 font-black">Fecha</th>
                                                 <th className="px-4 py-3 font-black">Asignado / Convenio</th>
                                                 <th className="px-4 py-3 font-black">Cliente / Equipo</th>
-                                                <th className="px-4 py-3 font-black text-right">Venta</th>
+                                                <th className="px-4 py-3 font-black text-right text-slate-500">Venta Bruta</th>
+                                                <th className="px-4 py-3 font-black text-right text-blue-600">Saldo a Financiar</th>
                                                 <th className="px-4 py-3 font-black text-right">Costo</th>
                                                 <th className="px-4 py-3 font-black text-amber-600 bg-amber-50/50 text-right">Cartera</th>
                                                 <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50 text-right">Admin 112</th>
@@ -688,7 +727,6 @@
                                                 const cuatroPorMil = consignarMontoBruto * 0.004;
                                                 const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
 
-                                                // 🎯 LÓGICA DE DETECCIÓN REGLA 40/60 EN LA UI
                                                 const assignedLower = String(row._assigned || '').toLowerCase();
                                                 const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz');
                                                 const isNewRuleDate = d && d.getTime() >= new Date(2026, 4, 26).getTime();
@@ -725,10 +763,10 @@
                                                             <div className="font-bold text-slate-700 text-xs truncate max-w-[180px]" title={row._client}>{row._client || '-'}</div>
                                                             <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[180px]">{row._device || '-'}</div>
                                                         </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-700 bg-slate-50/30">{row._venta > 0 ? formatCurrency(row._venta) : '-'}</td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-500">{row._venta > 0 ? formatCurrency(row._venta) : '-'}</td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-blue-700 bg-blue-50/30">{row._financed > 0 ? formatCurrency(row._financed) : '-'}</td>
                                                         <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-rose-500 bg-rose-50/10">{row._costo > 0 ? formatCurrency(row._costo) : '-'}</td>
                                                         
-                                                        {/* COLUMNA CARTERA AÑADIDA */}
                                                         <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-amber-600 bg-amber-50/20">{row._cartera > 0 ? formatCurrency(row._cartera) : '-'}</td>
                                                         
                                                         <td className="px-4 py-3 whitespace-nowrap text-right bg-indigo-50/30 font-black text-indigo-700">
@@ -752,7 +790,7 @@
                                                 );
                                             }) : (
                                                 <tr>
-                                                    <td colSpan={brand === 'todas' ? "10" : "9"} className="px-6 py-20 text-center text-slate-400">
+                                                    <td colSpan={brand === 'todas' ? "11" : "10"} className="px-6 py-20 text-center text-slate-400">
                                                         <div className="flex flex-col items-center gap-3">
                                                             <Icons.Database className="w-8 h-8 opacity-20"/>
                                                             <p>No se encontraron liquidaciones para los filtros aplicados.</p>
