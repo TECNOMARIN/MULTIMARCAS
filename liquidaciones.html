@@ -44,7 +44,9 @@
             AlertCircle: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconBase>,
             CheckCircle: (p) => <IconBase {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>,
             Search: (p) => <IconBase {...p}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></IconBase>,
-            Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>
+            Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>,
+            Settings: (p) => <IconBase {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1-2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>,
+            X: (p) => <IconBase {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></IconBase>
         };
 
         // ⚠️ PEGA AQUÍ TU URL CORRECTA DE GOOGLE APPS SCRIPT
@@ -52,8 +54,8 @@
 
         // UTILIDADES
         const parseAmount = (val) => {
-            let s = String(val || '');
-            s = s.replace(/[^0-9.,-]/g, '');
+            if (val === null || val === undefined || String(val).trim() === '') return null; // Retorna null si está vacío para diferenciar del 0
+            let s = String(val).replace(/[^0-9.,-]/g, '');
             s = s.replace(/[.,]00$/, '');
             s = s.replace(/[.,]/g, '');
             return parseInt(s, 10) || 0;
@@ -102,6 +104,7 @@
         function LiquidacionesApp() {
             const [brand, setBrand] = useState('payjoy'); 
             const [data, setData] = useState([]);
+            const [headersList, setHeadersList] = useState([]); // Para saber las columnas exactas
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState(null);
             
@@ -115,6 +118,19 @@
             
             const [selectedTiendas, setSelectedTiendas] = useState([]);
             const [isTiendaDropdownOpen, setIsTiendaDropdownOpen] = useState(false);
+
+            // ==========================================
+            // ESTADOS PARA EL MODAL DE EDICIÓN
+            // ==========================================
+            const [editSaleModal, setEditSaleModal] = useState({
+                show: false,
+                row: null,
+                gestor: '',
+                equipo: '',
+                costo: '',
+                remanente: ''
+            });
+            const [isSavingEdit, setIsSavingEdit] = useState(false);
 
             useEffect(() => {
                 if (selectedTiendas.length > 0 && selectedConvenio !== '') {
@@ -130,6 +146,7 @@
                     const brandsToFetch = brand === 'todas' ? ['payjoy', 'alocredit', 'krediya', 'credismart'] : [brand];
                     
                     let combinedData = [];
+                    let globalHeaders = [];
 
                     const promises = [
                         fetch(`${API_URL}${separator}type=usuarios_payjoy&t=${new Date().getTime()}`),
@@ -191,6 +208,8 @@
                             try {
                                 const jsonVentas = JSON.parse(await res.text());
                                 if (Array.isArray(jsonVentas) && jsonVentas.length > 0) {
+                                    if (globalHeaders.length === 0) globalHeaders = Object.keys(jsonVentas[0]);
+
                                     const parsedRows = jsonVentas.map(row => {
                                         const findVal = (keywords) => {
                                             let k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().trim() === kw));
@@ -221,19 +240,33 @@
                                                 u.includes('PIPE') || u.includes('RICARDO') || 
                                                 u.includes('EJECUTIVOS') || u.includes('JUAN CAMILO')
                                             ) {
-                                                aConsignarTotal += parseAmount(row[k]);
+                                                const amount = parseAmount(row[k]);
+                                                if (amount !== null) aConsignarTotal += amount;
                                             }
                                         });
 
                                         let financed = parseAmount(findVal(['SALDO A FINANCIAR', 'SALDO A FINACIAR', 'MONTO A FINANCIAR', 'MONTO TOTAL A FINANCIAR', 'MONTO TOTAL A CONSIGNAR', 'MONTO A CONSIGNAR', 'VALOR CREDITO']));
 
-                                        if (financed === 0 || isNaN(financed)) {
+                                        if (financed === 0 || financed === null || isNaN(financed)) {
                                             let totalVenta = parseAmount(findVal(['TOTAL VENTA', 'PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL']));
                                             let cuotaInicial = parseAmount(findVal(['CUOTA INICIAL', 'VALOR CUOTA INICIAL', 'INICIAL']));
                                             if (totalVenta > 0 && cuotaInicial >= 0) financed = totalVenta - cuotaInicial;
                                         }
 
+                                        // 🛡️ Obtener Remanente verificando nulos y guardando el 0 explícito
+                                        const rawRem = findVal(['EXCEDENTE DE INICIAL', 'REMANENTE DE INICIAL', 'REMANENTE']);
+                                        let remanenteVal = null;
+                                        if (rawRem !== undefined && rawRem !== null && String(rawRem).trim() !== "") {
+                                            remanenteVal = parseAmount(rawRem);
+                                            if (remanenteVal === null && String(rawRem).trim() === "0") {
+                                                remanenteVal = 0;
+                                            } else if (remanenteVal !== null) {
+                                                remanenteVal = Number(remanenteVal);
+                                            }
+                                        }
+
                                         return {
+                                            _id: findVal(['CEDULA', 'CC', 'DOCUMENTO', 'IDENTIFICACION']),
                                             _brandName: currentBrand.toUpperCase(),
                                             _date: dateKey ? row[dateKey] : undefined,
                                             _client: findVal(['NOMBRE COMPLETO', 'NOMBRE DEL CLIENTE', 'NOMBRE CLIENTE', 'NOMBRES', 'CLIENTE']),
@@ -250,7 +283,7 @@
                                             _ricardo: parseAmount(findVal(['RICARDO MARIN', 'CONSIGNAR RICARDO'])),
                                             _jc: parseAmount(findVal(['JUAN CAMILO'])),
                                             _ejec: parseAmount(findVal(['EJECUTIVOS'])),
-                                            _remanente: parseAmount(findVal(['EXCEDENTE DE INICIAL', 'REMANENTE DE INICIAL', 'REMANENTE'])),
+                                            _remanente: remanenteVal,
                                             _aConsignar: aConsignarTotal
                                         };
                                     });
@@ -260,6 +293,7 @@
                         }
                     }
                     
+                    setHeadersList(globalHeaders);
                     setData(combinedData);
                 } catch (error) {
                     console.error("Fetch Error:", error);
@@ -343,6 +377,74 @@
                 return Array.from(s).sort();
             }, [data]);
 
+            // ==========================================
+            // LÓGICA MODIFICAR VENTA DESDE EL MODAL
+            // ==========================================
+            const openEditModal = (row) => {
+                const inicialValor = (row._venta || 0) - (row._financed || 0);
+                let remanenteAplicado = row._remanente;
+                
+                // Si está vacío en la base de datos, mostramos el que se auto-calculó
+                if (remanenteAplicado === null || remanenteAplicado === undefined || remanenteAplicado === '') {
+                    remanenteAplicado = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
+                }
+
+                setEditSaleModal({
+                    show: true,
+                    row: row,
+                    gestor: String(row._assigned || '').trim(),
+                    equipo: String(row._device || '').trim(),
+                    costo: row._costo !== null && row._costo !== undefined ? String(row._costo) : '',
+                    remanente: String(remanenteAplicado)
+                });
+            };
+
+            const handleSaveSaleEdit = async () => {
+                if (!editSaleModal.row) return;
+                setIsSavingEdit(true);
+                try {
+                    const idVal = editSaleModal.row._id;
+                    const brandVal = (editSaleModal.row._brandName || brand || 'payjoy').toLowerCase();
+
+                    const updates = [];
+                    // Sanear Asignado y Equipo
+                    updates.push({ column: 'ASIGNADO', value: editSaleModal.gestor, append: false, cleanWrite: true });
+                    updates.push({ column: 'EQUIPO', value: editSaleModal.equipo, append: false, cleanWrite: true });
+                    
+                    // Sanear y enviar Costo y Remanente como STRING (para evitar que Apps Script ignore el 0 falsy)
+                    const costoVal = editSaleModal.costo !== '' ? String(editSaleModal.costo.replace(/\D/g, '')) : '';
+                    updates.push({ column: 'COSTO EQUIPO', value: costoVal, append: false, cleanWrite: true });
+                    
+                    const remanenteVal = editSaleModal.remanente !== '' ? String(editSaleModal.remanente.replace(/\D/g, '')) : '';
+                    
+                    // Buscar el nombre exacto de la columna de Remanente en esta financiera
+                    const remColName = headersList.find(h => String(h).toUpperCase().includes('REMANENTE') || String(h).toUpperCase().includes('EXCEDENTE')) || 'REMANENTE DE INICIAL';
+                    
+                    updates.push({ column: remColName, value: remanenteVal, append: false, cleanWrite: true });
+
+                    const payload = {
+                        type: brandVal,
+                        id: idVal,
+                        updates: updates
+                    };
+
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    fetchVentasData(); // Recarga la tabla para ver los cambios
+                    
+                    setEditSaleModal({ show: false, row: null, gestor: '', equipo: '', costo: '', remanente: '' });
+                } catch (error) {
+                    alert("Error al guardar: " + error.message);
+                } finally {
+                    setIsSavingEdit(false);
+                }
+            };
+
             // 🎯 LÓGICA DE KPIS ACTUALIZADA
             const kpis = useMemo(() => {
                 let stats = {
@@ -364,7 +466,8 @@
                     const storeLower = String(row._tienda || '').toLowerCase();
                     
                     // 🛡️ Lógica Exclusión 4x1000 obligatoria para este grupo
-                    const siemprePaga4x1000 = assignedLower.includes('chamorro') || assignedLower.includes('pipe') || assignedLower.includes('ricardo') || assignedLower.includes('edwin ortiz');
+                    const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz') || assignedLower.includes('melissa') || assignedLower.includes('beltran');
+                    const siemprePaga4x1000 = isPipeOChamorro;
                     const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
                     
                     const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
@@ -372,6 +475,12 @@
                     const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
 
                     const inicialValor = (row._venta || 0) - (row._financed || 0);
+                    
+                    // Auto-calcular remanente si está vacío (null o undefined)
+                    let remanenteCalculado = row._remanente;
+                    if (remanenteCalculado === null || remanenteCalculado === undefined || remanenteCalculado === '') {
+                        remanenteCalculado = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
+                    }
 
                     stats.ventasTotales += (row._venta || 0);
                     stats.inicial += inicialValor;
@@ -386,7 +495,7 @@
                     stats.cuatroPorMilTotal += cuatroPorMil;
                     
                     stats.cartera += (row._cartera || 0);
-                    stats.remanente += (row._remanente || 0);
+                    stats.remanente += Number(remanenteCalculado);
                 });
 
                 // Cálculos adicionales
@@ -416,8 +525,8 @@
                 doc.text(`Convenio: ${cName} | Aliado: ${pName} | Tiendas: ${tName} | Periodo: ${dateRangeStr}`, 14, 22);
 
                 const tableColumn = brand === 'todas' 
-                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta Bruta", "Inicial", "Saldo Finan.", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"]
-                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta Bruta", "Inicial", "Saldo Finan.", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"];
+                    ? ["Marca", "Fecha", "Convenio", "Asignado", "Cliente", "Venta Bruta", "Inicial", "Reman.", "Saldo Finan.", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"]
+                    : ["Fecha", "Convenio", "Asignado", "Cliente", "Venta Bruta", "Inicial", "Reman.", "Saldo Finan.", "Costo", "Cartera", "Admin 112", "4x1000", "A Consignar"];
                 
                 const tableRows = [];
 
@@ -427,7 +536,8 @@
                     
                     const assignedLower = String(row._assigned || '').toLowerCase();
                     const storeLower = String(row._tienda || '').toLowerCase();
-                    const siemprePaga4x1000 = assignedLower.includes('chamorro') || assignedLower.includes('pipe') || assignedLower.includes('ricardo') || assignedLower.includes('edwin ortiz');
+                    const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz') || assignedLower.includes('melissa') || assignedLower.includes('beltran');
+                    const siemprePaga4x1000 = isPipeOChamorro;
                     const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
                     
                     const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
@@ -437,6 +547,11 @@
                     const inicialValor = (row._venta || 0) - (row._financed || 0);
                     const porcentajeInicialFila = row._venta > 0 ? ((inicialValor / row._venta) * 100).toFixed(1) : "0.0";
 
+                    let remanenteCalculado = row._remanente;
+                    if (remanenteCalculado === null || remanenteCalculado === undefined || remanenteCalculado === '') {
+                        remanenteCalculado = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
+                    }
+
                     const rowData = [
                         fechaStr,
                         String(row._convenio || '').substring(0, 15),
@@ -444,6 +559,7 @@
                         String(row._client || '').substring(0, 20),
                         formatCurrency(row._venta),
                         `${formatCurrency(inicialValor)} (${porcentajeInicialFila}%)`,
+                        formatCurrency(remanenteCalculado),
                         formatCurrency(row._financed),
                         formatCurrency(row._costo),
                         formatCurrency(row._cartera), 
@@ -457,17 +573,17 @@
                 });
 
                 const footRow = brand === 'todas'
-                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.inicial), formatCurrency(kpis.creditoTotal), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]]
-                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.inicial), formatCurrency(kpis.creditoTotal), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]];
+                    ? [["", "", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.inicial), formatCurrency(kpis.remanente), formatCurrency(kpis.creditoTotal), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]]
+                    : [["", "", "", "TOTALES:", formatCurrency(kpis.ventasTotales), formatCurrency(kpis.inicial), formatCurrency(kpis.remanente), formatCurrency(kpis.creditoTotal), formatCurrency(kpis.costoTotal), formatCurrency(kpis.cartera), formatCurrency(kpis.utilidadAdmin), formatCurrency(kpis.cuatroPorMilTotal), formatCurrency(kpis.aConsignarSocioTotal)]];
 
                 doc.autoTable({
                     head: [tableColumn],
                     body: tableRows,
+                    foot: footRow,
                     startY: 28,
                     theme: 'grid',
-                    headStyles: { fillColor: [15, 23, 42] },
-                    styles: { fontSize: 7 },
-                    foot: footRow,
+                    styles: { fontSize: 7, cellPadding: 1.5 },
+                    headStyles: { fillColor: [44, 76, 140], textColor: 255 },
                     footStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42], fontStyle: 'bold' }
                 });
 
@@ -479,7 +595,8 @@
                 const exportData = filteredData.map(row => {
                     const assignedLower = String(row._assigned || '').toLowerCase();
                     const storeLower = String(row._tienda || '').toLowerCase();
-                    const siemprePaga4x1000 = assignedLower.includes('chamorro') || assignedLower.includes('pipe') || assignedLower.includes('ricardo') || assignedLower.includes('edwin ortiz');
+                    const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz') || assignedLower.includes('melissa') || assignedLower.includes('beltran');
+                    const siemprePaga4x1000 = isPipeOChamorro;
                     const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
                     
                     const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
@@ -488,6 +605,11 @@
                     
                     const inicialValor = (row._venta || 0) - (row._financed || 0);
                     const porcentajeInicialFila = row._venta > 0 ? ((inicialValor / row._venta) * 100).toFixed(1) : "0.0";
+
+                    let remanenteCalculado = row._remanente;
+                    if (remanenteCalculado === null || remanenteCalculado === undefined || remanenteCalculado === '') {
+                        remanenteCalculado = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
+                    }
 
                     const obj = {};
                     if (brand === 'todas') obj["Financiera"] = row._brandName;
@@ -500,6 +622,7 @@
                     obj["Valor Venta Bruta"] = row._venta;
                     obj["Inicial"] = inicialValor;
                     obj["% Inicial"] = Number(porcentajeInicialFila);
+                    obj["Remanente"] = Number(remanenteCalculado);
                     obj["Saldo a Financiar"] = row._financed;
                     obj["Costo Equipo"] = row._costo;
                     obj["Cartera"] = row._cartera;
@@ -513,7 +636,7 @@
                 const worksheet = window.XLSX.utils.json_to_sheet(exportData);
                 const workbook = window.XLSX.utils.book_new();
                 window.XLSX.utils.book_append_sheet(workbook, worksheet, "Liquidaciones");
-                window.XLSX.writeFile(workbook, `Liquidacion_${brand}_${new Date().toISOString().slice(0,10)}.xlsx`);
+                window.XLSX.writeFile(workbook, `Liquidaciones_${brand}_${new Date().toISOString().slice(0,10)}.xlsx`);
             };
 
             return (
@@ -527,7 +650,7 @@
                             <button onClick={() => window.location.href = 'tablero.html'} className="p-3 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all shadow-sm border border-slate-200" title="Volver al Dashboard">
                                 <Icons.ArrowLeft className="w-5 h-5"/>
                             </button>
-                            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-10 md:h-12 object-contain" />
+                            <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Logo Soluciones Efectivas" className="h-10 md:h-12 object-contain" />
                             <div className="h-8 w-px bg-slate-300 hidden md:block"></div>
                             <div>
                                 <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">Liquidación Comercial</h2>
@@ -677,8 +800,8 @@
                         <div className="flex justify-center py-20"><Icons.RefreshCw className="w-10 h-10 animate-spin text-indigo-500" /></div>
                     ) : (
                         <>
-                            {/* 🎯 TARJETAS DE RESUMEN: PRIMERA FILA (4 COLUMNAS) */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                            {/* 🎯 TARJETAS DE RESUMEN: PRIMERA FILA (5 COLUMNAS) */}
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
                                 <div className="bg-slate-100 p-4 xl:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5 truncate">Venta Bruta</p>
                                     <p className="text-xl 2xl:text-2xl font-black text-slate-700 tracking-tighter truncate" title={formatCurrency(kpis.ventasTotales)}>{formatCurrency(kpis.ventasTotales)}</p>
@@ -691,6 +814,12 @@
                                     <p className="text-[9px] text-emerald-600 mt-0.5 truncate font-bold">{kpis.porcentajeInicial}% de la Venta Bruta</p>
                                 </div>
                                 
+                                <div className="bg-cyan-50 p-4 xl:p-5 rounded-2xl shadow-sm border border-cyan-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-cyan-700 uppercase tracking-widest mb-0.5 truncate">Remanente</p>
+                                    <p className="text-xl 2xl:text-2xl font-black text-cyan-800 tracking-tighter truncate" title={formatCurrency(kpis.remanente)}>{formatCurrency(kpis.remanente)}</p>
+                                    <p className="text-[9px] text-cyan-600 mt-0.5 truncate font-bold">Excedente Pagado</p>
+                                </div>
+
                                 <div className="bg-slate-800 p-4 xl:p-5 rounded-2xl shadow-sm border border-slate-700 text-white flex flex-col justify-center transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 truncate">Total Financiado</p>
                                     <p className="text-xl 2xl:text-2xl font-black tracking-tighter truncate" title={formatCurrency(kpis.creditoTotal)}>{formatCurrency(kpis.creditoTotal)}</p>
@@ -703,8 +832,13 @@
                                 </div>
                             </div>
 
-                            {/* 🎯 TARJETAS DE RESUMEN: SEGUNDA FILA (4 COLUMNAS) */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            {/* 🎯 TARJETAS DE RESUMEN: SEGUNDA FILA (5 COLUMNAS) */}
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                                <div className="bg-indigo-50 p-4 xl:p-5 rounded-2xl shadow-sm border border-indigo-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
+                                    <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-widest mb-0.5 truncate" title="Utilidad">Utilidad</p>
+                                    <p className="text-xl 2xl:text-2xl font-black text-indigo-800 tracking-tighter truncate" title={formatCurrency(kpis.utilidad)}>{formatCurrency(kpis.utilidad)}</p>
+                                </div>
+
                                 <div className="bg-amber-50 p-4 xl:p-5 rounded-2xl shadow-sm border border-amber-200 flex flex-col justify-center transition-transform hover:-translate-y-1">
                                     <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mb-0.5 truncate" title="Peaje Cartera">Peaje Cartera</p>
                                     <p className="text-xl 2xl:text-2xl font-black text-amber-800 tracking-tighter truncate" title={formatCurrency(kpis.cartera)}>{formatCurrency(kpis.cartera)}</p>
@@ -751,6 +885,7 @@
                                                 <th className="px-4 py-3 font-black">Cliente / Equipo</th>
                                                 <th className="px-4 py-3 font-black text-right text-slate-500">Venta Bruta</th>
                                                 <th className="px-4 py-3 font-black text-right text-emerald-600">Inicial</th>
+                                                <th className="px-4 py-3 font-black text-right text-cyan-600">Remanente</th>
                                                 <th className="px-4 py-3 font-black text-right text-blue-600">Saldo a Financiar</th>
                                                 <th className="px-4 py-3 font-black text-right">Costo</th>
                                                 <th className="px-4 py-3 font-black text-amber-600 bg-amber-50/50 text-right">Cartera</th>
@@ -767,20 +902,26 @@
                                                 const assignedLower = String(row._assigned || '').toLowerCase();
                                                 const storeLower = String(row._tienda || '').toLowerCase();
                                                 
-                                                // 🛡️ Lógica Exclusión 4x1000 para vitrinas en la fila (Actualizado)
-                                                const siemprePaga4x1000 = assignedLower.includes('chamorro') || assignedLower.includes('pipe') || assignedLower.includes('ricardo') || assignedLower.includes('edwin ortiz');
+                                                // 🛡️ Lógica Exclusión 4x1000 para vitrinas en la fila
+                                                const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz') || assignedLower.includes('melissa') || assignedLower.includes('beltran');
+                                                const siemprePaga4x1000 = isPipeOChamorro;
                                                 const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
                                                 
                                                 const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
                                                 const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
                                                 const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
 
-                                                const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz');
                                                 const isNewRuleDate = d && d.getTime() >= new Date(2026, 4, 26).getTime();
                                                 const isNewRule = isNewRuleDate && isPipeOChamorro && ['ALOCREDIT', 'KREDIYA', 'CREDISMART'].includes(row._brandName);
 
                                                 const inicialValor = (row._venta || 0) - (row._financed || 0);
                                                 const porcentajeInicialFila = row._venta > 0 ? ((inicialValor / row._venta) * 100).toFixed(1) : "0.0";
+
+                                                // Autocálculo visual si es null (Para mostrar en la fila)
+                                                let remanenteFila = row._remanente;
+                                                if (remanenteFila === null || remanenteFila === undefined || remanenteFila === '') {
+                                                    remanenteFila = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
+                                                }
 
                                                 return (
                                                     <tr key={idx} className="hover:bg-slate-50 transition-colors">
@@ -797,16 +938,27 @@
                                                         )}
                                                         <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-slate-500">{fechaStr}</td>
                                                         <td className="px-4 py-3 border-r border-slate-100">
-                                                            <div className="font-bold text-slate-800 text-xs truncate max-w-[150px]" title={row._assigned}>{row._assigned || '-'}</div>
-                                                            <div className="flex items-center gap-1.5 mt-0.5">
-                                                                <div className="text-[9px] font-black text-indigo-500 tracking-wider uppercase" title={row._convenio}>
-                                                                    {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-300 font-normal italic">Sin Convenio</span>}
+                                                            <div className="flex items-center justify-between gap-2 relative group">
+                                                                <div className="flex flex-col">
+                                                                    <div className="font-bold text-slate-800 text-xs truncate max-w-[150px]" title={row._assigned}>{row._assigned || '-'}</div>
+                                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                                        <div className="text-[9px] font-black text-indigo-500 tracking-wider uppercase" title={row._convenio}>
+                                                                            {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-300 font-normal italic">Sin Convenio</span>}
+                                                                        </div>
+                                                                        {isNewRule && (
+                                                                            <span className="bg-emerald-500 text-white px-1.5 py-[1px] rounded text-[8px] font-black tracking-widest shadow-sm" title="Aplica nueva regla de liquidación (40% Admin / 60% Asesor - Peaje)">
+                                                                                40/60
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                                {isNewRule && (
-                                                                    <span className="bg-emerald-500 text-white px-1.5 py-[1px] rounded text-[8px] font-black tracking-widest shadow-sm" title="Aplica nueva regla de liquidación (40% Admin / 60% Asesor - Peaje)">
-                                                                        40/60
-                                                                    </span>
-                                                                )}
+                                                                <button 
+                                                                    onClick={() => openEditModal(row)} 
+                                                                    className="p-1.5 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded-lg transition-all shadow-sm border border-indigo-200 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100" 
+                                                                    title="Modificar Venta (Asignado, Equipo, Costo, Remanente)"
+                                                                >
+                                                                    <Icons.Settings className="w-4 h-4" />
+                                                                </button>
                                                             </div>
                                                         </td>
                                                         <td className="px-4 py-3 border-r border-slate-100">
@@ -820,6 +972,12 @@
                                                                 {inicialValor > 0 && <span className="text-[9px] font-black text-emerald-500/80 leading-none mt-0.5">{porcentajeInicialFila}%</span>}
                                                             </div>
                                                         </td>
+                                                        
+                                                        {/* 🎯 CELDA DE REMANENTE (SIN BOTÓN) */}
+                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-cyan-700 bg-cyan-50/30">
+                                                            {remanenteFila > 0 ? formatCurrency(remanenteFila) : (row._remanente === 0 || row._remanente === "0" ? '$ 0' : '-')}
+                                                        </td>
+
                                                         <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-blue-700 bg-blue-50/30">{row._financed > 0 ? formatCurrency(row._financed) : '-'}</td>
                                                         <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-rose-500 bg-rose-50/10">{row._costo > 0 ? formatCurrency(row._costo) : '-'}</td>
                                                         
@@ -846,7 +1004,7 @@
                                                 );
                                             }) : (
                                                 <tr>
-                                                    <td colSpan={brand === 'todas' ? "12" : "11"} className="px-6 py-20 text-center text-slate-400">
+                                                    <td colSpan={brand === 'todas' ? "13" : "12"} className="px-6 py-20 text-center text-slate-400">
                                                         <div className="flex flex-col items-center gap-3">
                                                             <Icons.Database className="w-8 h-8 opacity-20"/>
                                                             <p>No se encontraron liquidaciones para los filtros aplicados.</p>
@@ -859,6 +1017,102 @@
                                 </div>
                             </div>
                         </>
+                    )}
+
+                    {/* MODAL MODIFICAR VENTA (UNIFICADO) */}
+                    {editSaleModal.show && (
+                        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                            <div className="bg-white w-full max-w-md rounded-[24px] shadow-2xl flex flex-col border border-slate-200 overflow-hidden">
+                                
+                                {/* Cabecera */}
+                                <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-indigo-100 text-indigo-600 rounded-xl shadow-sm">
+                                            <Icons.Settings className="w-5 h-5"/>
+                                        </div>
+                                        <h3 className="font-black text-slate-800 text-lg leading-tight tracking-tight">Modificar Venta</h3>
+                                    </div>
+                                    <button onClick={() => !isSavingEdit && setEditSaleModal({ show: false, row: null, gestor: '', equipo: '', costo: '', remanente: '' })} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
+                                        <Icons.X className="w-5 h-5"/>
+                                    </button>
+                                </div>
+                                
+                                {/* Cuerpo */}
+                                <div className="p-6 space-y-5 bg-white custom-scrollbar max-h-[70vh] overflow-y-auto">
+                                    <div className="bg-[#f0f4ff] border border-blue-100 p-4 rounded-xl flex gap-3 text-sm text-blue-900 shadow-sm">
+                                        <Icons.AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-blue-600"/>
+                                        <p className="font-medium leading-relaxed text-xs">Los cambios realizados aquí se sincronizarán directamente en la base de datos y recalcularán las comisiones de forma automática.</p>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5 px-1">Gestor / Asignado</label>
+                                        <input 
+                                            type="text"
+                                            value={editSaleModal.gestor}
+                                            onChange={(e) => setEditSaleModal({...editSaleModal, gestor: e.target.value.toUpperCase()})}
+                                            className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#3b62ff] outline-none text-sm font-bold text-slate-700 transition-all shadow-sm"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5 px-1">Referencia del Equipo</label>
+                                        <input 
+                                            type="text"
+                                            value={editSaleModal.equipo}
+                                            onChange={(e) => setEditSaleModal({...editSaleModal, equipo: e.target.value.toUpperCase()})}
+                                            className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#3b62ff] outline-none text-sm font-bold text-slate-700 transition-all shadow-sm"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5 px-1">Costo (Opcional)</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                                <input 
+                                                    type="text"
+                                                    value={editSaleModal.costo}
+                                                    onChange={(e) => setEditSaleModal({...editSaleModal, costo: e.target.value.replace(/\D/g, '')})}
+                                                    className="w-full pl-6 pr-3 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#3b62ff] outline-none text-sm font-black text-[#dc143c] transition-all shadow-sm"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5 px-1">Remanente (Opcional)</label>
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                                                <input 
+                                                    type="text"
+                                                    value={editSaleModal.remanente}
+                                                    onChange={(e) => setEditSaleModal({...editSaleModal, remanente: e.target.value.replace(/\D/g, '')})}
+                                                    className="w-full pl-6 pr-3 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#3b62ff] outline-none text-sm font-black text-cyan-600 transition-all shadow-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 italic px-1">Ingresa solo números. Para el remanente escribe 0 si no se cobró o se perdonó. Para autocalcular déjalo vacío.</p>
+                                </div>
+
+                                {/* Pie */}
+                                <div className="p-6 border-t border-slate-50 bg-[#fbfcfd] flex justify-end gap-4 rounded-b-[24px]">
+                                    <button 
+                                        onClick={() => setEditSaleModal({ show: false, row: null, gestor: '', equipo: '', costo: '', remanente: '' })}
+                                        disabled={isSavingEdit}
+                                        className="px-6 py-2.5 font-black text-slate-600 hover:bg-slate-200 rounded-full transition-colors disabled:opacity-50 text-sm"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button 
+                                        onClick={handleSaveSaleEdit}
+                                        disabled={isSavingEdit || !editSaleModal.gestor}
+                                        className="flex items-center gap-2 px-8 py-2.5 bg-[#3b62ff] text-white font-black rounded-full hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50 text-sm"
+                                    >
+                                        {isSavingEdit ? <><Icons.RefreshCw className="w-4 h-4 animate-spin"/> Guardando...</> : 'Guardar Cambios'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             );
