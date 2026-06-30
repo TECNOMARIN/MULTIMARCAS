@@ -51,6 +51,7 @@
             font-family: 'Courier New', monospace;
             font-size: 10px;
             border: 1px solid rgba(255,255,255,0.05);
+            word-wrap: break-word;
         }
 
         .step-bubble {
@@ -70,7 +71,7 @@
 
     <div class="app-card w-full max-w-sm flex flex-col">
         <!-- Cabecera -->
-        <div class="bg-white px-5 py-3 flex items-center justify-between border-b border-slate-100">
+        <div class="bg-white px-5 py-3 flex items-center justify-between border-b border-slate-100 rounded-t-[20px]">
             <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/refs/heads/main/SOLUCIONES%20PNG.png" alt="Logo" class="h-8 w-auto">
             <div class="flex items-center gap-2">
                 <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
@@ -118,7 +119,7 @@
             </div>
         </div>
 
-        <div class="bg-slate-50 py-2 text-center border-t border-slate-100">
+        <div class="bg-slate-50 py-2 text-center border-t border-slate-100 rounded-b-[20px]">
             <p class="text-[7px] font-black text-slate-300 uppercase tracking-[0.3em]">
                 TECNOMARIN & SOLUCIONES CTG 2024
             </p>
@@ -139,7 +140,7 @@
         const APK_URL = 'https://github.com/TECNOMARIN/MULTIMARCAS/raw/refs/heads/main/nuovopay.apk';
 
         function log(msg, type = 'info') {
-            const colors = { info: 'text-slate-500', success: 'text-emerald-400 font-bold', error: 'text-red-400', process: 'text-blue-400' };
+            const colors = { info: 'text-slate-500', success: 'text-emerald-400 font-bold', error: 'text-red-400', process: 'text-blue-400', warning: 'text-yellow-400 font-bold' };
             const div = document.createElement('div');
             div.className = `mb-0.5 ${colors[type]}`;
             div.innerHTML = `<span class="opacity-30">></span> ${msg}`;
@@ -199,6 +200,15 @@
 
             async connect(device) {
                 await device.open();
+                
+                // Novedad: Forzar reseteo del puerto USB para evitar el error 'transferIn' si quedó bloqueado
+                try { 
+                    log("Reseteando interfaz USB (Anti-Stall)...", "process");
+                    await device.reset(); 
+                } catch(e) { 
+                    console.warn("Reset omitido:", e); 
+                }
+
                 await device.selectConfiguration(1);
                 
                 const iface = device.configuration.interfaces.find(i => 
@@ -225,10 +235,22 @@
                         view.setUint32(16, checksum, true);
                         view.setUint32(20, (~view.getUint32(0, true)) >>> 0, true);
                         new Uint8Array(buf, 24).set(payload);
-                        await device.transferOut(outEp, buf);
+                        
+                        try {
+                            await device.transferOut(outEp, buf);
+                        } catch(e) {
+                            throw new Error("TransferOut falló: Revisa el cable o procesos ADB concurrentes.");
+                        }
                     },
                     read: async () => {
-                        const res = await device.transferIn(inEp, 24);
+                        let res;
+                        try {
+                            // Novedad: Control del error transferIn específico
+                            res = await device.transferIn(inEp, 24);
+                        } catch (e) {
+                            throw new Error("Colisión USB (transferIn). ¿Tienes el servidor ADB abierto en tu PC? Ejecuta 'adb kill-server' y reconecta el cable.");
+                        }
+
                         if (res.data.byteLength < 24) return null;
                         const view = new DataView(res.data.buffer);
                         const cmdStr = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
@@ -246,15 +268,22 @@
                     }
                 };
 
-                const msg = "CNXN\0\0\0\x01\0\0\x10\0\0\0\0\0";
-                const payload = new Uint8Array(msg.length);
-                for (let i=0; i<msg.length; i++) payload[i] = msg.charCodeAt(i);
+                // Enviamos el saludo "host::" necesario en Android modernos
+                const payloadStr = "host::\0";
+                const payload = new TextEncoder().encode(payloadStr);
                 await this.transport.write("CNXN", 0x01000001, 4096, payload);
                 
                 const response = await this.transport.read();
-                if (!response || response.command !== "CNXN") throw new Error("Handshake ADB rechazado.");
-                this.transport.maxPayload = response.arg1;
+                if (!response) throw new Error("Sin respuesta del dispositivo.");
+                
+                // Novedad: Androids con seguridad RSA envían 'AUTH'
+                if (response.command === "AUTH") {
+                    throw new Error("¡El equipo requiere autorización RSA! Acepta la huella en la pantalla del celular y reconecta.");
+                }
 
+                if (response.command !== "CNXN") throw new Error("Handshake rechazado. Estado: " + response.command);
+                
+                this.transport.maxPayload = response.arg1;
                 this._receiveLoop(); // Iniciar hilo de lectura en segundo plano
             }
 
@@ -278,7 +307,7 @@
                         }
                     }
                 } catch (err) {
-                    console.log("Conexión ADB desconectada o finalizada.");
+                    console.log("Hilo de lectura cerrado:", err.message);
                 }
             }
 
@@ -357,7 +386,7 @@
             if (!navigator.usb) {
                 libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
                 libStatus.className = "text-red-500 font-bold";
-                log("Navegador incompatible. Usa Chrome en Android o PC.", "error");
+                log("Navegador incompatible o ejecutando en iframe sin permisos. Usa Chrome en Android o PC bajo HTTPS.", "error");
             } else {
                 libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
                 libStatus.className = "text-emerald-500 font-bold";
@@ -373,6 +402,8 @@
 
             try {
                 log("Esperando selección de equipo en pantalla...", "info");
+                
+                // Petición de dispositivo USB
                 const webusb = await navigator.usb.requestDevice({ 
                     filters: [{ classCode: 255, subclassCode: 66, protocolCode: 1 }] 
                 });
@@ -397,6 +428,7 @@
                 log("CONEXIÓN ADB ESTABLECIDA.", "success");
 
                 log("Descargando paquete MULTIMARCAS...", "info");
+                // Asegurarse de que el CORS de GitHub no bloquee la descarga
                 const response = await fetch(APK_URL);
                 if (!response.ok) throw new Error("Error de red al descargar la APK.");
                 const apkBlob = await response.blob();
@@ -418,6 +450,7 @@
                     log("RESPUESTA SISTEMA: " + (result.substring(0,40)), "info");
                     if (result.includes("already some accounts")) {
                         log("ERROR: EL EQUIPO AÚN TIENE CUENTAS.", "error");
+                        throw new Error("El dispositivo tiene cuentas configuradas.");
                     }
                 }
 
