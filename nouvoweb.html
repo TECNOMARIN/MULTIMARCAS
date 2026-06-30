@@ -239,16 +239,19 @@
                         try {
                             await device.transferOut(outEp, buf);
                         } catch(e) {
-                            throw new Error("TransferOut falló: Revisa el cable o procesos ADB concurrentes.");
+                            try { await device.clearHalt("out", outEp); } catch(ex) {}
+                            throw new Error("Fallo escritura USB. Revisa el cable o procesos concurrentes.");
                         }
                     },
                     read: async () => {
                         let res;
                         try {
-                            // Novedad: Control del error transferIn específico
+                            // Control del error transferIn específico
                             res = await device.transferIn(inEp, 24);
                         } catch (e) {
-                            throw new Error("Colisión USB (transferIn). ¿Tienes el servidor ADB abierto en tu PC? Ejecuta 'adb kill-server' y reconecta el cable.");
+                            // Intento de destrabar el puerto colapsado
+                            try { await device.clearHalt("in", inEp); } catch (ex) {}
+                            throw new Error("Puerto Bloqueado. Desconecta el OTG de ambos lados, ciérralo todo y reintenta.");
                         }
 
                         if (res.data.byteLength < 24) return null;
@@ -276,9 +279,9 @@
                 const response = await this.transport.read();
                 if (!response) throw new Error("Sin respuesta del dispositivo.");
                 
-                // Novedad: Androids con seguridad RSA envían 'AUTH'
+                // Androids con seguridad RSA envían 'AUTH'
                 if (response.command === "AUTH") {
-                    throw new Error("¡El equipo requiere autorización RSA! Acepta la huella en la pantalla del celular y reconecta.");
+                    throw new Error("¡Equipo requiere autorización! Acepta la huella en la pantalla del celular destino y reconecta.");
                 }
 
                 if (response.command !== "CNXN") throw new Error("Handshake rechazado. Estado: " + response.command);
@@ -386,7 +389,7 @@
             if (!navigator.usb) {
                 libStatus.innerHTML = "# ERROR: USB_NOT_SUPPORTED";
                 libStatus.className = "text-red-500 font-bold";
-                log("Navegador incompatible o ejecutando en iframe sin permisos. Usa Chrome en Android o PC bajo HTTPS.", "error");
+                log("Navegador incompatible. Usa Chrome en Android o PC bajo HTTPS.", "error");
             } else {
                 libStatus.innerHTML = "# CORE_SISTEMA_LISTO";
                 libStatus.className = "text-emerald-500 font-bold";
