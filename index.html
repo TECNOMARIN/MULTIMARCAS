@@ -591,6 +591,28 @@
             <input id="ed-cli-asesor-new" class="input is-small mt-2" style="font-weight: 600; display: none;" placeholder="Escriba el nombre del nuevo asesor">
         </div>
         
+        <!-- ⚡ NUEVA SECCIÓN: DATOS BANCARIOS ⚡ -->
+        <hr class="my-3">
+        <p class="is-size-7 mb-2" style="font-weight: 800; color: var(--brand-blue);">Información Bancaria / Legal (Opcional)</p>
+        <div class="columns is-mobile is-multiline mb-0">
+            <div class="column is-12 py-1"><label class="label is-small" style="font-weight: 700;">Representante Legal / Encargado</label><input id="ed-cli-rep" class="input is-small" style="font-weight: 600;" placeholder="Nombre completo"></div>
+            <div class="column is-6 py-1"><label class="label is-small" style="font-weight: 700;">Cédula / NIT</label><input id="ed-cli-cedula" class="input is-small" style="font-weight: 600;"></div>
+            <div class="column is-6 py-1"><label class="label is-small" style="font-weight: 700;">Correo</label><input id="ed-cli-correo" class="input is-small" style="font-weight: 600;"></div>
+            <div class="column is-12 py-1"><label class="label is-small" style="font-weight: 700;">Banco</label><input id="ed-cli-banco" class="input is-small" style="font-weight: 600;" placeholder="Ej: Bancolombia, Nequi..."></div>
+            <div class="column is-6 py-1">
+                <label class="label is-small" style="font-weight: 700;">Tipo de Cuenta</label>
+                <div class="select is-small is-fullwidth">
+                    <select id="ed-cli-tipo-cuenta" style="font-weight: 600;">
+                        <option value="">Seleccionar...</option>
+                        <option value="Ahorros">Ahorros</option>
+                        <option value="Corriente">Corriente</option>
+                    </select>
+                </div>
+            </div>
+            <div class="column is-6 py-1"><label class="label is-small" style="font-weight: 700;">No. Cuenta</label><input id="ed-cli-cuenta" class="input is-small" style="font-weight: 600;" placeholder="Sólo números"></div>
+        </div>
+        <hr class="my-3">
+
         <div class="field mt-3"><label class="label is-small" style="font-weight: 700;">Rol Asignado</label><div class="select is-small is-fullwidth"><select id="ed-cli-rol" onchange="renderAliadoVinculos(document.getElementById('ed-cli-id').value)" style="font-weight: 600;"></select></div></div>
         <hr><div id="vinculos-container" class="table-container mt-4"></div>
       </section>
@@ -1065,7 +1087,7 @@
             if(btnId) { const b = document.getElementById(btnId); if(b) { b.classList.remove('is-loading'); b.disabled = false; } }
         }
     }
-    
+
     // ⚡ NUEVA FUNCIÓN PARA ENVIAR EL ANUNCIO ⚡
     async function guardarAnuncio() {
         const msg = document.getElementById('anu_msg').value;
@@ -1273,6 +1295,15 @@
         document.getElementById('ed-cli-nom').value = c.nombre_cliente;
         document.getElementById('ed-cli-pass').value = c.contrasena;
         
+        // ⚡ CARGAR DATOS BANCARIOS ⚡
+        const b = db.bancos ? db.bancos.find(x => String(x.id_cliente).trim() === String(id).trim()) : null;
+        document.getElementById('ed-cli-rep').value = b ? (b.nombre_comercio || '') : '';
+        document.getElementById('ed-cli-cedula').value = b ? (b.cedula_nit || '') : '';
+        document.getElementById('ed-cli-correo').value = b ? (b.correo || '') : '';
+        document.getElementById('ed-cli-banco').value = b ? (b.banco || '') : '';
+        document.getElementById('ed-cli-tipo-cuenta').value = b ? (b.tipo_cuenta || '') : '';
+        document.getElementById('ed-cli-cuenta').value = b ? (b.cuenta_bancaria || '') : '';
+        
         const asesoresSet = new Set();
         db.clientes.forEach(cli => {
             if (cli.asesor && String(cli.asesor).trim() !== '') {
@@ -1392,7 +1423,14 @@
             contrasena: document.getElementById('ed-cli-pass').value, 
             asesor: asesorValue, 
             rol: rolSelect, 
-            factores: factores 
+            factores: factores,
+            // ⚡ ENVIAR DATOS BANCARIOS ⚡
+            nombre_comercio: document.getElementById('ed-cli-rep').value,
+            cedula_nit: document.getElementById('ed-cli-cedula').value,
+            correo: document.getElementById('ed-cli-correo').value,
+            banco: document.getElementById('ed-cli-banco').value,
+            tipo_cuenta: document.getElementById('ed-cli-tipo-cuenta').value,
+            cuenta_bancaria: document.getElementById('ed-cli-cuenta').value
         }, 'btn-upd-ali');
         
         closeModals(); 
