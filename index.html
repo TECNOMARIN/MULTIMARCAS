@@ -206,6 +206,10 @@
     </div>
 
     <div id="v-sim" class="section-view is-active-view">
+      
+      <!-- ⚡ NUEVO CONTENEDOR DE BANNER GLOBAL (Notificación) ⚡ -->
+      <div id="global-banner" style="display:none; margin-bottom: 1.5rem;"></div>
+
       <div class="welcome-banner" style="justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 15px;">
             <div class="welcome-icon" style="background: var(--brand-green);"><i data-lucide="store" style="color: white !important;"></i></div>
@@ -361,6 +365,7 @@
         <div id="at-vin" class="query-tab-item" onclick="switchAdminTab('vin')">Vinc. Personalizada</div>
         <div id="at-ent" class="query-tab-item" onclick="switchAdminTab('ent')">Entidades</div>
         <div id="at-pla" class="query-tab-item" onclick="switchAdminTab('pla')">Planes</div>
+        <div id="at-anu" class="query-tab-item" onclick="switchAdminTab('anu')" style="display:none;">Anuncios</div>
       </nav>
       <div class="py-5">
           <div id="asec-ali" class="admin-sec is-active">
@@ -409,6 +414,40 @@
           
           <div id="asec-ent" class="admin-sec"><div class="box-admin"><span class="admin-label">Nueva Entidad Financiera</span><input id="new_fin_nom" class="input mb-3" style="font-weight: 600;" placeholder="Nombre Entidad"><label class="label is-size-7" style="font-weight: 700;">Factor Base</label><input id="new_fin_fac" class="input mb-4" style="font-weight: 600;" type="number" step="0.01" placeholder="0.00"><button id="btn-admin-ent" class="button btn-modern is-save is-fullwidth" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value}, 'btn-admin-ent')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Entidad</button></div></div>
           <div id="asec-pla" class="admin-sec"><div class="box-admin"><span class="admin-label">Planes de Entidades</span><div class="select is-fullwidth mb-3"><select id="plan_fin_id" style="font-weight: 600;"></select></div><div class="columns is-mobile is-multiline mb-2"><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">Frecuencia</label><div class="select is-fullwidth"><select id="plan_tipo" style="font-weight: 600;"><option value="Mensual">Mensual</option><option value="Quincenal">Quincenal</option><option value="Semanal">Semanal</option></select></div></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">Máx Cuotas</label><input id="plan_num" class="input" style="font-weight: 600;" type="number"></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">% Int</label><input id="plan_int" class="input" style="font-weight: 600;" type="number" step="0.01"></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">% Fia</label><input id="plan_fia" class="input" style="font-weight: 600;" type="number" step="0.01"></div></div><button id="btn-admin-pla" class="button btn-modern is-save is-fullwidth mt-3" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, tipo_cuota: document.getElementById('plan_tipo').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tasa_fianza: document.getElementById('plan_fia').value}, 'btn-admin-pla')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Plan</button></div></div>
+          
+          <!-- ⚡ NUEVA SECCIÓN DE ANUNCIOS ⚡ -->
+          <div id="asec-anu" class="admin-sec">
+              <div class="box-admin">
+                  <span class="admin-label">Transmitir Anuncio Global</span>
+                  <p class="is-size-7 has-text-grey mb-3 font-medium">Este mensaje aparecerá inmediatamente en la Calculadora de todas las tiendas activas.</p>
+                  
+                  <div class="field">
+                      <label class="label is-small" style="font-weight: 700;">Mensaje a transmitir</label>
+                      <textarea id="anu_msg" class="textarea is-small" style="font-weight: 600; min-height: 100px;" placeholder="Escribe el aviso aquí..."></textarea>
+                  </div>
+                  <div class="columns is-mobile mb-4">
+                      <div class="column">
+                          <label class="label is-small" style="font-weight: 700;">Urgencia</label>
+                          <div class="select is-fullwidth is-small">
+                              <select id="anu_tipo" style="font-weight: 600;">
+                                  <option value="info">Informativo (Azul)</option>
+                                  <option value="urgente">Urgente (Rojo)</option>
+                              </select>
+                          </div>
+                      </div>
+                      <div class="column">
+                          <label class="label is-small" style="font-weight: 700;">Estado del Banner</label>
+                          <div class="select is-fullwidth is-small">
+                              <select id="anu_est" style="font-weight: 600;">
+                                  <option value="true">Activo (Visible)</option>
+                                  <option value="false">Inactivo (Oculto)</option>
+                              </select>
+                          </div>
+                      </div>
+                  </div>
+                  <button id="btn-admin-anu" class="button btn-modern is-save is-fullwidth" onclick="guardarAnuncio()"><i data-lucide="send" style="width: 18px; color: white !important; margin-right: 8px;"></i> Publicar Anuncio</button>
+              </div>
+          </div>
       </div>
     </div>
 
@@ -781,6 +820,40 @@
         db.financieras.forEach(f => optEntidad += `<option value="${f.id_financiera}">${f.nombre_financiera}</option>`);
         const fEntidadEl = document.getElementById('f-entidad');
         if (fEntidadEl) fEntidadEl.innerHTML = optEntidad;
+        
+        // ⚡ CARGAR Y RENDERIZAR NOTIFICACIÓN GLOBAL ⚡
+        if (db.notificacion) {
+            const anuMsg = document.getElementById('anu_msg');
+            if(anuMsg) {
+                anuMsg.value = db.notificacion.mensaje || '';
+                document.getElementById('anu_tipo').value = db.notificacion.tipo || 'info';
+                document.getElementById('anu_est').value = db.notificacion.activo ? 'true' : 'false';
+            }
+            
+            const bannerEl = document.getElementById('global-banner');
+            if(bannerEl) {
+                if (db.notificacion.activo && db.notificacion.mensaje) {
+                    const isUrg = db.notificacion.tipo === 'urgente';
+                    const colorClass = isUrg ? 'is-danger is-light' : 'is-info is-light';
+                    const iconStr = isUrg ? 'alert-triangle' : 'info';
+                    const bColor = isUrg ? '#ef4444' : '#3b82f6';
+                    
+                    bannerEl.innerHTML = `
+                        <div class="notification ${colorClass}" style="border-radius: 16px; display: flex; align-items: flex-start; gap: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid ${bColor};">
+                            <i data-lucide="${iconStr}" style="flex-shrink: 0; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">Aviso Importante</strong>
+                                <p style="font-weight: 600; font-size: 0.9rem; margin-top: 4px; line-height: 1.4;">${db.notificacion.mensaje}</p>
+                            </div>
+                        </div>
+                    `;
+                    bannerEl.style.display = 'block';
+                    if(window.lucide) window.lucide.createIcons();
+                } else {
+                    bannerEl.style.display = 'none';
+                }
+            }
+        }
 
         renderTables();
         if(currentUser) {
@@ -844,6 +917,7 @@
           document.getElementById('at-vin').style.display = isGlobalAdmin ? '' : 'none';
           document.getElementById('at-ent').style.display = isGlobalAdmin ? '' : 'none';
           document.getElementById('at-pla').style.display = isGlobalAdmin ? '' : 'none';
+          document.getElementById('at-anu').style.display = isGlobalAdmin ? '' : 'none'; // Mostrar tab anuncios
 
           const btnDist = document.getElementById('btn-distribuidor');
           if (btnDist) btnDist.style.display = isGlobalAdmin ? 'inline-flex' : 'none';
@@ -990,6 +1064,19 @@
         } finally {
             if(btnId) { const b = document.getElementById(btnId); if(b) { b.classList.remove('is-loading'); b.disabled = false; } }
         }
+    }
+    
+    // ⚡ NUEVA FUNCIÓN PARA ENVIAR EL ANUNCIO ⚡
+    async function guardarAnuncio() {
+        const msg = document.getElementById('anu_msg').value;
+        const tipo = document.getElementById('anu_tipo').value;
+        const activo = document.getElementById('anu_est').value === 'true';
+        
+        await apiCall('setNotificacion', {
+            mensaje: msg,
+            tipo: tipo,
+            activo: activo
+        }, 'btn-admin-anu');
     }
 
     // 🎯 NUEVA FUNCIÓN PARA ENVOLVER LA CREACIÓN DEL CLIENTE CON UNIDAD DE NEGOCIO
@@ -1426,7 +1513,8 @@
         askDeleteRol, askDeleteFinanciera, openQR, closeQR, checkNewAsesor, 
         openAliado, openFinanciera, openRol, confirmDeleteVinculo, 
         confirmDeleteVinculoRol, renderAliadoVinculos, openEstadoModal, 
-        closeEstadoModal, saveEstadoSimulacion, sendWhatsApp, filterTiendasCalc, crearClienteJerarquia
+        closeEstadoModal, saveEstadoSimulacion, sendWhatsApp, filterTiendasCalc, crearClienteJerarquia,
+        guardarAnuncio // Añadido para que React lo vea
     });
   </script>
 </body>
