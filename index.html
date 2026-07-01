@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Soluciones Efectivas CTG | Gestión empresarial V2.108</title>
+  <title>Soluciones Efectivas CTG | Gestión empresarial V2.109</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   
@@ -105,7 +105,6 @@
     .res-item p:first-child { font-size: 0.65rem; color: var(--brand-green); font-weight: 900; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em; }
     .res-item p:last-child { font-size: 1.3rem; font-weight: 900; }
     
-    /* INPUT PARA TOTAL CRÉDITO DENTRO DEL RECUADRO AZUL */
     .input-consignar { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white !important; font-weight: 900 !important; font-size: 1.2rem; text-align: center; border-radius: 8px; width: 90%; transition: all 0.3s ease; }
     .input-consignar:focus { background: rgba(255,255,255,0.2); border-color: white; box-shadow: 0 0 0 0.125em rgba(255, 255, 255, 0.25) !important; outline: none; }
     .input-consignar::placeholder { color: rgba(255,255,255,0.6) !important; }
@@ -182,7 +181,7 @@
       <div class="field mt-4"><label class="label is-small">Contraseña</label><div class="control has-icons-left"><input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" style="border-radius:12px;" onkeypress="if(event.key==='Enter') attemptLogin()"><span class="icon is-small is-left"><i data-lucide="key"></i></span></div></div>
       <button id="btn-login" class="button btn-modern is-save is-fullwidth is-medium mt-6" onclick="attemptLogin()"><i data-lucide="log-in" style="width: 18px; color: white !important;"></i> Ingresar al Portal</button>
     </div>
-    <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.108</div>
+    <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.109</div>
   </div>
 
   <div id="app-container" class="main-card">
@@ -191,6 +190,7 @@
     <div class="brand-header">
         <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Soluciones Efectivas CTG" class="brand-logo header-left-logo">
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;">
+            <div id="un-badge" class="tag is-info is-light" style="font-weight:800; display:none; text-transform: uppercase;">UN</div>
             <a href="retailb.html" class="button is-small" style="font-weight:900; background: var(--action-gradient); color: white; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3);">
                 <i data-lucide="external-link" style="width:14px; margin-right:5px;"></i>Retail
             </a>
@@ -226,7 +226,7 @@
       <div class="field">
           <label class="label is-small">Tienda / Aliado</label>
           <div id="box-search-tienda" class="control has-icons-left mb-2" style="display:none;">
-              <input id="search-tienda-calc" class="input is-small" style="border-radius: 8px; font-weight: 600;" type="text" placeholder="🔍 Escribe para filtrar aliados rápidamente..." oninput="window.filterTiendasCalc()">
+              <input id="search-tienda-calc" class="input is-small" style="border-radius: 8px; font-weight: 600;" type="text" placeholder="🔍 Escribe para filtrar aliados de tu UN..." oninput="window.filterTiendasCalc()">
               <span class="icon is-small is-left" style="color: #94a3b8 !important;"><i data-lucide="search"></i></span>
           </div>
           <div class="select is-fullwidth">
@@ -368,13 +368,25 @@
                   <span class="admin-label">Nuevo Aliado Comercial</span>
                   <input id="new_cli_nom" class="input mb-3" style="font-weight: 600;" placeholder="Nombre Comercial">
                   <input id="new_cli_pass" class="input mb-3" style="font-weight: 600;" placeholder="Contraseña">
+                  
+                  <div id="box-new-cli-un" class="field" style="display:none;">
+                      <label class="label is-size-7" style="font-weight: 700;">Unidad de Negocio (UN)</label>
+                      <div class="select is-fullwidth">
+                          <select id="new_cli_un" style="font-weight: 600;">
+                              <option value="Atlantico">Atlántico</option>
+                              <option value="Bolivar">Bolívar</option>
+                              <option value="Magdalena">Magdalena</option>
+                          </select>
+                      </div>
+                  </div>
+
                   <div class="field">
                       <label class="label is-size-7" style="font-weight: 700;">Asignar Rol (Copia factores al aliado)</label>
                       <div class="select is-fullwidth">
                           <select id="new_cli_rol" style="font-weight: 600;"></select>
                       </div>
                   </div>
-                  <button id="btn-admin-ali" class="button btn-modern is-save is-fullwidth mt-4" onclick="apiCall('crearCliente', {nombre: document.getElementById('new_cli_nom').value, contrasena: document.getElementById('new_cli_pass').value, rol: document.getElementById('new_cli_rol').value, asesor: currentUser ? currentUser.nombre_cliente : ''}, 'btn-admin-ali')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Aliado</button>
+                  <button id="btn-admin-ali" class="button btn-modern is-save is-fullwidth mt-4" onclick="crearClienteJerarquia()"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Aliado</button>
               </div>
           </div>
           
@@ -421,7 +433,7 @@
                     <div class="control has-icons-left">
                         <div class="select is-fullwidth">
                             <select id="search-asesor-consultas" onchange="window.renderTables()">
-                                <option value="">Todos los Asesores</option>
+                                <option value="">Todos los Asesores de mi UN</option>
                             </select>
                         </div>
                         <span class="icon is-left"><i data-lucide="users"></i></span>
@@ -430,7 +442,7 @@
             </div>
             <div class="table-container">
                 <table class="table is-fullwidth is-striped is-clickable">
-                    <thead><tr><th>Nombre Aliado</th><th>Clave Acceso</th><th>Asesor / KAM</th><th>Fecha Registro</th></tr></thead>
+                    <thead><tr><th>Nombre Aliado</th><th>UN</th><th>Clave Acceso</th><th>Asesor / KAM</th><th>Fecha Registro</th></tr></thead>
                     <tbody id="tb-clientes" style="font-weight: 500;"></tbody>
                 </table>
             </div>
@@ -484,7 +496,7 @@
         </div>
       </div>
     </div>
-    <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.108</div>
+    <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.109</div>
   </div>
 
   <div id="mod-confirm" class="modal"><div class="modal-background" onclick="closeConfirm()"></div><div class="modal-card" style="max-width: 350px;"><header class="modal-card-head has-background-danger"><p class="modal-card-title is-size-6 has-text-white has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Confirmar Acción</p></header><section class="modal-card-body has-text-centered py-5"><div class="mb-4 has-text-danger"><i data-lucide="alert-triangle" style="width:48px; height:48px;"></i></div><p id="confirm-text" class="has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">¿Seguro que desea eliminar este registro?</p></section><footer class="modal-card-foot is-justify-content-center"><button class="button is-light" onclick="closeConfirm()" style="font-family: 'Montserrat', sans-serif; font-weight: 700;">Cancelar</button><button id="btn-confirm-exec" class="button is-danger has-text-weight-bold" style="font-family: 'Montserrat', sans-serif;">Sí, eliminar</button></footer></div></div>
@@ -609,6 +621,9 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
     let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [], simulaciones: [], roles: [], roles_permisos: [] };
     let currentUser = null, confirmCallback = null;
+    
+    // Objeto global para almacenar los permisos y UN (Unidad de Negocio)
+    window.userPerms = { isGlobalAdmin: false, isRegionalAdmin: false, isSemiAdmin: false, hasPrivileges: false, un: '' };
 
     window.onload = () => { lucide.createIcons(); setDefaultDates(); refresh(); };
 
@@ -686,7 +701,14 @@
         if (!el) return;
         
         const currentVal = el.value;
-        const filtered = db.clientes.filter(c => String(c.nombre_cliente).toLowerCase().includes(term));
+        const myUN = String(window.userPerms.un).trim().toLowerCase();
+        
+        const filtered = db.clientes.filter(c => {
+            const matchName = String(c.nombre_cliente).toLowerCase().includes(term);
+            const clientUN = String(c.un || c.UN || '').trim().toLowerCase();
+            const matchUN = window.userPerms.isGlobalAdmin ? true : (clientUN === myUN);
+            return matchName && matchUN;
+        });
         
         el.innerHTML = filtered.length 
             ? filtered.map(i => `<option value="${i.id_cliente}">${i.nombre_cliente}</option>`).join('') 
@@ -707,8 +729,17 @@
       const res = await fetchApi('getData');
       if(res) {
         db = res;
-        fill('sel_cliente', db.clientes, 'id_cliente', 'nombre_cliente');
-        fill('rel_cli_id', db.clientes, 'id_cliente', 'nombre_cliente', true);
+        
+        // 1. Llenar Select de Clientes según Jerarquía de Unidad de Negocio (UN)
+        const myUN = String(window.userPerms.un).trim().toLowerCase();
+        const allowedClients = db.clientes.filter(c => {
+            if (window.userPerms.isGlobalAdmin) return true;
+            const clientUN = String(c.un || c.UN || '').trim().toLowerCase();
+            return clientUN === myUN;
+        });
+        
+        fill('sel_cliente', allowedClients, 'id_cliente', 'nombre_cliente');
+        fill('rel_cli_id', allowedClients, 'id_cliente', 'nombre_cliente', true);
         fill('rel_fin_id', db.financieras, 'id_financiera', 'nombre_financiera', true);
         fill('plan_fin_id', db.financieras, 'id_financiera', 'nombre_financiera', true);
         fill('rel_fin_id_rol', db.financieras, 'id_financiera', 'nombre_financiera', true);
@@ -726,13 +757,13 @@
             filterTiendasCalc();
         }
 
-        // Obtener Asesores Únicos para Poblar las Listas de Consultas e Historial
+        // Obtener Asesores Únicos de la UN permitida para Poblar las Listas
         const asesoresSet = new Set();
-        db.clientes.forEach(c => {
+        allowedClients.forEach(c => {
             if (c.asesor && String(c.asesor).trim() !== '') asesoresSet.add(String(c.asesor).trim());
         });
         const asesoresList = Array.from(asesoresSet).sort();
-        const optAsesor = '<option value="">Todos los Asesores</option>' + asesoresList.map(a => `<option value="${a}">${a}</option>`).join('');
+        const optAsesor = '<option value="">Todos los Asesores de mi UN</option>' + asesoresList.map(a => `<option value="${a}">${a}</option>`).join('');
         
         const asesorConsultasEl = document.getElementById('search-asesor-consultas');
         if (asesorConsultasEl) asesorConsultasEl.innerHTML = optAsesor;
@@ -740,9 +771,9 @@
         const asesorHisEl = document.getElementById('f-asesor-his');
         if (asesorHisEl) asesorHisEl.innerHTML = optAsesor;
 
-        // Popular filtros de historial
-        let optTienda = '<option value="">Todas</option>';
-        db.clientes.forEach(c => optTienda += `<option value="${c.id_cliente}">${c.nombre_cliente}</option>`);
+        // Popular filtros de historial con tiendas de mi UN
+        let optTienda = '<option value="">Todas de mi UN</option>';
+        allowedClients.forEach(c => optTienda += `<option value="${c.id_cliente}">${c.nombre_cliente}</option>`);
         const fTiendaEl = document.getElementById('f-tienda');
         if (fTiendaEl) fTiendaEl.innerHTML = optTienda;
 
@@ -767,32 +798,58 @@
       const f = db.clientes.find(c => String(c.nombre_cliente).toLowerCase().trim() === u && String(c.contrasena) === p);
       if (f) { 
           currentUser = f; 
+          
+          const uName = String(currentUser.nombre_cliente).toLowerCase().trim();
+          
+          // --- NUEVA LÓGICA DE JERARQUÍA UN ---
+          const isGlobalAdmin = uName === 'administrador';
+          const isRegionalAdmin = uName.startsWith('admin-');
+          const isSemiAdmin = uName.startsWith('cia'); 
+          const hasPrivileges = isGlobalAdmin || isRegionalAdmin || isSemiAdmin;
+
+          // Guardamos la configuración en la variable global para uso en la app
+          window.userPerms = {
+              isGlobalAdmin,
+              isRegionalAdmin,
+              isSemiAdmin,
+              hasPrivileges,
+              un: currentUser.un || currentUser.UN || currentUser.UnidaddeNegocio || ''
+          };
+
           document.getElementById('login-container').style.display = 'none'; 
           document.getElementById('app-container').style.display = 'block'; 
           
-          const uName = String(currentUser.nombre_cliente).toLowerCase().trim();
-          const isFullAdmin = uName === 'administrador';
-          const isSemiAdmin = uName.startsWith('cia'); 
-          const hasPrivileges = isFullAdmin || isSemiAdmin;
-
           document.getElementById('sel_cliente').disabled = !hasPrivileges; 
           document.getElementById('box-search-tienda').style.display = hasPrivileges ? 'block' : 'none';
           document.getElementById('sel_cliente').value = currentUser.id_cliente; 
           document.getElementById('display-store-name').innerText = currentUser.nombre_cliente; 
           
-          document.getElementById('t-adm').style.display = hasPrivileges ? 'block' : 'none'; 
-          document.getElementById('t-con').style.display = isFullAdmin ? 'block' : 'none'; 
+          // Mostrar/Ocultar Selector de Unidad de Negocio al crear cliente
+          const boxUN = document.getElementById('box-new-cli-un');
+          if (boxUN) boxUN.style.display = isGlobalAdmin ? 'block' : 'none';
 
-          document.getElementById('at-rol').style.display = isFullAdmin ? '' : 'none';
-          document.getElementById('at-vin').style.display = isFullAdmin ? '' : 'none';
-          document.getElementById('at-ent').style.display = isFullAdmin ? '' : 'none';
-          document.getElementById('at-pla').style.display = isFullAdmin ? '' : 'none';
+          // Mostrar Etiqueta de la UN actual
+          if (hasPrivileges && !isGlobalAdmin) {
+              const unBadge = document.getElementById('un-badge');
+              if (unBadge) {
+                  unBadge.style.display = 'flex';
+                  unBadge.innerText = 'UN: ' + window.userPerms.un;
+              }
+          }
+          
+          document.getElementById('t-adm').style.display = hasPrivileges ? 'block' : 'none'; 
+          document.getElementById('t-con').style.display = (isGlobalAdmin || isRegionalAdmin) ? 'block' : 'none'; 
+
+          document.getElementById('at-rol').style.display = isGlobalAdmin ? '' : 'none';
+          document.getElementById('at-vin').style.display = isGlobalAdmin ? '' : 'none';
+          document.getElementById('at-ent').style.display = isGlobalAdmin ? '' : 'none';
+          document.getElementById('at-pla').style.display = isGlobalAdmin ? '' : 'none';
 
           const btnDist = document.getElementById('btn-distribuidor');
-          if (btnDist) btnDist.style.display = isFullAdmin ? 'inline-flex' : 'none';
+          if (btnDist) btnDist.style.display = isGlobalAdmin ? 'inline-flex' : 'none';
 
           switchAdminTab('ali');
-          handleAllyChange(); 
+          refresh(); // Se llama a refresh para re-filtrar las tablas y dropdowns con la UN
           switchView('sim'); 
       } 
       else { showToast("Credenciales incorrectas", "error"); }
@@ -809,23 +866,32 @@
       const sAsesorEl = document.getElementById('search-asesor-consultas');
       const searchAsesor = (sAsesorEl ? sAsesorEl.value : '').toLowerCase();
 
+      const myUN = String(window.userPerms.un).trim().toLowerCase();
+
       const filteredCli = db.clientes.filter(c => {
           const matchName = String(c.nombre_cliente).toLowerCase().includes(searchCli);
           const matchAsesor = searchAsesor ? String(c.asesor || '').toLowerCase() === searchAsesor : true;
-          return matchName && matchAsesor;
+          const clientUN = String(c.un || c.UN || '').trim().toLowerCase();
+          const matchUN = window.userPerms.isGlobalAdmin ? true : (clientUN === myUN);
+
+          return matchName && matchAsesor && matchUN;
       });
       
       draw('tb-clientes', filteredCli.map(c => `
         <tr onclick="window.openAliado('${c.id_cliente}')">
           <td>${c.nombre_cliente}</td>
+          <td><span class="tag is-info is-light" style="font-size:0.65rem; font-weight:800; text-transform:uppercase;">${c.un || c.UN || 'N/A'}</span></td>
           <td><code style="font-family: monospace;">${c.contrasena}</code></td>
-          <td><span class="tag is-light is-info" style="font-size:0.65rem; font-weight:800;">${c.asesor || 'SIN ASESOR'}</span></td>
+          <td><span class="tag is-light is-primary" style="font-size:0.65rem; font-weight:800;">${c.asesor || 'SIN ASESOR'}</span></td>
           <td style="font-size:0.75rem; font-weight:600;">${c.fecha_registro || c.fecha || c.Fecha_registro || '-'}</td>
         </tr>
       `).join(''));
       
-      draw('tb-financieras', db.financieras.map(f => `<tr onclick="window.openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
-      draw('tb-roles', db.roles.map(r => `<tr onclick="window.openRol('${r.id_rol}')"><td>${r.nombre_rol}</td><td><span class="tag is-success is-light" style="font-weight: 700;">${r.estado || 'Activo'}</span></td></tr>`).join(''));
+      if (window.userPerms.isGlobalAdmin) {
+          draw('tb-financieras', db.financieras.map(f => `<tr onclick="window.openFinanciera('${f.id_financiera}')"><td>${f.nombre_financiera}</td><td>${f.factor_financiera}</td></tr>`).join(''));
+          draw('tb-roles', db.roles.map(r => `<tr onclick="window.openRol('${r.id_rol}')"><td>${r.nombre_rol}</td><td><span class="tag is-success is-light" style="font-weight: 700;">${r.estado || 'Activo'}</span></td></tr>`).join(''));
+      }
+      
       filterSimulations(); 
     }
 
@@ -840,6 +906,8 @@
       let list = db.simulaciones || [];
       const parseP = (s) => { if(!s) return 0; const b = (s.fecha || s.Fecha).split('/'); return new Date(b[2], b[1]-1, b[0]).getTime(); };
       
+      const myUN = String(window.userPerms.un).trim().toLowerCase();
+
       list = list.filter(s => {
           const t = parseP(s);
           if (t1 && t2 && (t < t1 || t > t2)) return false;
@@ -847,9 +915,17 @@
           if (fTienda && String(s.id_cliente).trim() !== String(fTienda).trim()) return false;
           if (fEntidad && String(s.id_financiera).trim() !== String(fEntidad).trim()) return false;
           
+          const foundC = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim());
+          if (!foundC) return false;
+
+          // Filtro Jerárquico UN
+          if (!window.userPerms.isGlobalAdmin) {
+              const clientUN = String(foundC.un || foundC.UN || '').trim().toLowerCase();
+              if (clientUN !== myUN) return false;
+          }
+
           if (fAsesor) {
-              const foundC = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim());
-              if (!foundC || String(foundC.asesor || '').trim() !== String(fAsesor).trim()) return false;
+              if (String(foundC.asesor || '').trim() !== String(fAsesor).trim()) return false;
           }
           
           return true;
@@ -916,8 +992,31 @@
         }
     }
 
+    // 🎯 NUEVA FUNCIÓN PARA ENVOLVER LA CREACIÓN DEL CLIENTE CON UNIDAD DE NEGOCIO
+    function crearClienteJerarquia() {
+        const nom = document.getElementById('new_cli_nom').value;
+        const pass = document.getElementById('new_cli_pass').value;
+        const rol = document.getElementById('new_cli_rol').value;
+        const asesor = currentUser ? currentUser.nombre_cliente : '';
+        
+        let targetUN = window.userPerms.isGlobalAdmin ? document.getElementById('new_cli_un').value : window.userPerms.un;
+
+        apiCall('crearCliente', {
+            nombre: nom, 
+            contrasena: pass, 
+            rol: rol, 
+            asesor: asesor,
+            un: targetUN
+        }, 'btn-admin-ali');
+    }
+
     function clearAdminForms(action) {
-        if(action === 'crearCliente') { document.getElementById('new_cli_nom').value = ""; document.getElementById('new_cli_pass').value = ""; document.getElementById('new_cli_rol').value = ""; }
+        if(action === 'crearCliente') { 
+            document.getElementById('new_cli_nom').value = ""; 
+            document.getElementById('new_cli_pass').value = ""; 
+            document.getElementById('new_cli_rol').value = ""; 
+            if(document.getElementById('new_cli_un')) document.getElementById('new_cli_un').value = "Atlantico";
+        }
         else if(action === 'crearFinanciera') { document.getElementById('new_fin_nom').value = ""; document.getElementById('new_fin_fac').value = ""; }
         else if(action === 'crearRol') { document.getElementById('new_rol_nom').value = ""; }
         else if(action === 'asignarFactorRol') { document.getElementById('rel_fac_val_rol').value = ""; document.getElementById('rel_rol_id').value = ""; document.getElementById('rel_fin_id_rol').value = "placeholder"; }
@@ -1018,7 +1117,6 @@
       
       document.getElementById('out_cuota').innerText = fmtCop(vC);
       
-      // --- CÁLCULO DE LA UTILIDAD REAL CORREGIDO ---
       let utilidadReal = 0;
       if (finObj) {
           const factorFinanciera = toNum(finObj.factor_financiera);
@@ -1328,7 +1426,7 @@
         askDeleteRol, askDeleteFinanciera, openQR, closeQR, checkNewAsesor, 
         openAliado, openFinanciera, openRol, confirmDeleteVinculo, 
         confirmDeleteVinculoRol, renderAliadoVinculos, openEstadoModal, 
-        closeEstadoModal, saveEstadoSimulacion, sendWhatsApp, filterTiendasCalc
+        closeEstadoModal, saveEstadoSimulacion, sendWhatsApp, filterTiendasCalc, crearClienteJerarquia
     });
   </script>
 </body>
