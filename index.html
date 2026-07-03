@@ -207,7 +207,6 @@
 
     <div id="v-sim" class="section-view is-active-view">
       
-      <!-- ⚡ NUEVO CONTENEDOR DE BANNER GLOBAL (Notificación) ⚡ -->
       <div id="global-banner" style="display:none; margin-bottom: 1.5rem;"></div>
 
       <div class="welcome-banner" style="justify-content: space-between;">
@@ -415,7 +414,6 @@
           <div id="asec-ent" class="admin-sec"><div class="box-admin"><span class="admin-label">Nueva Entidad Financiera</span><input id="new_fin_nom" class="input mb-3" style="font-weight: 600;" placeholder="Nombre Entidad"><label class="label is-size-7" style="font-weight: 700;">Factor Base</label><input id="new_fin_fac" class="input mb-4" style="font-weight: 600;" type="number" step="0.01" placeholder="0.00"><button id="btn-admin-ent" class="button btn-modern is-save is-fullwidth" onclick="apiCall('crearFinanciera', {nombre: document.getElementById('new_fin_nom').value, factor: document.getElementById('new_fin_fac').value}, 'btn-admin-ent')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Entidad</button></div></div>
           <div id="asec-pla" class="admin-sec"><div class="box-admin"><span class="admin-label">Planes de Entidades</span><div class="select is-fullwidth mb-3"><select id="plan_fin_id" style="font-weight: 600;"></select></div><div class="columns is-mobile is-multiline mb-2"><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">Frecuencia</label><div class="select is-fullwidth"><select id="plan_tipo" style="font-weight: 600;"><option value="Mensual">Mensual</option><option value="Quincenal">Quincenal</option><option value="Semanal">Semanal</option></select></div></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">Máx Cuotas</label><input id="plan_num" class="input" style="font-weight: 600;" type="number"></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">% Int</label><input id="plan_int" class="input" style="font-weight: 600;" type="number" step="0.01"></div><div class="column is-6"><label class="label is-size-7" style="font-weight: 700;">% Fia</label><input id="plan_fia" class="input" style="font-weight: 600;" type="number" step="0.01"></div></div><button id="btn-admin-pla" class="button btn-modern is-save is-fullwidth mt-3" onclick="apiCall('crearPlanCuota', {id_financiera: document.getElementById('plan_fin_id').value, tipo_cuota: document.getElementById('plan_tipo').value, numero_cuotas: document.getElementById('plan_num').value, tasa_interes: document.getElementById('plan_int').value, tasa_fianza: document.getElementById('plan_fia').value}, 'btn-admin-pla')"><i data-lucide="plus-circle" style="width: 18px;"></i> Registrar Plan</button></div></div>
           
-          <!-- ⚡ NUEVA SECCIÓN DE ANUNCIOS ⚡ -->
           <div id="asec-anu" class="admin-sec">
               <div class="box-admin">
                   <span class="admin-label">Transmitir Anuncio Global</span>
@@ -591,7 +589,6 @@
             <input id="ed-cli-asesor-new" class="input is-small mt-2" style="font-weight: 600; display: none;" placeholder="Escriba el nombre del nuevo asesor">
         </div>
         
-        <!-- ⚡ NUEVA SECCIÓN: DATOS BANCARIOS ⚡ -->
         <hr class="my-3">
         <p class="is-size-7 mb-2" style="font-weight: 800; color: var(--brand-blue);">Información Bancaria / Legal (Opcional)</p>
         <div class="columns is-mobile is-multiline mb-0">
@@ -683,7 +680,6 @@
     let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [], simulaciones: [], roles: [], roles_permisos: [] };
     let currentUser = null, confirmCallback = null;
     
-    // Objeto global para almacenar los permisos y UN (Unidad de Negocio)
     window.userPerms = { isGlobalAdmin: false, isRegionalAdmin: false, isSemiAdmin: false, hasPrivileges: false, un: '' };
 
     window.onload = () => { lucide.createIcons(); setDefaultDates(); refresh(); };
@@ -696,7 +692,6 @@
         setTimeout(() => { t.classList.remove('is-active'); setTimeout(() => t.remove(), 600); }, 3500);
     }
 
-    // Funciones Modal QR
     function openQR(url, title) {
         document.getElementById('qr-title').innerText = title;
         document.getElementById('qr-image').src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" + encodeURIComponent(url);
@@ -727,7 +722,6 @@
         return Math.round(num / 1000) * 1000;
     };
 
-    /* --- FUNCIONES PARA INPUT INVERSO --- */
     function handlePriceInput(input) { 
         let val = input.value.replace(/\D/g, ""); 
         if (val === "") { 
@@ -755,7 +749,6 @@
     function setDefaultDates() { const n = new Date(); const format = (d) => { let m = ''+(d.getMonth()+1), day = ''+d.getDate(), y = d.getFullYear(); if (m.length<2) m='0'+m; if (day.length<2) day='0'+day; return [y, m, day].join('-'); }; document.getElementById('f-desde').value = format(new Date(n.getFullYear(), n.getMonth(), 1)); document.getElementById('f-hasta').value = format(n); }
     function handlePredefinedFilter(val) { const today = new Date(); let start = null, end = new Date(); const format = (d) => d.toISOString().split('T')[0]; switch(val) { case 'semana': let day = today.getDay(), diff = today.getDate() - day + (day === 0 ? -6 : 1); start = new Date(today.setDate(diff)); break; case 'mes': start = new Date(today.getFullYear(), today.getMonth(), 1); break; case 'pasado': start = new Date(today.getFullYear(), today.getMonth() - 1, 1); end = new Date(today.getFullYear(), today.getMonth(), 0); break; case 'anio': start = new Date(today.getFullYear(), 0, 1); break; case 'anio_pasado': start = new Date(today.getFullYear() - 1, 0, 1); end = new Date(today.getFullYear() - 1, 11, 31); break; case 'todo': document.getElementById('f-desde').value = ""; document.getElementById('f-hasta').value = ""; filterSimulations(); return; } if(start) { document.getElementById('f-desde').value = format(start); document.getElementById('f-hasta').value = format(end); filterSimulations(); } }
 
-    /* --- FILTRO DINÁMICO DE ALIADOS --- */
     function filterTiendasCalc() {
         const term = document.getElementById('search-tienda-calc').value.toLowerCase();
         const el = document.getElementById('sel_cliente');
@@ -785,13 +778,26 @@
         }
     }
 
+    // ⚡ FUNCIÓN REFRESH MEJORADA CON REINTENTOS ⚡
     async function refresh() {
       document.getElementById('bg-sync-indicator').style.display = 'flex';
-      const res = await fetchApi('getData');
+      
+      let res = null;
+      let retries = 3;
+      while (retries > 0 && !res) {
+          // Intentar obtener datos con 45 segundos de timeout
+          res = await fetchApi('getData', null, 45000); 
+          
+          if (!res) {
+              console.warn(`Intento fallido de carga de BD. Reintentos restantes: ${retries - 1}`);
+              retries--;
+              if (retries > 0) await new Promise(r => setTimeout(r, 2000)); // Espera 2s antes de reintentar
+          }
+      }
+
       if(res) {
         db = res;
         
-        // 1. Llenar Select de Clientes según Jerarquía de Unidad de Negocio (UN)
         const myUN = String(window.userPerms.un).trim().toLowerCase();
         const allowedClients = db.clientes.filter(c => {
             if (window.userPerms.isGlobalAdmin) return true;
@@ -812,13 +818,11 @@
         if(document.getElementById('new_cli_rol')) document.getElementById('new_cli_rol').innerHTML = rolesOpts;
         if(document.getElementById('rel_rol_id')) document.getElementById('rel_rol_id').innerHTML = rolesOpts.replace('<option value="">Sin Rol (Personalizado)</option>','<option value="" disabled selected>Seleccione...</option>');
         
-        // Reaplicar filtro de búsqueda si el administrador lo está usando en calculadora
         const searchInputCalc = document.getElementById('search-tienda-calc');
         if (searchInputCalc && searchInputCalc.value) {
             filterTiendasCalc();
         }
 
-        // Obtener Asesores Únicos de la UN permitida para Poblar las Listas
         const asesoresSet = new Set();
         allowedClients.forEach(c => {
             if (c.asesor && String(c.asesor).trim() !== '') asesoresSet.add(String(c.asesor).trim());
@@ -832,7 +836,6 @@
         const asesorHisEl = document.getElementById('f-asesor-his');
         if (asesorHisEl) asesorHisEl.innerHTML = optAsesor;
 
-        // Popular filtros de historial con tiendas de mi UN
         let optTienda = '<option value="">Todas de mi UN</option>';
         allowedClients.forEach(c => optTienda += `<option value="${c.id_cliente}">${c.nombre_cliente}</option>`);
         const fTiendaEl = document.getElementById('f-tienda');
@@ -843,7 +846,6 @@
         const fEntidadEl = document.getElementById('f-entidad');
         if (fEntidadEl) fEntidadEl.innerHTML = optEntidad;
         
-        // ⚡ CARGAR Y RENDERIZAR NOTIFICACIÓN GLOBAL ⚡
         if (db.notificacion) {
             const anuMsg = document.getElementById('anu_msg');
             if(anuMsg) {
@@ -885,6 +887,9 @@
             handleAllyChange();
         }
         document.getElementById('bg-sync-indicator').style.display = 'none';
+      } else {
+        showToast("Error de conexión: El servidor está tardando demasiado. Intenta recargar la página.", "error");
+        document.getElementById('bg-sync-indicator').style.display = 'none';
       }
     }
 
@@ -896,13 +901,11 @@
           
           const uName = String(currentUser.nombre_cliente).toLowerCase().trim();
           
-          // --- NUEVA LÓGICA DE JERARQUÍA UN ---
           const isGlobalAdmin = uName === 'administrador';
           const isRegionalAdmin = uName.startsWith('admin-');
           const isSemiAdmin = uName.startsWith('cia'); 
           const hasPrivileges = isGlobalAdmin || isRegionalAdmin || isSemiAdmin;
 
-          // Guardamos la configuración en la variable global para uso en la app
           window.userPerms = {
               isGlobalAdmin,
               isRegionalAdmin,
@@ -919,11 +922,9 @@
           document.getElementById('sel_cliente').value = currentUser.id_cliente; 
           document.getElementById('display-store-name').innerText = currentUser.nombre_cliente; 
           
-          // Mostrar/Ocultar Selector de Unidad de Negocio al crear cliente
           const boxUN = document.getElementById('box-new-cli-un');
           if (boxUN) boxUN.style.display = isGlobalAdmin ? 'block' : 'none';
 
-          // Mostrar Etiqueta de la UN actual
           if (hasPrivileges && !isGlobalAdmin) {
               const unBadge = document.getElementById('un-badge');
               if (unBadge) {
@@ -939,13 +940,13 @@
           document.getElementById('at-vin').style.display = isGlobalAdmin ? '' : 'none';
           document.getElementById('at-ent').style.display = isGlobalAdmin ? '' : 'none';
           document.getElementById('at-pla').style.display = isGlobalAdmin ? '' : 'none';
-          document.getElementById('at-anu').style.display = isGlobalAdmin ? '' : 'none'; // Mostrar tab anuncios
+          document.getElementById('at-anu').style.display = isGlobalAdmin ? '' : 'none'; 
 
           const btnDist = document.getElementById('btn-distribuidor');
           if (btnDist) btnDist.style.display = isGlobalAdmin ? 'inline-flex' : 'none';
 
           switchAdminTab('ali');
-          refresh(); // Se llama a refresh para re-filtrar las tablas y dropdowns con la UN
+          refresh(); 
           switchView('sim'); 
       } 
       else { showToast("Credenciales incorrectas", "error"); }
@@ -1014,7 +1015,6 @@
           const foundC = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim());
           if (!foundC) return false;
 
-          // Filtro Jerárquico UN
           if (!window.userPerms.isGlobalAdmin) {
               const clientUN = String(foundC.un || foundC.UN || '').trim().toLowerCase();
               if (clientUN !== myUN) return false;
@@ -1074,13 +1074,32 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     }
 
-    async function fetchApi(action, data = null) { const url = new URL(SCRIPT_URL); url.searchParams.append('action', action); if(data) url.searchParams.append('data', JSON.stringify(data)); try { const res = await fetch(url.toString(), { method: 'GET', mode: 'cors' }); return (await res.json()).data; } catch (e) { return null; } }
+    // ⚡ FUNCIONES DE CONEXIÓN CON TIMEOUT MEJORADO ⚡
+    async function fetchApi(action, data = null, timeoutMs = 45000) { 
+        const url = new URL(SCRIPT_URL); 
+        url.searchParams.append('action', action); 
+        if(data) url.searchParams.append('data', JSON.stringify(data)); 
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+        try { 
+            const res = await fetch(url.toString(), { method: 'GET', mode: 'cors', signal: controller.signal }); 
+            clearTimeout(timeoutId);
+            return (await res.json()).data; 
+        } catch (e) { 
+            clearTimeout(timeoutId);
+            console.error(`Fetch API Error (${action}):`, e);
+            return null; 
+        } 
+    }
     
     async function apiCall(action, data = null, btnId = null) { 
         if(btnId) { const b = document.getElementById(btnId); if(b) { b.classList.add('is-loading'); b.disabled = true; } }
         try {
             const res = await fetchApi(action, data); 
             if(res) { refresh(); showToast(res, "success"); clearAdminForms(action); }
+            else { showToast("Error de conexión o tiempo de espera agotado", "error"); }
         } catch (error) {
             showToast("Error de conexión", "error");
         } finally {
@@ -1088,7 +1107,6 @@
         }
     }
 
-    // ⚡ NUEVA FUNCIÓN PARA ENVIAR EL ANUNCIO ⚡
     async function guardarAnuncio() {
         const msg = document.getElementById('anu_msg').value;
         const tipo = document.getElementById('anu_tipo').value;
@@ -1101,7 +1119,6 @@
         }, 'btn-admin-anu');
     }
 
-    // 🎯 NUEVA FUNCIÓN PARA ENVOLVER LA CREACIÓN DEL CLIENTE CON UNIDAD DE NEGOCIO
     function crearClienteJerarquia() {
         const nom = document.getElementById('new_cli_nom').value;
         const pass = document.getElementById('new_cli_pass').value;
@@ -1295,7 +1312,6 @@
         document.getElementById('ed-cli-nom').value = c.nombre_cliente;
         document.getElementById('ed-cli-pass').value = c.contrasena;
         
-        // ⚡ CARGAR DATOS BANCARIOS ⚡
         const b = db.bancos ? db.bancos.find(x => String(x.id_cliente).trim() === String(id).trim()) : null;
         document.getElementById('ed-cli-rep').value = b ? (b.nombre_comercio || '') : '';
         document.getElementById('ed-cli-cedula').value = b ? (b.cedula_nit || '') : '';
@@ -1424,7 +1440,6 @@
             asesor: asesorValue, 
             rol: rolSelect, 
             factores: factores,
-            // ⚡ ENVIAR DATOS BANCARIOS ⚡
             nombre_comercio: document.getElementById('ed-cli-rep').value,
             cedula_nit: document.getElementById('ed-cli-cedula').value,
             correo: document.getElementById('ed-cli-correo').value,
@@ -1541,7 +1556,6 @@
         }
     }
 
-    // EXPORTACIÓN OBLIGATORIA AL ENTORNO GLOBAL
     Object.assign(window, {
         attemptLogin, switchView, showDistribuidorPrices, handleAllyChange, 
         loadPlanes, loadNumCuotas, calc, handlePriceInput, handleConsignarInput, 
@@ -1552,7 +1566,7 @@
         openAliado, openFinanciera, openRol, confirmDeleteVinculo, 
         confirmDeleteVinculoRol, renderAliadoVinculos, openEstadoModal, 
         closeEstadoModal, saveEstadoSimulacion, sendWhatsApp, filterTiendasCalc, crearClienteJerarquia,
-        guardarAnuncio // Añadido para que React lo vea
+        guardarAnuncio 
     });
   </script>
 </body>
