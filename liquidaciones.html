@@ -64,9 +64,10 @@
             adminPct: 0.40,
             gestorPct: 0.60,
             comisionFija: 40000,
-            utilidadFijaAdmin: 70000, // Nuevo: Fee fijo que se cobra al aliado (El aliado se queda con el resto)
+            utilidadFijaAdmin: 70000, 
             peaje: 40000,
-            aplica4x1000: true
+            aplica4x1000: true,
+            aliadoPoneInventario: false // NUEVO: Define quién es el dueño del equipo
         };
 
         // UTILIDADES
@@ -175,6 +176,7 @@
                 let calcGestorBruto = 0;
                 let calcCartera = Number(config.peaje || 40000);
                 let aplica4x1000 = config.aplica4x1000 ?? true;
+                let aliadoPoneInventario = config.aliadoPoneInventario ?? false; // Leemos si el aliado pone el equipo
                 let reglaAplicada = "Estándar";
 
                 if (config.type === 'porcentajes') {
@@ -182,23 +184,35 @@
                     calcAdmin = utilidadBase * Number(config.adminPct);
                     calcGestorBruto = (utilidadBase * Number(config.gestorPct)) - calcCartera;
                 } else if (config.type === 'inversionista') {
+                    // Si el esquema es inversionista, el aliado ya recupera su equipo dentro de la fórmula tradicional
                     reglaAplicada = `Invers. ${config.adminPct*100}/${config.gestorPct*100}`;
                     calcAdmin = (utilidadBase * Number(config.adminPct)) - (calcCartera / 2);
                     calcGestorBruto = (utilidadBase * Number(config.gestorPct)) - (calcCartera / 2) + costoEqNum;
+                    aliadoPoneInventario = false; // Desactivar la adición manual abajo porque la regla "inversionista" ya incluye la devolución del costo de equipo (+ costoEqNum). Si no se duplica.
                 } else if (config.type === 'fija') {
                     reglaAplicada = "Comisión Fija (Aliado)";
-                    calcGestorBruto = Number(config.comisionFija) + costoEqNum;
+                    calcGestorBruto = Number(config.comisionFija);
                     calcAdmin = utilidadBase - Number(config.comisionFija) - calcCartera;
                 } else if (config.type === 'fija_admin') {
-                    // Nuevo: Fee de Plataforma. Admin cobra un fijo y Aliado asume costo y se queda el resto.
                     reglaAplicada = "Fija Admin";
                     calcAdmin = Number(config.utilidadFijaAdmin || 70000);
-                    calcGestorBruto = utilidadBase - calcAdmin - calcCartera + costoEqNum;
+                    // Si el Admin cobra un fijo, el aliado se queda con todo el resto (Incluyendo recuperar su costo de equipo si fuera suyo, pero OJO: Si el aliado NO puso el inventario, la empresa debería quedarse con el costo del equipo además del Fee, entonces lo deducimos).
+                    // Para simplificar: En Fija Admin, calculamos lo que le queda al aliado a partir del dinero total menos Fee Admin menos Peaje.
+                    // Si el aliado pone inventario, se le devuelve el costo equipo. Si no, no.
+                    calcGestorBruto = utilidadBase - calcAdmin - calcCartera;
                 } else {
                     // Estándar
                     calcAdmin = utilidadBase - calcCartera;
                     calcGestorBruto = 0;
                     aplica4x1000 = false;
+                }
+
+                // NUEVA REGLA DE INVENTARIO:
+                // Si el aliado fue quien puso el inventario, y no es esquema Inversionista (que ya lo devuelve intrínsecamente),
+                // entonces debemos sumarle el costo del equipo a su consignación bruta (porque la empresa recauda el total y debe devolver el equipo).
+                if (aliadoPoneInventario) {
+                    calcGestorBruto += costoEqNum;
+                    reglaAplicada += " (+ Eq)";
                 }
 
                 const calc4x1000 = aplica4x1000 ? (calcGestorBruto * 0.004) : 0;
@@ -433,7 +447,6 @@
             const recalculatedData = useMemo(() => {
                 return filteredData.map(row => applyRules(row, allyConfigs));
             }, [filteredData, allyConfigs]);
-
 
             const alliesLiquidationSummary = useMemo(() => {
                 if (!recalculatedData.length) return [];
@@ -801,6 +814,22 @@
                                  <option value="fija_admin">🟣 Fija Admin (Cobro fijo al aliado, él conserva el resto)</option>
                              </select>
                          </div>
+
+                         {/* NUEVO SWITCH: INVENTARIO */}
+                         {c.type !== 'inversionista' && (
+                             <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-center justify-between shadow-sm">
+                                 <div>
+                                    <h4 className="text-sm font-black text-blue-900">¿El Aliado pone el Inventario?</h4>
+                                    <p className="text-[10px] text-blue-600 font-medium mt-0.5 max-w-sm">
+                                        Si activas esta opción, el sistema le devolverá el "Costo Equipo" en la liquidación (sumado a su comisión), ya que el aparato es suyo.
+                                    </p>
+                                 </div>
+                                 <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                     <input type="checkbox" checked={c.aliadoPoneInventario || false} onChange={e => handleConfigFieldChange(b, 'aliadoPoneInventario', e.target.checked)} className="sr-only peer" />
+                                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                 </label>
+                             </div>
+                         )}
 
                          {(c.type === 'porcentajes' || c.type === 'inversionista') && (
                              <div className="grid grid-cols-2 gap-4">
