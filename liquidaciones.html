@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquidación de Comisiones - Multimarcas</title>
+    <title>Liquidación de Comisiones & Aliados - Multimarcas</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
-    <!-- VERSIÓN DE BABEL FIJADA PARA EVITAR PANTALLA BLANCA -->
     <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -25,7 +24,6 @@
 <body>
     <div id="root"></div>
 
-    <!-- PRESET DE REACT AÑADIDO OBLIGATORIAMENTE AQUÍ -->
     <script type="text/babel" data-presets="react">
         const { useState, useEffect, useMemo, useCallback } = React;
 
@@ -46,18 +44,35 @@
             Search: (p) => <IconBase {...p}><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></IconBase>,
             Database: (p) => <IconBase {...p}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>,
             Settings: (p) => <IconBase {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1-2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>,
-            X: (p) => <IconBase {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></IconBase>
+            X: (p) => <IconBase {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></IconBase>,
+            User: (p) => <IconBase {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconBase>,
+            Users: (p) => <IconBase {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></IconBase>,
+            Globe: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></IconBase>,
+            Building: (p) => <IconBase {...p}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="16"/><line x1="15" y1="22" x2="15" y2="16"/><path d="M9 16h6"/><path d="M12 2v4"/></IconBase>,
+            Award: (p) => <IconBase {...p}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></IconBase>,
+            Save: (p) => <IconBase {...p}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></IconBase>,
+            Copy: (p) => <IconBase {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></IconBase>
         };
 
-        // ⚠️ PEGA AQUÍ TU URL CORRECTA DE GOOGLE APPS SCRIPT
         const API_URL = 'https://script.google.com/macros/s/AKfycbz770i0j3vK5-9M2Z2EheDh9GX2x2j2KbjfFm_yNadBg5db3tEc5so58KWeIX5SwTmAZw/exec';
+
+        // ============================================================================
+        // ⚙️ CONFIGURACIÓN LOCAL (MEMORIA DEL NAVEGADOR)
+        // ============================================================================
+        const DEFAULT_ALLY_BRAND_CONFIG = {
+            type: 'estandar', // estandar, porcentajes, inversionista, fija, fija_admin
+            adminPct: 0.40,
+            gestorPct: 0.60,
+            comisionFija: 40000,
+            utilidadFijaAdmin: 70000, // Nuevo: Fee fijo que se cobra al aliado (El aliado se queda con el resto)
+            peaje: 40000,
+            aplica4x1000: true
+        };
 
         // UTILIDADES
         const parseAmount = (val) => {
-            if (val === null || val === undefined || String(val).trim() === '') return null; // Retorna null si está vacío para diferenciar del 0
-            let s = String(val).replace(/[^0-9.,-]/g, '');
-            s = s.replace(/[.,]00$/, '');
-            s = s.replace(/[.,]/g, '');
+            if (val === null || val === undefined || String(val).trim() === '') return null;
+            let s = String(val).replace(/[^0-9.,-]/g, '').replace(/[.,]00$/, '').replace(/[.,]/g, '');
             return parseInt(s, 10) || 0;
         };
 
@@ -68,68 +83,61 @@
         const parseDate = (dateVal) => {
             if (!dateVal) return null;
             let dateObj = null;
-            
             if (typeof dateVal === 'number') {
                 if (dateVal > 30000 && dateVal < 60000) return new Date(Math.round((dateVal - 25569) * 86400 * 1000));
             }
-
             if (typeof dateVal === 'string' && dateVal.length > 5) {
-                // 🛡️ CORRECCIÓN ZONA HORARIA
                 if (dateVal.includes('T')) {
                     const cleanDate = dateVal.split('T')[0]; 
                     const parts = cleanDate.split('-');
                     return new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]); 
                 }
-                
                 if (dateVal.match(/^\d{4}-\d{2}-\d{2}/)) {
                     const parts = dateVal.substring(0,10).split('-');
                     return new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
                 }
-                
                 dateObj = new Date(dateVal);
-                
                 if (!isNaN(dateObj.getTime())) {
                     const offset = dateObj.getTimezoneOffset() * 60000;
                     dateObj = new Date(dateObj.getTime() + offset);
                 }
-
             } else if (dateVal instanceof Date) {
                 dateObj = dateVal;
             }
-            
             if (!dateObj || isNaN(dateObj.getTime())) return null;
             return dateObj;
         };
 
         function LiquidacionesApp() {
-            const [brand, setBrand] = useState('payjoy'); 
+            // 🧠 ESTADO: REGLAS CONFIGURADAS POR ALIADO Y POR MARCA
+            const [allyConfigs, setAllyConfigs] = useState(() => {
+                const saved = localStorage.getItem('liquidacionesAllyConfigs_v3');
+                if (saved) {
+                    try { return JSON.parse(saved); } catch(e) {}
+                }
+                return {};
+            });
+
+            const [configModal, setConfigModal] = useState({ show: false, allyName: '', config: {}, activeTab: 'PAYJOY' });
+
+            const [brand, setBrand] = useState('todas'); 
             const [data, setData] = useState([]);
-            const [headersList, setHeadersList] = useState([]); // Para saber las columnas exactas
+            const [rawUsuarios, setRawUsuarios] = useState([]); 
+            const [headersList, setHeadersList] = useState([]); 
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState(null);
             
-            // Filtros
+            const [activeTab, setActiveTab] = useState('aliados');
             const [dateFilter, setDateFilter] = useState('thisMonth');
             const [customStartDate, setCustomStartDate] = useState('');
             const [customEndDate, setCustomEndDate] = useState('');
             const [selectedPartner, setSelectedPartner] = useState('');
             const [selectedConvenio, setSelectedConvenio] = useState('');
             const [searchTerm, setSearchTerm] = useState('');
-            
             const [selectedTiendas, setSelectedTiendas] = useState([]);
             const [isTiendaDropdownOpen, setIsTiendaDropdownOpen] = useState(false);
 
-            // ==========================================
-            // ESTADOS PARA EL MODAL DE EDICIÓN
-            // ==========================================
-            const [editSaleModal, setEditSaleModal] = useState({
-                show: false,
-                row: null,
-                gestor: '',
-                equipo: '',
-                costo: '',
-                remanente: ''
-            });
+            const [editSaleModal, setEditSaleModal] = useState({ show: false, row: null, gestor: '', equipo: '', costo: '', remanente: '' });
             const [isSavingEdit, setIsSavingEdit] = useState(false);
 
             useEffect(() => {
@@ -137,6 +145,77 @@
                     setSelectedConvenio('');
                 }
             }, [selectedTiendas, selectedConvenio]);
+
+            // =========================================================================
+            // 🛡️ REGLAS DEL NEGOCIO (CALCULADOR EN VIVO OVERRIDE DEL BACKEND)
+            // =========================================================================
+            const applyRules = (row, configs) => {
+                const allyName = String(row._assigned || 'SIN ASIGNAR').trim().toUpperCase();
+                const rowBrand = String(row._brandName || 'PAYJOY').toUpperCase();
+                
+                const inicialValor = (row._venta || 0) - (row._financed || 0);
+                
+                // Lógica de Remanente
+                let remanente = row._remanente;
+                if (remanente === null || remanente === undefined || remanente === '') {
+                    remanente = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
+                } else {
+                    remanente = Number(remanente);
+                }
+
+                const montoAConsignar = row._financed || 0; // Porque Consignar = Venta - Inicial = Financiado
+                const costoEqNum = row._costo || 0;
+                const utilidadBase = montoAConsignar + remanente - costoEqNum;
+                
+                // Buscar configuración específica
+                const allyConfig = configs[allyName] || {};
+                const config = allyConfig[rowBrand] || DEFAULT_ALLY_BRAND_CONFIG;
+
+                let calcAdmin = 0;
+                let calcGestorBruto = 0;
+                let calcCartera = Number(config.peaje || 40000);
+                let aplica4x1000 = config.aplica4x1000 ?? true;
+                let reglaAplicada = "Estándar";
+
+                if (config.type === 'porcentajes') {
+                    reglaAplicada = `Porcentajes ${config.adminPct*100}/${config.gestorPct*100}`;
+                    calcAdmin = utilidadBase * Number(config.adminPct);
+                    calcGestorBruto = (utilidadBase * Number(config.gestorPct)) - calcCartera;
+                } else if (config.type === 'inversionista') {
+                    reglaAplicada = `Invers. ${config.adminPct*100}/${config.gestorPct*100}`;
+                    calcAdmin = (utilidadBase * Number(config.adminPct)) - (calcCartera / 2);
+                    calcGestorBruto = (utilidadBase * Number(config.gestorPct)) - (calcCartera / 2) + costoEqNum;
+                } else if (config.type === 'fija') {
+                    reglaAplicada = "Comisión Fija (Aliado)";
+                    calcGestorBruto = Number(config.comisionFija) + costoEqNum;
+                    calcAdmin = utilidadBase - Number(config.comisionFija) - calcCartera;
+                } else if (config.type === 'fija_admin') {
+                    // Nuevo: Fee de Plataforma. Admin cobra un fijo y Aliado asume costo y se queda el resto.
+                    reglaAplicada = "Fija Admin";
+                    calcAdmin = Number(config.utilidadFijaAdmin || 70000);
+                    calcGestorBruto = utilidadBase - calcAdmin - calcCartera + costoEqNum;
+                } else {
+                    // Estándar
+                    calcAdmin = utilidadBase - calcCartera;
+                    calcGestorBruto = 0;
+                    aplica4x1000 = false;
+                }
+
+                const calc4x1000 = aplica4x1000 ? (calcGestorBruto * 0.004) : 0;
+                const calcConsignarNeto = calcGestorBruto - calc4x1000;
+
+                return {
+                    ...row,
+                    _remanenteCalc: remanente,
+                    _utilidadBase: utilidadBase,
+                    _calcAdmin: calcAdmin,
+                    _calcGestorBruto: calcGestorBruto,
+                    _calcCartera: calcCartera,
+                    _calc4x1000: calc4x1000,
+                    _calcConsignarNeto: calcConsignarNeto,
+                    _reglaAplicada: reglaAplicada
+                };
+            };
 
             const fetchVentasData = useCallback(async () => {
                 setLoading(true);
@@ -162,6 +241,7 @@
                         try {
                             const jsonUsu = JSON.parse(await usuariosRes.text());
                             if (Array.isArray(jsonUsu) && jsonUsu.length > 0) {
+                                setRawUsuarios(jsonUsu);
                                 
                                 const headerRowObj = jsonUsu.find(r => Object.values(r).some(v => String(v).toUpperCase().includes('CONVENIO')));
                                 let nameKey, asigKey, convKey, tiendaKey;
@@ -210,14 +290,25 @@
                                 if (Array.isArray(jsonVentas) && jsonVentas.length > 0) {
                                     if (globalHeaders.length === 0) globalHeaders = Object.keys(jsonVentas[0]);
 
+                                    const findConfigColumnLocal = (possibleNames, hList) => {
+                                        for (const name of possibleNames) {
+                                            const found = hList.find(h => h.toLowerCase().trim() === name.toLowerCase().trim());
+                                            if (found) return found;
+                                        }
+                                        for (const name of possibleNames) {
+                                            const found = hList.find(h => h.toLowerCase().includes(name.toLowerCase()));
+                                            if (found) return found;
+                                        }
+                                        return null;
+                                    };
+
                                     const parsedRows = jsonVentas.map(row => {
+                                        const keysLocal = Object.keys(row);
                                         const findVal = (keywords) => {
-                                            let k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().trim() === kw));
-                                            if(!k) k = Object.keys(row).find(key => keywords.some(kw => String(key).toUpperCase().includes(kw)));
-                                            return k ? row[k] : undefined;
+                                            const col = findConfigColumnLocal(keywords, keysLocal);
+                                            return col ? row[col] : undefined;
                                         };
-                                        
-                                        const dateKey = Object.keys(row).find(k => {
+                                        const dateKey = keysLocal.find(k => {
                                             const upper = String(k).toUpperCase();
                                             return upper.includes('FECHA') && !upper.includes('NACI');
                                         });
@@ -232,19 +323,6 @@
                                         
                                         let convenioFound = conveniosMap[searchTienda] || conveniosMap[searchVend] || 'SIN CONVENIO';
 
-                                        let aConsignarTotal = 0;
-                                        Object.keys(row).forEach(k => {
-                                            const u = k.toUpperCase().trim();
-                                            if (
-                                                (u.includes('CONSIGNAR') && !u.includes('MONTO') && !u.includes('TOTAL')) || 
-                                                u.includes('PIPE') || u.includes('RICARDO') || 
-                                                u.includes('EJECUTIVOS') || u.includes('JUAN CAMILO')
-                                            ) {
-                                                const amount = parseAmount(row[k]);
-                                                if (amount !== null) aConsignarTotal += amount;
-                                            }
-                                        });
-
                                         let financed = parseAmount(findVal(['SALDO A FINANCIAR', 'SALDO A FINACIAR', 'MONTO A FINANCIAR', 'MONTO TOTAL A FINANCIAR', 'MONTO TOTAL A CONSIGNAR', 'MONTO A CONSIGNAR', 'VALOR CREDITO']));
 
                                         if (financed === 0 || financed === null || isNaN(financed)) {
@@ -253,7 +331,6 @@
                                             if (totalVenta > 0 && cuotaInicial >= 0) financed = totalVenta - cuotaInicial;
                                         }
 
-                                        // 🛡️ Obtener Remanente verificando nulos y guardando el 0 explícito
                                         const rawRem = findVal(['EXCEDENTE DE INICIAL', 'REMANENTE DE INICIAL', 'REMANENTE']);
                                         let remanenteVal = null;
                                         if (rawRem !== undefined && rawRem !== null && String(rawRem).trim() !== "") {
@@ -277,14 +354,7 @@
                                             _venta: parseAmount(findVal(['TOTAL VENTA', 'PRECIO DE VENTA', 'VALOR VENTA', 'VENTA', 'MONTO TOTAL'])),
                                             _financed: financed, 
                                             _costo: parseAmount(findVal(['COSTOS EQUIPOS', 'COSTO EQUIPO', 'COSTO'])),
-                                            _cartera: parseAmount(findVal(['CARTERA', 'COSTO CARTERA', 'FEE CARTERA'])),
-                                            _admin112: parseAmount(findVal(['UTILIDADES ADMIN 112', 'ADMIN 112', 'UTILIDAD ADMIN'])),
-                                            _pipe: parseAmount(findVal(['PIPE Y CHAMORRO', 'LIQUIDACION PIPE'])),
-                                            _ricardo: parseAmount(findVal(['RICARDO MARIN', 'CONSIGNAR RICARDO'])),
-                                            _jc: parseAmount(findVal(['JUAN CAMILO'])),
-                                            _ejec: parseAmount(findVal(['EJECUTIVOS'])),
-                                            _remanente: remanenteVal,
-                                            _aConsignar: aConsignarTotal
+                                            _remanente: remanenteVal
                                         };
                                     });
                                     combinedData = combinedData.concat(parsedRows);
@@ -308,7 +378,7 @@
                 fetchVentasData();
             }, [brand, fetchVentasData]);
 
-            const getDateRange = () => {
+            const getDateRange = useCallback(() => {
                 const now = new Date();
                 now.setHours(0,0,0,0);
                 if (dateFilter === 'thisWeek') {
@@ -322,7 +392,7 @@
                 if (dateFilter === 'lastMonth') return { start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999) };
                 if (dateFilter === 'custom' && customStartDate && customEndDate) return { start: new Date(customStartDate + 'T00:00:00'), end: new Date(customEndDate + 'T23:59:59') };
                 return { start: new Date(2000, 0, 1), end: new Date(2100, 0, 1) }; 
-            };
+            }, [dateFilter, customStartDate, customEndDate]);
 
             const filteredData = useMemo(() => {
                 if (!data.length) return [];
@@ -357,7 +427,95 @@
                     const dB = parseDate(b._date) || 0;
                     return dB - dA;
                 });
-            }, [data, dateFilter, customStartDate, customEndDate, selectedPartner, selectedTiendas, selectedConvenio, searchTerm]);
+            }, [data, getDateRange, selectedPartner, selectedTiendas, selectedConvenio, searchTerm]);
+
+            // 🌟 Aplicar la matemática local a todos los datos filtrados
+            const recalculatedData = useMemo(() => {
+                return filteredData.map(row => applyRules(row, allyConfigs));
+            }, [filteredData, allyConfigs]);
+
+
+            const alliesLiquidationSummary = useMemo(() => {
+                if (!recalculatedData.length) return [];
+
+                const userMapInfo = {};
+                if (rawUsuarios.length > 0) {
+                    const uKeys = Object.keys(rawUsuarios[0]);
+                    const nameKey = uKeys.find(k => k.toUpperCase().includes('NOMBRE') || k.toUpperCase().includes('APELLIDO'));
+                    const asigKey = uKeys.find(k => k.toUpperCase().includes('ASINGACION') || k.toUpperCase().includes('ASIGNACION'));
+                    const bcoKey = uKeys.find(k => k.toUpperCase().includes('BANCO'));
+                    const tipoKey = uKeys.find(k => k.toUpperCase().includes('TIPO'));
+                    const ctaKey = uKeys.find(k => k.toUpperCase().includes('CUENTA') && !k.toUpperCase().includes('TIPO'));
+                    const idKey = uKeys.find(k => k.toUpperCase().includes('CEDULA') || k.toUpperCase().includes('NIT'));
+
+                    rawUsuarios.forEach(uRow => {
+                        let nameVal = nameKey ? String(uRow[nameKey] || '').trim().toUpperCase() : '';
+                        let asigVal = asigKey ? String(uRow[asigKey] || '').trim().toUpperCase() : '';
+                        
+                        let key = nameVal || asigVal;
+                        if (key && key !== 'NOMBRE_VENDEDOR') {
+                            userMapInfo[key] = {
+                                banco: bcoKey ? String(uRow[bcoKey] || '').trim() : '',
+                                tipoCuenta: tipoKey ? String(uRow[tipoKey] || '').trim() : '',
+                                nCuenta: ctaKey ? String(uRow[ctaKey] || '').trim() : '',
+                                nit: idKey ? String(uRow[idKey] || '').trim() : ''
+                            };
+                        }
+                    });
+                }
+
+                const summary = {};
+
+                recalculatedData.forEach(row => {
+                    const assignedName = String(row._assigned || 'SIN ASIGNAR').trim().toUpperCase();
+                    if (!summary[assignedName]) {
+                        summary[assignedName] = {
+                            name: assignedName,
+                            convenio: row._convenio || 'SIN CONVENIO',
+                            salesBrutas: 0,
+                            inicial: 0,
+                            remanente: 0,
+                            financed: 0,
+                            costo: 0,
+                            cartera: 0,
+                            admin112: 0,
+                            impuesto4x1000: 0,
+                            consignarNeto: 0,
+                            operaciones: 0,
+                            brandCount: {}
+                        };
+                    }
+
+                    const allyObj = summary[assignedName];
+                    const inicialValor = (row._venta || 0) - (row._financed || 0);
+
+                    allyObj.salesBrutas += (row._venta || 0);
+                    allyObj.inicial += inicialValor;
+                    allyObj.remanente += row._remanenteCalc;
+                    allyObj.financed += (row._financed || 0);
+                    allyObj.costo += (row._costo || 0);
+                    allyObj.cartera += row._calcCartera;
+                    allyObj.admin112 += row._calcAdmin;
+                    allyObj.impuesto4x1000 += row._calc4x1000;
+                    allyObj.consignarNeto += row._calcConsignarNeto;
+                    allyObj.operaciones++;
+
+                    const bName = row._brandName || 'DESCONOCIDO';
+                    allyObj.brandCount[bName] = (allyObj.brandCount[bName] || 0) + 1;
+                });
+
+                return Object.values(summary).map(ally => {
+                    const bankDetails = userMapInfo[ally.name] || { banco: '', tipoCuenta: '', nCuenta: '', nit: '' };
+                    return {
+                        ...ally,
+                        banco: bankDetails.banco,
+                        tipoCuenta: bankDetails.tipoCuenta,
+                        nCuenta: bankDetails.nCuenta,
+                        nit: bankDetails.nit
+                    };
+                }).sort((a, b) => b.consignarNeto - a.consignarNeto);
+
+            }, [recalculatedData, rawUsuarios]);
 
             const uniquePartners = useMemo(() => {
                 const s = new Set();
@@ -377,25 +535,14 @@
                 return Array.from(s).sort();
             }, [data]);
 
-            // ==========================================
-            // LÓGICA MODIFICAR VENTA DESDE EL MODAL
-            // ==========================================
             const openEditModal = (row) => {
-                const inicialValor = (row._venta || 0) - (row._financed || 0);
-                let remanenteAplicado = row._remanente;
-                
-                // Si está vacío en la base de datos, mostramos el que se auto-calculó
-                if (remanenteAplicado === null || remanenteAplicado === undefined || remanenteAplicado === '') {
-                    remanenteAplicado = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
-                }
-
                 setEditSaleModal({
                     show: true,
                     row: row,
                     gestor: String(row._assigned || '').trim(),
                     equipo: String(row._device || '').trim(),
                     costo: row._costo !== null && row._costo !== undefined ? String(row._costo) : '',
-                    remanente: String(remanenteAplicado)
+                    remanente: String(row._remanenteCalc)
                 });
             };
 
@@ -407,17 +554,14 @@
                     const brandVal = (editSaleModal.row._brandName || brand || 'payjoy').toLowerCase();
 
                     const updates = [];
-                    // Sanear Asignado y Equipo
                     updates.push({ column: 'ASIGNADO', value: editSaleModal.gestor, append: false, cleanWrite: true });
                     updates.push({ column: 'EQUIPO', value: editSaleModal.equipo, append: false, cleanWrite: true });
                     
-                    // Sanear y enviar Costo y Remanente como STRING (para evitar que Apps Script ignore el 0 falsy)
                     const costoVal = editSaleModal.costo !== '' ? String(editSaleModal.costo.replace(/\D/g, '')) : '';
                     updates.push({ column: 'COSTO EQUIPO', value: costoVal, append: false, cleanWrite: true });
                     
                     const remanenteVal = editSaleModal.remanente !== '' ? String(editSaleModal.remanente.replace(/\D/g, '')) : '';
                     
-                    // Buscar el nombre exacto de la columna de Remanente en esta financiera
                     const remColName = headersList.find(h => String(h).toUpperCase().includes('REMANENTE') || String(h).toUpperCase().includes('EXCEDENTE')) || 'REMANENTE DE INICIAL';
                     
                     updates.push({ column: remColName, value: remanenteVal, append: false, cleanWrite: true });
@@ -435,7 +579,7 @@
                         body: JSON.stringify(payload)
                     });
                     
-                    fetchVentasData(); // Recarga la tabla para ver los cambios
+                    fetchVentasData(); 
                     
                     setEditSaleModal({ show: false, row: null, gestor: '', equipo: '', costo: '', remanente: '' });
                 } catch (error) {
@@ -445,7 +589,6 @@
                 }
             };
 
-            // 🎯 LÓGICA DE KPIS ACTUALIZADA
             const kpis = useMemo(() => {
                 let stats = {
                     ventasTotales: 0,
@@ -456,55 +599,33 @@
                     cuatroPorMilTotal: 0,
                     cartera: 0,
                     remanente: 0,
-                    cantidad: filteredData.length,
+                    cantidad: recalculatedData.length,
                     inicial: 0,
                     utilidad: 0
                 };
 
-                filteredData.forEach(row => {
-                    const assignedLower = String(row._assigned || '').toLowerCase();
-                    const storeLower = String(row._tienda || '').toLowerCase();
-                    
-                    // 🛡️ Lógica Exclusión 4x1000 obligatoria para este grupo
-                    const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz') || assignedLower.includes('melissa') || assignedLower.includes('beltran');
-                    const siemprePaga4x1000 = isPipeOChamorro;
-                    const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
-                    
-                    const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
-                    const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
-                    const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
-
+                recalculatedData.forEach(row => {
                     const inicialValor = (row._venta || 0) - (row._financed || 0);
-                    
-                    // Auto-calcular remanente si está vacío (null o undefined)
-                    let remanenteCalculado = row._remanente;
-                    if (remanenteCalculado === null || remanenteCalculado === undefined || remanenteCalculado === '') {
-                        remanenteCalculado = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
-                    }
 
                     stats.ventasTotales += (row._venta || 0);
                     stats.inicial += inicialValor;
                     stats.creditoTotal += (row._financed || 0);
                     stats.costoTotal += (row._costo || 0);
                     
-                    // Utilidad = Venta Bruta - Costo Equipo
                     stats.utilidad += (row._venta || 0) - (row._costo || 0);
                     
-                    stats.utilidadAdmin += (row._admin112 || 0);
-                    stats.aConsignarSocioTotal += consignarMontoNeto;
-                    stats.cuatroPorMilTotal += cuatroPorMil;
+                    stats.utilidadAdmin += row._calcAdmin;
+                    stats.aConsignarSocioTotal += row._calcConsignarNeto;
+                    stats.cuatroPorMilTotal += row._calc4x1000;
                     
-                    stats.cartera += (row._cartera || 0);
-                    stats.remanente += Number(remanenteCalculado);
+                    stats.cartera += row._calcCartera;
+                    stats.remanente += row._remanenteCalc;
                 });
 
-                // Cálculos adicionales
                 stats.porcentajeInicial = stats.ventasTotales > 0 ? ((stats.inicial / stats.ventasTotales) * 100).toFixed(1) : "0.0";
-
                 return stats;
-            }, [filteredData]);
+            }, [recalculatedData]);
 
-            // 🎯 EXPORTACIÓN PDF ACTUALIZADA
             const handleExportPDF = () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('landscape'); 
@@ -530,27 +651,11 @@
                 
                 const tableRows = [];
 
-                filteredData.forEach(row => {
+                recalculatedData.forEach(row => {
                     const d = parseDate(row._date);
                     const fechaStr = d ? d.toLocaleDateString('es-ES') : '-';
-                    
-                    const assignedLower = String(row._assigned || '').toLowerCase();
-                    const storeLower = String(row._tienda || '').toLowerCase();
-                    const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz') || assignedLower.includes('melissa') || assignedLower.includes('beltran');
-                    const siemprePaga4x1000 = isPipeOChamorro;
-                    const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
-                    
-                    const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
-                    const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
-                    const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
-                    
                     const inicialValor = (row._venta || 0) - (row._financed || 0);
                     const porcentajeInicialFila = row._venta > 0 ? ((inicialValor / row._venta) * 100).toFixed(1) : "0.0";
-
-                    let remanenteCalculado = row._remanente;
-                    if (remanenteCalculado === null || remanenteCalculado === undefined || remanenteCalculado === '') {
-                        remanenteCalculado = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
-                    }
 
                     const rowData = [
                         fechaStr,
@@ -559,13 +664,13 @@
                         String(row._client || '').substring(0, 20),
                         formatCurrency(row._venta),
                         `${formatCurrency(inicialValor)} (${porcentajeInicialFila}%)`,
-                        formatCurrency(remanenteCalculado),
+                        formatCurrency(row._remanenteCalc),
                         formatCurrency(row._financed),
                         formatCurrency(row._costo),
-                        formatCurrency(row._cartera), 
-                        formatCurrency(row._admin112),
-                        formatCurrency(cuatroPorMil),
-                        formatCurrency(consignarMontoNeto)
+                        formatCurrency(row._calcCartera), 
+                        formatCurrency(row._calcAdmin),
+                        formatCurrency(row._calc4x1000),
+                        formatCurrency(row._calcConsignarNeto)
                     ];
 
                     if (brand === 'todas') rowData.unshift(row._brandName);
@@ -590,26 +695,10 @@
                 doc.save(`Liquidacion_${brand}_${new Date().toISOString().slice(0,10)}.pdf`);
             };
 
-            // 🎯 EXPORTACIÓN EXCEL ACTUALIZADA
             const handleExportExcel = () => {
-                const exportData = filteredData.map(row => {
-                    const assignedLower = String(row._assigned || '').toLowerCase();
-                    const storeLower = String(row._tienda || '').toLowerCase();
-                    const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz') || assignedLower.includes('melissa') || assignedLower.includes('beltran');
-                    const siemprePaga4x1000 = isPipeOChamorro;
-                    const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
-                    
-                    const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
-                    const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
-                    const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
-                    
+                const exportData = recalculatedData.map(row => {
                     const inicialValor = (row._venta || 0) - (row._financed || 0);
                     const porcentajeInicialFila = row._venta > 0 ? ((inicialValor / row._venta) * 100).toFixed(1) : "0.0";
-
-                    let remanenteCalculado = row._remanente;
-                    if (remanenteCalculado === null || remanenteCalculado === undefined || remanenteCalculado === '') {
-                        remanenteCalculado = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
-                    }
 
                     const obj = {};
                     if (brand === 'todas') obj["Financiera"] = row._brandName;
@@ -619,17 +708,17 @@
                     obj["Tienda"] = row._tienda || '';
                     obj["Cliente"] = row._client || '';
                     obj["Referencia"] = row._device || '';
+                    obj["Regla Aplicada"] = row._reglaAplicada || '';
                     obj["Valor Venta Bruta"] = row._venta;
                     obj["Inicial"] = inicialValor;
                     obj["% Inicial"] = Number(porcentajeInicialFila);
-                    obj["Remanente"] = Number(remanenteCalculado);
+                    obj["Remanente"] = row._remanenteCalc;
                     obj["Saldo a Financiar"] = row._financed;
                     obj["Costo Equipo"] = row._costo;
-                    obj["Cartera"] = row._cartera;
-                    obj["Remanente"] = row._remanente;
-                    obj["Admin 112"] = row._admin112;
-                    obj["4x1000"] = cuatroPorMil;
-                    obj["A Consignar"] = consignarMontoNeto; 
+                    obj["Cartera"] = row._calcCartera;
+                    obj["Admin 112"] = row._calcAdmin;
+                    obj["4x1000"] = row._calc4x1000;
+                    obj["A Consignar"] = row._calcConsignarNeto; 
                     return obj;
                 });
                 
@@ -638,6 +727,139 @@
                 window.XLSX.utils.book_append_sheet(workbook, worksheet, "Liquidaciones");
                 window.XLSX.writeFile(workbook, `Liquidaciones_${brand}_${new Date().toISOString().slice(0,10)}.xlsx`);
             };
+
+            const openAllyConfig = (name) => {
+                const currentConfig = allyConfigs[name] || {
+                    PAYJOY: { ...DEFAULT_ALLY_BRAND_CONFIG },
+                    ALOCREDIT: { ...DEFAULT_ALLY_BRAND_CONFIG },
+                    KREDIYA: { ...DEFAULT_ALLY_BRAND_CONFIG },
+                    CREDISMART: { ...DEFAULT_ALLY_BRAND_CONFIG },
+                };
+                
+                // Asegurarse de que las 4 existan
+                ['PAYJOY', 'ALOCREDIT', 'KREDIYA', 'CREDISMART'].forEach(b => {
+                    if (!currentConfig[b]) currentConfig[b] = { ...DEFAULT_ALLY_BRAND_CONFIG };
+                });
+
+                setConfigModal({
+                    show: true,
+                    allyName: name,
+                    config: JSON.parse(JSON.stringify(currentConfig)), // Deep copy
+                    activeTab: 'PAYJOY'
+                });
+            };
+
+            const handleConfigFieldChange = (brand, field, val) => {
+                setConfigModal(prev => ({
+                    ...prev,
+                    config: {
+                        ...prev.config,
+                        [brand]: {
+                            ...prev.config[brand],
+                            [field]: val
+                        }
+                    }
+                }));
+            };
+
+            const copyCurrentTabToAll = () => {
+                const currentConfigForTab = configModal.config[configModal.activeTab];
+                const newConfig = { ...configModal.config };
+                ['PAYJOY', 'ALOCREDIT', 'KREDIYA', 'CREDISMART'].forEach(b => {
+                    newConfig[b] = { ...currentConfigForTab };
+                });
+                setConfigModal(prev => ({ ...prev, config: newConfig }));
+            };
+
+            const saveAllyConfig = () => {
+                const updatedConfigs = {
+                    ...allyConfigs,
+                    [configModal.allyName]: configModal.config
+                };
+                setAllyConfigs(updatedConfigs);
+                localStorage.setItem('liquidacionesAllyConfigs_v3', JSON.stringify(updatedConfigs));
+                setConfigModal({ show: false, allyName: '', config: {}, activeTab: 'PAYJOY' });
+            };
+
+
+            const renderConfigFormForBrand = (b) => {
+                const c = configModal.config[b] || DEFAULT_ALLY_BRAND_CONFIG;
+
+                return (
+                    <div className="p-6 space-y-5 bg-white">
+                         <div>
+                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Esquema de Liquidación para {b}</label>
+                             <select 
+                                value={c.type} 
+                                onChange={e => handleConfigFieldChange(b, 'type', e.target.value)} 
+                                className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm transition-all"
+                             >
+                                 <option value="estandar">⚪ Estándar (Utilidad completa para Administración)</option>
+                                 <option value="porcentajes">🟢 Porcentajes (Ej: 40% Admin / 60% Gestor)</option>
+                                 <option value="inversionista">🟠 Inversionista (Recupera Costo Equipo + % de Utilidad)</option>
+                                 <option value="fija">🔵 Comisión Fija para Aliado (Valor estático a pagar)</option>
+                                 <option value="fija_admin">🟣 Fija Admin (Cobro fijo al aliado, él conserva el resto)</option>
+                             </select>
+                         </div>
+
+                         {(c.type === 'porcentajes' || c.type === 'inversionista') && (
+                             <div className="grid grid-cols-2 gap-4">
+                                 <div>
+                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">% Utilidad Administración</label>
+                                     <div className="relative">
+                                         <input type="number" value={c.adminPct * 100} onChange={e => handleConfigFieldChange(b, 'adminPct', (parseFloat(e.target.value)||0)/100)} className="w-full p-3.5 pr-8 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm" />
+                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                                     </div>
+                                 </div>
+                                 <div>
+                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">% Utilidad Gestor</label>
+                                     <div className="relative">
+                                         <input type="number" value={c.gestorPct * 100} onChange={e => handleConfigFieldChange(b, 'gestorPct', (parseFloat(e.target.value)||0)/100)} className="w-full p-3.5 pr-8 bg-slate-50 border border-slate-200 rounded-xl font-black text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm" />
+                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                                     </div>
+                                 </div>
+                             </div>
+                         )}
+
+                         {c.type === 'fija' && (
+                             <div>
+                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Comisión Fija a Pagar al Gestor ($)</label>
+                                 <div className="relative">
+                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</span>
+                                     <input type="number" value={c.comisionFija} onChange={e => handleConfigFieldChange(b, 'comisionFija', parseFloat(e.target.value)||0)} className="w-full p-3.5 pl-8 bg-slate-50 border border-slate-200 rounded-xl font-black text-blue-700 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" />
+                                 </div>
+                             </div>
+                         )}
+
+                         {c.type === 'fija_admin' && (
+                             <div>
+                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Utilidad Fija Administración ($)</label>
+                                 <div className="relative">
+                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</span>
+                                     <input type="number" value={c.utilidadFijaAdmin !== undefined ? c.utilidadFijaAdmin : 70000} onChange={e => handleConfigFieldChange(b, 'utilidadFijaAdmin', parseFloat(e.target.value)||0)} className="w-full p-3.5 pl-8 bg-slate-50 border border-slate-200 rounded-xl font-black text-purple-700 outline-none focus:ring-2 focus:ring-purple-500 shadow-sm" />
+                                 </div>
+                                 <p className="text-[9px] text-slate-400 mt-1.5 px-1 italic">El aliado asumirá el costo del equipo y se quedará con todo el remanente de utilidad posterior a este cobro y al peaje de cartera.</p>
+                             </div>
+                         )}
+
+                         <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 mt-2">
+                             <div>
+                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Peaje de Cartera ($)</label>
+                                 <div className="relative">
+                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</span>
+                                     <input type="number" value={c.peaje} onChange={e => handleConfigFieldChange(b, 'peaje', parseFloat(e.target.value)||0)} className="w-full p-3.5 pl-8 bg-slate-50 border border-slate-200 rounded-xl font-black text-rose-600 outline-none focus:ring-2 focus:ring-rose-500 shadow-sm" />
+                                 </div>
+                             </div>
+                             <div className="flex items-center pt-6">
+                                 <label className="flex items-center gap-3 cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-200 w-full shadow-sm hover:bg-white transition-colors">
+                                     <input type="checkbox" checked={c.aplica4x1000} onChange={e => handleConfigFieldChange(b, 'aplica4x1000', e.target.checked)} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
+                                     <span className="text-xs font-black text-slate-700 uppercase tracking-wide">Descontar 4x1000</span>
+                                 </label>
+                             </div>
+                         </div>
+                    </div>
+                );
+            }
 
             return (
                 <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-6 pb-12">
@@ -654,12 +876,13 @@
                             <div className="h-8 w-px bg-slate-300 hidden md:block"></div>
                             <div>
                                 <h2 className="text-2xl lg:text-3xl font-black text-slate-800 tracking-tight">Liquidación Comercial</h2>
-                                <p className="text-sm font-medium text-slate-500 mt-1">Calculadora financiera por cortes y aliados</p>
+                                <p className="text-sm font-medium text-slate-500 mt-1">Cálculo local y dinámico en vivo</p>
                             </div>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto relative z-10">
-                            <select value={brand} onChange={(e) => setBrand(e.target.value)} className="bg-slate-100 border border-slate-200 text-slate-700 font-bold text-sm py-2.5 px-4 rounded-xl outline-none cursor-pointer hover:bg-slate-200 transition-colors">
+
+                            <select value={brand} onChange={(e) => setBrand(e.target.value)} className="bg-white border-2 border-indigo-100 text-indigo-800 font-black text-sm py-2.5 px-4 rounded-xl outline-none cursor-pointer hover:bg-indigo-50 transition-colors shadow-sm">
                                 <option value="todas">TODAS LAS FINANCIERAS</option>
                                 <option value="payjoy">PAYJOY</option>
                                 <option value="alocredit">ALOCREDIT</option>
@@ -694,6 +917,22 @@
                         </div>
                     )}
 
+                    {/* CONTROL DE PESTAÑAS DUAL */}
+                    <div className="flex bg-slate-200/50 p-1.5 rounded-2xl w-fit border border-slate-200">
+                        <button 
+                            onClick={() => setActiveTab('aliados')}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${activeTab === 'aliados' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
+                        >
+                            <Icons.Users className="w-4 h-4" /> Directorio de Aliados
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('operaciones')}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 ${activeTab === 'operaciones' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
+                        >
+                            <Icons.Wallet className="w-4 h-4" /> Registro de Operaciones
+                        </button>
+                    </div>
+
                     {/* FILTROS DE BÚSQUEDA Y EXPORTACIÓN */}
                     <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 flex flex-col gap-4 relative z-20">
                         <div className="flex flex-col lg:flex-row gap-4 items-center w-full">
@@ -702,23 +941,20 @@
                                 <span className="text-xs font-bold text-indigo-800 uppercase tracking-widest mr-2">Filtros</span>
                             </div>
                             
-                            {/* 1. FILTRO CONVENIO (CONDICIONADO) */}
                             <div className={`flex-1 w-full relative transition-opacity ${selectedTiendas.length > 0 ? 'opacity-40' : ''}`}>
                                 <select 
                                     value={selectedConvenio} 
                                     onChange={e=>setSelectedConvenio(e.target.value)} 
                                     disabled={selectedTiendas.length > 0}
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm font-bold text-indigo-800 outline-none cursor-pointer disabled:cursor-not-allowed transition-all hover:bg-slate-100"
-                                    title={selectedTiendas.length > 0 ? 'Solo disponible cuando "Todas las Tiendas" está seleccionado' : ''}
                                 >
                                     <option value="">TODOS LOS CONVENIOS</option>
                                     <option value="SIN CONVENIO">-- SIN CONVENIO ASIGNADO --</option>
                                     {uniqueConvenios.map((c, i) => <option key={i} value={c}>{c}</option>)}
                                 </select>
-                                {selectedTiendas.length > 0 && <span className="absolute -top-2 right-2 bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm">INACTIVO POR TIENDA</span>}
+                                {selectedTiendas.length > 0 && <span className="absolute -top-2 right-2 bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm">INACTIVO</span>}
                             </div>
 
-                            {/* 2. FILTRO ALIADO */}
                             <div className="flex-1 w-full">
                                 <select value={selectedPartner} onChange={e=>setSelectedPartner(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm font-medium text-slate-700 outline-none cursor-pointer hover:bg-slate-100">
                                     <option value="">TODOS LOS ALIADOS</option>
@@ -726,7 +962,6 @@
                                 </select>
                             </div>
                             
-                            {/* 3. FILTRO TIENDAS (Múltiple) */}
                             <div className="flex-1 w-full relative">
                                 <button 
                                     type="button" 
@@ -778,14 +1013,12 @@
                                 )}
                             </div>
 
-                            {/* 4. BUSCADOR GENERAL */}
                             <div className="flex-1 w-full relative">
                                 <input type="text" placeholder="Búsqueda libre..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full p-2.5 pl-9 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                                 <Icons.Search className="w-4 h-4 text-slate-400 absolute left-3 top-3"/>
                             </div>
                         </div>
 
-                        {/* Rango Personalizado Visible si Aplica */}
                         {dateFilter === 'custom' && (
                             <div className="bg-indigo-50 px-6 py-3 rounded-xl border border-indigo-100 flex gap-4 items-center flex-wrap mx-2 mb-2">
                                 <span className="text-xs font-black text-indigo-800 uppercase tracking-widest">Rango:</span>
@@ -860,164 +1093,350 @@
                                 </div>
                             </div>
 
-                            {/* 🎯 TABLA DE DETALLE ACTUALIZADA */}
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-4">
-                                    <h3 className="font-black text-slate-800 flex items-center gap-2">
-                                        <Icons.DollarSign className="w-5 h-5 text-emerald-500" /> Desglose de Operaciones
-                                    </h3>
-                                    <div className="flex gap-2">
-                                        <button onClick={handleExportExcel} className="flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-700 border border-emerald-200 rounded-xl hover:bg-emerald-50 transition-colors font-bold text-xs shadow-sm">
-                                            <Icons.Download className="w-4 h-4"/> EXCEL
-                                        </button>
-                                        <button onClick={handleExportPDF} className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-colors font-bold text-xs shadow-sm">
-                                            <Icons.Download className="w-4 h-4"/> RECIBO PDF
-                                        </button>
+                            {/* PESTAÑA 1: DIRECTORIO DE ALIADOS */}
+                            {activeTab === 'aliados' && (
+                                <div className="space-y-6 animate-in slide-in-from-left duration-300">
+                                    <div className="flex justify-between items-center bg-slate-50 px-6 py-4 rounded-2xl border border-slate-200">
+                                        <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
+                                            <Icons.Users className="w-5 h-5 text-indigo-500"/> Directorio Consolidado por Gestores ({alliesLiquidationSummary.length})
+                                        </h3>
+                                        <p className="text-xs text-slate-400 font-semibold italic">Métricas de liquidación neta individualizada</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {alliesLiquidationSummary.length > 0 ? alliesLiquidationSummary.map((ally, index) => {
+                                            if (searchTerm && !ally.name.toLowerCase().includes(searchTerm.toLowerCase()) && !ally.convenio.toLowerCase().includes(searchTerm.toLowerCase())) {
+                                                return null;
+                                            }
+
+                                            return (
+                                                <div key={index} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow relative">
+                                                    
+                                                    {/* Cabecera Tarjeta */}
+                                                    <div className="p-5 border-b border-slate-100 flex justify-between items-start gap-3 bg-slate-50/50">
+                                                        <div>
+                                                            <h4 className="text-base font-black text-slate-800 tracking-tight line-clamp-1" title={ally.name}>{ally.name}</h4>
+                                                            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest block mt-0.5">{ally.convenio}</span>
+                                                        </div>
+                                                        <span className="bg-slate-100 text-slate-600 border px-2.5 py-1 rounded-md text-[10px] font-black tracking-widest shrink-0">
+                                                            {ally.operaciones} OPS
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Sección Configuración por Marcas */}
+                                                    <div className="p-4 border-b border-slate-100 bg-slate-50/50">
+                                                        <div className="flex justify-between items-center mb-3">
+                                                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5"><Icons.Award className="w-3.5 h-3.5"/> Reglas por Financiera</span>
+                                                            <button
+                                                                onClick={() => openAllyConfig(ally.name)}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-indigo-600 hover:text-white transition-all hover:scale-105"
+                                                            >
+                                                                <Icons.Settings className="w-3.5 h-3.5" /> Configurar
+                                                            </button>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            {['PAYJOY', 'ALOCREDIT', 'KREDIYA', 'CREDISMART'].map(b => {
+                                                                const c = (allyConfigs[ally.name] && allyConfigs[ally.name][b]) ? allyConfigs[ally.name][b] : DEFAULT_ALLY_BRAND_CONFIG;
+                                                                let badgeColor = "bg-slate-200 text-slate-600 border-slate-300";
+                                                                let label = "Estándar";
+                                                                if(c.type === 'porcentajes') { badgeColor = "bg-emerald-100 text-emerald-700 border-emerald-200"; label = `Porc. ${c.adminPct*100}/${c.gestorPct*100}`; }
+                                                                if(c.type === 'inversionista') { badgeColor = "bg-amber-100 text-amber-700 border-amber-200"; label = `Inv. ${c.adminPct*100}/${c.gestorPct*100}`; }
+                                                                if(c.type === 'fija') { badgeColor = "bg-blue-100 text-blue-700 border-blue-200"; label = `F. Aliado ${formatCurrency(c.comisionFija)}`; }
+                                                                if(c.type === 'fija_admin') { badgeColor = "bg-purple-100 text-purple-700 border-purple-200"; label = `F. Adm ${formatCurrency(c.utilidadFijaAdmin || 70000)}`; }
+
+                                                                return (
+                                                                    <div key={b} className="flex justify-between items-center bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg flex-wrap gap-1 shadow-sm">
+                                                                        <span className="text-[9px] font-black text-slate-400">{b.substring(0,3)}</span>
+                                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}`}>{label}</span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Desglose de Dinero */}
+                                                    <div className="p-5 space-y-3.5 flex-1">
+                                                        <div className="flex justify-between items-center text-xs font-bold border-b border-slate-50 pb-2">
+                                                            <span className="text-slate-400">Venta Bruta Total:</span>
+                                                            <span className="text-slate-600">{formatCurrency(ally.salesBrutas)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs font-bold border-b border-slate-50 pb-2">
+                                                            <span className="text-slate-400">Cuota Inicial:</span>
+                                                            <span className="text-slate-600">{formatCurrency(ally.inicial)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs font-bold border-b border-slate-50 pb-2">
+                                                            <span className="text-slate-400">Remanentes Cobrados:</span>
+                                                            <span className="text-slate-600">{formatCurrency(ally.remanente)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs font-bold border-b border-slate-50 pb-2">
+                                                            <span className="text-slate-400">Costo Equipos:</span>
+                                                            <span className="text-rose-500 font-black">{formatCurrency(ally.costo)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs font-bold border-b border-slate-50 pb-2">
+                                                            <span className="text-slate-400">Impuesto 4 x 1.000:</span>
+                                                            <span className="text-rose-600 font-bold">{formatCurrency(ally.impuesto4x1000)}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center text-xs font-bold border-b border-slate-50 pb-2">
+                                                            <span className="text-slate-400">Utilidad Admin 112:</span>
+                                                            <span className="text-indigo-600 font-black">{formatCurrency(ally.admin112)}</span>
+                                                        </div>
+
+                                                        {/* NETO A LIQUIDAR */}
+                                                        <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex justify-between items-center my-4 shadow-inner">
+                                                            <div>
+                                                                <span className="text-[9px] font-black text-emerald-800 uppercase tracking-widest block">Neto a Consignar</span>
+                                                                <span className="text-[9px] text-emerald-600 font-bold italic">Deducido 4x1000</span>
+                                                            </div>
+                                                            <span className="text-xl font-black text-emerald-700 tracking-tight">{formatCurrency(ally.consignarNeto)}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Datos de Transferencia */}
+                                                    <div className="p-4 bg-slate-50/80 border-t border-slate-100 space-y-2">
+                                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Información Bancaria</p>
+                                                        {ally.banco ? (
+                                                            <div className="bg-white p-2.5 rounded-lg border border-slate-200 text-xs font-bold space-y-1 text-slate-700">
+                                                                <div className="flex justify-between border-b pb-1 text-[10px] text-slate-400 font-black"><span>Beneficiario / NIT:</span><span className="text-slate-800">{ally.nit || 'No Registrado'}</span></div>
+                                                                <div className="flex justify-between items-center pt-1">
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-[8px] text-slate-400 font-black uppercase">Banco y Tipo</span>
+                                                                        <span className="text-slate-900 font-black uppercase text-[10px]">{ally.banco} - {ally.tipoCuenta}</span>
+                                                                    </div>
+                                                                    <span className="text-sm font-black text-indigo-700 tracking-widest font-mono italic">No. {ally.nCuenta}</span>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-center py-3 bg-white rounded-lg border border-slate-200 text-slate-400 font-bold text-xs italic">
+                                                                Sin información bancaria vinculada en USUARIOS.
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {/* Acciones */}
+                                                        <div className="flex gap-2 pt-2">
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setSelectedPartner(ally.name);
+                                                                    setActiveTab('operaciones');
+                                                                }}
+                                                                className="flex-1 py-2.5 bg-slate-800 hover:bg-black text-white font-bold rounded-lg text-[10px] shadow-sm hover:shadow transition-all text-center uppercase tracking-widest flex items-center justify-center gap-2"
+                                                            >
+                                                                <Icons.Search className="w-3.5 h-3.5"/> Auditar Operaciones
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }) : (
+                                            <div className="col-span-full py-20 text-center text-slate-400">No hay aliados para los filtros activos.</div>
+                                        )}
                                     </div>
                                 </div>
-                                <div className="overflow-x-auto custom-scrollbar max-h-[600px]">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-[10px] text-slate-500 uppercase tracking-widest bg-white sticky top-0 shadow-sm z-10 border-b border-slate-200">
-                                            <tr>
-                                                {brand === 'todas' && <th className="px-4 py-3 font-black">Financiera</th>}
-                                                <th className="px-4 py-3 font-black">Fecha</th>
-                                                <th className="px-4 py-3 font-black">Asignado / Convenio</th>
-                                                <th className="px-4 py-3 font-black">Cliente / Equipo</th>
-                                                <th className="px-4 py-3 font-black text-right text-slate-500">Venta Bruta</th>
-                                                <th className="px-4 py-3 font-black text-right text-emerald-600">Inicial</th>
-                                                <th className="px-4 py-3 font-black text-right text-cyan-600">Remanente</th>
-                                                <th className="px-4 py-3 font-black text-right text-blue-600">Saldo a Financiar</th>
-                                                <th className="px-4 py-3 font-black text-right">Costo</th>
-                                                <th className="px-4 py-3 font-black text-amber-600 bg-amber-50/50 text-right">Cartera</th>
-                                                <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50 text-right">Admin 112</th>
-                                                <th className="px-4 py-3 font-black text-rose-600 bg-rose-50/50 text-right">4x1000</th>
-                                                <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50 text-right">A Consignar</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {filteredData.length > 0 ? filteredData.map((row, idx) => {
-                                                const d = parseDate(row._date);
-                                                const fechaStr = d ? d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
-                                                
-                                                const assignedLower = String(row._assigned || '').toLowerCase();
-                                                const storeLower = String(row._tienda || '').toLowerCase();
-                                                
-                                                // 🛡️ Lógica Exclusión 4x1000 para vitrinas en la fila
-                                                const isPipeOChamorro = assignedLower.includes('pipe') || assignedLower.includes('chamorro') || assignedLower.includes('edwin ortiz') || assignedLower.includes('melissa') || assignedLower.includes('beltran');
-                                                const siemprePaga4x1000 = isPipeOChamorro;
-                                                const isVitrina = (assignedLower.includes('vitrina') || storeLower.includes('vitrina')) && !siemprePaga4x1000;
-                                                
-                                                const consignarMontoBruto = (row._pipe || 0) + (row._ricardo || 0) + (row._jc || 0) + (row._ejec || 0);
-                                                const cuatroPorMil = isVitrina ? 0 : consignarMontoBruto * 0.004;
-                                                const consignarMontoNeto = consignarMontoBruto - cuatroPorMil;
+                            )}
 
-                                                const isNewRuleDate = d && d.getTime() >= new Date(2026, 4, 26).getTime();
-                                                const isNewRule = isNewRuleDate && isPipeOChamorro && ['ALOCREDIT', 'KREDIYA', 'CREDISMART'].includes(row._brandName);
+                            {/* PESTAÑA 2: REGISTRO DE OPERACIONES */}
+                            {activeTab === 'operaciones' && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col animate-in slide-in-from-right duration-300">
+                                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-4">
+                                        <h3 className="font-black text-slate-800 flex items-center gap-2">
+                                            <Icons.DollarSign className="w-5 h-5 text-emerald-500" /> Desglose de Operaciones ({recalculatedData.length} registros)
+                                        </h3>
+                                        <div className="flex gap-2">
+                                            {selectedPartner && (
+                                                <button 
+                                                    onClick={() => setSelectedPartner('')}
+                                                    className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold text-xs transition-colors"
+                                                >
+                                                    Quitar Filtro Aliado
+                                                </button>
+                                            )}
+                                            <button onClick={handleExportExcel} className="flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-700 border border-emerald-200 rounded-xl hover:bg-emerald-50 transition-colors font-bold text-xs shadow-sm">
+                                                <Icons.Download className="w-4 h-4"/> EXCEL
+                                            </button>
+                                            <button onClick={handleExportPDF} className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-colors font-bold text-xs shadow-sm">
+                                                <Icons.Download className="w-4 h-4"/> RECIBO PDF
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="overflow-x-auto custom-scrollbar max-h-[600px]">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="text-[10px] text-slate-500 uppercase tracking-widest bg-white sticky top-0 shadow-sm z-10 border-b border-slate-200">
+                                                <tr>
+                                                    {brand === 'todas' && <th className="px-4 py-3 font-black">Financiera</th>}
+                                                    <th className="px-4 py-3 font-black">Fecha</th>
+                                                    <th className="px-4 py-3 font-black">Asignado / Convenio</th>
+                                                    <th className="px-4 py-3 font-black">Cliente / Equipo</th>
+                                                    <th className="px-4 py-3 font-black text-right text-slate-500">Venta Bruta</th>
+                                                    <th className="px-4 py-3 font-black text-right text-emerald-600">Inicial</th>
+                                                    <th className="px-4 py-3 font-black text-right text-cyan-600">Remanente</th>
+                                                    <th className="px-4 py-3 font-black text-right text-blue-600">Saldo a Financiar</th>
+                                                    <th className="px-4 py-3 font-black text-right">Costo</th>
+                                                    <th className="px-4 py-3 font-black text-amber-600 bg-amber-50/50 text-right">Cartera</th>
+                                                    <th className="px-4 py-3 font-black text-indigo-600 bg-indigo-50/50 text-right">Admin 112</th>
+                                                    <th className="px-4 py-3 font-black text-rose-600 bg-rose-50/50 text-right">4x1000</th>
+                                                    <th className="px-4 py-3 font-black text-emerald-600 bg-emerald-50/50 text-right">A Consignar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {recalculatedData.length > 0 ? recalculatedData.map((row, idx) => {
+                                                    const d = parseDate(row._date);
+                                                    const fechaStr = d ? d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '-';
+                                                    
+                                                    const inicialValor = (row._venta || 0) - (row._financed || 0);
+                                                    const porcentajeInicialFila = row._venta > 0 ? ((inicialValor / row._venta) * 100).toFixed(1) : "0.0";
 
-                                                const inicialValor = (row._venta || 0) - (row._financed || 0);
-                                                const porcentajeInicialFila = row._venta > 0 ? ((inicialValor / row._venta) * 100).toFixed(1) : "0.0";
-
-                                                // Autocálculo visual si es null (Para mostrar en la fila)
-                                                let remanenteFila = row._remanente;
-                                                if (remanenteFila === null || remanenteFila === undefined || remanenteFila === '') {
-                                                    remanenteFila = (inicialValor > (row._venta * 0.30)) ? (inicialValor - (row._venta * 0.30)) : 0;
-                                                }
-
-                                                return (
-                                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                        {brand === 'todas' && (
-                                                            <td className="px-4 py-3 font-bold text-xs align-middle">
-                                                                <span className={`inline-block px-2 py-1 rounded text-[9px] tracking-widest border shadow-sm
-                                                                    ${row._brandName === 'PAYJOY' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
-                                                                      row._brandName === 'ALOCREDIT' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 
-                                                                      row._brandName === 'KREDIYA' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                                                                      'bg-rose-50 text-rose-700 border-rose-200'}`}>
-                                                                    {row._brandName}
-                                                                </span>
-                                                            </td>
-                                                        )}
-                                                        <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-slate-500">{fechaStr}</td>
-                                                        <td className="px-4 py-3 border-r border-slate-100">
-                                                            <div className="flex items-center justify-between gap-2 relative group">
-                                                                <div className="flex flex-col">
-                                                                    <div className="font-bold text-slate-800 text-xs truncate max-w-[150px]" title={row._assigned}>{row._assigned || '-'}</div>
-                                                                    <div className="flex items-center gap-1.5 mt-0.5">
-                                                                        <div className="text-[9px] font-black text-indigo-500 tracking-wider uppercase" title={row._convenio}>
-                                                                            {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-300 font-normal italic">Sin Convenio</span>}
-                                                                        </div>
-                                                                        {isNewRule && (
-                                                                            <span className="bg-emerald-500 text-white px-1.5 py-[1px] rounded text-[8px] font-black tracking-widest shadow-sm" title="Aplica nueva regla de liquidación (40% Admin / 60% Asesor - Peaje)">
-                                                                                40/60
+                                                    return (
+                                                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                                                            {brand === 'todas' && (
+                                                                <td className="px-4 py-3 font-bold text-xs align-middle">
+                                                                    <span className={`inline-block px-2 py-1 rounded text-[9px] tracking-widest border shadow-sm
+                                                                        ${row._brandName === 'PAYJOY' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                                                                          row._brandName === 'ALOCREDIT' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 
+                                                                          row._brandName === 'KREDIYA' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                                                                          'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                                                                        {row._brandName}
+                                                                    </span>
+                                                                </td>
+                                                            )}
+                                                            <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-slate-500">{fechaStr}</td>
+                                                            <td className="px-4 py-3 border-r border-slate-100">
+                                                                <div className="flex items-center justify-between gap-2 relative group">
+                                                                    <div className="flex flex-col">
+                                                                        <div className="font-bold text-slate-800 text-xs truncate max-w-[150px]" title={row._assigned}>{row._assigned || '-'}</div>
+                                                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                                                            <div className="text-[9px] font-black text-indigo-500 tracking-wider uppercase" title={row._convenio}>
+                                                                                {row._convenio !== 'SIN CONVENIO' ? row._convenio : <span className="text-slate-300 font-normal italic">Sin Convenio</span>}
+                                                                            </div>
+                                                                            <span className="bg-emerald-100 text-emerald-700 px-1.5 py-[1px] rounded text-[8px] font-black tracking-widest shadow-sm border border-emerald-200" title={row._reglaAplicada}>
+                                                                                {row._reglaAplicada}
                                                                             </span>
-                                                                        )}
+                                                                        </div>
                                                                     </div>
+                                                                    <button 
+                                                                        onClick={() => openEditModal(row)} 
+                                                                        className="p-1.5 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded-lg transition-all shadow-sm border border-indigo-200 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100" 
+                                                                        title="Modificar Venta (Asignado, Equipo, Costo, Remanente)"
+                                                                    >
+                                                                        <Icons.Settings className="w-4 h-4" />
+                                                                    </button>
                                                                 </div>
-                                                                <button 
-                                                                    onClick={() => openEditModal(row)} 
-                                                                    className="p-1.5 text-indigo-600 bg-indigo-50 hover:text-white hover:bg-indigo-600 rounded-lg transition-all shadow-sm border border-indigo-200 ml-2 flex-shrink-0 opacity-0 group-hover:opacity-100" 
-                                                                    title="Modificar Venta (Asignado, Equipo, Costo, Remanente)"
-                                                                >
-                                                                    <Icons.Settings className="w-4 h-4" />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-4 py-3 border-r border-slate-100">
-                                                            <div className="font-bold text-slate-700 text-xs truncate max-w-[180px]" title={row._client}>{row._client || '-'}</div>
-                                                            <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[180px]">{row._device || '-'}</div>
-                                                        </td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-500">{row._venta > 0 ? formatCurrency(row._venta) : '-'}</td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right bg-emerald-50/20">
-                                                            <div className="flex flex-col items-end">
-                                                                <span className="font-bold text-emerald-600">{inicialValor > 0 ? formatCurrency(inicialValor) : '-'}</span>
-                                                                {inicialValor > 0 && <span className="text-[9px] font-black text-emerald-500/80 leading-none mt-0.5">{porcentajeInicialFila}%</span>}
-                                                            </div>
-                                                        </td>
-                                                        
-                                                        {/* 🎯 CELDA DE REMANENTE (SIN BOTÓN) */}
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-cyan-700 bg-cyan-50/30">
-                                                            {remanenteFila > 0 ? formatCurrency(remanenteFila) : (row._remanente === 0 || row._remanente === "0" ? '$ 0' : '-')}
-                                                        </td>
+                                                            </td>
+                                                            <td className="px-4 py-3 border-r border-slate-100">
+                                                                <div className="font-bold text-slate-700 text-xs truncate max-w-[180px]" title={row._client}>{row._client || '-'}</div>
+                                                                <div className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[180px]">{row._device || '-'}</div>
+                                                            </td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-500">{row._venta > 0 ? formatCurrency(row._venta) : '-'}</td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right bg-emerald-50/20">
+                                                                <div className="flex flex-col items-end">
+                                                                    <span className="font-bold text-emerald-600">{inicialValor > 0 ? formatCurrency(inicialValor) : '-'}</span>
+                                                                    {inicialValor > 0 && <span className="text-[9px] font-black text-emerald-500/80 leading-none mt-0.5">{porcentajeInicialFila}%</span>}
+                                                                </div>
+                                                            </td>
+                                                            
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-cyan-700 bg-cyan-50/30">
+                                                                {row._remanenteCalc > 0 ? formatCurrency(row._remanenteCalc) : (row._remanenteCalc === 0 ? '$ 0' : '-')}
+                                                            </td>
 
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-blue-700 bg-blue-50/30">{row._financed > 0 ? formatCurrency(row._financed) : '-'}</td>
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-rose-500 bg-rose-50/10">{row._costo > 0 ? formatCurrency(row._costo) : '-'}</td>
-                                                        
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-amber-600 bg-amber-50/20">{row._cartera > 0 ? formatCurrency(row._cartera) : '-'}</td>
-                                                        
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right bg-indigo-50/30 font-black text-indigo-700">
-                                                            <div className="flex flex-col items-end">
-                                                                <span>{row._admin112 !== 0 ? formatCurrency(row._admin112) : '-'}</span>
-                                                                {isNewRule && row._admin112 !== 0 && <span className="text-[8px] text-indigo-400 font-bold leading-none mt-0.5" title="Se aplica 40% directo sobre la Utilidad Real">40% Utilidad</span>}
-                                                            </div>
-                                                        </td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-blue-700 bg-blue-50/30">{row._financed > 0 ? formatCurrency(row._financed) : '-'}</td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-rose-500 bg-rose-50/10">{row._costo > 0 ? formatCurrency(row._costo) : '-'}</td>
+                                                            
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-amber-600 bg-amber-50/20">{row._calcCartera > 0 ? formatCurrency(row._calcCartera) : '-'}</td>
+                                                            
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right bg-indigo-50/30 font-black text-indigo-700">
+                                                                <div className="flex flex-col items-end">
+                                                                    <span>{row._calcAdmin !== 0 ? formatCurrency(row._calcAdmin) : '-'}</span>
+                                                                </div>
+                                                            </td>
 
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right bg-rose-50/20 font-bold text-xs text-rose-700">
-                                                            {cuatroPorMil > 0 ? formatCurrency(cuatroPorMil) : '-'}
-                                                        </td>
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right bg-rose-50/20 font-bold text-xs text-rose-700">
+                                                                {row._calc4x1000 > 0 ? formatCurrency(row._calc4x1000) : '-'}
+                                                            </td>
 
-                                                        <td className="px-4 py-3 whitespace-nowrap text-right bg-emerald-50/20 font-black text-emerald-700">
-                                                            <div className="flex flex-col items-end">
-                                                                <span>{consignarMontoNeto > 0 ? formatCurrency(consignarMontoNeto) : '-'}</span>
-                                                                {isNewRule && consignarMontoNeto > 0 && <span className="text-[8px] text-emerald-500 font-bold leading-none mt-0.5" title="Se aplica 60% sobre Utilidad Real menos peaje de cartera y 4x1000">60% (-Impuestos)</span>}
+                                                            <td className="px-4 py-3 whitespace-nowrap text-right bg-emerald-50/20 font-black text-emerald-700">
+                                                                <div className="flex flex-col items-end">
+                                                                    <span>{row._calcConsignarNeto > 0 ? formatCurrency(row._calcConsignarNeto) : '-'}</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                }) : (
+                                                    <tr>
+                                                        <td colSpan={brand === 'todas' ? "13" : "12"} className="px-6 py-20 text-center text-slate-400">
+                                                            <div className="flex flex-col items-center gap-3">
+                                                                <Icons.Database className="w-8 h-8 opacity-20"/>
+                                                                <p>No se encontraron liquidaciones para los filtros aplicados.</p>
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                );
-                                            }) : (
-                                                <tr>
-                                                    <td colSpan={brand === 'todas' ? "13" : "12"} className="px-6 py-20 text-center text-slate-400">
-                                                        <div className="flex flex-col items-center gap-3">
-                                                            <Icons.Database className="w-8 h-8 opacity-20"/>
-                                                            <p>No se encontraron liquidaciones para los filtros aplicados.</p>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </>
                     )}
+
+                    {/* =====================================================================
+                        MODAL CONFIGURACIÓN POR ALIADO Y POR MARCA
+                    ===================================================================== */}
+                    {configModal.show && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+                             <div className="bg-white w-full max-w-2xl rounded-[24px] shadow-2xl flex flex-col border border-slate-200 overflow-hidden">
+                                  
+                                  {/* Header */}
+                                  <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+                                      <div className="flex items-center gap-4">
+                                          <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl shadow-sm"><Icons.Settings className="w-5 h-5"/></div>
+                                          <div>
+                                              <h3 className="font-black text-slate-800 text-xl leading-tight tracking-tight">Configurar Reglas</h3>
+                                              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-0.5">Aliado: <span className="text-indigo-600">{configModal.allyName}</span></p>
+                                          </div>
+                                      </div>
+                                      <button onClick={() => setConfigModal({...configModal, show: false})} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
+                                          <Icons.X className="w-6 h-6"/>
+                                      </button>
+                                  </div>
+
+                                  {/* Tabs de Marcas */}
+                                  <div className="flex bg-slate-50 border-b border-slate-200">
+                                      {['PAYJOY', 'ALOCREDIT', 'KREDIYA', 'CREDISMART'].map(b => (
+                                          <button 
+                                              key={b} 
+                                              onClick={() => setConfigModal({...configModal, activeTab: b})}
+                                              className={`flex-1 py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${configModal.activeTab === b ? 'bg-white border-t-2 border-t-indigo-600 text-indigo-700 shadow-[0_-2px_10px_rgba(0,0,0,0.02)]' : 'text-slate-400 hover:bg-slate-200'}`}
+                                          >
+                                              {b}
+                                          </button>
+                                      ))}
+                                  </div>
+
+                                  {/* Form Body for activeTab */}
+                                  <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
+                                      {renderConfigFormForBrand(configModal.activeTab)}
+                                  </div>
+
+                                  {/* Footer */}
+                                  <div className="p-5 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4 shrink-0 rounded-b-[24px]">
+                                      <button 
+                                          onClick={copyCurrentTabToAll} 
+                                          className="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors uppercase tracking-widest flex items-center gap-1.5 bg-indigo-100/50 px-3 py-2 rounded-lg hover:bg-indigo-100"
+                                          title={`Aplicar la configuración de ${configModal.activeTab} a las otras 3 marcas.`}
+                                      >
+                                          <Icons.Copy className="w-4 h-4"/> Copiar a todas las marcas
+                                      </button>
+                                      <div className="flex gap-3 w-full sm:w-auto">
+                                          <button onClick={() => setConfigModal({...configModal, show: false})} className="flex-1 sm:flex-none px-6 py-2.5 font-bold text-slate-600 rounded-xl hover:bg-slate-200 transition-colors text-sm">
+                                              Cancelar
+                                          </button>
+                                          <button onClick={saveAllyConfig} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-2.5 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 transition-colors shadow-lg hover:-translate-y-0.5 text-sm uppercase tracking-wide">
+                                              <Icons.Save className="w-4 h-4"/> Guardar
+                                          </button>
+                                      </div>
+                                  </div>
+                             </div>
+                        </div>
+                    )}
+
 
                     {/* MODAL MODIFICAR VENTA (UNIFICADO) */}
                     {editSaleModal.show && (
