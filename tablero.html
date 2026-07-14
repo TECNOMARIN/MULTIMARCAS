@@ -59,7 +59,7 @@
             DollarSign: (p) => <IconBase {...p}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></IconBase>,
             X: (p) => <IconBase {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></IconBase>,
             Target: (p) => <IconBase {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></IconBase>,
-            Handshake: (p) => <IconBase {...p}><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-1.42-1.42l4.82-4.82a1 1 0 0 1 1.42 0l2.12 2.12a1 1 0 0 0 1.42 0l1.29-1.29a3 3 0 0 0 0-4.24l-2.12-2.12a3 3 0 0 0-4.24 0l-3.65 3.65a3 3 0 0 0 0 4.24l.88.88a1 1 0 0 1-1.42 1.42l-4.24-4.24a1 1 0 0 0-1.42 0l-2.12 2.12a3 3 0 0 0 0 4.24l2.12 2.12"/><path d="m7 13 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-1.42-1.42l4.82-4.82a1 1 0 0 1 1.42 0l2.12 2.12a1 1 0 0 0 1.42 0l1.29-1.29a3 3 0 0 0 0-4.24l-2.12-2.12a3 3 0 0 0-4.24 0l-3.65 3.65a3 3 0 0 0 0 4.24l.88.88a1 1 0 0 1-1.42 1.42l-4.24-4.24a1 1 0 0 0-1.42 0l-2.12 2.12a3 3 0 0 0 0 4.24l2.12 2.12"/></IconBase>,
+            Handshake: (p) => <IconBase {...p}><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-1.42-1.42l4.82-4.82a1 1 0 0 1 1.42 0l2.12 2.12a1 1 0 0 0 1.42 0l1.29-1.29a3 3 0 0 0 0-4.24l-2.12-2.12a3 3 0 0 0-4.24 0l-3.65 3.65a3 3 0 0 0 0 4.24l.88.88a1 1 0 0 1-1.42 1.42l-4.24-4.24a1 1 0 0 0-1.42 0l-2.12 2.12a3 3 0 0 0 0 4.24l2.12 2.12"/></IconBase>,
             Smartphone: (p) => <IconBase {...p}><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></IconBase>,
             ShieldAlert: (p) => <IconBase {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></IconBase>,
             AlertTriangle: (p) => <IconBase {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>,
@@ -91,7 +91,6 @@
                 try {
                     const res = await fetch(url, { ...options, signal: controller.signal });
                     clearTimeout(timeoutId);
-                    // no-cors requests return type 'opaque' con status 0 y ok false.
                     if (!res.ok && res.type !== 'opaque') throw new Error(`HTTP error! status: ${res.status}`);
                     return res;
                 } catch (e) {
@@ -286,9 +285,8 @@
                 }
 
                 if (typeof dateVal === 'string' && dateVal.length > 5) {
-                    // 🛡️ CORRECCIÓN ZONA HORARIA: Si la fecha viene como 2026-06-16T05... la forzamos
                     if (dateVal.includes('T')) {
-                        const cleanDate = dateVal.split('T')[0]; // Tomamos solo "2026-06-16"
+                        const cleanDate = dateVal.split('T')[0]; 
                         const parts = cleanDate.split('-');
                         return new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]); 
                     }
@@ -298,7 +296,6 @@
                         return new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
                     }
                     dateObj = new Date(dateVal);
-                    // Si aún así la parseó con desfase, le sumamos el offset
                     const offset = dateObj.getTimezoneOffset() * 60000;
                     dateObj = new Date(dateObj.getTime() + offset);
 
@@ -519,8 +516,6 @@
                 return false;
             }, [activeConfig, findColumnName, getDueDate, portfolio]);
 
-
-            // --- FETCH PARA TABLERO INDIVIDUAL ---
             const fetchData = useCallback(async () => {
                 setLoading(true);
                 setError(null);
@@ -686,7 +681,6 @@
                             });
 
                             const cCedulaCol = cKeys.find(k => { const l = String(k).toUpperCase().trim(); return !l.includes('#') && (l.includes('CEDULA') || l === 'CC'); });
-                            const cResponsableCol = cKeys.find(k => String(k).toUpperCase().trim() === "RESPONSABLE");
                             const cCelularCol = findConfigColumn(activeConfig?.columns?.phone, cKeys);
                             const cFechaNacCol = findConfigColumn(activeConfig?.columns?.birthDate, cKeys);
 
@@ -696,8 +690,8 @@
                                     const vData = mapaVentas[cedC];
                                     
                                     if (cedC && vData) {
+                                        // 🛡️ LIMPIEZA: Solo dependemos de cAsignadoCol. Si las hojas fueron pasadas de Responsable a Asignado, lo encontrará directo.
                                         if (cAsignadoCol && vData.asignado) cRow[cAsignadoCol] = vData.asignado;
-                                        if (cResponsableCol && vData.asignado) cRow[cResponsableCol] = vData.asignado;
                                         if (cVendedorCol && vData.vendedor) cRow[cVendedorCol] = vData.vendedor; 
                                         if (cNombreCol && vData.nombre) cRow[cNombreCol] = vData.nombre;
                                         if (cCelularCol && vData.celular) cRow[cCelularCol] = vData.celular;
@@ -743,7 +737,6 @@
                 fetchData(); 
             }, [fetchData]);
 
-            // --- FILTROS Y BÚSQUEDAS DINÁMICAS ---
             const { sellers, sellerColumn, assignees, assignedColumn, devices, deviceColumn, phoneColumn, clientColumn, stores, storeColumn, idColumn, convenios, deviceCostMap } = useMemo(() => {
                 if (!activeConfig || !activeConfig.columns) return { sellers: [], assignees: [], devices: [], stores: [], convenios: [], deviceCostMap: {} };
                 
@@ -811,7 +804,8 @@
                 arr = arr.filter(h => {
                     const lowerH = String(h).toLowerCase().trim();
                     if (lowerH === 'empresa') return false; 
-                    if (lowerH === 'responsable' && h !== assignedColumn) return false; 
+                    // 🛡️ LIMPIEZA VISUAL: Filtramos nombres viejos si no son la columna principal
+                    if ((lowerH === 'responsable' || lowerH === 'asignado') && h !== assignedColumn) return false; 
                     return true;
                 });
 
@@ -1752,7 +1746,6 @@
                 window.XLSX.writeFile(workbook, `Filtro_Personalizado_${portfolio}_${new Date().toISOString().slice(0,10)}.xlsx`);
             };
 
-            // --- ⚡ LÓGICA DE ACCIÓN RÁPIDA SEPARADA ---
             const triggerQuickAction = (row, actionType, quotaId = null) => {
                 let msg = "";
                 let qLabel = "";
