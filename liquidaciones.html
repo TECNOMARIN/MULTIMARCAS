@@ -60,17 +60,16 @@
         // ⚙️ CONFIGURACIÓN LOCAL (MEMORIA DEL NAVEGADOR)
         // ============================================================================
         const DEFAULT_ALLY_BRAND_CONFIG = {
-            type: 'estandar', // estandar, porcentajes, inversionista, fija, fija_admin
+            type: 'estandar', 
             adminPct: 0.40,
             gestorPct: 0.60,
             comisionFija: 40000,
             utilidadFijaAdmin: 70000, 
             peaje: 40000,
             aplica4x1000: true,
-            aliadoPoneInventario: false // NUEVO: Define quién es el dueño del equipo
+            aliadoPoneInventario: false 
         };
 
-        // UTILIDADES
         const parseAmount = (val) => {
             if (val === null || val === undefined || String(val).trim() === '') return null;
             let s = String(val).replace(/[^0-9.,-]/g, '').replace(/[.,]00$/, '').replace(/[.,]/g, '');
@@ -84,24 +83,28 @@
         const parseDate = (dateVal) => {
             if (!dateVal) return null;
             let dateObj = null;
+            
             if (typeof dateVal === 'number') {
                 if (dateVal > 30000 && dateVal < 60000) return new Date(Math.round((dateVal - 25569) * 86400 * 1000));
             }
+
             if (typeof dateVal === 'string' && dateVal.length > 5) {
+                // 🛡️ CORRECCIÓN ZONA HORARIA: Si la fecha viene como 2026-06-16T05... la forzamos
                 if (dateVal.includes('T')) {
                     const cleanDate = dateVal.split('T')[0]; 
                     const parts = cleanDate.split('-');
                     return new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]); 
                 }
+                
                 if (dateVal.match(/^\d{4}-\d{2}-\d{2}/)) {
-                    const parts = dateVal.substring(0,10).split('-');
+                    const parts = dateVal.split('-');
                     return new Date(parts[0], parseInt(parts[1], 10) - 1, parts[2]);
                 }
                 dateObj = new Date(dateVal);
-                if (!isNaN(dateObj.getTime())) {
-                    const offset = dateObj.getTimezoneOffset() * 60000;
-                    dateObj = new Date(dateObj.getTime() + offset);
-                }
+                // Si aún así la parseó con desfase, le sumamos el offset
+                const offset = dateObj.getTimezoneOffset() * 60000;
+                dateObj = new Date(dateObj.getTime() + offset);
+
             } else if (dateVal instanceof Date) {
                 dateObj = dateVal;
             }
@@ -110,7 +113,6 @@
         };
 
         function LiquidacionesApp() {
-            // 🧠 ESTADO: REGLAS CONFIGURADAS POR ALIADO Y POR MARCA
             const [allyConfigs, setAllyConfigs] = useState(() => {
                 const saved = localStorage.getItem('liquidacionesAllyConfigs_v3');
                 if (saved) {
@@ -164,11 +166,10 @@
                     remanente = Number(remanente);
                 }
 
-                const montoAConsignar = row._financed || 0; // Porque Consignar = Venta - Inicial = Financiado
+                const montoAConsignar = row._financed || 0; 
                 const costoEqNum = row._costo || 0;
                 const utilidadBase = montoAConsignar + remanente - costoEqNum;
                 
-                // Buscar configuración específica
                 const allyConfig = configs[allyName] || {};
                 const config = allyConfig[rowBrand] || DEFAULT_ALLY_BRAND_CONFIG;
 
@@ -176,7 +177,7 @@
                 let calcGestorBruto = 0;
                 let calcCartera = Number(config.peaje || 40000);
                 let aplica4x1000 = config.aplica4x1000 ?? true;
-                let aliadoPoneInventario = config.aliadoPoneInventario ?? false; // Leemos si el aliado pone el equipo
+                let aliadoPoneInventario = config.aliadoPoneInventario ?? false;
                 let reglaAplicada = "Estándar";
 
                 if (config.type === 'porcentajes') {
@@ -184,11 +185,10 @@
                     calcAdmin = utilidadBase * Number(config.adminPct);
                     calcGestorBruto = (utilidadBase * Number(config.gestorPct)) - calcCartera;
                 } else if (config.type === 'inversionista') {
-                    // Si el esquema es inversionista, el aliado ya recupera su equipo dentro de la fórmula tradicional
                     reglaAplicada = `Invers. ${config.adminPct*100}/${config.gestorPct*100}`;
                     calcAdmin = (utilidadBase * Number(config.adminPct)) - (calcCartera / 2);
                     calcGestorBruto = (utilidadBase * Number(config.gestorPct)) - (calcCartera / 2) + costoEqNum;
-                    aliadoPoneInventario = false; // Desactivar la adición manual abajo porque la regla "inversionista" ya incluye la devolución del costo de equipo (+ costoEqNum). Si no se duplica.
+                    aliadoPoneInventario = false; 
                 } else if (config.type === 'fija') {
                     reglaAplicada = "Comisión Fija (Aliado)";
                     calcGestorBruto = Number(config.comisionFija);
@@ -196,20 +196,13 @@
                 } else if (config.type === 'fija_admin') {
                     reglaAplicada = "Fija Admin";
                     calcAdmin = Number(config.utilidadFijaAdmin || 70000);
-                    // Si el Admin cobra un fijo, el aliado se queda con todo el resto (Incluyendo recuperar su costo de equipo si fuera suyo, pero OJO: Si el aliado NO puso el inventario, la empresa debería quedarse con el costo del equipo además del Fee, entonces lo deducimos).
-                    // Para simplificar: En Fija Admin, calculamos lo que le queda al aliado a partir del dinero total menos Fee Admin menos Peaje.
-                    // Si el aliado pone inventario, se le devuelve el costo equipo. Si no, no.
                     calcGestorBruto = utilidadBase - calcAdmin - calcCartera;
                 } else {
-                    // Estándar
                     calcAdmin = utilidadBase - calcCartera;
                     calcGestorBruto = 0;
                     aplica4x1000 = false;
                 }
 
-                // NUEVA REGLA DE INVENTARIO:
-                // Si el aliado fue quien puso el inventario, y no es esquema Inversionista (que ya lo devuelve intrínsecamente),
-                // entonces debemos sumarle el costo del equipo a su consignación bruta (porque la empresa recauda el total y debe devolver el equipo).
                 if (aliadoPoneInventario) {
                     calcGestorBruto += costoEqNum;
                     reglaAplicada += " (+ Eq)";
@@ -241,10 +234,15 @@
                     let combinedData = [];
                     let globalHeaders = [];
 
+                    // 🌟 MODIFICACIÓN: Hacemos fetch a Ventas Y a Cartera para tener el respaldo de la fecha
                     const promises = [
-                        fetch(`${API_URL}${separator}type=usuarios_payjoy&t=${new Date().getTime()}`),
-                        ...brandsToFetch.map(b => fetch(`${API_URL}${separator}type=ventas_${b}&t=${new Date().getTime()}`))
+                        fetch(`${API_URL}${separator}type=usuarios_payjoy&t=${new Date().getTime()}`)
                     ];
+                    
+                    brandsToFetch.forEach(b => {
+                        promises.push(fetch(`${API_URL}${separator}type=ventas_${b}&t=${new Date().getTime()}`));
+                        promises.push(fetch(`${API_URL}${separator}type=${b}&t=${new Date().getTime()}`)); // Endpoint de Cartera
+                    });
 
                     const responses = await Promise.all(promises);
                     
@@ -294,13 +292,42 @@
                         } catch(e) { console.error("Error al procesar convenios", e); }
                     }
 
-                    for (let i = 1; i < responses.length; i++) {
-                        const res = responses[i];
-                        const currentBrand = brandsToFetch[i-1];
+                    // Iterar por cada marca
+                    for (let i = 0; i < brandsToFetch.length; i++) {
+                        const currentBrand = brandsToFetch[i];
+                        const ventasRes = responses[1 + (i * 2)];
+                        const carteraRes = responses[2 + (i * 2)];
                         
-                        if (res.ok) {
+                        let dateFallbackMap = {};
+                        
+                        // 1. Procesar Cartera (Solo para extraer fechas por ID)
+                        if (carteraRes.ok) {
                             try {
-                                const jsonVentas = JSON.parse(await res.text());
+                                const jsonCartera = JSON.parse(await carteraRes.text());
+                                if (Array.isArray(jsonCartera) && jsonCartera.length > 0) {
+                                    const cKeys = Object.keys(jsonCartera[0]);
+                                    const cIdCol = cKeys.find(k => ['CEDULA', 'CC', 'DOCUMENTO', 'IDENTIFICACION'].includes(String(k).toUpperCase().trim()));
+                                    const cDateCol = cKeys.find(k => {
+                                        const upper = String(k).toUpperCase();
+                                        return upper.includes('FECHA') && !upper.includes('NACI');
+                                    });
+                                    
+                                    if (cIdCol && cDateCol) {
+                                        jsonCartera.forEach(r => {
+                                            const idStr = String(r[cIdCol] || '').replace(/\D/g, '');
+                                            if (idStr) {
+                                                dateFallbackMap[idStr] = r[cDateCol];
+                                            }
+                                        });
+                                    }
+                                }
+                            } catch (e) { console.warn("Error leyendo fechas de cartera", e); }
+                        }
+                        
+                        // 2. Procesar Ventas (Datos principales)
+                        if (ventasRes.ok) {
+                            try {
+                                const jsonVentas = JSON.parse(await ventasRes.text());
                                 if (Array.isArray(jsonVentas) && jsonVentas.length > 0) {
                                     if (globalHeaders.length === 0) globalHeaders = Object.keys(jsonVentas[0]);
 
@@ -310,7 +337,10 @@
                                             if (found) return found;
                                         }
                                         for (const name of possibleNames) {
-                                            const found = hList.find(h => h.toLowerCase().includes(name.toLowerCase()));
+                                            const found = hList.find(h => {
+                                                const lowerH = h.toLowerCase().trim();
+                                                return lowerH.includes(name.toLowerCase()) && !lowerH.includes('#') && !lowerH.includes('fecha');
+                                            });
                                             if (found) return found;
                                         }
                                         return null;
@@ -318,22 +348,27 @@
 
                                     const parsedRows = jsonVentas.map(row => {
                                         const keysLocal = Object.keys(row);
+                                        
+                                        const colAsignado = findConfigColumnLocal(['ASIGNADO', 'RESPONSABLE', 'GESTOR'], keysLocal);
+                                        const colVendedor = findConfigColumnLocal(['VENDEDOR', 'ASESOR'], keysLocal);
+                                        const colTienda = findConfigColumnLocal(['TIENDA', 'PUNTO DE VENTA', 'SUCURSAL', 'SEDE', 'PUNTO'], keysLocal);
+
+                                        let asignadoRaw = colAsignado ? (row[colAsignado] || '') : '';
+                                        let vendedorRaw = colVendedor ? (row[colVendedor] || '') : '';
+                                        let tiendaRaw = colTienda ? (row[colTienda] || '') : '';
+
                                         const findVal = (keywords) => {
                                             const col = findConfigColumnLocal(keywords, keysLocal);
                                             return col ? row[col] : undefined;
                                         };
+
                                         const dateKey = keysLocal.find(k => {
                                             const upper = String(k).toUpperCase();
                                             return upper.includes('FECHA') && !upper.includes('NACI');
                                         });
 
-                                        let asignadoRaw = findVal(['RESPONSABLE', 'ASIGNADO']) || findVal(['VENDEDOR', 'ASESOR']) || '';
-                                        let vendedorRaw = findVal(['VENDEDOR', 'ASESOR']) || '';
-                                        let tiendaRaw = findVal(['TIENDA', 'PUNTO DE VENTA', 'SUCURSAL', 'SEDE', 'PUNTO']) || '';
-                                        
-                                        let searchAsig = String(asignadoRaw).toLowerCase().trim();
-                                        let searchVend = String(vendedorRaw).toLowerCase().trim();
                                         let searchTienda = String(tiendaRaw).toLowerCase().trim();
+                                        let searchVend = String(vendedorRaw).toLowerCase().trim();
                                         
                                         let convenioFound = conveniosMap[searchTienda] || conveniosMap[searchVend] || 'SIN CONVENIO';
 
@@ -356,10 +391,19 @@
                                             }
                                         }
 
+                                        // 🌟 LÓGICA DE RESPALDO DE FECHA 🌟
+                                        let finalDate = dateKey ? row[dateKey] : undefined;
+                                        const idRaw = findVal(['CEDULA', 'CC', 'DOCUMENTO', 'IDENTIFICACION']);
+                                        const idClean = idRaw ? String(idRaw).replace(/\D/g, '') : '';
+
+                                        if ((!finalDate || String(finalDate).trim() === '') && idClean && dateFallbackMap[idClean]) {
+                                            finalDate = dateFallbackMap[idClean];
+                                        }
+
                                         return {
-                                            _id: findVal(['CEDULA', 'CC', 'DOCUMENTO', 'IDENTIFICACION']),
+                                            _id: idRaw,
                                             _brandName: currentBrand.toUpperCase(),
-                                            _date: dateKey ? row[dateKey] : undefined,
+                                            _date: finalDate,
                                             _client: findVal(['NOMBRE COMPLETO', 'NOMBRE DEL CLIENTE', 'NOMBRE CLIENTE', 'NOMBRES', 'CLIENTE']),
                                             _tienda: tiendaRaw,
                                             _assigned: asignadoRaw,
@@ -749,7 +793,6 @@
                     CREDISMART: { ...DEFAULT_ALLY_BRAND_CONFIG },
                 };
                 
-                // Asegurarse de que las 4 existan
                 ['PAYJOY', 'ALOCREDIT', 'KREDIYA', 'CREDISMART'].forEach(b => {
                     if (!currentConfig[b]) currentConfig[b] = { ...DEFAULT_ALLY_BRAND_CONFIG };
                 });
@@ -757,7 +800,7 @@
                 setConfigModal({
                     show: true,
                     allyName: name,
-                    config: JSON.parse(JSON.stringify(currentConfig)), // Deep copy
+                    config: JSON.parse(JSON.stringify(currentConfig)), 
                     activeTab: 'PAYJOY'
                 });
             };
@@ -815,7 +858,6 @@
                              </select>
                          </div>
 
-                         {/* NUEVO SWITCH: INVENTARIO */}
                          {c.type !== 'inversionista' && (
                              <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-xl flex items-center justify-between shadow-sm">
                                  <div>
@@ -986,7 +1028,7 @@
 
                             <div className="flex-1 w-full">
                                 <select value={selectedPartner} onChange={e=>setSelectedPartner(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-sm font-medium text-slate-700 outline-none cursor-pointer hover:bg-slate-100">
-                                    <option value="">TODOS LOS ALIADOS</option>
+                                    <option value="">TODOS LOS ASIGNADOS</option>
                                     {uniquePartners.map((p, i) => <option key={i} value={p}>{p}</option>)}
                                 </select>
                             </div>
@@ -1127,7 +1169,7 @@
                                 <div className="space-y-6 animate-in slide-in-from-left duration-300">
                                     <div className="flex justify-between items-center bg-slate-50 px-6 py-4 rounded-2xl border border-slate-200">
                                         <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
-                                            <Icons.Users className="w-5 h-5 text-indigo-500"/> Directorio Consolidado por Gestores ({alliesLiquidationSummary.length})
+                                            <Icons.Users className="w-5 h-5 text-indigo-500"/> Directorio Consolidado por Asignado ({alliesLiquidationSummary.length})
                                         </h3>
                                         <p className="text-xs text-slate-400 font-semibold italic">Métricas de liquidación neta individualizada</p>
                                     </div>
@@ -1361,7 +1403,11 @@
                                                                 </div>
                                                             </td>
                                                             
-                                                            <td className="px-4 py-3 whitespace-nowrap text-right font-bold text-cyan-700 bg-cyan-50/30">
+                                                            <td 
+                                                                className="px-4 py-3 whitespace-nowrap text-right font-bold text-cyan-700 bg-cyan-50/30 cursor-pointer hover:bg-cyan-100 transition-colors"
+                                                                onClick={() => openEditModal(row)}
+                                                                title="Clic para editar el Remanente"
+                                                            >
                                                                 {row._remanenteCalc > 0 ? formatCurrency(row._remanenteCalc) : (row._remanenteCalc === 0 ? '$ 0' : '-')}
                                                             </td>
 
