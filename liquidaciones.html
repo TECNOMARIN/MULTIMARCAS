@@ -196,7 +196,10 @@
                 } else if (config.type === 'fija_admin') {
                     reglaAplicada = "Fija Admin";
                     calcAdmin = Number(config.utilidadFijaAdmin || 70000);
-                    calcGestorBruto = utilidadBase - calcAdmin - calcCartera;
+                    // 🛡️ CORRECCIÓN: Si el cobro es fijo al aliado, ignoramos Costos y Remanentes.
+                    // Simplemente se transfiere el Monto a Consignar, restándole tu Fijo y la Cartera.
+                    calcGestorBruto = montoAConsignar - calcAdmin - calcCartera;
+                    aliadoPoneInventario = false; 
                 } else {
                     calcAdmin = utilidadBase - calcCartera;
                     calcGestorBruto = 0;
@@ -611,17 +614,24 @@
                     const brandVal = (editSaleModal.row._brandName || brand || 'payjoy').toLowerCase();
 
                     const updates = [];
-                    updates.push({ column: 'ASIGNADO', value: editSaleModal.gestor, append: false, cleanWrite: true });
-                    updates.push({ column: 'EQUIPO', value: editSaleModal.equipo, append: false, cleanWrite: true });
+                    
+                    // 🛡️ CORRECCIÓN BÚSQUEDA DE COLUMNAS EXACTA: Previene la colisión "Costo Equipo" vs "Equipo"
+                    const assignedCol = headersList.find(h => String(h).toUpperCase().includes('ASIGNADO') || String(h).toUpperCase().includes('RESPONSABLE')) || 'ASIGNADO';
+                    const deviceCol = headersList.find(h => {
+                        const u = String(h).toUpperCase().trim();
+                        return u === 'REFERENCIA' || u === 'EQUIPO' || u === 'MODELO' || u === 'REFERENCIA EQUIPO';
+                    }) || 'REFERENCIA';
+                    const costCol = headersList.find(h => String(h).toUpperCase().includes('COSTO EQUIPO') || String(h).toUpperCase().includes('COSTOS EQUIPOS')) || 'COSTO EQUIPO';
+                    const remCol = headersList.find(h => String(h).toUpperCase().includes('REMANENTE') || String(h).toUpperCase().includes('EXCEDENTE')) || 'REMANENTE DE INICIAL';
+
+                    updates.push({ column: assignedCol, value: editSaleModal.gestor, append: false, cleanWrite: true });
+                    updates.push({ column: deviceCol, value: editSaleModal.equipo, append: false, cleanWrite: true });
                     
                     const costoVal = editSaleModal.costo !== '' ? String(editSaleModal.costo.replace(/\D/g, '')) : '';
-                    updates.push({ column: 'COSTO EQUIPO', value: costoVal, append: false, cleanWrite: true });
+                    updates.push({ column: costCol, value: costoVal, append: false, cleanWrite: true });
                     
                     const remanenteVal = editSaleModal.remanente !== '' ? String(editSaleModal.remanente.replace(/\D/g, '')) : '';
-                    
-                    const remColName = headersList.find(h => String(h).toUpperCase().includes('REMANENTE') || String(h).toUpperCase().includes('EXCEDENTE')) || 'REMANENTE DE INICIAL';
-                    
-                    updates.push({ column: remColName, value: remanenteVal, append: false, cleanWrite: true });
+                    updates.push({ column: remCol, value: remanenteVal, append: false, cleanWrite: true });
 
                     const payload = {
                         type: brandVal,
