@@ -1359,14 +1359,34 @@
 
             const StatCard = ({ title, stats, quotaId, fpdInfo }) => {
                 if (!stats) return null;
-                let fpdPercent = "0.0", recoverNeeded = 0, targetPercent = 10;
+                
+                // 🎯 METAS DINÁMICAS POR COHORTE
+                let targetPercent = 10;
+                if (quotaId === 'fpd3') targetPercent = 20;
+                else if (quotaId === 'fpd7') targetPercent = 10;
+                else if (quotaId === 'fpd15' || quotaId === 'fpd10' || quotaId === 'fpd11' || quotaId === 'fpd12') targetPercent = 7;
+
+                let fpdPercent = "0.0", recoverNeeded = 0;
                 let hasSales = fpdInfo && fpdInfo.totalSales > 0;
                 if (hasSales) {
                     fpdPercent = ((fpdInfo.unpaid / fpdInfo.totalSales) * 100).toFixed(1);
                     const maxAllowed = Math.floor((fpdInfo.totalSales * targetPercent) / 100);
                     recoverNeeded = Math.max(0, fpdInfo.unpaid - maxAllowed);
                 }
-                let fpdColor = hasSales ? (parseFloat(fpdPercent) > 30 ? "text-red-700 bg-red-100" : parseFloat(fpdPercent) > 15 ? "text-yellow-700 bg-yellow-100" : "text-green-700 bg-green-100") : "text-slate-500 bg-slate-100";
+                
+                // 🎨 COLORES DINÁMICOS BASADOS EN LA META
+                let fpdColor = "text-slate-500 bg-slate-100";
+                if (hasSales) {
+                    const currentVal = parseFloat(fpdPercent);
+                    if (currentVal <= targetPercent) {
+                        fpdColor = "text-green-700 bg-green-100"; // Dentro de la meta
+                    } else if (currentVal <= targetPercent * 2) {
+                        fpdColor = "text-yellow-700 bg-yellow-100"; // Supera la meta pero no el doble
+                    } else {
+                        fpdColor = "text-red-700 bg-red-100"; // Duplica la mora permitida (Crítico)
+                    }
+                }
+
                 const isFpdActive = fpdQuotaFilter === quotaId;
                 const isActive = (t) => breakdownFilter && breakdownFilter.quota === quotaId && breakdownFilter.type === t;
                 const baseRow = "flex justify-between items-center p-2 rounded cursor-pointer transition-colors hover:ring-1 hover:ring-indigo-300";
