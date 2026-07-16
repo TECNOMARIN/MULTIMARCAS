@@ -67,7 +67,8 @@
             utilidadFijaAdmin: 70000, 
             peaje: 40000,
             aplica4x1000: true,
-            aliadoPoneInventario: false 
+            aliadoPoneInventario: false,
+            incluirRemanente: true
         };
 
         const parseAmount = (val) => {
@@ -168,10 +169,13 @@
 
                 const montoAConsignar = row._financed || 0; 
                 const costoEqNum = row._costo || 0;
-                const utilidadBase = montoAConsignar + remanente - costoEqNum;
                 
                 const allyConfig = configs[allyName] || {};
                 const config = allyConfig[rowBrand] || DEFAULT_ALLY_BRAND_CONFIG;
+
+                // 🎯 NUEVO: Validar si el remanente suma a la utilidad a repartir
+                const incluirRem = config.incluirRemanente !== false;
+                const utilidadBase = montoAConsignar + (incluirRem ? remanente : 0) - costoEqNum;
 
                 let calcAdmin = 0;
                 let calcGestorBruto = 0;
@@ -923,7 +927,7 @@
                              </div>
                          )}
 
-                         <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-5 mt-2">
+                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-100 pt-5 mt-2">
                              <div>
                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Peaje de Cartera ($)</label>
                                  <div className="relative">
@@ -935,6 +939,12 @@
                                  <label className="flex items-center gap-3 cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-200 w-full shadow-sm hover:bg-white transition-colors">
                                      <input type="checkbox" checked={c.aplica4x1000} onChange={e => handleConfigFieldChange(b, 'aplica4x1000', e.target.checked)} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
                                      <span className="text-xs font-black text-slate-700 uppercase tracking-wide">Descontar 4x1000</span>
+                                 </label>
+                             </div>
+                             <div className="flex items-center pt-6">
+                                 <label className="flex items-center gap-3 cursor-pointer bg-slate-50 p-3 rounded-xl border border-slate-200 w-full shadow-sm hover:bg-white transition-colors" title="Si se desactiva, el remanente no sumará a la utilidad a repartir">
+                                     <input type="checkbox" checked={c.incluirRemanente !== false} onChange={e => handleConfigFieldChange(b, 'incluirRemanente', e.target.checked)} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
+                                     <span className="text-xs font-black text-slate-700 uppercase tracking-wide">Sumar Remanente</span>
                                  </label>
                              </div>
                          </div>
