@@ -69,8 +69,147 @@
     .brand-logo { max-height: 130px; width: auto; transform: scale(1.1); display: block; margin: 0 auto; transition: 0.3s; object-fit: contain; }
     .header-left-logo { margin: 0 !important; transform-origin: left center; transform: scale(1.1) !important; max-height: 90px !important; }
 
-    #login-container .brand-header { height: auto; min-height: 380px; padding-top: 4rem; padding-bottom: 1.5rem; border-bottom: none; display: flex; align-items: center; justify-content: center; }
-    #login-container .brand-logo { max-height: 120px; transform: scale(1.1); transform-origin: center; margin-bottom: 1rem; }
+    /* 🎨 ESTILOS LOGIN PREMIUM ADAPTADOS DE TESORERIA */
+    #login-container {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+        position: relative;
+        max-width: 450px;
+    }
+    
+    #login-container .brand-header {
+        height: auto;
+        min-height: unset;
+        padding: 2.5rem 1.5rem 1.5rem 1.5rem;
+        border-bottom: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+    }
+    
+    #login-container .brand-logo {
+        max-height: 90px;
+        transform: scale(1);
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+    }
+
+    #login-view {
+        padding: 0 2rem 2.5rem 2rem;
+    }
+
+    .login-icon-container {
+        width: 64px;
+        height: 64px;
+        background: #f0fdf4;
+        color: var(--brand-green);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        border: 4px solid #f0fdf4;
+    }
+
+    .login-title {
+        font-weight: 900;
+        color: var(--brand-blue);
+        letter-spacing: -0.02em;
+        font-size: 1.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .login-subtitle {
+        font-weight: 800;
+        color: var(--brand-green);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+
+    .login-field-label {
+        font-size: 0.65rem;
+        font-weight: 900;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        display: block;
+        margin-bottom: 0.5rem;
+        padding-left: 0.25rem;
+    }
+
+    .login-input-wrapper {
+        position: relative;
+    }
+
+    .login-input-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    .login-input {
+        width: 100%;
+        padding: 0.875rem 1rem 0.875rem 3rem;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #334155;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .login-input::placeholder {
+        color: #cbd5e1;
+        font-weight: 600;
+    }
+
+    .login-input:focus {
+        background-color: white;
+        border-color: var(--brand-green);
+        box-shadow: 0 0 0 2px rgba(103, 183, 77, 0.2);
+    }
+
+    .login-button {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(to right, #10b981, #059669);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 900;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .login-button:hover {
+        background: linear-gradient(to right, #059669, #047857);
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4);
+        transform: translateY(-1px);
+    }
 
     .custom-tabs { display: flex; background: #fafafa; border-bottom: 1px solid #f1f5f9; overflow-x: auto; }
     .tab-item { flex: 1; min-width: 120px; padding: 1.1rem 0.5rem; text-align: center; cursor: pointer; color: #94a3b8; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border-bottom: 3px solid transparent; transition: 0.3s; white-space: nowrap; }
@@ -155,11 +294,15 @@
     .btn-delete-row:hover { transform: scale(1.2); }
 
     #brilla-fields { display: none; }
+    
+    /* 🎨 ESTILO DISTINTIVO PARA EL ESTADO DESEMBOLSADO */
+    .tag.is-desembolsado {
+        background-color: #064e3b !important; /* emerald-900 */
+        color: white !important;
+    }
 
     @media screen and (max-width: 768px) {
       .kpi-grid { grid-template-columns: 1fr; }
-      #login-container .brand-header { min-height: 250px; }
-      #login-container .brand-logo { max-height: 220px; }
       .brand-header { flex-direction: column; gap: 15px; height: auto; padding: 1.5rem; }
       .header-left-logo { max-height: 90px !important; transform: scale(1) !important; }
     }
@@ -169,17 +312,41 @@
 
   <div id="toast-container"></div>
 
+  <!-- 🌟 LOGIN PREMIUM REDISEÑADO 🌟 -->
   <div id="login-container" class="main-card" style="display: block;">
-    <div class="brand-header"><img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Soluciones Efectivas CTG" class="brand-logo"></div>
-    <div id="login-view" style="padding: 1.5rem 2rem 2.5rem 2rem;">
-      <div style="text-align: center; margin-bottom: 2.5rem;">
-        <div style="color: white; background: var(--brand-green); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 4px 15px rgba(103, 183, 77, 0.4);"><i data-lucide="shield-check" style="width:32px; height:32px; color: white !important;"></i></div>
-        <h2 class="title is-3 mb-4" style="font-weight:900; color: var(--brand-blue); letter-spacing: -0.02em;">Acceso Seguro</h2>
-        <p class="subtitle is-6" style="margin-top: 0.5rem; font-weight: 700; color: var(--brand-green);">Gestión integral de créditos para aliados</p>
-      </div>
-      <div class="field"><label class="label is-small">Aliado / Tienda</label><div class="control has-icons-left"><input id="login-user" class="input is-medium" type="text" placeholder="Nombre Comercial" style="border-radius:12px;"><span class="icon is-small is-left"><i data-lucide="store"></i></span></div></div>
-      <div class="field mt-4"><label class="label is-small">Contraseña</label><div class="control has-icons-left"><input id="login-pass" class="input is-medium" type="password" placeholder="••••••••" style="border-radius:12px;" onkeypress="if(event.key==='Enter') attemptLogin()"><span class="icon is-small is-left"><i data-lucide="key"></i></span></div></div>
-      <button id="btn-login" class="button btn-modern is-save is-fullwidth is-medium mt-6" onclick="attemptLogin()"><i data-lucide="log-in" style="width: 18px; color: white !important;"></i> Ingresar al Portal</button>
+    <div class="brand-header">
+        <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Soluciones Efectivas CTG" class="brand-logo">
+        <div class="login-icon-container">
+            <i data-lucide="shield-check" style="width: 32px; height: 32px;"></i>
+        </div>
+        <h2 class="login-title">Acceso Seguro</h2>
+        <p class="login-subtitle">Gestión Integral de Créditos</p>
+    </div>
+    
+    <div id="login-view">
+        <div style="margin-bottom: 1.25rem;">
+            <label class="login-field-label">Aliado / Tienda</label>
+            <div class="login-input-wrapper">
+                <div class="login-input-icon">
+                    <i data-lucide="store" style="width: 18px; height: 18px;"></i>
+                </div>
+                <input id="login-user" class="login-input" type="text" placeholder="Nombre Comercial">
+            </div>
+        </div>
+        
+        <div>
+            <label class="login-field-label">Contraseña</label>
+            <div class="login-input-wrapper">
+                <div class="login-input-icon">
+                    <i data-lucide="key" style="width: 18px; height: 18px;"></i>
+                </div>
+                <input id="login-pass" class="login-input" type="password" placeholder="••••••••" onkeypress="if(event.key==='Enter') attemptLogin()">
+            </div>
+        </div>
+        
+        <button id="btn-login" class="login-button" onclick="attemptLogin()">
+            <i data-lucide="log-in" style="width: 18px; height: 18px; color: white;"></i> Ingresar al Portal
+        </button>
     </div>
     <div class="footer-v">Soluciones Efectivas CTG | Gestión empresarial V2.109</div>
   </div>
@@ -191,6 +358,7 @@
         <img src="https://raw.githubusercontent.com/TECNOMARIN/MULTIMARCAS/main/SOLUCIONES%20PNG.png" alt="Soluciones Efectivas CTG" class="brand-logo header-left-logo">
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;">
             <div id="un-badge" class="tag is-info is-light" style="font-weight:800; display:none; text-transform: uppercase;">UN</div>
+            
             <a href="retailb.html" class="button is-small" style="font-weight:900; background: var(--action-gradient); color: white; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3);">
                 <i data-lucide="external-link" style="width:14px; margin-right:5px;"></i>Retail
             </a>
@@ -354,6 +522,40 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Nuevas tarjetas "Próximamente" -->
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card" style="opacity: 0.7;">
+                    <div style="position: absolute; top: 10px; right: -30px; background: #eab308; color: white; padding: 5px 30px; transform: rotate(45deg); font-size: 0.7rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Próximamente</div>
+                    <h3 style="color: #2563eb;">PayJoy</h3>
+                    <p>Financia tu smartphone a cuotas, sin vida crediticia y con solo tu cédula.</p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <button class="btn-ext" disabled style="flex: 1; background: #94a3b8; cursor: not-allowed;">⏳ En desarrollo</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card" style="opacity: 0.7;">
+                    <div style="position: absolute; top: 10px; right: -30px; background: #eab308; color: white; padding: 5px 30px; transform: rotate(45deg); font-size: 0.7rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Próximamente</div>
+                    <h3 style="color: #4f46e5;">Alocredit</h3>
+                    <p>Accede a tu nuevo celular en minutos, con un sistema ágil de aprobación.</p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <button class="btn-ext" disabled style="flex: 1; background: #94a3b8; cursor: not-allowed;">⏳ En desarrollo</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-6-tablet is-4-desktop">
+                <div class="ext-card" style="opacity: 0.7;">
+                    <div style="position: absolute; top: 10px; right: -30px; background: #eab308; color: white; padding: 5px 30px; transform: rotate(45deg); font-size: 0.7rem; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Próximamente</div>
+                    <h3 style="color: #059669;">Krediya</h3>
+                    <p>Tecnología a tu alcance con facilidades de pago diseñadas para ti.</p>
+                    <div style="display: flex; gap: 10px; margin-top: auto;">
+                        <button class="btn-ext" disabled style="flex: 1; background: #94a3b8; cursor: not-allowed;">⏳ En desarrollo</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -455,6 +657,11 @@
         <div id="m-rol" class="query-tab-item" onclick="switchQuery('rol')">Roles</div>
         <div id="m-fin" class="query-tab-item" onclick="switchQuery('fin')">Entidades</div>
         <div id="m-his" class="query-tab-item" onclick="switchQuery('his')">Historial</div>
+        
+        <!-- 🌟 BOTÓN DE TESORERÍA 🌟 -->
+        <a href="tesoreria.html" id="btn-tesoreria" class="query-tab-item" style="display:none; font-weight:900; background: linear-gradient(to right, #10b981, #059669); color: white; border: none; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); text-decoration: none;">
+            <i data-lucide="wallet" style="width:14px; margin-right:5px; vertical-align: middle;"></i>Caja
+        </a>
       </nav>
       <div class="p-5">
         
@@ -553,7 +760,7 @@
             <select id="sel-nuevo-estado" style="font-weight: 600;">
               <option value="Pendiente">Pendiente</option>
               <option value="Aprobado">Aprobado</option>
-              <option value="Desembolsado">Desembolsado</option>
+              <!-- La opción Desembolsado se agrega dinámicamente si tiene permisos -->
               <option value="Rechazado">Rechazado</option>
               <option value="Anulado">Anulado</option>
             </select>
@@ -680,7 +887,7 @@
     let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [], simulaciones: [], roles: [], roles_permisos: [] };
     let currentUser = null, confirmCallback = null;
     
-    window.userPerms = { isGlobalAdmin: false, isRegionalAdmin: false, isSemiAdmin: false, hasPrivileges: false, un: '' };
+    window.userPerms = { isGlobalAdmin: false, isRegionalAdmin: false, isSemiAdmin: false, isTesoreria: false, hasPrivileges: false, un: '' };
 
     window.onload = () => { lucide.createIcons(); setDefaultDates(); refresh(); };
 
@@ -759,7 +966,7 @@
         
         const filtered = db.clientes.filter(c => {
             const matchName = String(c.nombre_cliente).toLowerCase().includes(term);
-            const clientUN = String(c.un || c.UN || '').trim().toLowerCase();
+            const clientUN = String(c.un || c.UN || c.UnidaddeNegocio || c['UNIDAD DE NEGOCIO'] || c['Unidad de Negocio'] || '').trim().toLowerCase();
             const matchUN = window.userPerms.isGlobalAdmin ? true : (clientUN === myUN);
             return matchName && matchUN;
         });
@@ -778,20 +985,18 @@
         }
     }
 
-    // ⚡ FUNCIÓN REFRESH MEJORADA CON REINTENTOS ⚡
     async function refresh() {
       document.getElementById('bg-sync-indicator').style.display = 'flex';
       
       let res = null;
       let retries = 3;
       while (retries > 0 && !res) {
-          // Intentar obtener datos con 45 segundos de timeout
           res = await fetchApi('getData', null, 45000); 
           
           if (!res) {
               console.warn(`Intento fallido de carga de BD. Reintentos restantes: ${retries - 1}`);
               retries--;
-              if (retries > 0) await new Promise(r => setTimeout(r, 2000)); // Espera 2s antes de reintentar
+              if (retries > 0) await new Promise(r => setTimeout(r, 2000));
           }
       }
 
@@ -801,7 +1006,7 @@
         const myUN = String(window.userPerms.un).trim().toLowerCase();
         const allowedClients = db.clientes.filter(c => {
             if (window.userPerms.isGlobalAdmin) return true;
-            const clientUN = String(c.un || c.UN || '').trim().toLowerCase();
+            const clientUN = String(c.un || c.UN || c.UnidaddeNegocio || c['UNIDAD DE NEGOCIO'] || c['Unidad de Negocio'] || '').trim().toLowerCase();
             return clientUN === myUN;
         });
         
@@ -904,14 +1109,16 @@
           const isGlobalAdmin = uName === 'administrador';
           const isRegionalAdmin = uName.startsWith('admin-');
           const isSemiAdmin = uName.startsWith('cia'); 
-          const hasPrivileges = isGlobalAdmin || isRegionalAdmin || isSemiAdmin;
+          const isTesoreria = uName === 'tesoreria' || uName === 'tesorería';
+          const hasPrivileges = isGlobalAdmin || isRegionalAdmin || isSemiAdmin || isTesoreria;
 
           window.userPerms = {
               isGlobalAdmin,
               isRegionalAdmin,
               isSemiAdmin,
+              isTesoreria,
               hasPrivileges,
-              un: currentUser.un || currentUser.UN || currentUser.UnidaddeNegocio || ''
+              un: currentUser.un || currentUser.UN || currentUser.UnidaddeNegocio || currentUser['UNIDAD DE NEGOCIO'] || currentUser['Unidad de Negocio'] || ''
           };
 
           document.getElementById('login-container').style.display = 'none'; 
@@ -934,7 +1141,13 @@
           }
           
           document.getElementById('t-adm').style.display = hasPrivileges ? 'block' : 'none'; 
-          document.getElementById('t-con').style.display = (isGlobalAdmin || isRegionalAdmin) ? 'block' : 'none'; 
+          document.getElementById('t-con').style.display = (isGlobalAdmin || isRegionalAdmin || isTesoreria) ? 'block' : 'none'; 
+          
+          // MOSTRAR BOTÓN DE TESORERÍA SOLO PARA ADMIN GLOBAL O USUARIO TESORERIA
+          const btnTesoreria = document.getElementById('btn-tesoreria');
+          if (btnTesoreria) {
+              btnTesoreria.style.display = (isGlobalAdmin || isTesoreria) ? 'inline-flex' : 'none';
+          }
 
           document.getElementById('at-rol').style.display = isGlobalAdmin ? '' : 'none';
           document.getElementById('at-vin').style.display = isGlobalAdmin ? '' : 'none';
@@ -968,7 +1181,7 @@
       const filteredCli = db.clientes.filter(c => {
           const matchName = String(c.nombre_cliente).toLowerCase().includes(searchCli);
           const matchAsesor = searchAsesor ? String(c.asesor || '').toLowerCase() === searchAsesor : true;
-          const clientUN = String(c.un || c.UN || '').trim().toLowerCase();
+          const clientUN = String(c.un || c.UN || c.UnidaddeNegocio || c['UNIDAD DE NEGOCIO'] || c['Unidad de Negocio'] || '').trim().toLowerCase();
           const matchUN = window.userPerms.isGlobalAdmin ? true : (clientUN === myUN);
 
           return matchName && matchAsesor && matchUN;
@@ -977,7 +1190,7 @@
       draw('tb-clientes', filteredCli.map(c => `
         <tr onclick="window.openAliado('${c.id_cliente}')">
           <td>${c.nombre_cliente}</td>
-          <td><span class="tag is-info is-light" style="font-size:0.65rem; font-weight:800; text-transform:uppercase;">${c.un || c.UN || 'N/A'}</span></td>
+          <td><span class="tag is-info is-light" style="font-size:0.65rem; font-weight:800; text-transform:uppercase;">${c.un || c.UN || c.UnidaddeNegocio || c['UNIDAD DE NEGOCIO'] || c['Unidad de Negocio'] || 'N/A'}</span></td>
           <td><code style="font-family: monospace;">${c.contrasena}</code></td>
           <td><span class="tag is-light is-primary" style="font-size:0.65rem; font-weight:800;">${c.asesor || 'SIN ASESOR'}</span></td>
           <td style="font-size:0.75rem; font-weight:600;">${c.fecha_registro || c.fecha || c.Fecha_registro || '-'}</td>
@@ -1016,7 +1229,7 @@
           if (!foundC) return false;
 
           if (!window.userPerms.isGlobalAdmin) {
-              const clientUN = String(foundC.un || foundC.UN || '').trim().toLowerCase();
+              const clientUN = String(foundC.un || foundC.UN || foundC.UnidaddeNegocio || foundC['UNIDAD DE NEGOCIO'] || foundC['Unidad de Negocio'] || '').trim().toLowerCase();
               if (clientUN !== myUN) return false;
           }
 
@@ -1046,7 +1259,8 @@
         }
         
         let badgeClass = 'is-warning is-light';
-        if (estLower === 'aprobado' || estLower === 'desembolsado') badgeClass = 'is-success is-light';
+        if (estLower === 'aprobado') badgeClass = 'is-success is-light';
+        else if (estLower === 'desembolsado') badgeClass = 'is-desembolsado';
         else if (estLower === 'rechazado' || estLower === 'anulado') badgeClass = 'is-danger is-light';
         
         return `<tr><td>${s.fecha || s.Fecha}</td><td style="color:var(--brand-blue); font-weight:800;">${t}</td><td>${e}</td><td>${s.cc || s.CC || '-'}</td><td>${s.nombre || s.Nombre || '-'}</td><td class="has-text-right">${fmtCop(cred)}</td><td class="has-text-right" style="color:var(--brand-green); font-weight:800;">${fmtCop(util)}</td><td class="has-text-right" style="font-weight:700;">${fmtCop(toNum(s.valor_cuota))}</td><td class="has-text-centered">${s.n_cuotas}</td><td class="has-text-centered"><span class="tag ${badgeClass}" style="cursor: pointer; font-weight: 800; font-size: 0.65rem;" onclick="window.openEstadoModal('${s.id_simulacion || s.id || s.cc || ''}', '${estado}')" title="Clic para cambiar estado">${estado}</span></td></tr>`;
@@ -1074,7 +1288,6 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     }
 
-    // ⚡ FUNCIONES DE CONEXIÓN CON TIMEOUT MEJORADO ⚡
     async function fetchApi(action, data = null, timeoutMs = 45000) { 
         const url = new URL(SCRIPT_URL); 
         url.searchParams.append('action', action); 
@@ -1467,15 +1680,36 @@
     function openEstadoModal(id, estadoActual) {
         if(!id) { showToast("Error: No se pudo identificar esta solicitud", "error"); return; }
         
-        const estLower = String(estadoActual).toLowerCase();
-        if (estLower !== 'pendiente' && estLower !== 'en revisión' && estLower !== 'en revision') {
-            showToast("Estado bloqueado. Solicitar contactar a su Admin IT.", "error");
+        // 🔒 RESTRICCIÓN DE SEGURIDAD PARA TESORERÍA
+        const isTesoreriaOrAdmin = window.userPerms && (window.userPerms.isGlobalAdmin || window.userPerms.isTesoreria);
+        
+        // Bloquear si está "Desembolsado" y NO es Tesorería/Admin
+        if (estadoActual.toLowerCase() === 'desembolsado' && !isTesoreriaOrAdmin) {
+            showToast("Este crédito ya fue desembolsado. Solo Tesorería puede modificarlo.", "error");
             return;
         }
 
         document.getElementById('estado-sim-id').value = id;
         
+        // Regenerar opciones según permisos
         const select = document.getElementById('sel-nuevo-estado');
+        let optionsHTML = `
+            <option value="Pendiente">Pendiente</option>
+            <option value="Aprobado">Aprobado</option>
+        `;
+        
+        if (isTesoreriaOrAdmin) {
+            optionsHTML += `<option value="Desembolsado">Desembolsado</option>`;
+        }
+        
+        optionsHTML += `
+            <option value="Rechazado">Rechazado</option>
+            <option value="Anulado">Anulado</option>
+        `;
+        
+        select.innerHTML = optionsHTML;
+        
+        // Seleccionar el estado actual (si está en la lista) o Pendiente
         const exists = Array.from(select.options).some(opt => opt.value === estadoActual);
         select.value = exists ? estadoActual : 'Pendiente';
         
