@@ -6,6 +6,11 @@
   <title>Soluciones Efectivas CTG | Gestión empresarial V2.109</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- LIBRERÍAS PARA EXPORTAR PDF Y EXCEL -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <style>
     /* --- FUENTE CORPORATIVA --- */
@@ -728,7 +733,33 @@
                     <label class="label is-size-7" style="font-weight: 700;">Asesor</label>
                     <div class="select is-fullwidth"><select id="f-asesor-his" onchange="filterSimulations()"><option value="">Todos</option></select></div>
                 </div>
-                <div class="column is-12-mobile is-2-tablet py-1 is-flex is-align-items-flex-end"><button class="button is-brand is-fullwidth" style="height:40px; border-radius:10px; background: linear-gradient(135deg, #74c456 0%, #58a33f 100%); color: white; border: none; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3);" onclick="filterSimulations()"><i data-lucide="filter"></i></button></div>
+                <div class="column is-4-mobile is-2-tablet py-1">
+                    <label class="label is-size-7" style="font-weight: 700;">Estado</label>
+                    <div class="select is-fullwidth">
+                        <select id="f-estado-his" onchange="filterSimulations()">
+                            <option value="">Todos</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Aprobado">Aprobado</option>
+                            <option value="Desembolsado">Desembolsado</option>
+                            <option value="Rechazado">Rechazado</option>
+                            <option value="Anulado">Anulado</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="column is-12 py-2 is-flex is-justify-content-space-between is-align-items-center" style="gap: 10px; flex-wrap: wrap;">
+                    <button class="button is-brand" style="border-radius:10px; background: linear-gradient(135deg, #74c456 0%, #58a33f 100%); color: white; border: none; box-shadow: 0 4px 10px rgba(103, 183, 77, 0.3); flex-grow: 1;" onclick="filterSimulations()">
+                        <i data-lucide="filter" style="width:16px; margin-right:5px;"></i> Buscar / Refrescar
+                    </button>
+                    <div class="is-flex" style="gap: 10px;">
+                        <button class="button is-success is-light" style="border-radius:10px; font-weight: 800;" onclick="exportarHistorialExcel()">
+                            <i data-lucide="download" style="width:16px; margin-right:5px;"></i> Excel
+                        </button>
+                        <button class="button is-danger is-light" style="border-radius:10px; font-weight: 800;" onclick="exportarHistorialPDF()">
+                            <i data-lucide="download" style="width:16px; margin-right:5px;"></i> PDF
+                        </button>
+                    </div>
+                </div>
             </div>
           </div>
           <div class="table-container"><table class="table is-fullwidth is-striped is-narrow"><thead><tr><th>Fecha</th><th style="color:var(--brand-blue)">Tienda</th><th>Entidad</th><th>CC / Doc</th><th>Nombre Cliente</th><th class="has-text-right">Crédito</th><th class="has-text-right">Utilidad</th><th class="has-text-right">Cuota</th><th class="has-text-centered">Plazo</th><th class="has-text-centered">Estado</th></tr></thead><tbody id="tb-simulaciones" style="font-weight: 500;"></tbody></table></div>
@@ -1212,6 +1243,7 @@
       const fTienda = document.getElementById('f-tienda') ? document.getElementById('f-tienda').value : '';
       const fEntidad = document.getElementById('f-entidad') ? document.getElementById('f-entidad').value : '';
       const fAsesor = document.getElementById('f-asesor-his') ? document.getElementById('f-asesor-his').value : '';
+      const fEstado = document.getElementById('f-estado-his') ? document.getElementById('f-estado-his').value : '';
 
       let list = db.simulaciones || [];
       const parseP = (s) => { if(!s) return 0; const b = (s.fecha || s.Fecha).split('/'); return new Date(b[2], b[1]-1, b[0]).getTime(); };
@@ -1237,8 +1269,15 @@
               if (String(foundC.asesor || '').trim() !== String(fAsesor).trim()) return false;
           }
           
+          if (fEstado) {
+              const estLower = String(s.estado || s.Estado || 'Pendiente').toLowerCase();
+              if (estLower !== String(fEstado).toLowerCase()) return false;
+          }
+          
           return true;
       });
+      
+      window.currentFilteredSimulations = list; // Guardar la lista filtrada para exportaciones
       
       let sc = 0, su = 0, countDesembolsado = 0;
       const html = list.length ? list.slice().reverse().map(s => {
@@ -1790,6 +1829,90 @@
         }
     }
 
+    /* 📊 EXPORTACIONES A EXCEL Y PDF 📊 */
+    function exportarHistorialExcel() {
+        if (!window.currentFilteredSimulations || window.currentFilteredSimulations.length === 0) {
+            showToast("No hay datos para exportar", "error");
+            return;
+        }
+
+        const exportData = window.currentFilteredSimulations.slice().reverse().map(s => {
+            const foundC = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim());
+            const tienda = (foundC && foundC.nombre_cliente) ? foundC.nombre_cliente : 'Aliado';
+            const foundE = db.financieras.find(fi => String(fi.id_financiera).trim() === String(s.id_financiera).trim());
+            const entidad = (foundE && foundE.nombre_financiera) ? foundE.nombre_financiera : 'Entidad';
+
+            return {
+                "Fecha": s.fecha || s.Fecha,
+                "Tienda / Aliado": tienda,
+                "Entidad Financiera": entidad,
+                "Documento Cliente": s.cc || s.CC || '-',
+                "Nombre Cliente": s.nombre || s.Nombre || '-',
+                "Total Crédito": toNum(s.valor_a_consignar),
+                "Utilidad": toNum(s.utilidad),
+                "Cuota": toNum(s.valor_cuota),
+                "Plazo": s.n_cuotas,
+                "Estado": s.estado || s.Estado || 'Pendiente'
+            };
+        });
+
+        const worksheet = window.XLSX.utils.json_to_sheet(exportData);
+        const workbook = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(workbook, worksheet, "Historial");
+        window.XLSX.writeFile(workbook, `Historial_Creditos_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function exportarHistorialPDF() {
+        if (!window.currentFilteredSimulations || window.currentFilteredSimulations.length === 0) {
+            showToast("No hay datos para exportar", "error");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
+
+        doc.setFontSize(16);
+        doc.setTextColor(44, 76, 140); // --brand-blue
+        doc.text("Historial de Créditos y Simulaciones", 14, 15);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 116, 139); // slate-500
+        doc.text(`Generado el: ${new Date().toLocaleDateString('es-CO')} - Usuario: ${currentUser ? currentUser.nombre_cliente : 'Admin'}`, 14, 22);
+
+        const tableColumn = ["Fecha", "Tienda", "Entidad", "Documento", "Cliente", "Crédito", "Utilidad", "Estado"];
+        const tableRows = [];
+
+        window.currentFilteredSimulations.slice().reverse().forEach(s => {
+            const foundC = db.clientes.find(c => String(c.id_cliente).trim() === String(s.id_cliente).trim());
+            const tienda = (foundC && foundC.nombre_cliente) ? foundC.nombre_cliente : 'Aliado';
+            const foundE = db.financieras.find(fi => String(fi.id_financiera).trim() === String(s.id_financiera).trim());
+            const entidad = (foundE && foundE.nombre_financiera) ? foundE.nombre_financiera : 'Entidad';
+
+            tableRows.push([
+                s.fecha || s.Fecha,
+                tienda.substring(0, 20),
+                entidad,
+                s.cc || s.CC || '-',
+                String(s.nombre || s.Nombre || '-').substring(0, 20),
+                fmtCop(toNum(s.valor_a_consignar)),
+                fmtCop(toNum(s.utilidad)),
+                s.estado || s.Estado || 'Pendiente'
+            ]);
+        });
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 28,
+            theme: 'grid',
+            styles: { fontSize: 8, cellPadding: 2 },
+            headStyles: { fillColor: [44, 76, 140], textColor: 255 }, // Azul Corporativo
+            alternateRowStyles: { fillColor: [248, 250, 252] } // slate-50
+        });
+
+        doc.save(`Historial_Creditos_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
     Object.assign(window, {
         attemptLogin, switchView, showDistribuidorPrices, handleAllyChange, 
         loadPlanes, loadNumCuotas, calc, handlePriceInput, handleConsignarInput, 
@@ -1800,7 +1923,7 @@
         openAliado, openFinanciera, openRol, confirmDeleteVinculo, 
         confirmDeleteVinculoRol, renderAliadoVinculos, openEstadoModal, 
         closeEstadoModal, saveEstadoSimulacion, sendWhatsApp, filterTiendasCalc, crearClienteJerarquia,
-        guardarAnuncio 
+        guardarAnuncio, exportarHistorialExcel, exportarHistorialPDF
     });
   </script>
 </body>
