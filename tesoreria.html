@@ -131,13 +131,14 @@
             const [simulaciones, setSimulaciones] = useState([]);
             const [financieras, setFinancieras] = useState([]);
             const [clientes, setClientes] = useState([]); 
-            const [cuentasTesoreria, setCuentasTesoreria] = useState([]); // 🏦 NUEVO ESTADO CUENTAS
+            const [bancos, setBancos] = useState([]); // 🏦 HOJA DE BANCOS SEPARADA
+            const [cuentasTesoreria, setCuentasTesoreria] = useState([]); 
             
             const [searchTerm, setSearchTerm] = useState('');
             const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
             
             const [confirmModal, setConfirmModal] = useState({ show: false, row: null });
-            const [selectedCuentaOrigen, setSelectedCuentaOrigen] = useState(''); // 🏦 NUEVO ESTADO SELECTOR CUENTA
+            const [selectedCuentaOrigen, setSelectedCuentaOrigen] = useState(''); 
             const [isSaving, setIsSaving] = useState(false);
 
             // --- ESTADOS PARA GESTIÓN DE CUENTAS (MODAL) ---
@@ -206,7 +207,8 @@
                                 setUser(foundUser);
                                 setFinancieras(db.financieras || []);
                                 setClientes(db.clientes || []);
-                                setCuentasTesoreria(db.cuentas_tesoreria || []); // 🏦 GUARDAMOS LAS CUENTAS EN ESTADO
+                                setBancos(db.bancos || []); // 🏦 CARGA DE BANCOS SEPARADA
+                                setCuentasTesoreria(db.cuentas_tesoreria || []); 
                                 setIsAuthenticated(true);
                                 fetchSolicitudesAprobadas(db.simulaciones || []);
                             } else {
@@ -239,8 +241,9 @@
                         const resJson = await response.json();
                         simData = resJson.data.simulaciones;
                         setClientes(resJson.data.clientes || []);
+                        setBancos(resJson.data.bancos || []); // 🏦 RECARGA DE BANCOS
                         setFinancieras(resJson.data.financieras || []);
-                        setCuentasTesoreria(resJson.data.cuentas_tesoreria || []); // 🏦 RECARGAMOS LAS CUENTAS AL ACTUALIZAR
+                        setCuentasTesoreria(resJson.data.cuentas_tesoreria || []); 
                     }
 
                     if (Array.isArray(simData)) {
@@ -264,6 +267,7 @@
                 setSimulaciones([]);
                 setTodasSolicitudes([]);
                 setCuentasTesoreria([]);
+                setBancos([]);
                 setLoginData({ username: '', password: '' });
                 setShowPassword(false);
             };
@@ -278,15 +282,18 @@
                 return cli ? cli.nombre_cliente : 'Aliado / Tienda no encontrada';
             };
 
+            // 🏦 LÓGICA DE BÚSQUEDA BANCARIA CORREGIDA 
             const getDatosBancarios = (idCli) => {
                 const cli = clientes.find(c => String(c.id_cliente).trim() === String(idCli).trim());
-                if (!cli) return null;
+                const bancoData = bancos.find(b => String(b.id_cliente).trim() === String(idCli).trim());
                 
-                const banco = cli.banco || cli.Banco || '';
-                const tipo = cli.tipo_cuenta || cli.Tipo_Cuenta || '';
-                const cuenta = cli.cuenta_bancaria || cli.Cuenta_Bancaria || '';
-                const nit = cli.cedula_nit || cli.Cedula_Nit || '';
-                const nombreComercio = cli.nombre_comercio || cli.Nombre_Comercio || cli.nombre_cliente;
+                if (!cli && !bancoData) return null;
+                
+                const banco = bancoData ? bancoData.banco : (cli ? cli.banco : '');
+                const tipo = bancoData ? bancoData.tipo_cuenta : (cli ? cli.tipo_cuenta : '');
+                const cuenta = bancoData ? bancoData.cuenta_bancaria : (cli ? cli.cuenta_bancaria : '');
+                const nit = bancoData ? bancoData.cedula_nit : (cli ? cli.cedula_nit : '');
+                const nombreComercio = bancoData && bancoData.nombre_comercio ? bancoData.nombre_comercio : (cli ? cli.nombre_cliente : 'Desconocido');
 
                 if (!banco && !cuenta) return null;
 
@@ -296,7 +303,7 @@
                     banco: banco, 
                     tipo: tipo, 
                     cuenta: cuenta,
-                    nombre_tienda: cli.nombre_cliente 
+                    nombre_tienda: cli ? cli.nombre_cliente : nombreComercio
                 };
             };
 
@@ -373,7 +380,7 @@
                         "Nombre Cliente": findCol(s, ['NOMBRE COMPLETO', 'NOMBRES', 'NOMBRE']) || s.nombre || s.Nombre || s.cliente || s.Cliente,
                         "Valor Dispersado": Number(findCol(s, ['CONSIGNAR', 'TOTAL_CREDITO', 'VALOR_A_CONSIGNAR', 'VALOR']) || 0),
                         "Estado": findCol(s, ['ESTADO', 'PAGOS']),
-                        "Cuenta Origen (Salida)": findCol(s, ['CUENTA ORIGEN', 'BANCO ORIGEN', 'ORIGEN']) || 'No registrada' // 🏦 AGREGADO EXPORTACIÓN
+                        "Cuenta Origen (Salida)": findCol(s, ['CUENTA ORIGEN', 'BANCO ORIGEN', 'ORIGEN']) || 'No registrada'
                     };
                 });
                 const worksheet = window.XLSX.utils.json_to_sheet(exportData);
@@ -391,7 +398,6 @@
                 doc.setFontSize(10);
                 doc.text(`Periodo: ${fechaDesde} al ${fechaHasta}`, 14, 22);
 
-                // 🏦 AGREGADO AL PDF
                 const tableColumn = ["Fecha", "Tienda", "Entidad", "Documento", "Cliente", "Valor Dispersado", "Origen de Fondos"];
                 const tableRows = filteredHistorial.map(s => {
                     const idClienteVal = findCol(s, ['ID_CLIENTE', 'ID CLIENTE']) || s.id_cliente;
@@ -420,11 +426,11 @@
 
             const openConfirmModal = (row) => {
                 setConfirmModal({ show: true, row });
-                setSelectedCuentaOrigen(''); // Reset selector on open
+                setSelectedCuentaOrigen(''); 
             };
 
             const executeDesembolso = async () => {
-                if (!confirmModal.row || !selectedCuentaOrigen) return; // 🏦 REQUIERE CUENTA SELECCIONADA
+                if (!confirmModal.row || !selectedCuentaOrigen) return; 
                 setIsSaving(true);
                 
                 try {
@@ -436,7 +442,7 @@
                         id_simulacion: rowId,
                         cc: ccVal,
                         estado: 'Desembolsado',
-                        cuenta_origen: selectedCuentaOrigen // 🏦 ENVIAMOS LA CUENTA DE ORIGEN AL BACKEND
+                        cuenta_origen: selectedCuentaOrigen
                     };
 
                     const separator = API_URL.includes('?') ? '&' : '?';
@@ -477,7 +483,7 @@
 
                     showToast("Cuenta agregada exitosamente", "success");
                     setNuevaCuenta({ banco: '', tipo_cuenta: 'Ahorros', numero_cuenta: '' });
-                    fetchSolicitudesAprobadas(); // Recargar datos para traer la nueva cuenta
+                    fetchSolicitudesAprobadas(); 
                 } catch (error) {
                     showToast(error.message, "error");
                 } finally {
@@ -492,7 +498,6 @@
                     const separator = API_URL.includes('?') ? '&' : '?';
                     const fetchUrl = `${API_URL}${separator}action=updateCuentaTesoreria&data=${encodeURIComponent(JSON.stringify(payload))}`;
                     
-                    // Optimistic update in UI
                     setCuentasTesoreria(prev => prev.map(acc => acc.id_cuenta === c.id_cuenta ? {...acc, estado: newStatus} : acc));
                     
                     const response = await fetch(fetchUrl, { method: 'GET', mode: 'cors' });
@@ -502,7 +507,7 @@
                     showToast("Estado de cuenta actualizado", "success");
                 } catch (e) { 
                     showToast("Error al actualizar estado", "error"); 
-                    fetchSolicitudesAprobadas(); // Revert on error
+                    fetchSolicitudesAprobadas(); 
                 }
             };
 
@@ -611,7 +616,6 @@
                                 <span className="text-sm font-black text-[#1e3a6d]">{user?.nombre_cliente}</span>
                             </div>
                             
-                            {/* 🏦 BOTÓN DE CONFIGURACIÓN DE CUENTAS */}
                             <button 
                                 onClick={() => setShowCuentasModal(true)}
                                 className="flex items-center justify-center p-2.5 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-slate-200"
@@ -855,7 +859,6 @@
                                                                     </span>
                                                                 </td>
                                                                 
-                                                                {/* 🏦 NUEVA COLUMNA DE ORIGEN EN HISTORIAL */}
                                                                 <td className="px-5 py-4 align-middle text-center border-l border-slate-100">
                                                                     <span className="text-xs font-bold text-slate-500">
                                                                         {origenFondos}
@@ -929,7 +932,6 @@
                                             <span className="font-mono font-bold text-slate-600 text-xs">{findCol(confirmModal.row, ['CC', 'CEDULA', 'DOCUMENTO'])}</span>
                                         </div>
 
-                                        {/* 🏦 SELECTOR DE CUENTA DE ORIGEN */}
                                         <div className="mt-4 pt-3 border-t border-slate-100">
                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Cuenta de Origen (Obligatorio)</label>
                                             <select
