@@ -429,7 +429,10 @@
       <div class="solicitante-section" style="border-left: 4px solid var(--brand-green); padding: 0.75rem 1.25rem; margin-top: 1.5rem; margin-bottom: 2rem; background: #fafafa; border-radius: 0 16px 16px 0;">
         <span class="admin-label" style="margin-bottom: 1rem; color: var(--brand-green);">Datos del Solicitante (Cliente)</span>
         <div class="columns is-mobile is-multiline mb-0">
-            <div class="column is-6 py-1"><input id="in_cc" class="input is-small" placeholder="CC / Documento"></div>
+            <div class="column is-6 py-1">
+                <input id="in_cc" class="input is-small" placeholder="CC / Documento" onblur="autoCompleteClientData(this.value)">
+                <p id="crm-msg" class="help is-success" style="display:none; font-weight:bold; font-size:0.65rem;">¡Cliente encontrado!</p>
+            </div>
             <div class="column is-6 py-1"><input id="in_celular" class="input is-small" placeholder="Celular"></div>
             <div class="column is-12 py-1"><input id="in_nombre_sol" class="input is-small" placeholder="Nombre completo"></div>
             <div class="column is-12 py-1"><input id="in_correo" class="input is-small" placeholder="Correo electrónico"></div>
@@ -445,7 +448,16 @@
             </div>
         </div>
       </div>
-      <button id="btn-main-action" class="button btn-modern is-save is-fullwidth is-medium" onclick="validateAndSave()"><i data-lucide="send" style="width: 18px; color: white !important;"></i> Enviar y Registrar</button>
+      <div class="columns is-mobile">
+          <div class="column is-narrow">
+              <button class="button is-light is-medium" style="border-radius: 14px; font-weight: 800; color: #64748b;" onclick="clearInputs()" title="Limpiar Formulario">
+                  <i data-lucide="eraser" style="width: 18px;"></i>
+              </button>
+          </div>
+          <div class="column">
+              <button id="btn-main-action" class="button btn-modern is-save is-fullwidth is-medium" onclick="validateAndSave()"><i data-lucide="send" style="width: 18px; color: white !important;"></i> Enviar y Registrar</button>
+          </div>
+      </div>
     </div>
 
     <div id="v-ext" class="section-view">
@@ -913,7 +925,7 @@
     </div>
   </div>
 
-  <script>
+    <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
     let db = { clientes: [], financieras: [], cuotas: [], porcentajes: [], simulaciones: [], roles: [], roles_permisos: [] };
     let currentUser = null, confirmCallback = null;
@@ -1523,7 +1535,58 @@
             const el = document.getElementById(id); 
             if(el) el.value = ""; 
         }); 
+        
+        const crmMsg = document.getElementById('crm-msg');
+        if (crmMsg) crmMsg.style.display = 'none';
+
         render(0,0); 
+    }
+
+    function autoCompleteClientData(cedula) {
+        if (!cedula || cedula.trim() === '') return;
+        
+        const searchDoc = String(cedula).replace(/\D/g, '');
+        if (searchDoc === '') return;
+
+        // Buscar en simulaciones
+        let foundClient = null;
+        if (db.simulaciones && db.simulaciones.length > 0) {
+            // Buscamos de la más reciente a la más antigua
+            for (let i = db.simulaciones.length - 1; i >= 0; i--) {
+                const s = db.simulaciones[i];
+                const sDoc = String(s.cc || s.CC || s.DOCUMENTO || s.cedula || s.CEDULA || '').replace(/\D/g, '');
+                if (sDoc === searchDoc) {
+                    foundClient = {
+                        nombre: s.nombre || s.NOMBRE || s.Nombre || '',
+                        celular: s.celular || s.CELULAR || s.Celular || s.telefono || s.TELEFONO || '',
+                        correo: s.correo || s.CORREO || s.Correo || s.email || s.EMAIL || ''
+                    };
+                    break;
+                }
+            }
+        }
+
+        const msgEl = document.getElementById('crm-msg');
+        
+        if (foundClient) {
+            if (foundClient.nombre) document.getElementById('in_nombre_sol').value = foundClient.nombre;
+            if (foundClient.celular) document.getElementById('in_celular').value = foundClient.celular;
+            if (foundClient.correo) document.getElementById('in_correo').value = foundClient.correo;
+            
+            if (msgEl) {
+                msgEl.innerText = "¡Datos encontrados!";
+                msgEl.className = "help is-success";
+                msgEl.style.display = "block";
+                setTimeout(() => { msgEl.style.display = "none"; }, 3000);
+            }
+        } else {
+            if (msgEl) {
+                msgEl.innerText = "Cliente nuevo";
+                msgEl.className = "help is-info";
+                msgEl.style.display = "block";
+                setTimeout(() => { msgEl.style.display = "none"; }, 3000);
+            }
+        }
     }
     
     function validateAndSave() {
