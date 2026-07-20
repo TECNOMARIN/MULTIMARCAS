@@ -63,7 +63,7 @@
         const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
-        const VERSION = "V5.3 ERP";
+        const VERSION = "V5.4 ERP";
 
         const Icon = ({ name, size = 20, className = "" }) => {
             const icons = {
@@ -275,7 +275,7 @@
                 return c ? c.nombre_cliente : "Aliado Comercial";
             }, [db, selectedCliente]);
 
-            // Función Matemática Principal (Bidireccional)
+            // Función Matemática Principal
             const calcMath = useCallback((source, pVentaStr, vConsignarStr, nCuotas) => {
                 if (!selectedCliente || !selectedFinanciera || !selectedPlan || !nCuotas) {
                     setCuotaAprox(0);
@@ -345,7 +345,6 @@
                 };
             }, [selectedCliente, selectedFinanciera, selectedPlan, db]);
 
-            // Handlers para Inputs Monetarios
             const handlePriceChange = (e) => {
                 let val = e.target.value.replace(/\D/g, "");
                 if (val === "") { setPrecioVenta(""); setValorConsignar(""); setCuotaAprox(0); return; }
@@ -423,7 +422,6 @@
                     celular: clientData.celular
                 };
 
-                // WhatsApp Logic
                 const storeName = activeStoreName;
                 const asesorName = currentUser?.asesor || "No asignado";
                 const bankObj = db.financieras.find(f => String(f.id_financiera).trim() === String(selectedFinanciera).trim());
@@ -1250,7 +1248,15 @@
                 });
                 setEditAliadoModal({ show: true, data: { ...cli, factores: factores } });
             };
-            const openEditRol = (rol) => setEditRolModal({ show: true, data: { ...rol } });
+            
+            const openEditRol = (rol) => {
+                const factores = db.financieras.map(f => {
+                    const p = db.roles_permisos.find(rp => String(rp.ROL).trim() === String(rol.id_rol).trim() && String(rp.id_financiera).trim() === String(f.id_financiera).trim());
+                    return { id_fin: f.id_financiera, valor: p ? p.factor_cliente : '' };
+                });
+                setEditRolModal({ show: true, data: { ...rol, factores } });
+            };
+            
             const openEditEntidad = (fin) => setEditEntidadModal({ show: true, data: { ...fin } });
 
             // --- FUNCIONES PARA GUARDAR EDICIONES ---
@@ -1283,9 +1289,23 @@
                 }));
             };
 
+            const handleRolFactorChange = (id_fin, value) => {
+                setEditRolModal(prev => ({
+                    ...prev,
+                    data: {
+                        ...prev.data,
+                        factores: prev.data.factores.map(f => f.id_fin === id_fin ? { ...f, valor: value } : f)
+                    }
+                }));
+            };
+
             const saveEditRol = async () => {
                 setIsSavingEdit(true);
-                const success = await apiCall('updateRol', editRolModal.data, "Rol actualizado");
+                const payload = {
+                    ...editRolModal.data,
+                    factores: editRolModal.data.factores.filter(f => f.valor !== '')
+                };
+                const success = await apiCall('updateRol', payload, "Rol y factores actualizados");
                 if (success) setEditRolModal({ show: false, data: null });
                 setIsSavingEdit(false);
             };
@@ -1386,10 +1406,10 @@
                                     {/* BOTONES DE EXPORTACIÓN */}
                                     <div className="flex gap-2 justify-end pt-2 border-t border-slate-200 mt-3">
                                         <button onClick={exportarExcel} className="flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors font-bold text-xs shadow-sm">
-                                            <Icon name="Download" size={14}/> Excel
+                                            <Icon name="Download" size={14}/> <span>Excel</span>
                                         </button>
                                         <button onClick={exportarPDF} className="flex items-center gap-1.5 px-4 py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors font-bold text-xs shadow-sm">
-                                            <Icon name="Download" size={14}/> PDF
+                                            <Icon name="Download" size={14}/> <span>PDF</span>
                                         </button>
                                     </div>
 
@@ -1469,10 +1489,24 @@
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {filteredClientes.map((c, i) => (
-                                                <tr key={i} onClick={() => userPerms.hasPrivileges && openEditAliado(c)} className={`transition-colors ${userPerms.hasPrivileges ? 'hover:bg-slate-50 cursor-pointer' : ''}`}>
+                                                <tr key={i} onClick={() => {
+                                                    if (!userPerms.hasPrivileges) return;
+                                                    const isMasterUser = c.nombre_cliente.toLowerCase() === 'administrador' || c.nombre_cliente.toLowerCase().includes('tesore');
+                                                    if (isMasterUser && !userPerms.isGlobalAdmin) {
+                                                        showToast("Solo el Administrador Global puede modificar a este usuario maestro.", "error");
+                                                        return;
+                                                    }
+                                                    openEditAliado(c);
+                                                }} className={`transition-colors ${userPerms.hasPrivileges ? 'hover:bg-slate-50 cursor-pointer' : ''}`}>
                                                     <td className="px-4 py-3 font-bold text-slate-800">{c.nombre_cliente}</td>
                                                     <td className="px-4 py-3"><span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest">{c.un || c.UN || c.UnidaddeNegocio || c['UNIDAD DE NEGOCIO'] || c['Unidad de Negocio'] || 'N/A'}</span></td>
-                                                    <td className="px-4 py-3 font-mono text-slate-500 text-xs">{c.contrasena}</td>
+                                                    <td className="px-4 py-3 font-mono text-slate-500 text-xs">
+                                                      {c.contrasena ? (
+                                                          <span className="flex items-center gap-2">
+                                                            <span>****</span>
+                                                          </span>
+                                                      ) : '-'}
+                                                    </td>
                                                     <td className="px-4 py-3"><span className="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest">{c.asesor || 'SIN ASESOR'}</span></td>
                                                     <td className="px-4 py-3 text-slate-500 font-medium text-xs">{parseDate(c.fecha_registro || c.fecha || c.Fecha_registro)}</td>
                                                 </tr>
@@ -1531,7 +1565,7 @@
                                 <div className="p-6 bg-slate-50 space-y-4 overflow-y-auto custom-scrollbar">
                                     <div>
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nombre Tienda</label>
-                                        <input type="text" value={editAliadoModal.data.nombre_cliente} onChange={e=>setEditAliadoModal({...editAliadoModal, data:{...editAliadoModal.data, nombre_cliente: e.target.value}})} className="w-full bg-white border border-slate-200 py-2.5 px-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#1e3a6d]" />
+                                        <input type="text" value={editAliadoModal.data.nombre_cliente} onChange={e=>setEditAliadoModal({...editAliadoModal, data:{...editAliadoModal.data, nombre_cliente: e.target.value}})} className="w-full bg-white border border-slate-200 py-2.5 px-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#1e3a6d]" disabled={!userPerms.isGlobalAdmin && (editAliadoModal.data.nombre_cliente.toLowerCase() === 'administrador' || editAliadoModal.data.nombre_cliente.toLowerCase().includes('tesore'))} />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Contraseña</label>
@@ -1637,16 +1671,39 @@
 
                     {editRolModal.show && editRolModal.data && (
                         <div className="fixed inset-0 z-[8000] flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm animate-in fade-in">
-                            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-pop-in">
-                                <div className="p-5 bg-[#1e3a6d] text-white flex justify-between items-center">
+                            <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-pop-in max-h-[90vh]">
+                                <div className="p-5 bg-[#1e3a6d] text-white flex justify-between items-center shrink-0">
                                     <h3 className="font-black text-lg">Configurar Rol</h3>
                                     <button onClick={() => setEditRolModal({show:false, data:null})} className="hover:bg-white/20 p-1.5 rounded-full"><Icon name="X" size={20}/></button>
                                 </div>
-                                <div className="p-6 bg-slate-50">
+                                <div className="p-6 bg-slate-50 overflow-y-auto custom-scrollbar">
                                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nombre del Rol</label>
                                     <input type="text" value={editRolModal.data.nombre_rol} onChange={e=>setEditRolModal({...editRolModal, data:{...editRolModal.data, nombre_rol: e.target.value}})} className="w-full bg-white border border-slate-200 py-2.5 px-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#1e3a6d]" />
+                                    
+                                    <div className="mt-6 border-t border-slate-200 pt-4">
+                                        <h4 className="text-[10px] font-black text-[#1e3a6d] uppercase tracking-widest mb-3">Factores Predeterminados</h4>
+                                        <p className="text-[10px] text-slate-500 mb-3">Asigne el factor base para cada financiera en este rol.</p>
+                                        <div className="space-y-2">
+                                            {db.financieras.map(f => {
+                                                const factorVal = editRolModal.data.factores.find(fac => fac.id_fin === f.id_financiera)?.valor || '';
+                                                return (
+                                                    <div key={f.id_financiera} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200">
+                                                        <span className="text-xs font-bold text-slate-700">{f.nombre_financiera}</span>
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            placeholder="Ej: 0.85"
+                                                            value={factorVal}
+                                                            onChange={(e) => handleRolFactorChange(f.id_financiera, e.target.value)}
+                                                            className="w-24 text-right bg-slate-50 border border-slate-200 py-1 px-2 rounded text-xs font-bold outline-none focus:border-[#1e3a6d]"
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="p-4 bg-white border-t border-slate-100 flex justify-between items-center">
+                                <div className="p-4 bg-white border-t border-slate-100 flex justify-between items-center shrink-0">
                                     <button onClick={deleteRol} disabled={isSavingEdit} className="px-4 py-2 bg-rose-50 text-rose-600 font-bold rounded-xl hover:bg-rose-100 transition-colors disabled:opacity-50 text-xs flex items-center gap-1"><Icon name="Trash2" size={14}/> Eliminar</button>
                                     <button onClick={saveEditRol} disabled={isSavingEdit} className="px-6 py-2 bg-[#67B74D] text-white font-black rounded-xl hover:bg-[#559e3d] shadow-md transition-all flex items-center gap-2 disabled:opacity-50 text-sm">
                                         {isSavingEdit ? <Icon name="RefreshCw" className="animate-spin" size={16}/> : <Icon name="Save" size={16}/>} Actualizar
@@ -2210,7 +2267,7 @@
                         if (retries > 0) await new Promise(r => setTimeout(r, 1500));
                         else {
                             console.error("Fetch Data Error:", error);
-                            showToast("Error de conexión. Intenta de nuevo.", "error");
+                            if (isRefresh) showToast("Error de conexión. Intenta de nuevo.", "error");
                         }
                     }
                 }
@@ -2408,7 +2465,7 @@
                                 <>
                                     {!isSidebarCollapsed && <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 mb-1 mt-4">Administración</p>}
                                     <NavItem id="con" icon="Database" label="Consultas" hidden={!(userPerms.isGlobalAdmin || userPerms.isRegionalAdmin || userPerms.isTesoreria)} />
-                                    <NavItem id="adm" icon="Settings" label="Configuración" hidden={!userPerms.hasPrivileges} />
+                                    <NavItem id="adm" icon="Settings" label="Configuración" hidden={!userPerms.isGlobalAdmin} />
                                 </>
                             )}
                         </div>
@@ -2425,7 +2482,7 @@
                         <button onClick={() => setActiveView('sim')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'sim' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Calculator" size={18} className="mb-1"/> Simulador</button>
                         <button onClick={() => setActiveView('ext')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'ext' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Smartphone" size={18} className="mb-1"/> Créditos</button>
                         {(userPerms.isGlobalAdmin || userPerms.isTesoreria) && <button onClick={() => setActiveView('tes')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'tes' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Landmark" size={18} className="mb-1"/> Caja</button>}
-                        {userPerms.hasPrivileges && <button onClick={() => setActiveView('adm')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'adm' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Settings" size={18} className="mb-1"/> Config</button>}
+                        {userPerms.isGlobalAdmin && <button onClick={() => setActiveView('adm')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'adm' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Settings" size={18} className="mb-1"/> Config</button>}
                         <button onClick={handleLogout} className="flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-rose-500 hover:bg-rose-50"><Icon name="LogOut" size={18} className="mb-1"/> Salir</button>
                     </div>
 
@@ -2444,7 +2501,7 @@
                             {activeView === 'sim' && <CalculatorView db={db} currentUser={currentUser} userPerms={userPerms} apiCall={apiCall} showToast={showToast} />}
                             {activeView === 'ext' && <OnlineCreditView onOpenQr={(url, title) => setQrModal({show: true, url, title})} loadDistribuidorPrices={loadDistribuidorPrices} />}
                             {activeView === 'dash' && (userPerms.isGlobalAdmin || userPerms.isRegionalAdmin) && <DashboardView db={db} userPerms={userPerms} />}
-                            {activeView === 'adm' && userPerms.hasPrivileges && <AdminView db={db} userPerms={userPerms} apiCall={apiCall} showToast={showToast} />}
+                            {activeView === 'adm' && userPerms.isGlobalAdmin && <AdminView db={db} userPerms={userPerms} apiCall={apiCall} showToast={showToast} />}
                             {activeView === 'con' && (userPerms.isGlobalAdmin || userPerms.isRegionalAdmin || userPerms.isTesoreria) && <QueriesView db={db} userPerms={userPerms} apiCall={apiCall} showToast={showToast} />}
                             {activeView === 'tes' && (userPerms.isGlobalAdmin || userPerms.isTesoreria) && <TesoreriaView db={db} apiCall={apiCall} showToast={showToast} />}
                         </div>
