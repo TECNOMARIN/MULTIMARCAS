@@ -63,7 +63,7 @@
         const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH2a6_gdBJ6uEzmms8qneHg5XnpThtWALqEjgZ9YYcEyMdG1ikYWb68POhtVELJdrdRA/exec";
-        const VERSION = "V5.2 ERP";
+        const VERSION = "V5.3 ERP";
 
         const Icon = ({ name, size = 20, className = "" }) => {
             const icons = {
@@ -834,11 +834,11 @@
             );
         };
 
-        const AdminView = ({ db, apiCall, showToast }) => {
+        const AdminView = ({ db, userPerms, apiCall, showToast }) => {
             const [activeTab, setActiveTab] = useState('aliados');
             const [isSaving, setIsSaving] = useState(false);
 
-            const [aliadoForm, setAliadoForm] = useState({ nom: '', pass: '', rol: '', un: 'Atlantico', asesor: '' });
+            const [aliadoForm, setAliadoForm] = useState({ nom: '', pass: '', rol: '', un: userPerms.isGlobalAdmin ? 'Atlantico' : userPerms.un, asesor: '' });
             const [isNewAsesorCreate, setIsNewAsesorCreate] = useState(false);
 
             const [rolForm, setRolForm] = useState('');
@@ -869,9 +869,13 @@
                 <div className="max-w-4xl mx-auto animate-fade-in w-full pb-20">
                     <div className="flex overflow-x-auto bg-white rounded-2xl shadow-sm border border-slate-200 mb-6 p-1.5 custom-scrollbar gap-1">
                         <button onClick={()=>setActiveTab('aliados')} className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeTab==='aliados' ? 'bg-[#1e3a6d] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>Nuevo Aliado</button>
-                        <button onClick={()=>setActiveTab('roles')} className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeTab==='roles' ? 'bg-[#1e3a6d] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>Roles y Permisos</button>
-                        <button onClick={()=>setActiveTab('entidades')} className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeTab==='entidades' ? 'bg-[#1e3a6d] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>Entidades y Planes</button>
-                        <button onClick={()=>setActiveTab('anuncios')} className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeTab==='anuncios' ? 'bg-[#1e3a6d] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>Anuncio Global</button>
+                        {userPerms.isGlobalAdmin && (
+                            <>
+                                <button onClick={()=>setActiveTab('roles')} className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeTab==='roles' ? 'bg-[#1e3a6d] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>Roles y Permisos</button>
+                                <button onClick={()=>setActiveTab('entidades')} className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeTab==='entidades' ? 'bg-[#1e3a6d] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>Entidades y Planes</button>
+                                <button onClick={()=>setActiveTab('anuncios')} className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-colors ${activeTab==='anuncios' ? 'bg-[#1e3a6d] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}>Anuncio Global</button>
+                            </>
+                        )}
                     </div>
 
                     <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
@@ -930,40 +934,43 @@
                                         </div>
                                         <div className="md:col-span-2">
                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Unidad de Negocio (UN)</label>
-                                            <select value={aliadoForm.un} onChange={e=>setAliadoForm({...aliadoForm, un: e.target.value})} className="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#67B74D]">
+                                            <select disabled={!userPerms.isGlobalAdmin} value={aliadoForm.un} onChange={e=>setAliadoForm({...aliadoForm, un: e.target.value})} className="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#67B74D] disabled:opacity-60 disabled:cursor-not-allowed">
                                                 <option value="Atlantico">Atlántico</option>
                                                 <option value="Bolivar">Bolívar</option>
                                                 <option value="Magdalena">Magdalena</option>
                                             </select>
+                                            {!userPerms.isGlobalAdmin && <p className="text-[10px] text-slate-400 mt-1 font-bold">Solo los administradores globales pueden asignar una UN diferente.</p>}
                                         </div>
                                     </div>
-                                    <button disabled={isSaving} onClick={() => handleSave('crearCliente', {nombre: aliadoForm.nom, contrasena: aliadoForm.pass, rol: aliadoForm.rol, un: aliadoForm.un, asesor: aliadoForm.asesor}, () => { setAliadoForm({nom:'', pass:'', rol:'', un:'Atlantico', asesor:''}); setIsNewAsesorCreate(false); })} className="mt-4 px-6 py-3 bg-[#67B74D] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:bg-[#559e3d] flex items-center gap-2">
+                                    <button disabled={isSaving} onClick={() => handleSave('crearCliente', {nombre: aliadoForm.nom, contrasena: aliadoForm.pass, rol: aliadoForm.rol, un: aliadoForm.un, asesor: aliadoForm.asesor}, () => { setAliadoForm({nom:'', pass:'', rol:'', un: userPerms.isGlobalAdmin ? 'Atlantico' : userPerms.un, asesor:''}); setIsNewAsesorCreate(false); })} className="mt-4 px-6 py-3 bg-[#67B74D] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:bg-[#559e3d] flex items-center gap-2">
                                         {isSaving ? <Icon name="RefreshCw" className="animate-spin" size={16}/> : <Icon name="PlusCircle" size={16}/>} Registrar Aliado
                                     </button>
                                 </div>
                                 
-                                <div>
-                                    <h3 className="text-sm font-black text-[#1e3a6d] uppercase tracking-widest mb-4 border-b pb-2">Vincular Factor Personalizado a Tienda</h3>
-                                    <p className="text-xs text-slate-400 mb-3">Úsalo solo si la tienda no tiene rol o necesita una excepción.</p>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <select value={vincTiendaForm.cli} onChange={e=>setVincTiendaForm({...vincTiendaForm, cli: e.target.value})} className="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#1e3a6d]">
-                                            <option value="">Tienda...</option>
-                                            {cliList.map(c=><option key={c.id_cliente} value={c.id_cliente}>{c.nombre_cliente}</option>)}
-                                        </select>
-                                        <select value={vincTiendaForm.fin} onChange={e=>setVincTiendaForm({...vincTiendaForm, fin: e.target.value})} className="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#1e3a6d]">
-                                            <option value="">Entidad...</option>
-                                            {finList.map(f=><option key={f.id_financiera} value={f.id_financiera}>{f.nombre_financiera}</option>)}
-                                        </select>
-                                        <input type="number" step="0.01" placeholder="Factor (Ej: 0.85)" value={vincTiendaForm.factor} onChange={e=>setVincTiendaForm({...vincTiendaForm, factor: e.target.value})} className="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#1e3a6d]" />
+                                {userPerms.isGlobalAdmin && (
+                                    <div>
+                                        <h3 className="text-sm font-black text-[#1e3a6d] uppercase tracking-widest mb-4 border-b pb-2">Vincular Factor Personalizado a Tienda</h3>
+                                        <p className="text-xs text-slate-400 mb-3">Úsalo solo si la tienda no tiene rol o necesita una excepción.</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <select value={vincTiendaForm.cli} onChange={e=>setVincTiendaForm({...vincTiendaForm, cli: e.target.value})} className="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#1e3a6d]">
+                                                <option value="">Tienda...</option>
+                                                {cliList.map(c=><option key={c.id_cliente} value={c.id_cliente}>{c.nombre_cliente}</option>)}
+                                            </select>
+                                            <select value={vincTiendaForm.fin} onChange={e=>setVincTiendaForm({...vincTiendaForm, fin: e.target.value})} className="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#1e3a6d]">
+                                                <option value="">Entidad...</option>
+                                                {finList.map(f=><option key={f.id_financiera} value={f.id_financiera}>{f.nombre_financiera}</option>)}
+                                            </select>
+                                            <input type="number" step="0.01" placeholder="Factor (Ej: 0.85)" value={vincTiendaForm.factor} onChange={e=>setVincTiendaForm({...vincTiendaForm, factor: e.target.value})} className="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-[#1e3a6d]" />
+                                        </div>
+                                        <button disabled={isSaving} onClick={() => handleSave('asignarFactorCliente', {id_cliente: vincTiendaForm.cli, id_financiera: vincTiendaForm.fin, factor_cliente: vincTiendaForm.factor}, () => setVincTiendaForm({cli:'', fin:'', factor:''}))} className="mt-4 px-6 py-3 bg-[#1e3a6d] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:bg-black flex items-center gap-2">
+                                            {isSaving ? <Icon name="RefreshCw" className="animate-spin" size={16}/> : <Icon name="Save" size={16}/>} Guardar Vinculación
+                                        </button>
                                     </div>
-                                    <button disabled={isSaving} onClick={() => handleSave('asignarFactorCliente', {id_cliente: vincTiendaForm.cli, id_financiera: vincTiendaForm.fin, factor_cliente: vincTiendaForm.factor}, () => setVincTiendaForm({cli:'', fin:'', factor:''}))} className="mt-4 px-6 py-3 bg-[#1e3a6d] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-md hover:bg-black flex items-center gap-2">
-                                        {isSaving ? <Icon name="RefreshCw" className="animate-spin" size={16}/> : <Icon name="Save" size={16}/>} Guardar Vinculación
-                                    </button>
-                                </div>
+                                )}
                             </div>
                         )}
 
-                        {activeTab === 'roles' && (
+                        {activeTab === 'roles' && userPerms.isGlobalAdmin && (
                             <div className="space-y-8">
                                 <div>
                                     <h3 className="text-sm font-black text-[#1e3a6d] uppercase tracking-widest mb-4 border-b pb-2">Crear Nuevo Rol</h3>
@@ -995,7 +1002,7 @@
                             </div>
                         )}
 
-                        {activeTab === 'entidades' && (
+                        {activeTab === 'entidades' && userPerms.isGlobalAdmin && (
                             <div className="space-y-8">
                                 <div>
                                     <h3 className="text-sm font-black text-[#1e3a6d] uppercase tracking-widest mb-4 border-b pb-2">Nueva Entidad Financiera</h3>
@@ -1031,7 +1038,7 @@
                             </div>
                         )}
 
-                        {activeTab === 'anuncios' && (
+                        {activeTab === 'anuncios' && userPerms.isGlobalAdmin && (
                             <div>
                                 <h3 className="text-sm font-black text-[#1e3a6d] uppercase tracking-widest mb-4 border-b pb-2">Transmitir Anuncio Global</h3>
                                 <p className="text-xs text-slate-400 mb-4">Este mensaje aparecerá inmediatamente en la Calculadora de todas las tiendas activas.</p>
@@ -1569,7 +1576,7 @@
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Rol</label>
-                                            <select value={editAliadoModal.data.rol} onChange={e=>setEditAliadoModal({...editAliadoModal, data:{...editAliadoModal.data, rol: e.target.value}})} className="w-full bg-white border border-slate-200 py-2.5 px-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#1e3a6d]">
+                                            <select disabled={!userPerms.isGlobalAdmin} value={editAliadoModal.data.rol} onChange={e=>setEditAliadoModal({...editAliadoModal, data:{...editAliadoModal.data, rol: e.target.value}})} className="w-full bg-white border border-slate-200 py-2.5 px-3 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-[#1e3a6d] disabled:opacity-60 disabled:cursor-not-allowed">
                                                 <option value="">Sin Rol (Personalizado)</option>
                                                 {(db.roles||[]).map(r=><option key={r.id_rol} value={r.id_rol}>{r.nombre_rol}</option>)}
                                             </select>
@@ -1608,7 +1615,8 @@
                                                                 placeholder="Ej: 0.85"
                                                                 value={factorVal}
                                                                 onChange={(e) => handleAliadoFactorChange(f.id_financiera, e.target.value)}
-                                                                className="w-24 text-right bg-slate-50 border border-slate-200 py-1 px-2 rounded text-xs font-bold outline-none focus:border-[#1e3a6d]"
+                                                                disabled={!userPerms.isGlobalAdmin}
+                                                                className="w-24 text-right bg-slate-50 border border-slate-200 py-1 px-2 rounded text-xs font-bold outline-none focus:border-[#1e3a6d] disabled:opacity-60 disabled:cursor-not-allowed"
                                                             />
                                                         </div>
                                                     );
@@ -1618,7 +1626,7 @@
                                     </div>
                                 </div>
                                 <div className="p-4 bg-white border-t border-slate-100 flex justify-between items-center shrink-0">
-                                    <button onClick={deleteAliado} disabled={isSavingEdit} className="px-4 py-2 bg-rose-50 text-rose-600 font-bold rounded-xl hover:bg-rose-100 transition-colors disabled:opacity-50 text-xs flex items-center gap-1"><Icon name="Trash2" size={14}/> Eliminar</button>
+                                    <button onClick={deleteAliado} disabled={isSavingEdit || !userPerms.isGlobalAdmin} className="px-4 py-2 bg-rose-50 text-rose-600 font-bold rounded-xl hover:bg-rose-100 transition-colors disabled:opacity-50 text-xs flex items-center gap-1"><Icon name="Trash2" size={14}/> Eliminar</button>
                                     <button onClick={saveEditAliado} disabled={isSavingEdit} className="px-6 py-2 bg-[#67B74D] text-white font-black rounded-xl hover:bg-[#559e3d] shadow-md transition-all flex items-center gap-2 disabled:opacity-50 text-sm">
                                         {isSavingEdit ? <Icon name="RefreshCw" className="animate-spin" size={16}/> : <Icon name="Save" size={16}/>} Actualizar
                                     </button>
@@ -2392,7 +2400,7 @@
                                 <>
                                     {!isSidebarCollapsed && <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-3 mb-1 mt-4">Gestión y Caja</p>}
                                     <NavItem id="dash" icon="PieChart" label="Dashboard" hidden={!userPerms.isGlobalAdmin && !userPerms.isRegionalAdmin} />
-                                    <NavItem id="tes" icon="Landmark" label="Tesorería" hidden={!(userPerms.isGlobalAdmin || userPerms.isRegionalAdmin || userPerms.isTesoreria)} />
+                                    <NavItem id="tes" icon="Landmark" label="Tesorería" hidden={!(userPerms.isGlobalAdmin || userPerms.isTesoreria)} />
                                 </>
                             )}
 
@@ -2416,7 +2424,7 @@
                     <div className="md:hidden bg-white border-t border-slate-200 flex overflow-x-auto custom-scrollbar p-2 gap-2 shrink-0 z-20">
                         <button onClick={() => setActiveView('sim')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'sim' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Calculator" size={18} className="mb-1"/> Simulador</button>
                         <button onClick={() => setActiveView('ext')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'ext' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Smartphone" size={18} className="mb-1"/> Créditos</button>
-                        {(userPerms.isGlobalAdmin || userPerms.isRegionalAdmin || userPerms.isTesoreria) && <button onClick={() => setActiveView('tes')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'tes' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Landmark" size={18} className="mb-1"/> Caja</button>}
+                        {(userPerms.isGlobalAdmin || userPerms.isTesoreria) && <button onClick={() => setActiveView('tes')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'tes' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Landmark" size={18} className="mb-1"/> Caja</button>}
                         {userPerms.hasPrivileges && <button onClick={() => setActiveView('adm')} className={`flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeView === 'adm' ? 'bg-[#2C4C8C] text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}><Icon name="Settings" size={18} className="mb-1"/> Config</button>}
                         <button onClick={handleLogout} className="flex-1 min-w-[100px] flex flex-col items-center justify-center p-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-rose-500 hover:bg-rose-50"><Icon name="LogOut" size={18} className="mb-1"/> Salir</button>
                     </div>
@@ -2436,9 +2444,9 @@
                             {activeView === 'sim' && <CalculatorView db={db} currentUser={currentUser} userPerms={userPerms} apiCall={apiCall} showToast={showToast} />}
                             {activeView === 'ext' && <OnlineCreditView onOpenQr={(url, title) => setQrModal({show: true, url, title})} loadDistribuidorPrices={loadDistribuidorPrices} />}
                             {activeView === 'dash' && (userPerms.isGlobalAdmin || userPerms.isRegionalAdmin) && <DashboardView db={db} userPerms={userPerms} />}
-                            {activeView === 'adm' && userPerms.hasPrivileges && <AdminView db={db} apiCall={apiCall} showToast={showToast} />}
+                            {activeView === 'adm' && userPerms.hasPrivileges && <AdminView db={db} userPerms={userPerms} apiCall={apiCall} showToast={showToast} />}
                             {activeView === 'con' && (userPerms.isGlobalAdmin || userPerms.isRegionalAdmin || userPerms.isTesoreria) && <QueriesView db={db} userPerms={userPerms} apiCall={apiCall} showToast={showToast} />}
-                            {activeView === 'tes' && (userPerms.isGlobalAdmin || userPerms.isRegionalAdmin || userPerms.isTesoreria) && <TesoreriaView db={db} apiCall={apiCall} showToast={showToast} />}
+                            {activeView === 'tes' && (userPerms.isGlobalAdmin || userPerms.isTesoreria) && <TesoreriaView db={db} apiCall={apiCall} showToast={showToast} />}
                         </div>
                     </div>
 
