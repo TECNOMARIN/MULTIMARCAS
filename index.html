@@ -144,6 +144,11 @@
             return key ? row[key] : '';
         };
 
+        const safeFloat = (val) => {
+            if (val === null || val === undefined || String(val).trim() === '') return 0;
+            return parseFloat(String(val).replace(',', '.')) || 0;
+        };
+
         const parseDate = (val) => {
             if (!val) return '-';
             const d = new Date(val);
@@ -286,17 +291,17 @@
                 
                 if (cli && cli.rol) {
                     const pRol = db.roles_permisos.find(rp => String(rp.ROL).trim() === String(cli.rol).trim() && String(rp.id_financiera).trim() === String(selectedFinanciera).trim());
-                    if (pRol) factor = parseFloat(pRol.factor_cliente);
+                    if (pRol) factor = safeFloat(pRol.factor_cliente);
                 }
                 if (!factor) {
                     const rel = db.porcentajes.find(rp => String(rp.id_cliente).trim() === String(selectedCliente).trim() && String(rp.id_financiera).trim() === String(selectedFinanciera).trim());
-                    if (rel) factor = parseFloat(rel.factor_cliente);
+                    if (rel) factor = safeFloat(rel.factor_cliente);
                 }
 
                 const cuo = db.cuotas.find(c => String(c.id_cuota).trim() === String(selectedPlan).trim());
                 const finObj = db.financieras.find(f => String(f.id_financiera).trim() === String(selectedFinanciera).trim());
 
-                if (!factor || !cuo || nCuotas <= 0) {
+                if (!factor || factor === 0 || !cuo || nCuotas <= 0) {
                     setCuotaAprox(0);
                     return null;
                 }
@@ -318,31 +323,44 @@
                      p = parsePrice(precioVenta);
                      cons = parsePrice(valorConsignar);
                 }
+                
+                // Protección contra campos que digan "$ NaN" o generen fallos
+                if (isNaN(p) || isNaN(cons)) {
+                    setCuotaAprox(0);
+                    return null;
+                }
 
-                const tI = parseFloat(cuo.tasa_interes) / 100;
-                const tF = parseFloat(cuo.tasa_fianza) / 100;
+                const tI = safeFloat(cuo.tasa_interes) / 100;
+                const tF = safeFloat(cuo.tasa_fianza) / 100;
                 const cB = (cons + (cons * tI * nCuotas)) / nCuotas;
                 const vC = cB + (cB * tF);
 
-                setCuotaAprox(vC);
+                setCuotaAprox(vC || 0);
 
                 let utilidadReal = 0;
                 if (finObj) {
-                    const factorFinanciera = parseFloat(finObj.factor_financiera);
-                    const factorDecimal = factorFinanciera >= 1 ? (factorFinanciera / 100) : factorFinanciera;
+                    const factorFinanciera = safeFloat(finObj.factor_financiera);
+                    let factorDecimal = 0;
+                    if (factorFinanciera > 0) {
+                        factorDecimal = factorFinanciera >= 1 ? (factorFinanciera / 100) : factorFinanciera;
+                    }
                     
                     let montoNetoRecibido = 0;
-                    if (factorDecimal >= 0.50) montoNetoRecibido = cons * factorDecimal;
-                    else montoNetoRecibido = cons - (cons * factorDecimal);
+                    if (factorDecimal > 0) {
+                        if (factorDecimal >= 0.50) montoNetoRecibido = cons * factorDecimal;
+                        else montoNetoRecibido = cons - (cons * factorDecimal);
+                    } else {
+                        montoNetoRecibido = cons;
+                    }
                     
                     utilidadReal = montoNetoRecibido - p;
                 }
 
                 return {
                     id_cliente: selectedCliente, id_financiera: selectedFinanciera, id_cuota: selectedPlan,
-                    precio_producto: p, valor_a_consignar: cons, valor_cuota: vC, n_cuotas: nCuotas, utilidad: utilidadReal
+                    precio_producto: p || 0, valor_a_consignar: cons || 0, valor_cuota: vC || 0, n_cuotas: nCuotas, utilidad: utilidadReal || 0
                 };
-            }, [selectedCliente, selectedFinanciera, selectedPlan, db]);
+            }, [selectedCliente, selectedFinanciera, selectedPlan, precioVenta, valorConsignar, db]);
 
             // Handlers para Inputs Monetarios
             const handlePriceChange = (e) => {
